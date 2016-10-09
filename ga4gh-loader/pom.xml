@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+
+	<parent>
+		<groupId>org.collaboratory</groupId>
+		<artifactId>ga4gh</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>ga4gh-loader</artifactId>
+	<name>${project.artifactId}</name>
+	<description>${project.name}</description>
+
+	<dependencies>
+
+		<!-- DCC - Common -->
+		<dependency>
+			<groupId>org.icgc.dcc</groupId>
+			<artifactId>dcc-common-core</artifactId>
+			<version>${dcc-common.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.icgc.dcc</groupId>
+			<artifactId>dcc-common-es</artifactId>
+			<version>${dcc-common.version}</version>
+		</dependency>
+
+    	<!-- Search -->
+		<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>elasticsearch</artifactId>
+		</dependency>
+
+    	<!-- Genomics -->
+		<dependency>
+			<groupId>com.github.samtools</groupId>
+			<artifactId>htsjdk</artifactId>
+			<version>${htsjdk.version}</version>
+		</dependency>
+
+		<!-- Utilities -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+
+	</dependencies>
+
+	<properties>
+		<!-- Versions - DCC -->
+		<dcc-common.version>4.2.13</dcc-common.version>
+		<htsjdk.version>2.1.0</htsjdk.version>
+	</properties>
+
+</project>
