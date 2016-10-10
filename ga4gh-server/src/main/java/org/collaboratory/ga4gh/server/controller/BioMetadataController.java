@@ -36,26 +36,26 @@ import lombok.val;
 @RestController
 public class BioMetadataController {
 
-	@PostMapping("/individuals/search")
-	public SearchIndividualsResponse searchIndividuals(@RequestBody SearchIndividualsRequest request) {
-		return SearchIndividualsResponse.newBuilder().build();
-	}
+  @PostMapping("/individuals/search")
+  public SearchIndividualsResponse searchIndividuals(@RequestBody SearchIndividualsRequest request) {
+    return SearchIndividualsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/individuals/{individualId:(?!search).+}")
-	public Individual getIndividual(@PathVariable("individualId") GetIndividualRequest request) {
-		val id = request.getIndividualId();
-		return Individual.newBuilder().setId(id).build();
-	}
+  @GetMapping("/individuals/{individualId:(?!search).+}")
+  public Individual getIndividual(@PathVariable("individualId") GetIndividualRequest request) {
+    val id = request.getIndividualId();
+    return Individual.newBuilder().setId(id).build();
+  }
 
-	@PostMapping("/biosamples/search")
-	public SearchBioSamplesResponse searchBioSamples(@RequestBody SearchBioSamplesRequest request) {
-		return SearchBioSamplesResponse.newBuilder().build();
-	}
+  @PostMapping("/biosamples/search")
+  public SearchBioSamplesResponse searchBioSamples(@RequestBody SearchBioSamplesRequest request) {
+    return SearchBioSamplesResponse.newBuilder().build();
+  }
 
-	@GetMapping("/biosamples/{bioSampleId:(?!search).+}")
-	public BioSample getBioSample(@PathVariable("bioSampleId") GetBioSampleRequest request) {
-		val id = request.getBioSampleId();
-		return BioSample.newBuilder().setId(id).build();
-	}
+  @GetMapping("/biosamples/{bioSampleId:(?!search).+}")
+  public BioSample getBioSample(@PathVariable("bioSampleId") GetBioSampleRequest request) {
+    val id = request.getBioSampleId();
+    return BioSample.newBuilder().setId(id).build();
+  }
 
 }

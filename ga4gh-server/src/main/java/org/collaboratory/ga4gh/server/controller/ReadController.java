@@ -34,20 +34,20 @@ import lombok.val;
 @RestController
 public class ReadController {
 
-	@PostMapping("/readgroupsets/search")
-	public SearchReadGroupSetsResponse searchReadGroupSets(@RequestBody SearchReadGroupSetsRequest request) {
-		return SearchReadGroupSetsResponse.newBuilder().build();
-	}
+  @PostMapping("/readgroupsets/search")
+  public SearchReadGroupSetsResponse searchReadGroupSets(@RequestBody SearchReadGroupSetsRequest request) {
+    return SearchReadGroupSetsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/readgroupsets/{readGroupSetId:(?!search).+}")
-	public ReadGroupSet getReadGroupSet(@PathVariable("readGroupSetId") GetReadGroupSetRequest request) {
-		val id = request.getReadGroupSetId();
-		return ReadGroupSet.newBuilder().setId(id).build();
-	}
+  @GetMapping("/readgroupsets/{readGroupSetId:(?!search).+}")
+  public ReadGroupSet getReadGroupSet(@PathVariable("readGroupSetId") GetReadGroupSetRequest request) {
+    val id = request.getReadGroupSetId();
+    return ReadGroupSet.newBuilder().setId(id).build();
+  }
 
-	@PostMapping("/reads/search")
-	public SearchReadsResponse searchReads(@RequestBody SearchReadsRequest request) {
-		return SearchReadsResponse.newBuilder().build();
-	}
+  @PostMapping("/reads/search")
+  public SearchReadsResponse searchReads(@RequestBody SearchReadsRequest request) {
+    return SearchReadsResponse.newBuilder().build();
+  }
 
 }

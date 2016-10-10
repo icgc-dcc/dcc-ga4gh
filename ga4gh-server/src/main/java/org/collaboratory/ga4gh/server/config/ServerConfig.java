@@ -24,9 +24,9 @@ import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
 @Configuration
 public class ServerConfig {
 
-	@Bean
-	public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
-		return new ProtobufHttpMessageConverter();
-	}
+  @Bean
+  public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
+    return new ProtobufHttpMessageConverter();
+  }
 
 }

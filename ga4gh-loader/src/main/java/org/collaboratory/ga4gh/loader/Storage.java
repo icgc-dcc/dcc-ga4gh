@@ -23,35 +23,35 @@ import lombok.val;
 
 public class Storage {
 
-	@SneakyThrows
-	public static File downloadFile(String objectId) {
-		val objectUrl = getObjectUrl(objectId);
-		val output = Paths.get("/tmp/file.vcf.gz");
+  @SneakyThrows
+  public static File downloadFile(String objectId) {
+    val objectUrl = getObjectUrl(objectId);
+    val output = Paths.get("/tmp/file.vcf.gz");
 
-		@Cleanup
-		val input = objectUrl.openStream();
-		copy(input, output, REPLACE_EXISTING);
+    @Cleanup
+    val input = objectUrl.openStream();
+    copy(input, output, REPLACE_EXISTING);
 
-		return output.toFile();
-	}
+    return output.toFile();
+  }
 
-	private static URL getObjectUrl(String objectId) throws IOException {
-		val storageUrl = new URL(STORAGE_API + "/download/" + objectId + "?offset=0&length=-1&external=true");
+  private static URL getObjectUrl(String objectId) throws IOException {
+    val storageUrl = new URL(STORAGE_API + "/download/" + objectId + "?offset=0&length=-1&external=true");
 
-		val connection = (HttpURLConnection) storageUrl.openConnection();
-		connection.setRequestProperty(AUTHORIZATION, "Bearer " + TOKEN);
+    val connection = (HttpURLConnection) storageUrl.openConnection();
+    connection.setRequestProperty(AUTHORIZATION, "Bearer " + TOKEN);
 
-		val object = readObject(connection);
+    val object = readObject(connection);
 
-		return getUrl(object);
-	}
+    return getUrl(object);
+  }
 
-	private static URL getUrl(JsonNode object) throws MalformedURLException {
-		return new URL(object.get("parts").get(0).get("url").textValue());
-	}
+  private static URL getUrl(JsonNode object) throws MalformedURLException {
+    return new URL(object.get("parts").get(0).get("url").textValue());
+  }
 
-	private static JsonNode readObject(HttpURLConnection connection) throws JsonProcessingException, IOException {
-		return DEFAULT.readTree(connection.getInputStream());
-	}
+  private static JsonNode readObject(HttpURLConnection connection) throws JsonProcessingException, IOException {
+    return DEFAULT.readTree(connection.getInputStream());
+  }
 
 }

@@ -34,23 +34,23 @@ import lombok.val;
 @RestController
 public class AlleleAnnotationController {
 
-	@PostMapping("/variantannotations/search")
-	public SearchVariantAnnotationsResponse searchVariantAnnotations(
-			@RequestBody SearchVariantAnnotationsRequest request) {
-		return SearchVariantAnnotationsResponse.newBuilder().build();
-	}
+  @PostMapping("/variantannotations/search")
+  public SearchVariantAnnotationsResponse searchVariantAnnotations(
+      @RequestBody SearchVariantAnnotationsRequest request) {
+    return SearchVariantAnnotationsResponse.newBuilder().build();
+  }
 
-	@PostMapping("/variantannotationsets/search")
-	public SearchVariantAnnotationSetsResponse searchVariantAnnotationSets(
-			@RequestBody SearchVariantAnnotationSetsRequest request) {
-		return SearchVariantAnnotationSetsResponse.newBuilder().build();
-	}
+  @PostMapping("/variantannotationsets/search")
+  public SearchVariantAnnotationSetsResponse searchVariantAnnotationSets(
+      @RequestBody SearchVariantAnnotationSetsRequest request) {
+    return SearchVariantAnnotationSetsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/variantannotationsets/{variantAnnotationSetId:(?!search).+}")
-	public VariantAnnotationSet getVariant(
-			@PathVariable("variantAnnotationSetId") GetVariantAnnotationSetRequest request) {
-		val id = request.getVariantAnnotationSetId();
-		return VariantAnnotationSet.newBuilder().setId(id).build();
-	}
+  @GetMapping("/variantannotationsets/{variantAnnotationSetId:(?!search).+}")
+  public VariantAnnotationSet getVariant(
+      @PathVariable("variantAnnotationSetId") GetVariantAnnotationSetRequest request) {
+    val id = request.getVariantAnnotationSetId();
+    return VariantAnnotationSet.newBuilder().setId(id).build();
+  }
 
 }

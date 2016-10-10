@@ -40,37 +40,37 @@ import lombok.val;
 @RestController
 public class VariantController {
 
-	@PostMapping("/variants/search")
-	public SearchVariantsResponse searchVariants(@RequestBody SearchVariantsRequest request) {
-		return SearchVariantsResponse.newBuilder().build();
-	}
+  @PostMapping("/variants/search")
+  public SearchVariantsResponse searchVariants(@RequestBody SearchVariantsRequest request) {
+    return SearchVariantsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/variants/{variantId:(?!search).+}")
-	public Variant getVariant(@PathVariable("variantId") GetVariantRequest request) {
-		val id = request.getVariantId();
-		return Variant.newBuilder().setId(id).build();
-	}
+  @GetMapping("/variants/{variantId:(?!search).+}")
+  public Variant getVariant(@PathVariable("variantId") GetVariantRequest request) {
+    val id = request.getVariantId();
+    return Variant.newBuilder().setId(id).build();
+  }
 
-	@PostMapping("/variantsets/search")
-	public SearchVariantSetsResponse searchVariantSets(@RequestBody SearchVariantSetsRequest request) {
-		return SearchVariantSetsResponse.newBuilder().build();
-	}
+  @PostMapping("/variantsets/search")
+  public SearchVariantSetsResponse searchVariantSets(@RequestBody SearchVariantSetsRequest request) {
+    return SearchVariantSetsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/variantsets/{variantSetId:(?!search).+}")
-	public VariantSet getVariantSet(@PathVariable("variantSetId") GetVariantSetRequest request) {
-		val id = request.getVariantSetId();
-		return VariantSet.newBuilder().setId(id).build();
-	}
+  @GetMapping("/variantsets/{variantSetId:(?!search).+}")
+  public VariantSet getVariantSet(@PathVariable("variantSetId") GetVariantSetRequest request) {
+    val id = request.getVariantSetId();
+    return VariantSet.newBuilder().setId(id).build();
+  }
 
-	@PostMapping("/callsets/search")
-	public SearchCallSetsResponse searchCallSets(@RequestBody SearchCallSetsRequest request) {
-		return SearchCallSetsResponse.newBuilder().build();
-	}
+  @PostMapping("/callsets/search")
+  public SearchCallSetsResponse searchCallSets(@RequestBody SearchCallSetsRequest request) {
+    return SearchCallSetsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/callsets/{callSetId:(?!search).+}")
-	public CallSet getCallSet(@PathVariable("callSetId") GetCallSetRequest request) {
-		val id = request.getCallSetId();
-		return CallSet.newBuilder().setId(id).build();
-	}
+  @GetMapping("/callsets/{callSetId:(?!search).+}")
+  public CallSet getCallSet(@PathVariable("callSetId") GetCallSetRequest request) {
+    val id = request.getCallSetId();
+    return CallSet.newBuilder().setId(id).build();
+  }
 
 }

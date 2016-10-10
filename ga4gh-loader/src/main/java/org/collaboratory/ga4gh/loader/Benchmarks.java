@@ -27,69 +27,69 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Benchmarks {
 
-	@SneakyThrows
-	public static void main(String[] args) {
-		try (val client = newClient()) {
-			val benchmarks = new Benchmarks(client, INDEX_NAME);
-			benchmarks.execute();
-		} catch (Exception e) {
-			log.error("Exception running: ", e);
-		}
-	}
+  @SneakyThrows
+  public static void main(String[] args) {
+    try (val client = newClient()) {
+      val benchmarks = new Benchmarks(client, INDEX_NAME);
+      benchmarks.execute();
+    } catch (Exception e) {
+      log.error("Exception running: ", e);
+    }
+  }
 
-	private final Client client;
-	private final String indexName;
+  private final Client client;
+  private final String indexName;
 
-	public void execute() {
-		count(rangeQuery("start").from(10_000_000).to(20_000_000));
-		terms(b -> b.field("chr"));
-		terms(b -> b.field("type"));
-		terms(b -> b.field("alternateAlleles.baseString"));
-		histogram(b -> b.field("start").interval(1_000_000));
-	}
+  public void execute() {
+    count(rangeQuery("start").from(10_000_000).to(20_000_000));
+    terms(b -> b.field("chr"));
+    terms(b -> b.field("type"));
+    terms(b -> b.field("alternateAlleles.baseString"));
+    histogram(b -> b.field("start").interval(1_000_000));
+  }
 
-	@SneakyThrows
-	private void terms(Consumer<TermsBuilder> builder) {
-		val aggregation = AggregationBuilders.terms("aggregation");
-		builder.accept(aggregation);
-		display((Terms) aggregate(aggregation).get("aggregation"));
-	}
+  @SneakyThrows
+  private void terms(Consumer<TermsBuilder> builder) {
+    val aggregation = AggregationBuilders.terms("aggregation");
+    builder.accept(aggregation);
+    display((Terms) aggregate(aggregation).get("aggregation"));
+  }
 
-	@SneakyThrows
-	private void histogram(Consumer<HistogramBuilder> builder) {
-		val aggregation = AggregationBuilders.histogram("aggregation");
-		builder.accept(aggregation);
-		display((Histogram) aggregate(aggregation).get("aggregation"));
-	}
+  @SneakyThrows
+  private void histogram(Consumer<HistogramBuilder> builder) {
+    val aggregation = AggregationBuilders.histogram("aggregation");
+    builder.accept(aggregation);
+    display((Histogram) aggregate(aggregation).get("aggregation"));
+  }
 
-	@SneakyThrows
-	private void count(QueryBuilder builder) {
-		val query = client.prepareCount(indexName).setQuery(builder);
+  @SneakyThrows
+  private void count(QueryBuilder builder) {
+    val query = client.prepareCount(indexName).setQuery(builder);
 
-		log.info(">>> Executing count: {}", builder);
-		val watch = createStarted();
-		val response = query.execute().get();
-		log.info("<<< Took: {}", watch);
+    log.info(">>> Executing count: {}", builder);
+    val watch = createStarted();
+    val response = query.execute().get();
+    log.info("<<< Took: {}", watch);
 
-		log.info("Count: {}", response.getCount());
-	}
+    log.info("Count: {}", response.getCount());
+  }
 
-	@SneakyThrows
-	private Aggregations aggregate(AbstractAggregationBuilder aggregation) {
-		val query = client.prepareSearch(indexName).addAggregation(aggregation);
+  @SneakyThrows
+  private Aggregations aggregate(AbstractAggregationBuilder aggregation) {
+    val query = client.prepareSearch(indexName).addAggregation(aggregation);
 
-		log.info(">>> Executing {}", query);
-		val watch = createStarted();
-		val response = query.execute().get();
-		log.info("<<< Took: {}", watch);
+    log.info(">>> Executing {}", query);
+    val watch = createStarted();
+    val response = query.execute().get();
+    log.info("<<< Took: {}", watch);
 
-		return response.getAggregations();
-	}
+    return response.getAggregations();
+  }
 
-	private void display(MultiBucketsAggregation aggregation) {
-		for (val bucket : aggregation.getBuckets()) {
-			log.info("{} = {}", bucket.getKey(), bucket.getDocCount());
-		}
-	}
+  private void display(MultiBucketsAggregation aggregation) {
+    for (val bucket : aggregation.getBuckets()) {
+      log.info("{} = {}", bucket.getKey(), bucket.getDocCount());
+    }
+  }
 
 }

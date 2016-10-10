@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <http://www.gnu.org/licenses/>.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -16,6 +31,7 @@
 
 	<dependencies>
 
+		<!-- Protobuf -->
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
@@ -26,6 +42,7 @@
 
 	<build>
 		<plugins>
+			<!-- Generate sources -->
 			<plugin>
 				<groupId>com.googlecode.maven-download-plugin</groupId>
 				<artifactId>download-maven-plugin</artifactId>
@@ -33,7 +50,7 @@
 				<executions>
 					<execution>
 						<id>download-ga4gh-schemas</id>
-						<phase>compile</phase>
+						<phase>generate-sources</phase>
 						<goals>
 							<goal>wget</goal>
 						</goals>
@@ -54,24 +71,19 @@
 					<protoSourceRoot>${project.build.directory}/schemas-${ga4gh-schema.version}/src/main/proto</protoSourceRoot>
 					<outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
 					<lineLength>132</lineLength>
-					<!-- 
-					<pluginId>grpc-java</pluginId>
-					<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.0.1:exe:${os.detected.classifier}</pluginArtifact>
-					 -->
 				</configuration>
 				<executions>
 					<execution>
 						<id>compile-ga4gh-schemas</id>
-						<phase>compile</phase>
+						<phase>generate-sources</phase>
 						<goals>
 							<goal>compile</goal>
-							<!-- 
-							<goal>compile-custom</goal>
-							 -->
 						</goals>
 					</execution>
 				</executions>
 			</plugin>
+			
+			<!-- Compile -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
@@ -88,7 +100,10 @@
 	</build>
 
 	<properties>
+		<!-- Versions - GA4GH -->
 		<ga4gh-schema.version>0.6.0a7</ga4gh-schema.version>
+		
+		<!-- Versions - Protobuf -->
 		<proto.version>3.0.0-beta-3</proto.version>
 	</properties>
 

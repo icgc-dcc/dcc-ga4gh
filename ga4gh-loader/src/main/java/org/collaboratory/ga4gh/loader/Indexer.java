@@ -21,45 +21,45 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Indexer {
 
-	private final Client client;
-	private final DocumentWriter writer;
-	private final String indexName;
+  private final Client client;
+  private final DocumentWriter writer;
+  private final String indexName;
 
-	private int id = 1;
+  private int id = 1;
 
-	@SneakyThrows
-	public void prepareIndex() {
-		log.info("Preparing index {}...", indexName);
-		val indexes = client.admin().indices();
-		if (indexes.prepareExists(indexName).execute().get().isExists()) {
-			checkState(indexes.prepareDelete(indexName).execute().get().isAcknowledged());
-		}
+  @SneakyThrows
+  public void prepareIndex() {
+    log.info("Preparing index {}...", indexName);
+    val indexes = client.admin().indices();
+    if (indexes.prepareExists(indexName).execute().get().isExists()) {
+      checkState(indexes.prepareDelete(indexName).execute().get().isAcknowledged());
+    }
 
-		indexes.prepareCreate(indexName).execute();
-	}
+    indexes.prepareCreate(indexName).execute();
+  }
 
-	@SneakyThrows
-	public void indexVariants(@NonNull Iterable<ObjectNode> variants, String objectId) {
-		for (val variant : variants) {
-			writeVariant(variant);
-		}
-	}
+  @SneakyThrows
+  public void indexVariants(@NonNull Iterable<ObjectNode> variants, String objectId) {
+    for (val variant : variants) {
+      writeVariant(variant);
+    }
+  }
 
-	private void writeVariant(ObjectNode variant) throws IOException {
-		writer.write(new Document(nextId(), variant, new VariantDocumentType()));
-	}
+  private void writeVariant(ObjectNode variant) throws IOException {
+    writer.write(new Document(nextId(), variant, new VariantDocumentType()));
+  }
 
-	private String nextId() {
-		return String.valueOf(id++);
-	}
+  private String nextId() {
+    return String.valueOf(id++);
+  }
 
-	private static class VariantDocumentType implements DocumentType {
+  private static class VariantDocumentType implements DocumentType {
 
-		@Override
-		public String getIndexType() {
-			return Config.TYPE_NAME;
-		}
+    @Override
+    public String getIndexType() {
+      return Config.TYPE_NAME;
+    }
 
-	}
+  }
 
 }

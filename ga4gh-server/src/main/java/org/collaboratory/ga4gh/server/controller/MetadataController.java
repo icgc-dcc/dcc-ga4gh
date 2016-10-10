@@ -32,15 +32,15 @@ import lombok.val;
 @RestController
 public class MetadataController {
 
-	@PostMapping("/datasets/search")
-	public SearchDatasetsResponse searchDatasets(@RequestBody SearchDatasetsRequest request) {
-		return SearchDatasetsResponse.newBuilder().build();
-	}
+  @PostMapping("/datasets/search")
+  public SearchDatasetsResponse searchDatasets(@RequestBody SearchDatasetsRequest request) {
+    return SearchDatasetsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/datasets/{datasetId:(?!search).+}")
-	public Dataset getDataset(@PathVariable("datasetId") GetDatasetRequest request) {
-		val id = request.getDatasetId();
-		return Dataset.newBuilder().setId(id).build();
-	}
+  @GetMapping("/datasets/{datasetId:(?!search).+}")
+  public Dataset getDataset(@PathVariable("datasetId") GetDatasetRequest request) {
+    val id = request.getDatasetId();
+    return Dataset.newBuilder().setId(id).build();
+  }
 
 }

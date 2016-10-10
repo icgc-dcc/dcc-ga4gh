@@ -14,24 +14,24 @@ import lombok.NonNull;
 
 public class VCF implements Closeable {
 
-	@NonNull
-	private final VCFFileReader vcf;
+  @NonNull
+  private final VCFFileReader vcf;
 
-	public VCF(File file) {
-		this.vcf = new VCFFileReader(file, false);
-	}
+  public VCF(File file) {
+    this.vcf = new VCFFileReader(file, false);
+  }
 
-	public Iterable<ObjectNode> read() {
-		return transform(vcf, this::convert);
-	}
+  public Iterable<ObjectNode> read() {
+    return transform(vcf, this::convert);
+  }
 
-	private ObjectNode convert(VariantContext record) {
-		return DEFAULT.convertValue(record, ObjectNode.class);
-	}
+  private ObjectNode convert(VariantContext record) {
+    return DEFAULT.convertValue(record, ObjectNode.class);
+  }
 
-	@Override
-	public void close() {
-		vcf.close();
-	}
+  @Override
+  public void close() {
+    vcf.close();
+  }
 
 }

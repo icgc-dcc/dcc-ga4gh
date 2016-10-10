@@ -36,26 +36,26 @@ import lombok.val;
 @RestController
 public class SequenceAnnotationController {
 
-	@PostMapping("/featuresets/search")
-	public SearchFeatureSetsResponse searchFeatureSets(@RequestBody SearchFeatureSetsRequest request) {
-		return SearchFeatureSetsResponse.newBuilder().build();
-	}
+  @PostMapping("/featuresets/search")
+  public SearchFeatureSetsResponse searchFeatureSets(@RequestBody SearchFeatureSetsRequest request) {
+    return SearchFeatureSetsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/featuresets/{featureSetId:(?!search).+}")
-	public FeatureSet getFeatureSet(@PathVariable("featureSetId") GetFeatureSetRequest request) {
-		val id = request.getFeatureSetId();
-		return FeatureSet.newBuilder().setId(id).build();
-	}
+  @GetMapping("/featuresets/{featureSetId:(?!search).+}")
+  public FeatureSet getFeatureSet(@PathVariable("featureSetId") GetFeatureSetRequest request) {
+    val id = request.getFeatureSetId();
+    return FeatureSet.newBuilder().setId(id).build();
+  }
 
-	@PostMapping("/features/search")
-	public SearchFeaturesResponse searchFeatures(@RequestBody SearchFeaturesRequest request) {
-		return SearchFeaturesResponse.newBuilder().build();
-	}
+  @PostMapping("/features/search")
+  public SearchFeaturesResponse searchFeatures(@RequestBody SearchFeaturesRequest request) {
+    return SearchFeaturesResponse.newBuilder().build();
+  }
 
-	@GetMapping("/features/{featureId:(?!search).+}")
-	public Feature getFeature(@PathVariable("featureId") GetFeatureRequest request) {
-		val id = request.getFeatureId();
-		return Feature.newBuilder().setId(id).build();
-	}
+  @GetMapping("/features/{featureId:(?!search).+}")
+  public Feature getFeature(@PathVariable("featureId") GetFeatureRequest request) {
+    val id = request.getFeatureId();
+    return Feature.newBuilder().setId(id).build();
+  }
 
 }

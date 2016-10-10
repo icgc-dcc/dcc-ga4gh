@@ -38,32 +38,32 @@ import lombok.val;
 @RestController
 public class ReferenceController {
 
-	@PostMapping("/referencesets/search")
-	public SearchReferenceSetsResponse searchReferenceSets(@RequestBody SearchReferenceSetsRequest request) {
-		return SearchReferenceSetsResponse.newBuilder().build();
-	}
+  @PostMapping("/referencesets/search")
+  public SearchReferenceSetsResponse searchReferenceSets(@RequestBody SearchReferenceSetsRequest request) {
+    return SearchReferenceSetsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/referencesets/{referenceSetId:(?!search).+}")
-	public ReferenceSet getReferenceSet(@PathVariable("referenceSetId") GetReferenceSetRequest request) {
-		val id = request.getReferenceSetId();
-		return ReferenceSet.newBuilder().setId(id).build();
-	}
+  @GetMapping("/referencesets/{referenceSetId:(?!search).+}")
+  public ReferenceSet getReferenceSet(@PathVariable("referenceSetId") GetReferenceSetRequest request) {
+    val id = request.getReferenceSetId();
+    return ReferenceSet.newBuilder().setId(id).build();
+  }
 
-	@PostMapping("/references/search")
-	public SearchReferencesResponse searchReferences(@RequestBody SearchReferencesRequest request) {
-		return SearchReferencesResponse.newBuilder().build();
-	}
+  @PostMapping("/references/search")
+  public SearchReferencesResponse searchReferences(@RequestBody SearchReferencesRequest request) {
+    return SearchReferencesResponse.newBuilder().build();
+  }
 
-	@GetMapping("/references/{referenceId:(?!search).+}")
-	public Reference getReference(@PathVariable("referenceId") GetReferenceRequest request) {
-		val id = request.getReferenceId();
-		return Reference.newBuilder().setId(id).build();
-	}
+  @GetMapping("/references/{referenceId:(?!search).+}")
+  public Reference getReference(@PathVariable("referenceId") GetReferenceRequest request) {
+    val id = request.getReferenceId();
+    return Reference.newBuilder().setId(id).build();
+  }
 
-	@GetMapping("/references/{referenceId:(?!search).+}/bases")
-	public ListReferenceBasesResponse listReferenceBases(
-			@PathVariable("referenceId") ListReferenceBasesRequest request) {
-		return ListReferenceBasesResponse.newBuilder().build();
-	}
+  @GetMapping("/references/{referenceId:(?!search).+}/bases")
+  public ListReferenceBasesResponse listReferenceBases(
+      @PathVariable("referenceId") ListReferenceBasesRequest request) {
+    return ListReferenceBasesResponse.newBuilder().build();
+  }
 
 }

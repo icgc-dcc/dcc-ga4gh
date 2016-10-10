@@ -36,28 +36,28 @@ import lombok.val;
 @RestController
 public class RnaQuantificationController {
 
-	@PostMapping("/rnaquantificationsets/search")
-	public SearchRnaQuantificationSetsResponse searchRnaQuantificationSets(
-			@RequestBody SearchRnaQuantificationSetsRequest request) {
-		return SearchRnaQuantificationSetsResponse.newBuilder().build();
-	}
+  @PostMapping("/rnaquantificationsets/search")
+  public SearchRnaQuantificationSetsResponse searchRnaQuantificationSets(
+      @RequestBody SearchRnaQuantificationSetsRequest request) {
+    return SearchRnaQuantificationSetsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/rnaquantificationsets/{rnaQuantificationId:(?!search).+}")
-	public RnaQuantification getRnaQuantification(
-			@PathVariable("rnaQuantificationId") GetRnaQuantificationRequest request) {
-		val id = request.getRnaQuantificationId();
-		return RnaQuantification.newBuilder().setId(id).build();
-	}
+  @GetMapping("/rnaquantificationsets/{rnaQuantificationId:(?!search).+}")
+  public RnaQuantification getRnaQuantification(
+      @PathVariable("rnaQuantificationId") GetRnaQuantificationRequest request) {
+    val id = request.getRnaQuantificationId();
+    return RnaQuantification.newBuilder().setId(id).build();
+  }
 
-	@PostMapping("/expressionlevels/search")
-	public SearchExpressionLevelsResponse searchExpressionLevels(@RequestBody SearchExpressionLevelsRequest request) {
-		return SearchExpressionLevelsResponse.newBuilder().build();
-	}
+  @PostMapping("/expressionlevels/search")
+  public SearchExpressionLevelsResponse searchExpressionLevels(@RequestBody SearchExpressionLevelsRequest request) {
+    return SearchExpressionLevelsResponse.newBuilder().build();
+  }
 
-	@GetMapping("/expressionlevels/{expressionLevelId:(?!search).+}")
-	public ExpressionLevel getExpressionLevel(@PathVariable("expressionLevelId") GetExpressionLevelRequest request) {
-		val id = request.getExpressionLevelId();
-		return ExpressionLevel.newBuilder().setId(id).build();
-	}
+  @GetMapping("/expressionlevels/{expressionLevelId:(?!search).+}")
+  public ExpressionLevel getExpressionLevel(@PathVariable("expressionLevelId") GetExpressionLevelRequest request) {
+    val id = request.getExpressionLevelId();
+    return ExpressionLevel.newBuilder().setId(id).build();
+  }
 
 }

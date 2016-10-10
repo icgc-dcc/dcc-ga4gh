@@ -16,21 +16,21 @@ import lombok.val;
 
 public class Factory {
 
-	public static Client newClient() {
-		val client = new TransportClient();
-		client.addTransportAddress(new InetSocketTransportAddress(NODE_ADDRESS, NODE_PORT));
+  public static Client newClient() {
+    val client = new TransportClient();
+    client.addTransportAddress(new InetSocketTransportAddress(NODE_ADDRESS, NODE_PORT));
 
-		return client;
-	}
+    return client;
+  }
 
-	public static DocumentWriter newDocumentWriter() {
-		return createDocumentWriter(new DocumentWriterConfiguration().esUrl(ES_URL).indexName(INDEX_NAME));
-	}
+  public static DocumentWriter newDocumentWriter() {
+    return createDocumentWriter(new DocumentWriterConfiguration().esUrl(ES_URL).indexName(INDEX_NAME));
+  }
 
-	public static Loader newLoader(Client client, DocumentWriter writer) {
-		val indexer = new Indexer(client, writer, INDEX_NAME);
+  public static Loader newLoader(Client client, DocumentWriter writer) {
+    val indexer = new Indexer(client, writer, INDEX_NAME);
 
-		return new Loader(indexer);
-	}
+    return new Loader(indexer);
+  }
 
 }

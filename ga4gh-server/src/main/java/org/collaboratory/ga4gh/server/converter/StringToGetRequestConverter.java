@@ -51,45 +51,58 @@ import lombok.val;
 @Component
 public class StringToGetRequestConverter implements GenericConverter {
 
-	@Getter
-	private final Set<ConvertiblePair> convertibleTypes = resolveConvertableTypes();
+  @Getter
+  private final Set<ConvertiblePair> convertibleTypes = resolveConvertableTypes();
 
-	@Override
-	public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
-		val property = resolveProperty(targetType);
-		val target = invokeNewBuilder(targetType);
-		invokeSetter(target, property, source);
-		return invokeBuild(target);
-	}
+  @Override
+  public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+    val property = resolveProperty(targetType);
+    val target = invokeNewBuilder(targetType);
+    invokeSetter(target, property, source);
+    return invokeBuild(target);
+  }
 
-	private String resolveProperty(TypeDescriptor targetType) {
-		val pathVariable = targetType.getAnnotation(PathVariable.class);
-		return pathVariable.name();
-	}
+  private String resolveProperty(TypeDescriptor targetType) {
+    val pathVariable = targetType.getAnnotation(PathVariable.class);
+    return pathVariable.name();
+  }
 
-	@SneakyThrows
-	private Object invokeNewBuilder(TypeDescriptor targetType) {
-		val newBuilderMethod = targetType.getObjectType().getMethod("newBuilder");
-		return newBuilderMethod.invoke(null);
-	}
+  @SneakyThrows
+  private Object invokeNewBuilder(TypeDescriptor targetType) {
+    val newBuilderMethod = targetType.getObjectType().getMethod("newBuilder");
+    return newBuilderMethod.invoke(null);
+  }
 
-	private void invokeSetter(Object target, String property, Object value) {
-		val accessor = PropertyAccessorFactory.forBeanPropertyAccess(target);
-		accessor.setPropertyValue(property, value);
-	}
+  private void invokeSetter(Object target, String property, Object value) {
+    val accessor = PropertyAccessorFactory.forBeanPropertyAccess(target);
+    accessor.setPropertyValue(property, value);
+  }
 
-	@SneakyThrows
-	private Object invokeBuild(Object target) {
-		return target.getClass().getMethod("build").invoke(target);
-	}
+  @SneakyThrows
+  private Object invokeBuild(Object target) {
+    return target.getClass().getMethod("build").invoke(target);
+  }
 
-	private static Set<ConvertiblePair> resolveConvertableTypes() {
-		return ImmutableSet.<Class<?>>of(GetBioSampleRequest.class, GetCallSetRequest.class, GetDatasetRequest.class,
-				GetExpressionLevelRequest.class, GetFeatureRequest.class, GetFeatureSetRequest.class,
-				GetIndividualRequest.class, GetReadGroupSetRequest.class, GetReferenceRequest.class,
-				GetReferenceSetRequest.class, GetRnaQuantificationRequest.class, GetVariantAnnotationSetRequest.class,
-				GetVariantRequest.class, GetVariantSetRequest.class, ListReferenceBasesRequest.class).stream()
-				.map(targetType -> new ConvertiblePair(String.class, targetType)).collect(toImmutableSet());
-	}
+  private static Set<ConvertiblePair> resolveConvertableTypes() {
+    return ImmutableSet.<Class<?>> of(
+        GetBioSampleRequest.class,
+        GetCallSetRequest.class,
+        GetDatasetRequest.class,
+        GetExpressionLevelRequest.class,
+        GetFeatureRequest.class,
+        GetFeatureSetRequest.class,
+        GetIndividualRequest.class,
+        GetReadGroupSetRequest.class,
+        GetReferenceRequest.class,
+        GetReferenceSetRequest.class,
+        GetRnaQuantificationRequest.class,
+        GetVariantAnnotationSetRequest.class,
+        GetVariantRequest.class,
+        GetVariantSetRequest.class,
+        ListReferenceBasesRequest.class)
+        .stream()
+        .map(targetType -> new ConvertiblePair(String.class, targetType))
+        .collect(toImmutableSet());
+  }
 
 }

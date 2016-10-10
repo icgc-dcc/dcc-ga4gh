@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <http://www.gnu.org/licenses/>.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -29,13 +44,20 @@
 
 	<dependencyManagement>
 		<dependencies>
-	    <!-- Spring -->
+	    	<!-- Spring -->
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
 				<version>${spring-boot.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			
+			<!-- DCC - Common -->
+			<dependency>
+				<groupId>org.icgc.dcc</groupId>
+				<artifactId>dcc-common-core</artifactId>
+				<version>${dcc-common.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -51,15 +73,18 @@
 	</build>
 
 	<properties>
- 		<!-- Versions - Spring Boot -->
+		<!-- Versions - DCC -->
+		<dcc-common.version>4.2.13</dcc-common.version>
+			
+		<!-- Versions - Spring Boot -->
 		<spring-boot.version>1.4.1.RELEASE</spring-boot.version>
-    	<!-- Versions - Spring Boot - Maven -->
+		<!-- Versions - Spring Boot - Maven -->
 		<spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
-    	<!-- Versions - Spring Boot - Jackson -->
+		<!-- Versions - Spring Boot - Jackson -->
 		<jackson.version>2.8.3</jackson.version>
 		<!-- Versions - Spring Boot - Slf4j -->
 		<slf4j.version>1.7.21</slf4j.version>
-    	<!-- Versions - Spring Boot - Logging -->
+		<!-- Versions - Spring Boot - Logging -->
 		<logback.version>1.1.7</logback.version>
 		
 		<!-- Versions - Test -->
