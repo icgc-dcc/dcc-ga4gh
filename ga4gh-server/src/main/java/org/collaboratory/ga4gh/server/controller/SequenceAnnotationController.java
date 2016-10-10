@@ -41,8 +41,8 @@ public class SequenceAnnotationController {
 		return SearchFeatureSetsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/featuresets/{id:(?!search).+}")
-	public FeatureSet getFeatureSet(@PathVariable("id") GetFeatureSetRequest request) {
+	@GetMapping("/featuresets/{featureSetId:(?!search).+}")
+	public FeatureSet getFeatureSet(@PathVariable("featureSetId") GetFeatureSetRequest request) {
 		val id = request.getFeatureSetId();
 		return FeatureSet.newBuilder().setId(id).build();
 	}
@@ -52,8 +52,8 @@ public class SequenceAnnotationController {
 		return SearchFeaturesResponse.newBuilder().build();
 	}
 
-	@GetMapping("/features/{id:(?!search).+}")
-	public Feature getFeature(@PathVariable("id") GetFeatureRequest request) {
+	@GetMapping("/features/{featureId:(?!search).+}")
+	public Feature getFeature(@PathVariable("featureId") GetFeatureRequest request) {
 		val id = request.getFeatureId();
 		return Feature.newBuilder().setId(id).build();
 	}

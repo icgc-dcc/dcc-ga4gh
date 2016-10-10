@@ -21,8 +21,11 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 
 import java.util.Set;
 
+import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -41,33 +44,52 @@ import ga4gh.SequenceAnnotationServiceOuterClass.GetFeatureSetRequest;
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.val;
 
-//@Component
-public class StringToRequestConverter implements GenericConverter {
+@Component
+public class StringToGetRequestConverter implements GenericConverter {
+
+	@Getter
+	private final Set<ConvertiblePair> convertibleTypes = resolveConvertableTypes();
 
 	@Override
-	public Set<ConvertiblePair> getConvertibleTypes() {
-		val types = ImmutableSet.<Class<?>>of(GetBioSampleRequest.class, GetCallSetRequest.class,
-				GetDatasetRequest.class, GetExpressionLevelRequest.class, GetFeatureRequest.class,
-				GetFeatureSetRequest.class, GetIndividualRequest.class, GetReadGroupSetRequest.class,
-				GetReferenceRequest.class, GetReferenceSetRequest.class, GetRnaQuantificationRequest.class,
-				GetVariantAnnotationSetRequest.class, GetVariantRequest.class, GetVariantSetRequest.class,
-				ListReferenceBasesRequest.class);
-
-		return types.stream().map(targetType -> new ConvertiblePair(String.class, targetType))
-				.collect(toImmutableSet());
+	public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+		val property = resolveProperty(targetType);
+		val target = invokeNewBuilder(targetType);
+		invokeSetter(target, property, source);
+		return invokeBuild(target);
 	}
 
-	@Override
-	@SneakyThrows
-	public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
-		val newBuilderMethod = targetType.getClass().getMethod("newBuilder");
-		val target = newBuilderMethod.invoke(null);
-		target.getClass().getFields();
+	private String resolveProperty(TypeDescriptor targetType) {
+		val pathVariable = targetType.getAnnotation(PathVariable.class);
+		return pathVariable.name();
+	}
 
-		return source;
+	@SneakyThrows
+	private Object invokeNewBuilder(TypeDescriptor targetType) {
+		val newBuilderMethod = targetType.getObjectType().getMethod("newBuilder");
+		return newBuilderMethod.invoke(null);
+	}
+
+	private void invokeSetter(Object target, String property, Object value) {
+		val accessor = PropertyAccessorFactory.forBeanPropertyAccess(target);
+		accessor.setPropertyValue(property, value);
+	}
+
+	@SneakyThrows
+	private Object invokeBuild(Object target) {
+		return target.getClass().getMethod("build").invoke(target);
+	}
+
+	private static Set<ConvertiblePair> resolveConvertableTypes() {
+		return ImmutableSet.<Class<?>>of(GetBioSampleRequest.class, GetCallSetRequest.class, GetDatasetRequest.class,
+				GetExpressionLevelRequest.class, GetFeatureRequest.class, GetFeatureSetRequest.class,
+				GetIndividualRequest.class, GetReadGroupSetRequest.class, GetReferenceRequest.class,
+				GetReferenceSetRequest.class, GetRnaQuantificationRequest.class, GetVariantAnnotationSetRequest.class,
+				GetVariantRequest.class, GetVariantSetRequest.class, ListReferenceBasesRequest.class).stream()
+				.map(targetType -> new ConvertiblePair(String.class, targetType)).collect(toImmutableSet());
 	}
 
 }

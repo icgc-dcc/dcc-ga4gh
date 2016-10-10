@@ -45,8 +45,8 @@ public class VariantController {
 		return SearchVariantsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/variants/{id:(?!search).+}")
-	public Variant getVariant(@PathVariable("id") GetVariantRequest request) {
+	@GetMapping("/variants/{variantId:(?!search).+}")
+	public Variant getVariant(@PathVariable("variantId") GetVariantRequest request) {
 		val id = request.getVariantId();
 		return Variant.newBuilder().setId(id).build();
 	}
@@ -56,8 +56,8 @@ public class VariantController {
 		return SearchVariantSetsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/variantsets/{id:(?!search).+}")
-	public VariantSet getVariantSet(@PathVariable("id") GetVariantSetRequest request) {
+	@GetMapping("/variantsets/{variantSetId:(?!search).+}")
+	public VariantSet getVariantSet(@PathVariable("variantSetId") GetVariantSetRequest request) {
 		val id = request.getVariantSetId();
 		return VariantSet.newBuilder().setId(id).build();
 	}
@@ -67,8 +67,8 @@ public class VariantController {
 		return SearchCallSetsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/callsets/{id:(?!search).+}")
-	public CallSet getCallSet(@PathVariable("id") GetCallSetRequest request) {
+	@GetMapping("/callsets/{callSetId:(?!search).+}")
+	public CallSet getCallSet(@PathVariable("callSetId") GetCallSetRequest request) {
 		val id = request.getCallSetId();
 		return CallSet.newBuilder().setId(id).build();
 	}

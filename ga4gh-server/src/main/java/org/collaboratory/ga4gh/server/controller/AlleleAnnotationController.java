@@ -46,8 +46,9 @@ public class AlleleAnnotationController {
 		return SearchVariantAnnotationSetsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/variantannotationsets/{id:(?!search).+}")
-	public VariantAnnotationSet getVariant(@PathVariable("id") GetVariantAnnotationSetRequest request) {
+	@GetMapping("/variantannotationsets/{variantAnnotationSetId:(?!search).+}")
+	public VariantAnnotationSet getVariant(
+			@PathVariable("variantAnnotationSetId") GetVariantAnnotationSetRequest request) {
 		val id = request.getVariantAnnotationSetId();
 		return VariantAnnotationSet.newBuilder().setId(id).build();
 	}

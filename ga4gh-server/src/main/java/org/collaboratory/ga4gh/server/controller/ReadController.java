@@ -39,8 +39,8 @@ public class ReadController {
 		return SearchReadGroupSetsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/readgroupsets/{id:(?!search).+}")
-	public ReadGroupSet getReadGroupSet(@PathVariable("id") GetReadGroupSetRequest request) {
+	@GetMapping("/readgroupsets/{readGroupSetId:(?!search).+}")
+	public ReadGroupSet getReadGroupSet(@PathVariable("readGroupSetId") GetReadGroupSetRequest request) {
 		val id = request.getReadGroupSetId();
 		return ReadGroupSet.newBuilder().setId(id).build();
 	}

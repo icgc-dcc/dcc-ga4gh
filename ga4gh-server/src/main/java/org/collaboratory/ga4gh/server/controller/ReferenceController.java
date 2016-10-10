@@ -43,8 +43,8 @@ public class ReferenceController {
 		return SearchReferenceSetsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/referencesets/{id:(?!search).+}")
-	public ReferenceSet getReferenceSet(@PathVariable("id") GetReferenceSetRequest request) {
+	@GetMapping("/referencesets/{referenceSetId:(?!search).+}")
+	public ReferenceSet getReferenceSet(@PathVariable("referenceSetId") GetReferenceSetRequest request) {
 		val id = request.getReferenceSetId();
 		return ReferenceSet.newBuilder().setId(id).build();
 	}
@@ -54,14 +54,15 @@ public class ReferenceController {
 		return SearchReferencesResponse.newBuilder().build();
 	}
 
-	@GetMapping("/references/{id:(?!search).+}")
-	public Reference getReference(@PathVariable("id") GetReferenceRequest request) {
+	@GetMapping("/references/{referenceId:(?!search).+}")
+	public Reference getReference(@PathVariable("referenceId") GetReferenceRequest request) {
 		val id = request.getReferenceId();
 		return Reference.newBuilder().setId(id).build();
 	}
 
-	@GetMapping("/references/{id:(?!search).+}/bases")
-	public ListReferenceBasesResponse listReferenceBases(@PathVariable("id") ListReferenceBasesRequest request) {
+	@GetMapping("/references/{referenceId:(?!search).+}/bases")
+	public ListReferenceBasesResponse listReferenceBases(
+			@PathVariable("referenceId") ListReferenceBasesRequest request) {
 		return ListReferenceBasesResponse.newBuilder().build();
 	}
 

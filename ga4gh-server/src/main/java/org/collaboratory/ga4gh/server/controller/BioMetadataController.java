@@ -41,8 +41,8 @@ public class BioMetadataController {
 		return SearchIndividualsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/individuals/{id:(?!search).+}")
-	public Individual getIndividual(@PathVariable("id") GetIndividualRequest request) {
+	@GetMapping("/individuals/{individualId:(?!search).+}")
+	public Individual getIndividual(@PathVariable("individualId") GetIndividualRequest request) {
 		val id = request.getIndividualId();
 		return Individual.newBuilder().setId(id).build();
 	}
@@ -52,8 +52,8 @@ public class BioMetadataController {
 		return SearchBioSamplesResponse.newBuilder().build();
 	}
 
-	@GetMapping("/biosamples/{id:(?!search).+}")
-	public BioSample getBioSample(@PathVariable("id") GetBioSampleRequest request) {
+	@GetMapping("/biosamples/{bioSampleId:(?!search).+}")
+	public BioSample getBioSample(@PathVariable("bioSampleId") GetBioSampleRequest request) {
 		val id = request.getBioSampleId();
 		return BioSample.newBuilder().setId(id).build();
 	}

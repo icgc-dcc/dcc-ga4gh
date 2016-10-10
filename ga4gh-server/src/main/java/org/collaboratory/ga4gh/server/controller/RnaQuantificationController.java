@@ -42,8 +42,9 @@ public class RnaQuantificationController {
 		return SearchRnaQuantificationSetsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/rnaquantificationsets/{id:(?!search).+}")
-	public RnaQuantification getRnaQuantification(@PathVariable("id") GetRnaQuantificationRequest request) {
+	@GetMapping("/rnaquantificationsets/{rnaQuantificationId:(?!search).+}")
+	public RnaQuantification getRnaQuantification(
+			@PathVariable("rnaQuantificationId") GetRnaQuantificationRequest request) {
 		val id = request.getRnaQuantificationId();
 		return RnaQuantification.newBuilder().setId(id).build();
 	}
@@ -53,8 +54,8 @@ public class RnaQuantificationController {
 		return SearchExpressionLevelsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/expressionlevels/{id:(?!search).+}")
-	public ExpressionLevel getExpressionLevel(@PathVariable("id") GetExpressionLevelRequest request) {
+	@GetMapping("/expressionlevels/{expressionLevelId:(?!search).+}")
+	public ExpressionLevel getExpressionLevel(@PathVariable("expressionLevelId") GetExpressionLevelRequest request) {
 		val id = request.getExpressionLevelId();
 		return ExpressionLevel.newBuilder().setId(id).build();
 	}

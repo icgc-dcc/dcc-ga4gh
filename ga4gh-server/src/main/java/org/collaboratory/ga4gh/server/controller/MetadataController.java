@@ -37,8 +37,8 @@ public class MetadataController {
 		return SearchDatasetsResponse.newBuilder().build();
 	}
 
-	@GetMapping("/datasets/{id:(?!search).+}")
-	public Dataset getDataset(@PathVariable("id") GetDatasetRequest request) {
+	@GetMapping("/datasets/{datasetId:(?!search).+}")
+	public Dataset getDataset(@PathVariable("datasetId") GetDatasetRequest request) {
 		val id = request.getDatasetId();
 		return Dataset.newBuilder().setId(id).build();
 	}
