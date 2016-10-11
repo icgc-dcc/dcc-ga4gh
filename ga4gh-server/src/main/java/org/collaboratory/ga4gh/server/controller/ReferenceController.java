@@ -17,10 +17,13 @@
  */
 package org.collaboratory.ga4gh.server.controller;
 
+import org.collaboratory.ga4gh.server.service.ReferenceService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ga4gh.ReferenceServiceOuterClass.GetReferenceRequest;
@@ -38,15 +41,18 @@ import lombok.val;
 @RestController
 public class ReferenceController {
 
+  @Autowired
+  private ReferenceService referenceService;
+
   @PostMapping("/referencesets/search")
   public SearchReferenceSetsResponse searchReferenceSets(@RequestBody SearchReferenceSetsRequest request) {
     return SearchReferenceSetsResponse.newBuilder().build();
   }
 
   @GetMapping("/referencesets/{referenceSetId:(?!search).+}")
-  public ReferenceSet getReferenceSet(@PathVariable("referenceSetId") GetReferenceSetRequest request) {
-    val id = request.getReferenceSetId();
-    return ReferenceSet.newBuilder().setId(id).build();
+  public ReferenceSet getReferenceSet(@PathVariable("referenceSetId") String referenceSetId) {
+    val request = GetReferenceSetRequest.newBuilder().setReferenceSetId(referenceSetId).build();
+    return referenceService.getReferenceSet(request);
   }
 
   @PostMapping("/references/search")
@@ -55,15 +61,28 @@ public class ReferenceController {
   }
 
   @GetMapping("/references/{referenceId:(?!search).+}")
-  public Reference getReference(@PathVariable("referenceId") GetReferenceRequest request) {
-    val id = request.getReferenceId();
-    return Reference.newBuilder().setId(id).build();
+  public Reference getReference(@PathVariable("referenceId") String referenceId) {
+    val request = GetReferenceRequest.newBuilder().setReferenceId(referenceId).build();
+    return referenceService.getReference(request);
   }
 
   @GetMapping("/references/{referenceId:(?!search).+}/bases")
   public ListReferenceBasesResponse listReferenceBases(
-      @PathVariable("referenceId") ListReferenceBasesRequest request) {
-    return ListReferenceBasesResponse.newBuilder().build();
+      @PathVariable("referenceId") String referenceId,
+      @RequestParam(name = "start", required = false, defaultValue = "0") Long start,
+      @RequestParam(name = "end", required = false) Long end,
+      @RequestParam(name = "page_token", required = false, defaultValue = "") String pageToken) {
+    if (end == null) {
+      end = getReference(referenceId).getLength();
+    }
+
+    val request = ListReferenceBasesRequest.newBuilder()
+        .setReferenceId(referenceId)
+        .setStart(start)
+        .setEnd(end)
+        .setPageToken(pageToken).build();
+
+    return referenceService.listReferenceBases(request);
   }
 
 }

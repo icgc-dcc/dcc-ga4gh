@@ -43,11 +43,11 @@ import lombok.val;
 public class VariantController {
 
   @Autowired
-  VariantService service;
+  private VariantService variantService;
 
   @PostMapping("/variants/search")
   public SearchVariantsResponse searchVariants(@RequestBody SearchVariantsRequest request) {
-    return service.searchVariants(request);
+    return variantService.searchVariants(request);
   }
 
   @GetMapping("/variants/{variantId:(?!search).+}")

@@ -1,6 +1,13 @@
+![Collaboratory logo](https://avatars1.githubusercontent.com/u/10966125?v=3&s=200)
+![GA4GH logo](http://ga4gh.org/assets/svg/GA_logo.svg)
+
 # Collaboratory - GA4GH
 
-A GA4GH compliant API implementation to server data from the [Collaboratory](http://www.cancercollaboratory.org/).
+A GA4GH compliant API implementation to serve data from the [Collaboratory](http://www.cancercollaboratory.org/).
+
+## Status
+
+Currently only the [References API](http://ga4gh-schemas.readthedocs.io/en/latest/api/references.html) is partially supported. Future will will focus on the [Variants API](http://ga4gh-schemas.readthedocs.io/en/latest/api/variants.html), followed by the [Reads API](http://ga4gh-schemas.readthedocs.io/en/latest/api/reads.html). 
 
 ## Modules
 

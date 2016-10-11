@@ -23,6 +23,7 @@ import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
 import ga4gh.Variants.Call;
 import ga4gh.Variants.Variant;
+import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class VariantService {
 
-  public SearchVariantsResponse searchVariants(SearchVariantsRequest request) {
+  public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
     val nextPageToken = "nextPageToken";
 
     log.info("pageToken: {}", request.getPageToken());
