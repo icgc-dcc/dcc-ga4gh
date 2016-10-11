@@ -17,6 +17,8 @@
  */
 package org.collaboratory.ga4gh.server.controller;
 
+import org.collaboratory.ga4gh.server.service.VariantService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,9 +42,12 @@ import lombok.val;
 @RestController
 public class VariantController {
 
+  @Autowired
+  VariantService service;
+
   @PostMapping("/variants/search")
   public SearchVariantsResponse searchVariants(@RequestBody SearchVariantsRequest request) {
-    return SearchVariantsResponse.newBuilder().build();
+    return service.searchVariants(request);
   }
 
   @GetMapping("/variants/{variantId:(?!search).+}")
