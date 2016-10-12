@@ -19,12 +19,19 @@ package org.collaboratory.ga4gh.server.config;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @Configuration
 public class WebConfig extends WebMvcConfigurerAdapter {
+
+  @Bean
+  public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
+    return new ProtobufHttpMessageConverter();
+  }
 
   @Override
   public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {

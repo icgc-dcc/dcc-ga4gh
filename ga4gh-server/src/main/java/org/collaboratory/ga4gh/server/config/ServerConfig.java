@@ -21,15 +21,9 @@ import org.collaboratory.ga4gh.server.reference.ReferenceGenome;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
 
 @Configuration
 public class ServerConfig {
-
-  @Bean
-  public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
-    return new ProtobufHttpMessageConverter();
-  }
 
   @Bean
   public ReferenceGenome referenceGenome(@Value("${reference.fastaFile:/tmp/GRCh37.fasta}") String fastaFile) {
