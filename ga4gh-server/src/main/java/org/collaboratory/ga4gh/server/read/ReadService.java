@@ -15,54 +15,19 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.server.service;
+package org.collaboratory.ga4gh.server.read;
 
 import org.springframework.stereotype.Service;
 
-import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
-import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
-import ga4gh.Variants.Call;
-import ga4gh.Variants.Variant;
+import ga4gh.ReadServiceOuterClass.SearchReadsRequest;
+import ga4gh.ReadServiceOuterClass.SearchReadsResponse;
 import lombok.NonNull;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
-public class VariantService {
+public class ReadService {
 
-  public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
-    val nextPageToken = "nextPageToken";
-
-    log.info("pageToken: {}", request.getPageToken());
-    log.info("pageSize: {}", request.getPageSize());
-    log.info("referenceName: {}", request.getReferenceName());
-    log.info("variantSetId: {}", request.getVariantSetId());
-    log.info("callSetIdsList: {}", request.getCallSetIdsList());
-    log.info("start: {}", request.getStart());
-    log.info("end: {}", request.getEnd());
-
-    return SearchVariantsResponse.newBuilder()
-        .setNextPageToken(nextPageToken)
-        .addVariants(Variant.newBuilder()
-            .setId("id")
-            .setVariantSetId("variantSetId")
-            .setReferenceName("referenceName")
-            .setStart(1)
-            .setEnd(10)
-            .setCreated(0)
-            .setUpdated(0)
-            .addAlternateBases("T")
-            .addNames("name")
-            .addCalls(Call.newBuilder()
-                .setCallSetId("callSetId")
-                .setCallSetName("callSetName")
-                .setPhaseset("phaseset")
-                .addGenotype(1)
-                .addGenotype(2)
-                .addGenotypeLikelihood(0.3)
-                .addGenotypeLikelihood(0.5)))
-        .build();
+  public SearchReadsResponse searchReads(@NonNull SearchReadsRequest request) {
+    return SearchReadsResponse.newBuilder().build();
   }
 
 }

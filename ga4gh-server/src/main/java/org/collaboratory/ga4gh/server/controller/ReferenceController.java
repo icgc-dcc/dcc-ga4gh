@@ -17,7 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.controller;
 
-import org.collaboratory.ga4gh.server.service.ReferenceService;
+import org.collaboratory.ga4gh.server.reference.ReferenceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

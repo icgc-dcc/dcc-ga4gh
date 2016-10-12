@@ -17,6 +17,8 @@
  */
 package org.collaboratory.ga4gh.server.controller;
 
+import org.collaboratory.ga4gh.server.read.ReadService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +36,9 @@ import lombok.val;
 @RestController
 public class ReadController {
 
+  @Autowired
+  private ReadService readService;
+
   @PostMapping("/readgroupsets/search")
   public SearchReadGroupSetsResponse searchReadGroupSets(@RequestBody SearchReadGroupSetsRequest request) {
     return SearchReadGroupSetsResponse.newBuilder().build();
@@ -47,7 +52,7 @@ public class ReadController {
 
   @PostMapping("/reads/search")
   public SearchReadsResponse searchReads(@RequestBody SearchReadsRequest request) {
-    return SearchReadsResponse.newBuilder().build();
+    return readService.searchReads(request);
   }
 
 }

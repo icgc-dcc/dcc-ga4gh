@@ -15,14 +15,13 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.server.service;
+package org.collaboratory.ga4gh.server.reference;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.primitives.Longs.min;
 
 import java.util.NoSuchElementException;
 
-import org.collaboratory.ga4gh.reference.ReferenceGenome;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

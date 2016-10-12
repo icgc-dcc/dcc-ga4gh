@@ -17,7 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.config;
 
-import org.collaboratory.ga4gh.reference.ReferenceGenome;
+import org.collaboratory.ga4gh.server.reference.ReferenceGenome;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

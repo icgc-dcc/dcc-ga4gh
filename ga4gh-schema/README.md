@@ -9,3 +9,9 @@ From the command line:
 ```shell
 mvn clean package
 ```
+
+## Resources
+
+To property build within Eclipse, see:
+
+- https://github.com/trustin/os-maven-plugin/#issues-with-eclipse-m2e-or-other-ides
