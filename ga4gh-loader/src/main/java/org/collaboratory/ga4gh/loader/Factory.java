@@ -1,6 +1,5 @@
 package org.collaboratory.ga4gh.loader;
 
-import static org.collaboratory.ga4gh.loader.Config.ES_URL;
 import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
@@ -24,7 +23,10 @@ public class Factory {
   }
 
   public static DocumentWriter newDocumentWriter() {
-    return createDocumentWriter(new DocumentWriterConfiguration().esUrl(ES_URL).indexName(INDEX_NAME));
+    val client = new TransportClient();
+    client.addTransportAddress(new InetSocketTransportAddress(NODE_ADDRESS, NODE_PORT));
+
+    return createDocumentWriter(new DocumentWriterConfiguration().client(client).indexName(INDEX_NAME));
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer) {

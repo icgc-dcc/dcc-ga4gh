@@ -31,9 +31,12 @@ public class Loader {
 
     log.info("Resolving object ids...");
     val objectIds = Portal.getObjectIds();
-
+    val total = objectIds.size();
+    int counter = 1;
     for (val objectId : objectIds) {
+      log.info("Loading {}/{}", counter, total);
       loadObject(objectId);
+      counter++;
     }
   }
 
@@ -43,8 +46,12 @@ public class Loader {
 
     log.info("Reading variants from {}...", file);
     @Cleanup
-    val vcf = new VCF(file);
+    val vcf = new VCF(file, objectId);
     val variants = vcf.read();
+    val header = vcf.getHeader();
+
+    log.info("Indexing header {}...", objectId);
+    indexer.indexHeaders(header, objectId);
 
     log.info("Indexing {}...", objectId);
     indexer.indexVariants(variants, objectId);
