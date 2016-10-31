@@ -35,7 +35,11 @@ public class Loader {
     int counter = 1;
     for (val objectId : objectIds) {
       log.info("Loading {}/{}", counter, total);
-      loadObject(objectId);
+      try {
+        loadObject(objectId);
+      } catch (Exception e) {
+        log.warn("Bad VCF with object id: {}", objectId);
+      }
       counter++;
     }
   }

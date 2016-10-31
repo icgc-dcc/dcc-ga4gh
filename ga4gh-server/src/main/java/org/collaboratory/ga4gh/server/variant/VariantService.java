@@ -101,6 +101,8 @@ public class VariantService {
         .map(al -> al.getBaseString())
         .collect(toList());
 
+    val genotypes = vc.getGenotypes();
+
     Builder builder = Variant.newBuilder()
         .setId(vc.getID())
         .setVariantSetId("foo")

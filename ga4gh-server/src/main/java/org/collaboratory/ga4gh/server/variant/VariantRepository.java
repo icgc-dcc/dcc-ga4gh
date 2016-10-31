@@ -27,6 +27,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
 
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
@@ -50,11 +51,12 @@ public class VariantRepository {
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
     val searchRequestBuilder = (new SearchRequestBuilder(client))
         .setIndices("dcc-variants")
-        .setTypes("variants");
+        .setTypes("variants")
+        .addSort("start", SortOrder.ASC)
+        .setSize(request.getPageSize());
 
     val bool = boolFilter();
-    bool.must(rangeFilter("start").gte(request.getStart()));
-    bool.must(rangeFilter("end").lt(request.getEnd()));
+    bool.must(rangeFilter("start").gte(request.getStart()).lt(request.getEnd()));
     bool.must(termFilter("reference_name", request.getReferenceName()));
 
     val query = filteredQuery(matchAllQuery(), bool);

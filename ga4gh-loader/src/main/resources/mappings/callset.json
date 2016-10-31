@@ -1,0 +1,13 @@
+{
+	"callset": {
+		"properties": {
+			"vcf_header": {
+				"type": "string",
+				"index": "no"
+			}
+		},
+		"_source": {
+			"enabled": true
+		}
+	}
+}
