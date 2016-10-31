@@ -51,12 +51,13 @@ public class VariantRepository {
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
     val searchRequestBuilder = (new SearchRequestBuilder(client))
         .setIndices("dcc-variants")
-        .setTypes("variants")
+        .setTypes("variant")
         .addSort("start", SortOrder.ASC)
         .setSize(request.getPageSize());
 
     val bool = boolFilter();
-    bool.must(rangeFilter("start").gte(request.getStart()).lt(request.getEnd()));
+    bool.must(rangeFilter("start").gte(request.getStart()));
+    bool.must(rangeFilter("end").lt(request.getEnd()));
     bool.must(termFilter("reference_name", request.getReferenceName()));
 
     val query = filteredQuery(matchAllQuery(), bool);
