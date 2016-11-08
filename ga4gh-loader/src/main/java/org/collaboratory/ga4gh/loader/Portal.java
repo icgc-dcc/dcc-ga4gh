@@ -1,6 +1,7 @@
 package org.collaboratory.ga4gh.loader;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
@@ -9,15 +10,21 @@ import java.net.URLEncoder;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
-public class Portal {
+@NoArgsConstructor(access = PRIVATE)
+public final class Portal {
 
-  public static List<String> getObjectIds() {
-    val objectIds = ImmutableList.<String> builder();
+  /**
+   * Gets all Collaboratory VCF files.
+   */
+  public static List<ObjectNode> getFileMetas() {
+    val fileMetas = ImmutableList.<ObjectNode> builder();
     val size = 100;
 
     int from = 1;
@@ -27,8 +34,8 @@ public class Portal {
       val hits = getHits(result);
 
       for (val hit : hits) {
-        val objectId = getObjectId(hit);
-        objectIds.add(objectId);
+        val fileMeta = (ObjectNode) hit;
+        fileMetas.add(fileMeta);
       }
 
       if (hits.size() < size) {
@@ -38,15 +45,11 @@ public class Portal {
       from += size;
     }
 
-    return objectIds.build();
+    return fileMetas.build();
   }
 
   private static JsonNode getHits(JsonNode result) {
     return result.get("hits");
-  }
-
-  private static String getObjectId(JsonNode hit) {
-    return hit.get("objectId").textValue();
   }
 
   @SneakyThrows

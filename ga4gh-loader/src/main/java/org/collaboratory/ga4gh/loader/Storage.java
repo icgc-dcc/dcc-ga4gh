@@ -3,6 +3,7 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static java.nio.file.Files.copy;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_API;
 import static org.collaboratory.ga4gh.loader.Config.TOKEN;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
@@ -18,10 +19,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.Cleanup;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
-public class Storage {
+@NoArgsConstructor(access = PRIVATE)
+public final class Storage {
 
   @SneakyThrows
   public static File downloadFile(String objectId) {

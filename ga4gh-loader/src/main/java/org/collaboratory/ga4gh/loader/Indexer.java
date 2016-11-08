@@ -39,7 +39,7 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexVariants(@NonNull Iterable<ObjectNode> variants, String objectId) {
+  public void indexVariants(@NonNull ObjectNode fileMeta, @NonNull Iterable<ObjectNode> variants) {
     for (val variant : variants) {
       writeVariant(variant);
     }

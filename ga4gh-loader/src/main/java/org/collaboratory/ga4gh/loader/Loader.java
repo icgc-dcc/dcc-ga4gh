@@ -4,6 +4,8 @@ import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +31,17 @@ public class Loader {
   public void load() {
     indexer.prepareIndex();
 
-    log.info("Resolving object ids...");
-    val objectIds = Portal.getObjectIds();
+    log.info("Resolving file metadata...");
+    val fileMetas = Portal.getFileMetas();
 
-    for (val objectId : objectIds) {
-      loadObject(objectId);
+    for (val fileMeta : fileMetas) {
+      loadFile(fileMeta);
     }
   }
 
-  private void loadObject(String objectId) {
+  private void loadFile(ObjectNode fileMeta) {
+    val objectId = FileMetas.getObjectId(fileMeta);
+
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);
 
@@ -47,7 +51,7 @@ public class Loader {
     val variants = vcf.read();
 
     log.info("Indexing {}...", objectId);
-    indexer.indexVariants(variants, objectId);
+    indexer.indexVariants(fileMeta, variants);
   }
 
 }
