@@ -30,11 +30,13 @@ public class Loader {
     indexer.prepareIndex();
 
     log.info("Resolving object ids...");
-    val objectIds = Portal.getObjectIds();
-    val total = objectIds.size();
+    val fileMetas = Portal.getFileMetas();
+    val total = fileMetas.size();
     int counter = 1;
-    for (val objectId : objectIds) {
+    String objectId;
+    for (val fileMeta : fileMetas) {
       log.info("Loading {}/{}", counter, total);
+      objectId = fileMeta.get("objectId").textValue();
       try {
         loadObject(objectId);
       } catch (Exception e) {
@@ -58,7 +60,7 @@ public class Loader {
     indexer.indexHeaders(header, objectId);
 
     log.info("Indexing {}...", objectId);
-    indexer.indexVariants(variants, objectId);
+    indexer.indexVariants(variants);
   }
 
 }
