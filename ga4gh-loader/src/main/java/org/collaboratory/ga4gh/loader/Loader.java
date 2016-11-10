@@ -4,8 +4,6 @@ import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -31,27 +29,36 @@ public class Loader {
   public void load() {
     indexer.prepareIndex();
 
-    log.info("Resolving file metadata...");
-    val fileMetas = Portal.getFileMetas();
-
-    for (val fileMeta : fileMetas) {
-      loadFile(fileMeta);
+    log.info("Resolving object ids...");
+    val objectIds = Portal.getObjectIds();
+    val total = objectIds.size();
+    int counter = 1;
+    for (val objectId : objectIds) {
+      log.info("Loading {}/{}", counter, total);
+      try {
+        loadObject(objectId);
+      } catch (Exception e) {
+        log.warn("Bad VCF with object id: {}", objectId);
+      }
+      counter++;
     }
   }
 
-  private void loadFile(ObjectNode fileMeta) {
-    val objectId = FileMetas.getObjectId(fileMeta);
-
+  private void loadObject(String objectId) {
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);
 
     log.info("Reading variants from {}...", file);
     @Cleanup
-    val vcf = new VCF(file);
+    val vcf = new VCF(file, objectId);
     val variants = vcf.read();
+    val header = vcf.getHeader();
+
+    log.info("Indexing header {}...", objectId);
+    indexer.indexHeaders(header, objectId);
 
     log.info("Indexing {}...", objectId);
-    indexer.indexVariants(fileMeta, variants);
+    indexer.indexVariants(variants, objectId);
   }
 
 }
