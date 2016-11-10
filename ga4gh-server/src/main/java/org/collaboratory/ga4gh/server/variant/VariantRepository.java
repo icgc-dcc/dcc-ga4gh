@@ -17,21 +17,27 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
-import static org.elasticsearch.index.query.FilterBuilders.rangeFilter;
-import static org.elasticsearch.index.query.FilterBuilders.termFilter;
-import static org.elasticsearch.index.query.QueryBuilders.filteredQuery;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_ADDRESS;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_PORT;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import java.net.InetAddress;
+
+import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
 
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 
 /**
@@ -43,24 +49,30 @@ public class VariantRepository {
   @NonNull
   private final TransportClient client;
 
+  // TODO: rtisma -- put TransportClient construction into commmon module, this is also applies to the loader
+  @SuppressWarnings("resource")
+  @SneakyThrows
   public VariantRepository() {
-    this.client = new TransportClient();
-    this.client.addTransportAddress(new InetSocketTransportAddress("10.30.128.130", 9300));
+    this.client = new PreBuiltTransportClient(Settings.EMPTY)
+        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
   }
 
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
-    val searchRequestBuilder = (new SearchRequestBuilder(client))
+    val searchRequestBuilder = SearchAction.INSTANCE.newRequestBuilder(client)
         .setIndices("dcc-variants")
         .setTypes("variant")
         .addSort("start", SortOrder.ASC)
         .setSize(request.getPageSize());
 
-    val bool = boolFilter();
-    bool.must(rangeFilter("start").gte(request.getStart()));
-    bool.must(rangeFilter("end").lt(request.getEnd()));
-    bool.must(termFilter("reference_name", request.getReferenceName()));
+    val bool = boolQuery();
+    bool.must(rangeQuery("start").gte(request.getStart()));
+    bool.must(rangeQuery("end").lt(request.getEnd()));
+    bool.must(termQuery("reference_name", request.getReferenceName()));
 
-    val query = filteredQuery(matchAllQuery(), bool);
+    val query = boolQuery();
+    query.must(matchAllQuery());
+    query.filter(bool);
+
     return searchRequestBuilder.setQuery(query).get();
   }
 

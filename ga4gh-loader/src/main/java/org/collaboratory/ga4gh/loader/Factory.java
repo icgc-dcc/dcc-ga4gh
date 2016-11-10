@@ -5,26 +5,32 @@ import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
+import java.net.InetAddress;
+
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.icgc.dcc.dcc.common.es.DocumentWriterConfiguration;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 
+import lombok.SneakyThrows;
 import lombok.val;
 
 public class Factory {
 
+  @SuppressWarnings("resource")
+  @SneakyThrows
+  // TODO: rtisma -- put this in a common module, so that every one can reference
   public static Client newClient() {
-    val client = new TransportClient();
-    client.addTransportAddress(new InetSocketTransportAddress(NODE_ADDRESS, NODE_PORT));
+    val client = new PreBuiltTransportClient(Settings.EMPTY)
+        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
 
     return client;
   }
 
   public static DocumentWriter newDocumentWriter() {
-    val client = new TransportClient();
-    client.addTransportAddress(new InetSocketTransportAddress(NODE_ADDRESS, NODE_PORT));
+    val client = newClient();
 
     return createDocumentWriter(new DocumentWriterConfiguration().client(client).indexName(INDEX_NAME));
   }

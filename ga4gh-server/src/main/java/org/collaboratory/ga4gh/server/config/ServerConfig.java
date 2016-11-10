@@ -25,6 +25,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ServerConfig {
 
+  public static final String NODE_ADDRESS = "10.30.128.130";
+  public static final int NODE_PORT = 9300;
+
   @Bean
   public ReferenceGenome referenceGenome(@Value("${reference.fastaFile:/tmp/GRCh37.fasta}") String fastaFile) {
     return new ReferenceGenome(fastaFile);

@@ -47,6 +47,11 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>transport</artifactId>
+			<version>${elasticsearch.version}</version>
+		</dependency>
 
 		<!-- Genomics -->
 		<dependency>
@@ -110,6 +115,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 	<properties>
 		<!-- Versions - Genomics -->
 		<htsjdk.version>2.1.0</htsjdk.version>
+		<elasticsearch.version>5.0.0</elasticsearch.version>
 	</properties>
 
 </project>
