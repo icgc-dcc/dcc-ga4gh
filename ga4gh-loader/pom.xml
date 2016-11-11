@@ -69,6 +69,34 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.6.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.6.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-1.2-api</artifactId>
+			<version>2.6.2</version>
+		</dependency>
+		<!-- 
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.4</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.4</version>
+      </dependency>
+		 -->
+		
 
 	</dependencies>
 	
@@ -116,6 +144,10 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		<!-- Versions - Genomics -->
 		<htsjdk.version>2.1.0</htsjdk.version>
 		<elasticsearch.version>5.0.0</elasticsearch.version>
+		<jackson.version>2.6.0</jackson.version>
+		<jackson-smile.version>2.6.0</jackson-smile.version>
+		<jackson-yaml.version>2.6.0</jackson-yaml.version>
+		<jackson-csv.version>2.6.0</jackson-csv.version>
 	</properties>
 
 </project>
