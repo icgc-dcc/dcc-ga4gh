@@ -16,16 +16,6 @@ public class Loader {
 
   public static void main(String[] args) {
     log.info("Static Config:\n" + Config.toConfigString());
-    try {
-      int numSeconds = 7;
-      for (int i = 0; i < numSeconds; i++) {
-        System.out.println((numSeconds - i) + " seconds left...");
-        Thread.sleep(1000);
-      }
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
-      e.printStackTrace();
-    }
     try (val client = newClient(); val writer = newDocumentWriter()) {
       val loader = newLoader(client, writer);
       loader.load();
