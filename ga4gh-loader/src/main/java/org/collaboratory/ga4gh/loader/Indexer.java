@@ -40,7 +40,7 @@ public class Indexer {
     log.info("Preparing index {}...", indexName);
     val indexes = client.admin().indices();
     if (indexes.prepareExists(indexName).execute().get().isExists()) {
-      if (indexes.prepareDelete(indexName).execute().get().isAcknowledged()) {
+      if (indexes.prepareDelete(indexName).execute().get().isAcknowledged() == false) {
         throw new ElasticsearchException("Deletion of index " + indexName + " not acknowledged");
       }
     }
