@@ -70,9 +70,7 @@ public class Factory {
     return String.valueOf(Math.abs(id));
   }
 
-  public static DocumentWriter newDocumentWriter() {
-    val client = newClient();
-
+  public static DocumentWriter newDocumentWriter(final Client client) {
     return createDocumentWriter(new DocumentWriterConfiguration().client(client).indexName(INDEX_NAME));
   }
 

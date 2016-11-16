@@ -16,7 +16,7 @@ public class Loader {
 
   public static void main(String[] args) {
     log.info("Static Config:\n" + Config.toConfigString());
-    try (val client = newClient(); val writer = newDocumentWriter()) {
+    try (val client = newClient(); val writer = newDocumentWriter(client)) {
       val loader = newLoader(client, writer);
       loader.load();
     } catch (Exception e) {
