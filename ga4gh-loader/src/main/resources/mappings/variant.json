@@ -15,11 +15,11 @@
 			},
 			"start": {
 				"type": "long",
-				"index": "not_analyzed"
+				"index": "false"
 			},
 			"end": {
 				"type": "long",
-				"index": "not_analyzed"
+				"index": "false"
 			},
 			"reference_name": {
 				"type": "keyword",
