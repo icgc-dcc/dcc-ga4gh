@@ -2,16 +2,16 @@
 	"variant": {
 		"properties": {
 			"id": {
-				"type": "string",
-				"index": "not_analyzed"
+				"type": "keyword",
+				"index": "false"
 			},
 			"variant_set_id": {
-				"type": "string",
-				"index": "not_analyzed"
+				"type": "keyword",
+				"index": "false"
 			},
 			"call_set_id": {
-				"type": "string",
-				"index": "not_analyzed"
+				"type": "keyword",
+				"index": "false"
 			},
 			"start": {
 				"type": "long",
@@ -22,12 +22,12 @@
 				"index": "not_analyzed"
 			},
 			"reference_name": {
-				"type": "string",
-				"index": "not_analyzed"
+				"type": "keyword",
+				"index": "false"
 			},
 			"record": {
-				"type": "string",
-				"index": "no"
+				"type": "keyword",
+				"index": "false"
 			}
 		},
 		"_source": {

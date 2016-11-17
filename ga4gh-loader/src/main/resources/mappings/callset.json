@@ -2,8 +2,8 @@
 	"callset": {
 		"properties": {
 			"vcf_header": {
-				"type": "string",
-				"index": "no"
+				"type": "keyword",
+				"index": "false"
 			}
 		},
 		"_source": {
