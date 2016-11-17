@@ -87,6 +87,11 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.6.2</version>
+		</dependency>
 
 	</dependencies>
 
@@ -114,7 +119,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		<!-- Versions - Protobuf -->
 		<protobuf-java-format.version>1.4</protobuf-java-format.version>
 		<!-- Versions - Spring Boot - Jackson -->
-		<jackson.version>2.8.3</jackson.version>
+		<jackson.version>2.8.1</jackson.version>
 		<elasticsearch.version>5.0.0</elasticsearch.version>
 	</properties>
 

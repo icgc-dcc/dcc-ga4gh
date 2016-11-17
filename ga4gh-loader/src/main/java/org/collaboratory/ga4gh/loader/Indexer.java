@@ -13,8 +13,8 @@ import java.util.Base64;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
-import org.icgc.dcc.dcc.common.es.impl.DocumentType;
-import org.icgc.dcc.dcc.common.es.model.Document;
+import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
+import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -77,7 +77,7 @@ public class Indexer {
     val obj = DEFAULT.createObjectNode();
     obj.put("vcf_header", ser);
 
-    writer.write(new Document(objectId, obj, new HeaderDocumentType()));
+    writer.write(new IndexDocument(objectId, obj, new HeaderDocumentType()));
   }
 
   @SneakyThrows
@@ -88,14 +88,14 @@ public class Indexer {
   }
 
   private void writeVariant(ObjectNode variant) throws IOException {
-    writer.write(new Document(nextId(), variant, new VariantDocumentType()));
+    writer.write(new IndexDocument(nextId(), variant, new VariantDocumentType()));
   }
 
   private String nextId() {
     return String.valueOf(id++);
   }
 
-  private static class VariantDocumentType implements DocumentType {
+  private static class VariantDocumentType implements IndexDocumentType {
 
     @Override
     public String getIndexType() {
@@ -104,7 +104,7 @@ public class Indexer {
 
   }
 
-  private static class HeaderDocumentType implements DocumentType {
+  private static class HeaderDocumentType implements IndexDocumentType {
 
     @Override
     public String getIndexType() {

@@ -58,7 +58,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 				<artifactId>ga4gh-schema</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-				
+
 	    	<!-- Spring -->
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
@@ -67,14 +67,14 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			
+
 			<!-- DCC - Common -->
 			<dependency>
 				<groupId>org.icgc.dcc</groupId>
 				<artifactId>dcc-common-core</artifactId>
 				<version>${dcc-common.version}</version>
 			</dependency>
-			
+
 			<!-- Genomics -->
 			<dependency>
 				<groupId>com.github.samtools</groupId>
@@ -92,8 +92,8 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
 	<properties>
 		<!-- Versions - DCC -->
-		<dcc-common.version>4.2.15-SNAPSHOT</dcc-common.version>
-			
+		<dcc-common.version>4.3.4</dcc-common.version>
+
 		<!-- Versions - Spring Boot -->
 		<spring-boot.version>1.4.1.RELEASE</spring-boot.version>
 		<!-- Versions - Spring Boot - Maven -->
@@ -102,10 +102,10 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		<slf4j.version>1.7.21</slf4j.version>
 		<!-- Versions - Spring Boot - Logging -->
 		<logback.version>1.1.7</logback.version>
-		
+
 		<!-- Versions - Genomics -->
 		<htsjdk.version>2.1.0</htsjdk.version>
-		
+
 		<!-- Versions - Test -->
 		<junit.version>4.12</junit.version>
 	</properties>

@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ServerConfig {
 
-  public static final String NODE_ADDRESS = "10.30.128.130";
+  public static final String NODE_ADDRESS = "localhost";
   public static final int NODE_PORT = 9300;
 
   @Bean
