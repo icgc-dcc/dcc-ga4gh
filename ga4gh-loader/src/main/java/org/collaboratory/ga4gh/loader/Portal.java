@@ -25,10 +25,11 @@ public final class Portal {
    */
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = 100;
+    val size = 1;
 
     int from = 1;
-    while (true) {
+    int debug_to = -1
+    while (debug_to == -1 || from <= debug_to) {
       val url = getUrl(size, from);
       val result = read(url);
       val hits = getHits(result);
@@ -59,10 +60,8 @@ public final class Portal {
   @SneakyThrows
   private static URL getUrl(int size, int from) {
     val endpoint = PORTAL_API + "/api/v1/repository/files";
-    val repository = "Collaboratory - Toronto";
-    val fileFormat = "VCF";
-    val filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + repository + "\"]},"
-        + "\"fileFormat\":{\"is\":[\"" + fileFormat + "\"]}}}", UTF_8.name());
+    val filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + Config.REPOSITORY_NAME + "\"]},"
+        + "\"fileFormat\":{\"is\":[\"" + Config.FILE_FORMAT + "\"]}}}", UTF_8.name());
 
     return new URL(endpoint + "?" + "filters=" + filters + "&" + "size=" + size + "&" + "from=" + from);
   }
