@@ -20,13 +20,14 @@ public class VCF implements Closeable {
   @NonNull
   private final VCFFileReader vcf;
   @NonNull
-  private final String objectId;
+  private final AdditionalIndicesData indices;
+
   @NonNull
   private final VCFEncoder encoder;
 
-  public VCF(File file, String objectId) {
+  public VCF(File file, AdditionalIndicesData indices) {
     this.vcf = new VCFFileReader(file, false);
-    this.objectId = objectId;
+    this.indices = indices;
     this.encoder = new VCFEncoder(vcf.getFileHeader(), true, true);
   }
 
@@ -42,7 +43,10 @@ public class VCF implements Closeable {
     val variantDoc = DEFAULT.createObjectNode();
     variantDoc.put("id", record.getID());
     variantDoc.put("variant_set_id", "test");
-    variantDoc.put("call_set_id", objectId);
+    variantDoc.put("call_set_id", this.indices.getObjectId());
+    variantDoc.put("file_id", this.indices.getFileId());
+    variantDoc.put("donor_id", this.indices.getDonorId());
+    variantDoc.put("sample_id", this.indices.getSampleId());
     variantDoc.put("start", record.getStart());
     variantDoc.put("end", record.getEnd());
     variantDoc.put("reference_name", record.getContig());
