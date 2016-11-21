@@ -25,6 +25,18 @@
 				"type": "keyword",
 				"index": "false"
 			},
+			"file_id": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"donor_id": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"sample_id": {
+				"type": "keyword",
+				"index": "false"
+			},
 			"record": {
 				"type": "text",
 				"index": "false"
