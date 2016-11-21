@@ -70,7 +70,7 @@ public class Loader {
 
     log.info("Reading variants from {}...", file);
     @Cleanup
-    val vcf = new VCF(file, additionalIndicesData);
+    val vcf = new VCF(file);
     val variants = vcf.read();
     val header = vcf.getHeader();
 
@@ -78,7 +78,7 @@ public class Loader {
     indexer.indexHeaders(header, objectId);
 
     log.info("Indexing {}...", objectId);
-    indexer.indexVariants(variants);
+    indexer.indexVariants(variants, additionalIndicesData);
   }
 
 }
