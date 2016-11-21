@@ -4,6 +4,8 @@ import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -36,24 +38,39 @@ public class Loader {
     int counter = 1;
     String objectId;
     for (val fileMeta : fileMetas) {
+
       log.info("Loading {}/{}", counter, total);
-      objectId = fileMeta.get("objectId").textValue();
       try {
-        loadObject(objectId);
+        loadObjectNode(fileMeta);
       } catch (Exception e) {
-        log.warn("Bad VCF with object id: {}", objectId);
+        log.warn("Message: " + e.getMessage());
+        e.printStackTrace();
+        log.warn("Bad VCF with object id: {}", FileMetaUtils.getObjectId(fileMeta));
       }
       counter++;
     }
   }
 
-  private void loadObject(String objectId) {
+  private void loadObjectNode(ObjectNode objectNode) {
+
+    val objectId = FileMetaUtils.getObjectId(objectNode);
+    val fileId = FileMetaUtils.getFileId(objectNode, Config.REPOSITORY_NAME);
+    val sampleId = FileMetaUtils.getSampleId(objectNode);
+    val donorId = FileMetaUtils.getDonorId(objectNode);
+
+    val additionalIndicesData = AdditionalIndicesData.builder()
+        .objectId(objectId)
+        .fileId(fileId)
+        .sampleId(sampleId)
+        .donorId(donorId)
+        .build();
+
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);
 
     log.info("Reading variants from {}...", file);
     @Cleanup
-    val vcf = new VCF(file, objectId);
+    val vcf = new VCF(file, additionalIndicesData);
     val variants = vcf.read();
     val header = vcf.getHeader();
 
