@@ -10,6 +10,8 @@ public class Config {
   public static final String TOKEN = System.getProperty("token");
   public static final String STORAGE_API = "https://storage.cancercollaboratory.org";
   public static final String PORTAL_API = "https://dcc.icgc.org";
+  public static final String REPOSITORY_NAME = "Collaboratory - Toronto";
+  public static final String FILE_FORMAT = "VCF";
 
   public static String toConfigString() {
     StringBuilder sb = new StringBuilder();
