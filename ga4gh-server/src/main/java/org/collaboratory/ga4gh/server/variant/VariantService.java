@@ -17,19 +17,48 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
+import java.util.Base64;
+import java.util.List;
+
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
-import ga4gh.Variants.Call;
 import ga4gh.Variants.Variant;
+import ga4gh.Variants.Variant.Builder;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderVersion;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class VariantService {
+
+  @NonNull
+  private final VariantRepository variantRepository;
+  @NonNull
+  private final HeaderRepository headerRepository;
+
+  private final VCFCodec CODEC = new VCFCodec();
+  private final ObjectMapper MAPPER = new ObjectMapper();
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
     // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
@@ -43,27 +72,49 @@ public class VariantService {
     log.info("start: {}", request.getStart());
     log.info("end: {}", request.getEnd());
 
-    return SearchVariantsResponse.newBuilder()
-        .setNextPageToken(nextPageToken)
-        .addVariants(Variant.newBuilder()
-            .setId("id")
-            .setVariantSetId("variantSetId")
-            .setReferenceName("referenceName")
-            .setStart(1)
-            .setEnd(10)
-            .setCreated(0)
-            .setUpdated(0)
-            .addAlternateBases("T")
-            .addNames("name")
-            .addCalls(Call.newBuilder()
-                .setCallSetId("callSetId")
-                .setCallSetName("callSetName")
-                .setPhaseset("phaseset")
-                .addGenotype(1)
-                .addGenotype(2)
-                .addGenotypeLikelihood(0.3)
-                .addGenotypeLikelihood(0.5)))
-        .build();
+    val response = variantRepository.findVariants(request);
+    return buildResponse(response);
+  }
+
+  private SearchVariantsResponse buildResponse(@NonNull SearchResponse searchResponse) {
+    val responseBuilder = SearchVariantsResponse.newBuilder();
+    stream(searchResponse.getHits()).map(this::convertToVariant).forEach(v -> responseBuilder.addVariants(v));
+
+    return responseBuilder.build();
+  }
+
+  @SneakyThrows
+  private Builder convertToVariant(@NonNull SearchHit hit) {
+    JsonNode json = MAPPER.readTree(hit.getSourceAsString());
+    val response = headerRepository.getHeader(json.get("call_set_id").asText());
+    val headerString = response.getSource().get("vcf_header").toString();
+    byte[] data = Base64.getDecoder().decode(headerString);
+    ObjectInputStream ois = new ObjectInputStream(
+        new ByteArrayInputStream(data));
+
+    val header = (VCFHeader) ois.readObject();
+    val codec = new VCFCodec();
+    codec.setVCFHeader(header, VCFHeaderVersion.VCF4_1);
+    VariantContext vc = codec.decode(json.get("record").asText());
+
+    List<String> alt = vc.getAlternateAlleles().stream()
+        .map(al -> al.getBaseString())
+        .collect(toList());
+
+    val genotypes = vc.getGenotypes();
+
+    Builder builder = Variant.newBuilder()
+        .setId(vc.getID())
+        .setVariantSetId("foo")
+        .setReferenceName(vc.getContig())
+        .setReferenceBases(vc.getReference().getBaseString())
+        .addAllAlternateBases(alt)
+        .setStart(vc.getStart())
+        .setEnd(vc.getEnd())
+        .setCreated(0)
+        .setUpdated(0);
+
+    return builder;
   }
 
 }

@@ -4,8 +4,6 @@ import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 public class Loader {
 
   public static void main(String[] args) {
-    try (val client = newClient(); val writer = newDocumentWriter()) {
+    log.info("Static Config:\n" + Config.toConfigString());
+    try (val client = newClient(); val writer = newDocumentWriter(client)) {
       val loader = newLoader(client, writer);
       loader.load();
     } catch (Exception e) {
@@ -31,27 +30,38 @@ public class Loader {
   public void load() {
     indexer.prepareIndex();
 
-    log.info("Resolving file metadata...");
+    log.info("Resolving object ids...");
     val fileMetas = Portal.getFileMetas();
-
+    val total = fileMetas.size();
+    int counter = 1;
+    String objectId;
     for (val fileMeta : fileMetas) {
-      loadFile(fileMeta);
+      log.info("Loading {}/{}", counter, total);
+      objectId = fileMeta.get("objectId").textValue();
+      try {
+        loadObject(objectId);
+      } catch (Exception e) {
+        log.warn("Bad VCF with object id: {}", objectId);
+      }
+      counter++;
     }
   }
 
-  private void loadFile(ObjectNode fileMeta) {
-    val objectId = FileMetas.getObjectId(fileMeta);
-
+  private void loadObject(String objectId) {
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);
 
     log.info("Reading variants from {}...", file);
     @Cleanup
-    val vcf = new VCF(file);
+    val vcf = new VCF(file, objectId);
     val variants = vcf.read();
+    val header = vcf.getHeader();
+
+    log.info("Indexing header {}...", objectId);
+    indexer.indexHeaders(header, objectId);
 
     log.info("Indexing {}...", objectId);
-    indexer.indexVariants(fileMeta, variants);
+    indexer.indexVariants(variants);
   }
 
 }

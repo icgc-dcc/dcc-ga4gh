@@ -15,22 +15,43 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.server.config;
+package org.collaboratory.ga4gh.server.variant;
 
-import org.collaboratory.ga4gh.server.reference.ReferenceGenome;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_ADDRESS;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_PORT;
 
-@Configuration
-public class ServerConfig {
+import java.net.InetAddress;
 
-  public static final String NODE_ADDRESS = "localhost";
-  public static final int NODE_PORT = 9300;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.springframework.stereotype.Repository;
 
-  @Bean
-  public ReferenceGenome referenceGenome(@Value("${reference.fastaFile:/tmp/GRCh37.fasta}") String fastaFile) {
-    return new ReferenceGenome(fastaFile);
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+
+/**
+ * 
+ */
+@Repository
+public class HeaderRepository {
+
+  @NonNull
+  private final TransportClient client;
+
+  @SuppressWarnings("resource")
+  @SneakyThrows
+  public HeaderRepository() {
+    this.client = new PreBuiltTransportClient(Settings.EMPTY)
+        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
+  }
+
+  public GetResponse getHeader(String objectId) {
+    val searchRequestBuilder = client.prepareGet("dcc-variants", "callset", objectId);
+    return searchRequestBuilder.get();
   }
 
 }

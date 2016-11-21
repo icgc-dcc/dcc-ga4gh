@@ -1,0 +1,40 @@
+{
+	"variant": {
+		"properties": {
+			"id": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"variant_set_id": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"call_set_id": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"start": {
+				"type": "long",
+				"index": "false"
+			},
+			"end": {
+				"type": "long",
+				"index": "false"
+			},
+			"reference_name": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"record": {
+				"type": "text",
+				"index": "false"
+			}
+		},
+		"_all": {
+			"enabled": false
+		},
+		"_source": {
+			"enabled": true
+		}
+	}
+}
