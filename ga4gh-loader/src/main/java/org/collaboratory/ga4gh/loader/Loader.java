@@ -3,6 +3,10 @@ package org.collaboratory.ga4gh.loader;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
+import static org.collaboratory.ga4gh.loader.FileMeta.getDonorId;
+import static org.collaboratory.ga4gh.loader.FileMeta.getFileId;
+import static org.collaboratory.ga4gh.loader.FileMeta.getObjectId;
+import static org.collaboratory.ga4gh.loader.FileMeta.getSampleId;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -53,10 +57,10 @@ public class Loader {
 
   private void loadFile(ObjectNode objectNode) {
 
-    val objectId = FileMeta.getObjectId(objectNode);
-    val fileId = FileMeta.getFileId(objectNode, Config.REPOSITORY_NAME);
-    val sampleId = FileMeta.getSampleId(objectNode);
-    val donorId = FileMeta.getDonorId(objectNode);
+    val objectId = getObjectId(objectNode);
+    val fileId = getFileId(objectNode, Config.REPOSITORY_NAME);
+    val sampleId = getSampleId(objectNode);
+    val donorId = getDonorId(objectNode);
 
     val additionalSourceData = AdditionalSourceData.builder()
         .objectId(objectId)
