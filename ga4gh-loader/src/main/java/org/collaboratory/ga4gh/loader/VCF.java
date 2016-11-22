@@ -16,19 +16,25 @@ import lombok.NonNull;
 
 public class VCF implements Closeable {
 
+  public static final boolean REQUIRE_INDEX_CFG = false;
+  public static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
+  public static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
+
   @NonNull
   private final VCFFileReader vcf;
 
   @NonNull
-  private final FileMetaData additionalSourceData;
+  private final FileMetaData fileMetaData;
 
   @NonNull
   private final VCFEncoder encoder;
 
-  public VCF(File file, FileMetaData additionalSourceData) {
-    this.vcf = new VCFFileReader(file, false);
-    this.additionalSourceData = additionalSourceData;
-    this.encoder = new VCFEncoder(vcf.getFileHeader(), true, true);
+  public VCF(File file, FileMetaData fileMetaData) {
+
+    this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
+    this.fileMetaData = fileMetaData;
+    this.encoder =
+        new VCFEncoder(vcf.getFileHeader(), ALLOW_MISSING_FIELDS_IN_HEADER_CFG, OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
   }
 
   public Iterable<ObjectNode> read() {
@@ -47,10 +53,10 @@ public class VCF implements Closeable {
         .with("end", record.getEnd())
         .with("reference_name", record.getContig())
         .with("record", encoder.encode(record))
-        .with("call_set_id", this.additionalSourceData.getObjectId())
-        .with("file_id", this.additionalSourceData.getFileId())
-        .with("donor_id", this.additionalSourceData.getDonorId())
-        .with("sample_id", this.additionalSourceData.getSampleId())
+        .with("call_set_id", this.fileMetaData.getObjectId())
+        .with("file_id", this.fileMetaData.getFileId())
+        .with("donor_id", this.fileMetaData.getDonorId())
+        .with("sample_id", this.fileMetaData.getSampleId())
         .end();
   }
 

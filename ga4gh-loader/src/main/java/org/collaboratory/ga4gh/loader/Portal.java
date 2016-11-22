@@ -25,10 +25,10 @@ public final class Portal {
    */
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = 2;
+    val size = Config.PORTAL_FETCH_SIZE;
 
     int from = 1;
-    while (from < 2) {
+    while (true) {
       val url = getUrl(size, from);
       val result = read(url);
       val hits = getHits(result);

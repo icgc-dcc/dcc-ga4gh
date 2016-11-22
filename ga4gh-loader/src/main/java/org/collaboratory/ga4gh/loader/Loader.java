@@ -59,14 +59,14 @@ public class Loader {
     val sampleId = getSampleId(objectNode);
     val donorId = getDonorId(objectNode);
 
-    val additionalSourceData = new FileMetaData(objectId, fileId, sampleId, donorId);
+    val fileMetaData = new FileMetaData(objectId, fileId, sampleId, donorId);
 
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);
 
     log.info("Reading variants from {}...", file);
     @Cleanup
-    val vcf = new VCF(file, additionalSourceData);
+    val vcf = new VCF(file, fileMetaData);
     val variants = vcf.read();
     val header = vcf.getHeader();
 
