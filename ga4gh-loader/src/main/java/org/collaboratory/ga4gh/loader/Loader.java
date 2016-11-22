@@ -3,10 +3,10 @@ package org.collaboratory.ga4gh.loader;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
-import static org.collaboratory.ga4gh.loader.FileMeta.getDonorId;
-import static org.collaboratory.ga4gh.loader.FileMeta.getFileId;
-import static org.collaboratory.ga4gh.loader.FileMeta.getObjectId;
-import static org.collaboratory.ga4gh.loader.FileMeta.getSampleId;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getDonorId;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getFileId;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getObjectId;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getSampleId;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -45,7 +45,7 @@ public class Loader {
       try {
         loadFile(fileMeta);
       } catch (Exception e) {
-        log.warn("Bad VCF with object id: {}", FileMeta.getObjectId(fileMeta));
+        log.warn("Bad VCF with object id: {}", PortalFiles.getObjectId(fileMeta));
         log.warn("Message: {} ", e.getMessage());
       }
       counter++;

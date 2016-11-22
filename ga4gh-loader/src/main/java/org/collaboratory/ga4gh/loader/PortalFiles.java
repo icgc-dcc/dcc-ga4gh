@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class FileMeta {
+public final class PortalFiles {
 
   public static final String FILECOPIES = "fileCopies";
   public static final String OBJECTID = "objectId";
