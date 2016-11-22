@@ -81,21 +81,10 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexVariants(@NonNull Iterable<ObjectNode> variants,
-      @NonNull final AdditionalIndicesData additionalIndicesData) {
+  public void indexVariants(@NonNull Iterable<ObjectNode> variants) {
     for (val variant : variants) {
-      updateVariantWithAdditionalIndices(variant, additionalIndicesData);
       writeVariant(variant);
     }
-  }
-
-  private static void updateVariantWithAdditionalIndices(@NonNull ObjectNode variant,
-      @NonNull final AdditionalIndicesData additionalIndicesData) {
-    variant.put("call_set_id", additionalIndicesData.getObjectId());
-    variant.put("file_id", additionalIndicesData.getFileId());
-    variant.put("donor_id", additionalIndicesData.getDonorId());
-    variant.put("sample_id", additionalIndicesData.getSampleId());
-
   }
 
   private void writeVariant(ObjectNode variant) throws IOException {
