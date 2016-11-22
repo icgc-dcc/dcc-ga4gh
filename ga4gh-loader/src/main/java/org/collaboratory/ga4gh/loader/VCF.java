@@ -21,14 +21,14 @@ public class VCF implements Closeable {
   private final VCFFileReader vcf;
 
   @NonNull
-  private final AdditionalSourceData additionalIndicesData;
+  private final AdditionalSourceData additionalSourceData;
 
   @NonNull
   private final VCFEncoder encoder;
 
-  public VCF(File file, AdditionalSourceData additionalIndicesData) {
+  public VCF(File file, AdditionalSourceData additionalSourceData) {
     this.vcf = new VCFFileReader(file, false);
-    this.additionalIndicesData = additionalIndicesData;
+    this.additionalSourceData = additionalSourceData;
     this.encoder = new VCFEncoder(vcf.getFileHeader(), true, true);
   }
 
@@ -48,10 +48,10 @@ public class VCF implements Closeable {
     variantDoc.put("end", record.getEnd());
     variantDoc.put("reference_name", record.getContig());
     variantDoc.put("record", encoder.encode(record));
-    variantDoc.put("call_set_id", this.additionalIndicesData.getObjectId());
-    variantDoc.put("file_id", this.additionalIndicesData.getFileId());
-    variantDoc.put("donor_id", this.additionalIndicesData.getDonorId());
-    variantDoc.put("sample_id", this.additionalIndicesData.getSampleId());
+    variantDoc.put("call_set_id", this.additionalSourceData.getObjectId());
+    variantDoc.put("file_id", this.additionalSourceData.getFileId());
+    variantDoc.put("donor_id", this.additionalSourceData.getDonorId());
+    variantDoc.put("sample_id", this.additionalSourceData.getSampleId());
 
     return variantDoc;
   }
