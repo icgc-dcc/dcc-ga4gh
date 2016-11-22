@@ -28,8 +28,7 @@ public final class Portal {
     val size = 100;
 
     int from = 1;
-    int debug_to = -1;
-    while (debug_to == -1 || from <= debug_to) {
+    while (true) {
       val url = getUrl(size, from);
       val result = read(url);
       val hits = getHits(result);
