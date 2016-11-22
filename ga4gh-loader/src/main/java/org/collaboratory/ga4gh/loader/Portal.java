@@ -53,10 +53,6 @@ public final class Portal {
     return result.get("hits");
   }
 
-  private static String getObjectId(JsonNode hit) {
-    return hit.get("objectId").textValue();
-  }
-
   @SneakyThrows
   private static URL getUrl(int size, int from) {
     val endpoint = PORTAL_API + "/api/v1/repository/files";

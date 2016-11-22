@@ -41,7 +41,7 @@ public class Loader {
 
       log.info("Loading {}/{}", counter, total);
       try {
-        loadObjectNode(fileMeta);
+        loadFile(fileMeta);
       } catch (Exception e) {
         log.warn("Message: " + e.getMessage());
         e.printStackTrace();
@@ -51,7 +51,7 @@ public class Loader {
     }
   }
 
-  private void loadObjectNode(ObjectNode objectNode) {
+  private void loadFile(ObjectNode objectNode) {
 
     val objectId = FileMetaUtils.getObjectId(objectNode);
     val fileId = FileMetaUtils.getFileId(objectNode, Config.REPOSITORY_NAME);
