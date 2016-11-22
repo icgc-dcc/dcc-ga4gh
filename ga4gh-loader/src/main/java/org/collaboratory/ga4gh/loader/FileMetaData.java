@@ -25,10 +25,14 @@ public class FileMetaData {
 
   @NonNull
   public String objectId;
+
   @NonNull
   public String fileId;
+
   @NonNull
   public String sampleId;
+
   @NonNull
   public String donorId;
+
 }
