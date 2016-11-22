@@ -5,6 +5,8 @@
 
 A GA4GH compliant API implementation to serve data from the [Collaboratory](http://www.cancercollaboratory.org/).
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9c75cc929d994fe4bce065a23fd2f134)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=icgc-dcc/ga4gh&amp;utm_campaign=Badge_Grade)
+
 ## Status
 
 Currently only the [References API](http://ga4gh-schemas.readthedocs.io/en/latest/api/references.html) is partially supported. Future will will focus on the [Variants API](http://ga4gh-schemas.readthedocs.io/en/latest/api/variants.html), followed by the [Reads API](http://ga4gh-schemas.readthedocs.io/en/latest/api/reads.html). 
