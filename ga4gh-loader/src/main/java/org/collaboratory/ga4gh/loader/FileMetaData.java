@@ -17,15 +17,11 @@
  */
 package org.collaboratory.ga4gh.loader;
 
-import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
+import lombok.Value;
 
-/**
- */
-@Builder
-@Getter
-public class AdditionalSourceData {
+@Value
+public class FileMetaData {
 
   @NonNull
   public String objectId;

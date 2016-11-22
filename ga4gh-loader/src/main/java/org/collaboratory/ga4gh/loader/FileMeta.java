@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class FileMeta {
@@ -44,8 +43,7 @@ public final class FileMeta {
   }
 
   public static String getFileId(@NonNull ObjectNode file, String repoName) {
-    JsonNode indexFileNode = getIndexFile(file, repoName);
-    return indexFileNode.path(ID).textValue();
+    return file.path(ID).textValue();
   }
 
   public static String getProjectCode(@NonNull ObjectNode file) {
@@ -62,25 +60,6 @@ public final class FileMeta {
 
   private static JsonNode getFirstDonor(ObjectNode file) {
     return getDonors(file).path(0);
-  }
-
-  private static JsonNode getFileCopies(ObjectNode file) {
-    return file.path(FILECOPIES);
-  }
-
-  private static JsonNode getIndexFile(ObjectNode file, String repoName) {
-    val fileCopiesNode = getFileCopies(file);
-    val iterator = fileCopiesNode.elements();
-    while (iterator.hasNext()) {
-      JsonNode fileCopiesElement = iterator.next();
-      JsonNode repoNameNode = fileCopiesElement.path(REPONAME);
-      String actualRepoName = repoNameNode.textValue();
-      if (actualRepoName.equals(repoName)) {
-        return fileCopiesElement.path(INDEXFILE);
-      }
-    }
-    throw new IllegalArgumentException(
-        "The RepoName \"" + repoName + "\" DNE in the currect ObjectNode: " + file.toString());
   }
 
   private static JsonNode getDonors(ObjectNode file) {

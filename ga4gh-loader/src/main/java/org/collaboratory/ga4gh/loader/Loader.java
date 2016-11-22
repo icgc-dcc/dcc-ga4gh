@@ -62,12 +62,7 @@ public class Loader {
     val sampleId = getSampleId(objectNode);
     val donorId = getDonorId(objectNode);
 
-    val additionalSourceData = AdditionalSourceData.builder()
-        .objectId(objectId)
-        .fileId(fileId)
-        .sampleId(sampleId)
-        .donorId(donorId)
-        .build();
+    val additionalSourceData = new FileMetaData(objectId, fileId, sampleId, donorId);
 
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);

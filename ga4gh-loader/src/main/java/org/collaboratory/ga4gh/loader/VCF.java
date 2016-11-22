@@ -20,12 +20,12 @@ public class VCF implements Closeable {
   private final VCFFileReader vcf;
 
   @NonNull
-  private final AdditionalSourceData additionalSourceData;
+  private final FileMetaData additionalSourceData;
 
   @NonNull
   private final VCFEncoder encoder;
 
-  public VCF(File file, AdditionalSourceData additionalSourceData) {
+  public VCF(File file, FileMetaData additionalSourceData) {
     this.vcf = new VCFFileReader(file, false);
     this.additionalSourceData = additionalSourceData;
     this.encoder = new VCFEncoder(vcf.getFileHeader(), true, true);
