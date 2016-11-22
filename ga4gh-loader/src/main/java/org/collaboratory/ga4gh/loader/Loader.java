@@ -40,16 +40,13 @@ public class Loader {
     val fileMetas = Portal.getFileMetas();
     val total = fileMetas.size();
     int counter = 1;
-    String objectId;
     for (val fileMeta : fileMetas) {
-
       log.info("Loading {}/{}", counter, total);
       try {
         loadFile(fileMeta);
       } catch (Exception e) {
-        log.warn("Message: " + e.getMessage());
-        e.printStackTrace();
         log.warn("Bad VCF with object id: {}", FileMeta.getObjectId(fileMeta));
+        log.warn("Message: {} ", e.getMessage());
       }
       counter++;
     }
