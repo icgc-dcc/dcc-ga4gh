@@ -29,35 +29,35 @@ import lombok.val;
 @NoArgsConstructor(access = PRIVATE)
 public final class FileMeta {
 
-  public static final String IDX__FILECOPIES = "fileCopies";
-  public static final String IDX__OBJECTID = "objectId";
-  public static final String IDX__PROJECTCODE = "projectCode";
-  public static final String IDX__DONORID = "donorId";
-  public static final String IDX__DONORS = "donors";
-  public static final String IDX__SAMPLEID = "sampleId";
-  public static final String IDX__REPONAME = "repoName";
-  public static final String IDX__INDEXFILE = "indexFile";
-  public static final String IDX__ID = "id";
+  public static final String FILECOPIES = "fileCopies";
+  public static final String OBJECTID = "objectId";
+  public static final String PROJECTCODE = "projectCode";
+  public static final String DONORID = "donorId";
+  public static final String DONORS = "donors";
+  public static final String SAMPLEID = "sampleId";
+  public static final String REPONAME = "repoName";
+  public static final String INDEXFILE = "indexFile";
+  public static final String ID = "id";
 
   public static String getObjectId(@NonNull ObjectNode file) {
-    return file.path(IDX__OBJECTID).textValue();
+    return file.path(OBJECTID).textValue();
   }
 
   public static String getFileId(@NonNull ObjectNode file, String repoName) {
     JsonNode indexFileNode = getIndexFile(file, repoName);
-    return indexFileNode.path(IDX__ID).textValue();
+    return indexFileNode.path(ID).textValue();
   }
 
   public static String getProjectCode(@NonNull ObjectNode file) {
-    return getFirstDonor(file).path(IDX__PROJECTCODE).get(0).textValue();
+    return getFirstDonor(file).path(PROJECTCODE).get(0).textValue();
   }
 
   public static String getDonorId(@NonNull ObjectNode file) {
-    return getFirstDonor(file).path(IDX__DONORID).textValue();
+    return getFirstDonor(file).path(DONORID).textValue();
   }
 
   public static String getSampleId(@NonNull ObjectNode file) {
-    return getFirstDonor(file).path(IDX__SAMPLEID).get(0).textValue();
+    return getFirstDonor(file).path(SAMPLEID).get(0).textValue();
   }
 
   private static JsonNode getFirstDonor(ObjectNode file) {
@@ -65,7 +65,7 @@ public final class FileMeta {
   }
 
   private static JsonNode getFileCopies(ObjectNode file) {
-    return file.path(IDX__FILECOPIES);
+    return file.path(FILECOPIES);
   }
 
   private static JsonNode getIndexFile(ObjectNode file, String repoName) {
@@ -73,10 +73,10 @@ public final class FileMeta {
     val iterator = fileCopiesNode.elements();
     while (iterator.hasNext()) {
       JsonNode fileCopiesElement = iterator.next();
-      JsonNode repoNameNode = fileCopiesElement.path(IDX__REPONAME);
+      JsonNode repoNameNode = fileCopiesElement.path(REPONAME);
       String actualRepoName = repoNameNode.textValue();
       if (actualRepoName.equals(repoName)) {
-        return fileCopiesElement.path(IDX__INDEXFILE);
+        return fileCopiesElement.path(INDEXFILE);
       }
     }
     throw new IllegalArgumentException(
@@ -84,7 +84,7 @@ public final class FileMeta {
   }
 
   private static JsonNode getDonors(ObjectNode file) {
-    return file.path(IDX__DONORS);
+    return file.path(DONORS);
   }
 
 }
