@@ -69,6 +69,7 @@ public class Indexer {
   public void indexHeaders(@NonNull VCFHeader header, String objectId) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
+    // TODO: [rtisma]: consider changing this stategy and using the raw header
     oos.writeObject(header);
     oos.close();
     val ser = Base64.getEncoder().encodeToString(baos.toByteArray());
