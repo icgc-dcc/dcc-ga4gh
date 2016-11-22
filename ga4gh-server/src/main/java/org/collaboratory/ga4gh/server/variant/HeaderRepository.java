@@ -33,9 +33,6 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 
-/**
- * 
- */
 @Repository
 public class HeaderRepository {
 
