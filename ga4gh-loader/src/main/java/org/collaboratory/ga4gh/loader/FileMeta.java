@@ -27,7 +27,7 @@ import lombok.NonNull;
 import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class FileMetaUtils {
+public final class FileMeta {
 
   public static final String IDX__FILECOPIES = "fileCopies";
   public static final String IDX__OBJECTID = "objectId";

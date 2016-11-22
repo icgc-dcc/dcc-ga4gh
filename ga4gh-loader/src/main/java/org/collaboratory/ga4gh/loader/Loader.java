@@ -45,7 +45,7 @@ public class Loader {
       } catch (Exception e) {
         log.warn("Message: " + e.getMessage());
         e.printStackTrace();
-        log.warn("Bad VCF with object id: {}", FileMetaUtils.getObjectId(fileMeta));
+        log.warn("Bad VCF with object id: {}", FileMeta.getObjectId(fileMeta));
       }
       counter++;
     }
@@ -53,10 +53,10 @@ public class Loader {
 
   private void loadFile(ObjectNode objectNode) {
 
-    val objectId = FileMetaUtils.getObjectId(objectNode);
-    val fileId = FileMetaUtils.getFileId(objectNode, Config.REPOSITORY_NAME);
-    val sampleId = FileMetaUtils.getSampleId(objectNode);
-    val donorId = FileMetaUtils.getDonorId(objectNode);
+    val objectId = FileMeta.getObjectId(objectNode);
+    val fileId = FileMeta.getFileId(objectNode, Config.REPOSITORY_NAME);
+    val sampleId = FileMeta.getSampleId(objectNode);
+    val donorId = FileMeta.getDonorId(objectNode);
 
     val additionalSourceData = AdditionalSourceData.builder()
         .objectId(objectId)
