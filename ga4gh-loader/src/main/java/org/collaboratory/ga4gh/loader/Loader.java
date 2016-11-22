@@ -58,7 +58,7 @@ public class Loader {
     val sampleId = FileMetaUtils.getSampleId(objectNode);
     val donorId = FileMetaUtils.getDonorId(objectNode);
 
-    val additionalIndicesData = AdditionalIndicesData.builder()
+    val additionalSourceData = AdditionalSourceData.builder()
         .objectId(objectId)
         .fileId(fileId)
         .sampleId(sampleId)
@@ -70,7 +70,7 @@ public class Loader {
 
     log.info("Reading variants from {}...", file);
     @Cleanup
-    val vcf = new VCF(file);
+    val vcf = new VCF(file, additionalSourceData);
     val variants = vcf.read();
     val header = vcf.getHeader();
 
@@ -78,7 +78,7 @@ public class Loader {
     indexer.indexHeaders(header, objectId);
 
     log.info("Indexing {}...", objectId);
-    indexer.indexVariants(variants, additionalIndicesData);
+    indexer.indexVariants(variants);
   }
 
 }
