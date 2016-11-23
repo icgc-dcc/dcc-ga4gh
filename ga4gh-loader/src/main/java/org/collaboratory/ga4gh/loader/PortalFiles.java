@@ -28,21 +28,18 @@ import lombok.NonNull;
 @NoArgsConstructor(access = PRIVATE)
 public final class PortalFiles {
 
-  public static final String FILE_COPIES = "fileCopies";
-  public static final String OBJECT_ID = "objectId";
-  public static final String PROJECT_CODE = "projectCode";
-  public static final String DONOR_ID = "donorId";
-  public static final String DONORS = "donors";
-  public static final String SAMPLE_ID = "sampleId";
-  public static final String REPO_NAME = "repoName";
-  public static final String INDEX_FILE = "indexFile";
-  public static final String ID = "id";
+  private static final String OBJECT_ID = "objectId";
+  private static final String PROJECT_CODE = "projectCode";
+  private static final String DONOR_ID = "donorId";
+  private static final String DONORS = "donors";
+  private static final String SAMPLE_ID = "sampleId";
+  private static final String ID = "id";
 
   public static String getObjectId(@NonNull ObjectNode file) {
     return file.path(OBJECT_ID).textValue();
   }
 
-  public static String getFileId(@NonNull ObjectNode file, String repoName) {
+  public static String getFileId(@NonNull ObjectNode file) {
     return file.path(ID).textValue();
   }
 

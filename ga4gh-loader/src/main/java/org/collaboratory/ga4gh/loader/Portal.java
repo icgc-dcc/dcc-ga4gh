@@ -21,7 +21,7 @@ import lombok.val;
 public final class Portal {
 
   private static final int PORTAL_FETCH_SIZE = 100;
-  public static final String REPOSITORY_NAME = "Collaboratory - Toronto";
+  private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
   private static final String FILE_FORMAT = "VCF";
 
   /**
@@ -30,7 +30,6 @@ public final class Portal {
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
     val size = PORTAL_FETCH_SIZE;
-
     int from = 1;
     while (true) {
       val url = getUrl(size, from);

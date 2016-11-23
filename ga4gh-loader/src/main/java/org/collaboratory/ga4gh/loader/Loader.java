@@ -35,7 +35,6 @@ public class Loader {
 
   public void load() {
     indexer.prepareIndex();
-
     log.info("Resolving object ids...");
     val fileMetas = Portal.getFileMetas();
     val total = fileMetas.size();
@@ -53,9 +52,8 @@ public class Loader {
   }
 
   private void loadFile(ObjectNode objectNode) {
-
     val objectId = getObjectId(objectNode);
-    val fileId = getFileId(objectNode, Portal.REPOSITORY_NAME);
+    val fileId = getFileId(objectNode);
     val sampleId = getSampleId(objectNode);
     val donorId = getDonorId(objectNode);
 
