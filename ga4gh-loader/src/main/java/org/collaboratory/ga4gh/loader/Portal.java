@@ -20,12 +20,16 @@ import lombok.val;
 @NoArgsConstructor(access = PRIVATE)
 public final class Portal {
 
+  private static final int PORTAL_FETCH_SIZE = 100;
+  private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
+  private static final String FILE_FORMAT = "VCF";
+
   /**
    * Gets all Collaboratory VCF files.
    */
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = Config.PORTAL_FETCH_SIZE;
+    val size = PORTAL_FETCH_SIZE;
 
     int from = 1;
     while (true) {
@@ -55,8 +59,8 @@ public final class Portal {
   @SneakyThrows
   private static URL getUrl(int size, int from) {
     val endpoint = PORTAL_API + "/api/v1/repository/files";
-    val filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + Config.REPOSITORY_NAME + "\"]},"
-        + "\"fileFormat\":{\"is\":[\"" + Config.FILE_FORMAT + "\"]}}}", UTF_8.name());
+    val filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
+        + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]}}}", UTF_8.name());
 
     return new URL(endpoint + "?" + "filters=" + filters + "&" + "size=" + size + "&" + "from=" + from);
   }
