@@ -21,7 +21,7 @@ import lombok.val;
 public final class Portal {
 
   private static final int PORTAL_FETCH_SIZE = 100;
-  private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
+  public static final String REPOSITORY_NAME = "Collaboratory - Toronto";
   private static final String FILE_FORMAT = "VCF";
 
   /**

@@ -55,7 +55,7 @@ public class Loader {
   private void loadFile(ObjectNode objectNode) {
 
     val objectId = getObjectId(objectNode);
-    val fileId = getFileId(objectNode, Config.REPOSITORY_NAME);
+    val fileId = getFileId(objectNode, Portal.REPOSITORY_NAME);
     val sampleId = getSampleId(objectNode);
     val donorId = getDonorId(objectNode);
 
