@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
@@ -10,7 +11,6 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
@@ -40,9 +40,7 @@ public class Indexer {
     log.info("Preparing index {}...", indexName);
     val indexes = client.admin().indices();
     if (indexes.prepareExists(indexName).execute().get().isExists()) {
-      if (indexes.prepareDelete(indexName).execute().get().isAcknowledged() == false) {
-        throw new ElasticsearchException("Deletion of index " + indexName + " not acknowledged");
-      }
+      checkState(indexes.prepareDelete(indexName).execute().get().isAcknowledged());
     }
 
     val settings = new StringBuffer();
@@ -71,6 +69,7 @@ public class Indexer {
   public void indexHeaders(@NonNull VCFHeader header, String objectId) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
+    // TODO: [rtisma]: consider changing this stategy and using the raw header
     oos.writeObject(header);
     oos.close();
     val ser = Base64.getEncoder().encodeToString(baos.toByteArray());

@@ -48,6 +48,13 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<artifactId>annotations</artifactId>
 			<scope>provided</scope>
 		</dependency>
+
+		<!--  Logging -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.6.2</version>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>
@@ -74,6 +81,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 				<artifactId>dcc-common-core</artifactId>
 				<version>${dcc-common.version}</version>
 			</dependency>
+
 
 			<!-- Genomics -->
 			<dependency>
@@ -108,6 +116,13 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
 		<!-- Versions - Test -->
 		<junit.version>4.12</junit.version>
+
+		<!-- Versions - Jackson Version override needed for ES5.0.0 upgrade -->
+		<jackson.version>2.8.1</jackson.version>
+		<jackson-smile.version>2.8.1</jackson-smile.version>
+		<jackson-yaml.version>2.8.1</jackson-yaml.version>
+		<jackson-csv.version>2.8.1</jackson-csv.version>
+		<elasticsearch.version>5.0.0</elasticsearch.version>
 	</properties>
 
 </project>
