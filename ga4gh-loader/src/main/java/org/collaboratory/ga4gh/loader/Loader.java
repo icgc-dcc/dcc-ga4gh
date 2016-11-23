@@ -3,6 +3,12 @@ package org.collaboratory.ga4gh.loader;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getDonorId;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getFileId;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getObjectId;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getSampleId;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -29,31 +35,36 @@ public class Loader {
 
   public void load() {
     indexer.prepareIndex();
-
     log.info("Resolving object ids...");
     val fileMetas = Portal.getFileMetas();
     val total = fileMetas.size();
     int counter = 1;
-    String objectId;
     for (val fileMeta : fileMetas) {
       log.info("Loading {}/{}", counter, total);
-      objectId = fileMeta.get("objectId").textValue();
       try {
-        loadObject(objectId);
+        loadFile(fileMeta);
       } catch (Exception e) {
-        log.warn("Bad VCF with object id: {}", objectId);
+        log.warn("Bad VCF with object id: {}", PortalFiles.getObjectId(fileMeta));
+        log.warn("Message: {} ", e.getMessage());
       }
       counter++;
     }
   }
 
-  private void loadObject(String objectId) {
+  private void loadFile(ObjectNode objectNode) {
+    val objectId = getObjectId(objectNode);
+    val fileId = getFileId(objectNode);
+    val sampleId = getSampleId(objectNode);
+    val donorId = getDonorId(objectNode);
+
+    val fileMetaData = new FileMetaData(objectId, fileId, sampleId, donorId);
+
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);
 
     log.info("Reading variants from {}...", file);
     @Cleanup
-    val vcf = new VCF(file, objectId);
+    val vcf = new VCF(file, fileMetaData);
     val variants = vcf.read();
     val header = vcf.getHeader();
 

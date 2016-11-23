@@ -20,13 +20,16 @@ import lombok.val;
 @NoArgsConstructor(access = PRIVATE)
 public final class Portal {
 
+  private static final int PORTAL_FETCH_SIZE = 100;
+  private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
+  private static final String FILE_FORMAT = "VCF";
+
   /**
    * Gets all Collaboratory VCF files.
    */
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = 100;
-
+    val size = PORTAL_FETCH_SIZE;
     int from = 1;
     while (true) {
       val url = getUrl(size, from);
@@ -52,17 +55,11 @@ public final class Portal {
     return result.get("hits");
   }
 
-  private static String getObjectId(JsonNode hit) {
-    return hit.get("objectId").textValue();
-  }
-
   @SneakyThrows
   private static URL getUrl(int size, int from) {
     val endpoint = PORTAL_API + "/api/v1/repository/files";
-    val repository = "Collaboratory - Toronto";
-    val fileFormat = "VCF";
-    val filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + repository + "\"]},"
-        + "\"fileFormat\":{\"is\":[\"" + fileFormat + "\"]}}}", UTF_8.name());
+    val filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
+        + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]}}}", UTF_8.name());
 
     return new URL(endpoint + "?" + "filters=" + filters + "&" + "size=" + size + "&" + "from=" + from);
   }

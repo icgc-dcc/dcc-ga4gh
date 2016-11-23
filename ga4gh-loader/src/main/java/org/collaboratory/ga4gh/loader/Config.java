@@ -12,16 +12,14 @@ public class Config {
   public static final String PORTAL_API = "https://dcc.icgc.org";
 
   public static String toConfigString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("INDEX_NAME: " + INDEX_NAME + "\n");
-    sb.append("TYPE_NAME: " + TYPE_NAME + "\n");
-    sb.append("NODE_ADDRESS: " + NODE_ADDRESS + "\n");
-    sb.append("NODE_PORT: " + NODE_PORT + "\n");
-    sb.append("ES_URL: " + ES_URL + "\n");
-    sb.append("TOKEN: " + TOKEN + "\n");
-    sb.append("STORAGE_API: " + STORAGE_API + "\n");
-    sb.append("PORTAL_API: " + PORTAL_API + "\n");
-    return sb.toString();
+    return "INDEX_NAME: " + INDEX_NAME + "\n"
+        + "TYPE_NAME: " + TYPE_NAME + "\n"
+        + "NODE_ADDRESS: " + NODE_ADDRESS + "\n"
+        + "NODE_PORT: " + NODE_PORT + "\n"
+        + "ES_URL: " + ES_URL + "\n"
+        + "TOKEN: " + TOKEN + "\n"
+        + "STORAGE_API: " + STORAGE_API + "\n"
+        + "PORTAL_API: " + PORTAL_API;
   }
 
 }
