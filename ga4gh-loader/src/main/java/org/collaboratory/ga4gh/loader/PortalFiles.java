@@ -28,18 +28,18 @@ import lombok.NonNull;
 @NoArgsConstructor(access = PRIVATE)
 public final class PortalFiles {
 
-  public static final String FILECOPIES = "fileCopies";
-  public static final String OBJECTID = "objectId";
-  public static final String PROJECTCODE = "projectCode";
-  public static final String DONORID = "donorId";
+  public static final String FILE_COPIES = "fileCopies";
+  public static final String OBJECT_ID = "objectId";
+  public static final String PROJECT_CODE = "projectCode";
+  public static final String DONOR_ID = "donorId";
   public static final String DONORS = "donors";
-  public static final String SAMPLEID = "sampleId";
-  public static final String REPONAME = "repoName";
-  public static final String INDEXFILE = "indexFile";
+  public static final String SAMPLE_ID = "sampleId";
+  public static final String REPO_NAME = "repoName";
+  public static final String INDEX_FILE = "indexFile";
   public static final String ID = "id";
 
   public static String getObjectId(@NonNull ObjectNode file) {
-    return file.path(OBJECTID).textValue();
+    return file.path(OBJECT_ID).textValue();
   }
 
   public static String getFileId(@NonNull ObjectNode file, String repoName) {
@@ -47,15 +47,15 @@ public final class PortalFiles {
   }
 
   public static String getProjectCode(@NonNull ObjectNode file) {
-    return getFirstDonor(file).path(PROJECTCODE).get(0).textValue();
+    return getFirstDonor(file).path(PROJECT_CODE).get(0).textValue();
   }
 
   public static String getDonorId(@NonNull ObjectNode file) {
-    return getFirstDonor(file).path(DONORID).textValue();
+    return getFirstDonor(file).path(DONOR_ID).textValue();
   }
 
   public static String getSampleId(@NonNull ObjectNode file) {
-    return getFirstDonor(file).path(SAMPLEID).get(0).textValue();
+    return getFirstDonor(file).path(SAMPLE_ID).get(0).textValue();
   }
 
   private static JsonNode getFirstDonor(ObjectNode file) {
