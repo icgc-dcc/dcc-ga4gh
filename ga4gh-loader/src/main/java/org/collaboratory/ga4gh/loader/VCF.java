@@ -16,25 +16,22 @@ import lombok.NonNull;
 
 public class VCF implements Closeable {
 
-  public static final boolean REQUIRE_INDEX_CFG = false;
-  public static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
-  public static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
+  private static final boolean REQUIRE_INDEX_CFG = false;
+  private static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
+  private static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
 
-  @NonNull
   private final VCFFileReader vcf;
 
-  @NonNull
   private final FileMetaData fileMetaData;
 
-  @NonNull
   private final VCFEncoder encoder;
 
-  public VCF(File file, FileMetaData fileMetaData) {
-
+  public VCF(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
     this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
     this.fileMetaData = fileMetaData;
-    this.encoder =
-        new VCFEncoder(vcf.getFileHeader(), ALLOW_MISSING_FIELDS_IN_HEADER_CFG, OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
+    this.encoder = new VCFEncoder(vcf.getFileHeader(),
+        ALLOW_MISSING_FIELDS_IN_HEADER_CFG,
+        OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
   }
 
   public Iterable<ObjectNode> read() {
