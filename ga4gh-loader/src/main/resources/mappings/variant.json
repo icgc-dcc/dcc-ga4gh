@@ -29,6 +29,14 @@
 				"type": "keyword",
 				"index": "true"
 			},
+			"data_type": {
+				"type": "keyword",
+				"index": "true"
+			},
+			"object_id": {
+				"type": "keyword",
+				"index": "true"
+			},
 			"record": {
 				"type": "text",
 				"index": "false"

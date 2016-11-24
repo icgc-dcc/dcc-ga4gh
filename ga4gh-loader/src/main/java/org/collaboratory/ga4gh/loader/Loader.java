@@ -3,6 +3,7 @@ package org.collaboratory.ga4gh.loader;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
+import static org.collaboratory.ga4gh.loader.PortalFiles.getDataType;
 import static org.collaboratory.ga4gh.loader.PortalFiles.getDonorId;
 import static org.collaboratory.ga4gh.loader.PortalFiles.getFileId;
 import static org.collaboratory.ga4gh.loader.PortalFiles.getObjectId;
@@ -56,8 +57,9 @@ public class Loader {
     val fileId = getFileId(objectNode);
     val sampleId = getSampleId(objectNode);
     val donorId = getDonorId(objectNode);
+    val dataType = getDataType(objectNode);
 
-    val fileMetaData = new FileMetaData(objectId, fileId, sampleId, donorId);
+    val fileMetaData = new FileMetaData(objectId, fileId, sampleId, donorId, dataType);
 
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);

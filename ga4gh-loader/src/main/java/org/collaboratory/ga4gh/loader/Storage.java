@@ -14,6 +14,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,16 +28,40 @@ import lombok.val;
 @NoArgsConstructor(access = PRIVATE)
 public final class Storage {
 
+  public static void main(String[] args) {
+    Map<String, String> map = new HashMap<>();
+    map.put("FI671314", "035fba3f-dfef-50be-9f43-0b3831fa983f");
+    map.put("FI671208", "6df08e83-a6e2-5ea5-896b-850b195cf991");
+    for (val entry : map.entrySet()) {
+      String outputFn = "/tmp/rob." + entry.getKey() + ".vcf.gz";
+      String objectId = entry.getValue();
+      try {
+        downloadFile(objectId, outputFn);
+        System.out.println("Successfully downloaded file: " + outputFn);
+      } catch (Exception e) {
+        System.out.println("Failed to download " + outputFn + ":  " + e.getMessage());
+
+      }
+
+    }
+
+  }
+
   @SneakyThrows
-  public static File downloadFile(String objectId) {
+  public static File downloadFile(String objectId, String filename) {
     val objectUrl = getObjectUrl(objectId);
-    val output = Paths.get("/tmp/file.vcf.gz");
+    val output = Paths.get(filename);
 
     @Cleanup
     val input = objectUrl.openStream();
     copy(input, output, REPLACE_EXISTING);
 
     return output.toFile();
+  }
+
+  @SneakyThrows
+  public static File downloadFile(String objectId) {
+    return downloadFile(objectId, "/tmp/file.vcf.gz");
   }
 
   private static URL getObjectUrl(String objectId) throws IOException {

@@ -71,10 +71,23 @@ public class VariantService {
         .setVariantSetId("SA507363")
         .build();
     val variantRepo = new VariantRepository();
-    val searchVariantResponse = variantRepo.findVariants(request);
+    val headerRepo = new HeaderRepository();
+    val variantService = new VariantService(variantRepo, headerRepo);
+    val searchVariantResponse = variantService.searchVariants(request);
     log.info("SearchVariantResponse: {} ", searchVariantResponse);
 
   }
+
+  /*
+   * public Variant getVariants(@NonNull GetVariantRequest request) { val variantId = request.getVariantId(); // search
+   * elasticsearch for this variant // populate builder with ES response
+   * 
+   * val variant = Variant.newBuilder() .setId(request.getVariantId()) .setVariantSetId()
+   * 
+   * 
+   * 
+   * }
+   */
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
     // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
@@ -118,6 +131,7 @@ public class VariantService {
         .collect(toList());
 
     val genotypes = vc.getGenotypes();
+    val something = vc.getGenotypesOrderedByName();
 
     Builder builder = Variant.newBuilder()
         .setId(vc.getID())
