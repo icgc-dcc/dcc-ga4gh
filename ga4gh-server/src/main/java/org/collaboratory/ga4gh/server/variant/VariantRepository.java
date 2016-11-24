@@ -20,9 +20,9 @@ package org.collaboratory.ga4gh.server.variant;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_PORT;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.net.InetAddress;
 
@@ -64,16 +64,18 @@ public class VariantRepository {
         .addSort("start", SortOrder.ASC)
         .setSize(request.getPageSize());
 
-    val bool = boolQuery();
-    bool.must(rangeQuery("start").gte(request.getStart()));
-    bool.must(rangeQuery("end").lt(request.getEnd()));
-    bool.must(termQuery("reference_name", request.getReferenceName()));
+    val boolQuery = boolQuery()
+        .must(matchQuery("variant_set_id", request.getVariantSetId()))
+        .must(matchQuery("reference_name", request.getReferenceName()))
+        .must(rangeQuery("start").gte(request.getStart()))
+        .must(rangeQuery("end").lt(request.getEnd()));
+    for (String callSetId : request.getCallSetIdsList()) {
+      boolQuery.should(matchQuery("call_set_id", callSetId));
+    }
 
-    val query = boolQuery();
-    query.must(matchAllQuery());
-    query.filter(bool);
+    val constantScoreQuery = constantScoreQuery(boolQuery);
 
-    return searchRequestBuilder.setQuery(query).get();
+    return searchRequestBuilder.setQuery(constantScoreQuery).get();
   }
 
 }

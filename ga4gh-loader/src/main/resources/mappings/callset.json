@@ -1,6 +1,10 @@
 {
 	"callset": {
 		"properties": {
+			"id" : {
+				"type": "keyword",
+				"index": "true"
+			},
 			"vcf_header": {
 				"type": "keyword",
 				"index": "false"

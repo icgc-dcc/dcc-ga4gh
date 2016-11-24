@@ -3,7 +3,8 @@ package org.collaboratory.ga4gh.loader;
 public class Config {
 
   public static final String INDEX_NAME = "dcc-variants";
-  public static final String TYPE_NAME = "variant";
+  public static final String VARIANT_TYPE_NAME = "variant";
+  public static final String CALLSET_TYPE_NAME = "callset";
   public static final String NODE_ADDRESS = System.getProperty("node_address", "localhost");
   public static final int NODE_PORT = Integer.valueOf(System.getProperty("node_port", "9300"));
   public static final String ES_URL = "es://" + NODE_ADDRESS + ":" + NODE_PORT;
@@ -13,7 +14,8 @@ public class Config {
 
   public static String toConfigString() {
     return "INDEX_NAME: " + INDEX_NAME + "\n"
-        + "TYPE_NAME: " + TYPE_NAME + "\n"
+        + "VARIANT_TYPE_NAME: " + VARIANT_TYPE_NAME + "\n"
+        + "CALLSET_TYPE_NAME: " + CALLSET_TYPE_NAME + "\n"
         + "NODE_ADDRESS: " + NODE_ADDRESS + "\n"
         + "NODE_PORT: " + NODE_PORT + "\n"
         + "ES_URL: " + ES_URL + "\n"

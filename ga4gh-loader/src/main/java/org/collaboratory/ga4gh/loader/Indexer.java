@@ -2,6 +2,8 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
+import static org.collaboratory.ga4gh.loader.Config.CALLSET_TYPE_NAME;
+import static org.collaboratory.ga4gh.loader.Config.VARIANT_TYPE_NAME;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.BufferedReader;
@@ -49,18 +51,23 @@ public class Indexer {
     settingsReader.lines().forEach(s -> settings.append(s));
     log.info(settings.toString());
 
-    val mapping1 = new StringBuffer();
-    val reader1 = new BufferedReader(new InputStreamReader(getSystemResourceAsStream("mappings/variant.json")));
-    reader1.lines().forEach(s -> mapping1.append(s));
+    val variantMappingStringBuffer = new StringBuffer();
+    val variantMappingReader =
+        new BufferedReader(new InputStreamReader(getSystemResourceAsStream("mappings/variant.json")));
+    variantMappingReader.lines().forEach(s -> variantMappingStringBuffer.append(s));
 
-    val mapping2 = new StringBuffer();
-    val reader2 = new BufferedReader(new InputStreamReader(getSystemResourceAsStream("mappings/callset.json")));
-    reader2.lines().forEach(s -> mapping2.append(s));
+    val callsetMappingStringBuffer = new StringBuffer();
+    val callsetMappingReader =
+        new BufferedReader(new InputStreamReader(getSystemResourceAsStream("mappings/callset.json")));
+    callsetMappingReader.lines().forEach(s -> callsetMappingStringBuffer.append(s));
 
     val retVal = indexes.prepareCreate(indexName)
         .setSettings(settings.toString())
-        .addMapping(Config.TYPE_NAME, mapping1.toString()).addMapping("callset", mapping2.toString())
+        .addMapping(VARIANT_TYPE_NAME, variantMappingStringBuffer.toString())
+        .addMapping(CALLSET_TYPE_NAME, callsetMappingStringBuffer.toString())
         .execute().actionGet().isAcknowledged();
+    checkState(retVal);
+
     log.info("Index ret val is: {}", retVal);
 
   }
@@ -98,7 +105,7 @@ public class Indexer {
 
     @Override
     public String getIndexType() {
-      return Config.TYPE_NAME;
+      return VARIANT_TYPE_NAME;
     }
 
   }
@@ -107,7 +114,7 @@ public class Indexer {
 
     @Override
     public String getIndexType() {
-      return "callset";
+      return CALLSET_TYPE_NAME;
     }
 
   }

@@ -68,8 +68,8 @@ public class Loader {
     val variants = vcf.read();
     val header = vcf.getHeader();
 
-    log.info("Indexing header {}...", objectId);
-    indexer.indexHeaders(header, objectId);
+    log.info("Indexing header {}...", fileId);
+    indexer.indexHeaders(header, fileId);
 
     log.info("Indexing {}...", objectId);
     indexer.indexVariants(variants);
