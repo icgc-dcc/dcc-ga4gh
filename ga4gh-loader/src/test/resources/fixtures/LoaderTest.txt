@@ -1,0 +1,15 @@
+{ "index":{ "_index":"dcc-variants", "_type":"variant", "_id":"035fba3f-dfef-50be-9f43-0b3831fa983f" }}
+{
+    "id": "035fba3f-dfef-50be-9f43-0b3831fa983f",
+    "start": 2353106,
+    "end": 2353106,
+    "reference_name": "20",
+    "record": "20\t2353106\t.\tG\tT\t.\t.\tCallers=broad,dkfz,muse,sanger;NumCallers=4;VAF=0.1667;Variant_Classification=IGR;t_alt_count=8;t_ref_count=40",
+    "call_set_id": "FI671314",
+    "variant_set_id": "SA507363",
+    "donor_id": "DO46901"
+}
+{ "index":{ "_index":"dcc-variants", "_type":"callset", "_id":"1" }}
+{
+    "id": "1"
+}

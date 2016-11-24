@@ -1,13 +1,10 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 
@@ -17,6 +14,7 @@ import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
 import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.io.Resources;
 
 import htsjdk.variant.vcf.VCFHeader;
 import lombok.NonNull;
@@ -29,10 +27,28 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Indexer {
 
+  /**
+   * Constants.
+   */
+  public static final String CALLSET_TYPE_NAME = "callset";
+  public static final String VARIANT_TYPE_NAME = "variant";
+
+  private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
+
+  /**
+   * Dependencies.
+   */
   private final Client client;
   private final DocumentWriter writer;
+
+  /**
+   * Configuration.
+   */
   private final String indexName;
 
+  /**
+   * State.
+   */
   private int id = 1;
 
   @SneakyThrows
@@ -43,26 +59,11 @@ public class Indexer {
       checkState(indexes.prepareDelete(indexName).execute().get().isAcknowledged());
     }
 
-    val settings = new StringBuffer();
-    val settingsReader =
-        new BufferedReader(new InputStreamReader(getSystemResourceAsStream("mappings/index.settings.json")));
-    settingsReader.lines().forEach(s -> settings.append(s));
-    log.info(settings.toString());
-
-    val mapping1 = new StringBuffer();
-    val reader1 = new BufferedReader(new InputStreamReader(getSystemResourceAsStream("mappings/variant.json")));
-    reader1.lines().forEach(s -> mapping1.append(s));
-
-    val mapping2 = new StringBuffer();
-    val reader2 = new BufferedReader(new InputStreamReader(getSystemResourceAsStream("mappings/callset.json")));
-    reader2.lines().forEach(s -> mapping2.append(s));
-
-    val retVal = indexes.prepareCreate(indexName)
-        .setSettings(settings.toString())
-        .addMapping(Config.TYPE_NAME, mapping1.toString()).addMapping("callset", mapping2.toString())
-        .execute().actionGet().isAcknowledged();
-    log.info("Index ret val is: {}", retVal);
-
+    checkState(indexes.prepareCreate(indexName)
+        .setSettings(read("index.settings.json").toString())
+        .addMapping(CALLSET_TYPE_NAME, read("callset.mapping.json").toString())
+        .addMapping(VARIANT_TYPE_NAME, read("variant.mapping.json").toString())
+        .execute().actionGet().isAcknowledged());
   }
 
   @SneakyThrows
@@ -98,7 +99,7 @@ public class Indexer {
 
     @Override
     public String getIndexType() {
-      return Config.TYPE_NAME;
+      return Indexer.VARIANT_TYPE_NAME;
     }
 
   }
@@ -110,6 +111,12 @@ public class Indexer {
       return "callset";
     }
 
+  }
+
+  @SneakyThrows
+  private static ObjectNode read(String fileName) {
+    val url = Resources.getResource(MAPPINGS_DIR + "/" + fileName);
+    return (ObjectNode) DEFAULT.readTree(url);
   }
 
 }

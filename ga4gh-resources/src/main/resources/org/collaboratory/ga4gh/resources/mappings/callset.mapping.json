@@ -1,0 +1,16 @@
+{
+	"callset": {
+		"properties": {
+			"vcf_header": {
+				"type": "keyword",
+				"index": "false"
+			}
+		},
+		"_all": {
+			"enabled": false
+		},
+		"_source": {
+			"enabled": true
+		}
+	}
+}
