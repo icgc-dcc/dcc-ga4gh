@@ -34,9 +34,15 @@ public final class PortalFiles {
   private static final String DONORS = "donors";
   private static final String SAMPLE_ID = "sampleId";
   private static final String ID = "id";
+  private static final String DATA_TYPE = "dataType";
+  private static final String DATA_CATEGORIZATION = "dataCategorization";
 
   public static String getObjectId(@NonNull ObjectNode file) {
     return file.path(OBJECT_ID).textValue();
+  }
+
+  public static String getDataType(@NonNull ObjectNode file) {
+    return getDataCategorization(file).path(DATA_TYPE).textValue();
   }
 
   public static String getFileId(@NonNull ObjectNode file) {
@@ -57,6 +63,10 @@ public final class PortalFiles {
 
   private static JsonNode getFirstDonor(ObjectNode file) {
     return getDonors(file).path(0);
+  }
+
+  private static JsonNode getDataCategorization(ObjectNode file) {
+    return file.path(DATA_CATEGORIZATION);
   }
 
   private static JsonNode getDonors(ObjectNode file) {

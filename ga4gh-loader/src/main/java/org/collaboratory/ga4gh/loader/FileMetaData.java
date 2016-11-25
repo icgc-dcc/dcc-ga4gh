@@ -35,4 +35,7 @@ public class FileMetaData {
   @NonNull
   public String donorId;
 
+  @NonNull
+  public String dataType;
+
 }

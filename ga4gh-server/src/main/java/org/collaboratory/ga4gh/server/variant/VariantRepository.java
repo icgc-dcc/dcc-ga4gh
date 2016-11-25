@@ -35,6 +35,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
 
+import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -75,6 +76,19 @@ public class VariantRepository {
 
     val constantScoreQuery = constantScoreQuery(boolQuery);
 
+    return searchRequestBuilder.setQuery(constantScoreQuery).get();
+  }
+
+  public SearchResponse findVariantById(@NonNull GetVariantRequest request) {
+    val searchRequestBuilder = SearchAction.INSTANCE.newRequestBuilder(client)
+        .setIndices("dcc-variants")
+        .setTypes("variant")
+        .addSort("start", SortOrder.ASC)
+        .setSize(1); // only want one variant
+
+    val boolQuery = boolQuery()
+        .must(matchQuery("id", request.getVariantId()));
+    val constantScoreQuery = constantScoreQuery(boolQuery);
     return searchRequestBuilder.setQuery(constantScoreQuery).get();
   }
 

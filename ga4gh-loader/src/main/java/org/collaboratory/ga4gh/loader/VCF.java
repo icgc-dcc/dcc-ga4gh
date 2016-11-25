@@ -44,6 +44,7 @@ public class VCF implements Closeable {
 
   private ObjectNode convert(VariantContext record) {
     return object()
+        // .with("id", this.fileMetaData.getObjectId())
         .with("id", record.getID())
         .with("start", record.getStart())
         .with("end", record.getEnd())
@@ -52,6 +53,8 @@ public class VCF implements Closeable {
         .with("call_set_id", this.fileMetaData.getFileId())
         .with("variant_set_id", this.fileMetaData.getSampleId())
         .with("donor_id", this.fileMetaData.getDonorId())
+        .with("data_type", this.fileMetaData.getDataType())
+        .with("object_id", this.fileMetaData.getObjectId())
         .end();
   }
 
