@@ -68,9 +68,8 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		
 		<!-- Search -->
 		<dependency>
-			<groupId>org.elasticsearch.client</groupId>
-			<artifactId>transport</artifactId>
-			<version>${elasticsearch.version}</version>
+			<groupId>org.icgc.dcc</groupId>
+			<artifactId>elasticsearch-shaded</artifactId>
 		</dependency>
 		
 		<!-- Utilities -->
@@ -84,6 +83,12 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<artifactId>guava</artifactId>
 		</dependency>
 
+		<!-- Test - Search -->
+		<dependency>
+			<groupId>org.icgc.dcc</groupId>
+			<artifactId>elasticsearch-test-shaded</artifactId>
+		</dependency>
+		
 	</dependencies>
 
 	<build>
