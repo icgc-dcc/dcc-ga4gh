@@ -25,6 +25,10 @@
 				"type": "keyword",
 				"index": "true"
 			},
+			"bio_sample_id": {
+				"type": "keyword",
+				"index": "true"
+			},
 			"variant_set_id": {
 				"type": "keyword",
 				"index": "true"
@@ -33,7 +37,7 @@
 				"type": "keyword",
 				"index": "true"
 			},
-			"object_id": {
+			"caller_ids": {
 				"type": "keyword",
 				"index": "true"
 			},

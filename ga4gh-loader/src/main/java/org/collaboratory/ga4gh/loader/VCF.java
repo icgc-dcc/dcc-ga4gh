@@ -1,10 +1,12 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.collect.Iterables.transform;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -13,6 +15,7 @@ import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import lombok.NonNull;
+import lombok.val;
 
 public class VCF implements Closeable {
 
@@ -43,8 +46,13 @@ public class VCF implements Closeable {
   }
 
   private ObjectNode convert(VariantContext record) {
+    val jsonArrayNode = array().with(
+        record.getCommonInfo().getAttributeAsList("Callers")
+            .stream()
+            .map(x -> x.toString())
+            .collect(Collectors.toList()));
+
     return object()
-        // .with("id", this.fileMetaData.getObjectId())
         .with("id", record.getID())
         .with("start", record.getStart())
         .with("end", record.getEnd())
@@ -54,7 +62,8 @@ public class VCF implements Closeable {
         .with("variant_set_id", this.fileMetaData.getSampleId())
         .with("donor_id", this.fileMetaData.getDonorId())
         .with("data_type", this.fileMetaData.getDataType())
-        .with("object_id", this.fileMetaData.getObjectId())
+        .with("bio_sample_id", this.fileMetaData.getSampleId())
+        .with("caller_ids", jsonArrayNode)
         .end();
   }
 
