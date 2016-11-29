@@ -1,9 +1,25 @@
 {
 	"callset": {
 		"properties": {
-			"vcf_header": {
+			"id": {
 				"type": "keyword",
-				"index": "false"
+				"index": "true"
+			},
+			"name": {
+				"type": "keyword",
+				"index": "true"
+			},
+			"caller_id": {
+				"type": "keyword",
+				"index": "true"
+			},
+			"variant_set_id": {
+				"type": "keyword",
+				"index": "true"
+			},
+			"data_set_id": {
+				"type": "keyword",
+				"index": "true"
 			}
 		},
 		"_all": {

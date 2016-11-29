@@ -1,11 +1,10 @@
 package org.collaboratory.ga4gh.loader;
 
-import static com.google.common.collect.Iterables.transform;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,33 +36,68 @@ public class VCF implements Closeable {
         OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
   }
 
-  public Iterable<ObjectNode> read() {
-    return transform(vcf, this::convert);
+  public Iterable<ObjectNode> readCallSets() {
+    val outList = new ArrayList<ObjectNode>();
+    for (VariantContext record : vcf) {
+      outList.addAll(record.getCommonInfo().getAttributeAsList("Callers")
+          .stream()
+          .map(c -> convertCallSet(fileMetaData.getSampleId(), c.toString()))
+          .collect(Collectors.toList()));
+    }
+    return outList;
+  }
+
+  public Iterable<ObjectNode> readVariants() {
+    val outList = new ArrayList<ObjectNode>();
+    for (VariantContext record : vcf) {
+      outList.addAll(record.getCommonInfo().getAttributeAsList("Callers")
+          .stream()
+          .map(c -> convert(record, c.toString()))
+          .collect(Collectors.toList()));
+    }
+    return outList;
   }
 
   public VCFHeader getHeader() {
     return vcf.getFileHeader();
   }
 
-  private ObjectNode convert(VariantContext record) {
-    val jsonArrayNode = array().with(
-        record.getCommonInfo().getAttributeAsList("Callers")
-            .stream()
-            .map(x -> x.toString())
-            .collect(Collectors.toList()));
+  private static String createCallSetId(String bio_sample_id, String caller_id) {
+    return bio_sample_id + caller_id;
+  }
+
+  private ObjectNode convertCallSet(String bio_sample_id, String caller_id) {
+    return object()
+        .with("id", createCallSetId(bio_sample_id, caller_id))
+        .with("name", bio_sample_id + "_" + caller_id)
+        .with("caller_id", caller_id)
+        .with("variant_set_id", createVariantSetId(caller_id))
+        .with("data_set_id", this.fileMetaData.getDataType())
+        .end();
+
+  }
+
+  private static String createVariantId(VariantContext record) {
+    return record.getStart() + record.getEnd() + record.getContig();
+  }
+
+  private static String createVariantSetId(String caller_id) {
+    return caller_id;
+  }
+
+  private ObjectNode convert(VariantContext record, String caller_id) {
 
     return object()
-        .with("id", record.getID())
+        .with("id", createVariantId(record))
         .with("start", record.getStart())
         .with("end", record.getEnd())
         .with("reference_name", record.getContig())
         .with("record", encoder.encode(record))
-        .with("call_set_id", this.fileMetaData.getFileId())
-        .with("variant_set_id", this.fileMetaData.getSampleId())
+        .with("caller_id", caller_id)
+        .with("variant_set_id", createVariantSetId(caller_id))
         .with("donor_id", this.fileMetaData.getDonorId())
         .with("data_type", this.fileMetaData.getDataType())
         .with("bio_sample_id", this.fileMetaData.getSampleId())
-        .with("caller_ids", jsonArrayNode)
         .end();
   }
 

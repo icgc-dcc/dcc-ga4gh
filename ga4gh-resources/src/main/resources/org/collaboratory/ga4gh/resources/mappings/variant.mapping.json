@@ -17,7 +17,7 @@
 				"type": "keyword",
 				"index": "true"
 			},
-			"call_set_id": {
+			"caller_id": {
 				"type": "keyword",
 				"index": "true"
 			},
@@ -34,10 +34,6 @@
 				"index": "true"
 			},
 			"data_type": {
-				"type": "keyword",
-				"index": "true"
-			},
-			"caller_ids": {
 				"type": "keyword",
 				"index": "true"
 			},

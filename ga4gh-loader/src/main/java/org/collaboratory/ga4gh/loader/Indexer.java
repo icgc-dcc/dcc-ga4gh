@@ -31,6 +31,7 @@ public class Indexer {
    * Constants.
    */
   public static final String CALLSET_TYPE_NAME = "callset";
+  public static final String BIO_SAMPLE_TYPE_NAME = "bio_sample";
   public static final String VARIANT_TYPE_NAME = "variant";
 
   private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
@@ -62,6 +63,7 @@ public class Indexer {
     checkState(indexes.prepareCreate(indexName)
         .setSettings(read("index.settings.json").toString())
         .addMapping(CALLSET_TYPE_NAME, read("callset.mapping.json").toString())
+        .addMapping(BIO_SAMPLE_TYPE_NAME, read("bio_sample.mapping.json").toString())
         .addMapping(VARIANT_TYPE_NAME, read("variant.mapping.json").toString())
         .execute().actionGet().isAcknowledged());
   }
@@ -81,10 +83,22 @@ public class Indexer {
   }
 
   @SneakyThrows
+  public void indexCallSets(@NonNull Iterable<ObjectNode> callSets) {
+
+    for (val callSet : callSets) {
+      writeCallSet(callSet);
+    }
+  }
+
+  @SneakyThrows
   public void indexVariants(@NonNull Iterable<ObjectNode> variants) {
     for (val variant : variants) {
       writeVariant(variant);
     }
+  }
+
+  private void writeCallSet(ObjectNode callSet) throws IOException {
+    writer.write(new IndexDocument(nextId(), callSet, new CallSetDocumentType()));
   }
 
   private void writeVariant(ObjectNode variant) throws IOException {
@@ -105,6 +119,15 @@ public class Indexer {
   }
 
   private static class HeaderDocumentType implements IndexDocumentType {
+
+    @Override
+    public String getIndexType() {
+      return BIO_SAMPLE_TYPE_NAME;
+    }
+
+  }
+
+  private static class CallSetDocumentType implements IndexDocumentType {
 
     @Override
     public String getIndexType() {
