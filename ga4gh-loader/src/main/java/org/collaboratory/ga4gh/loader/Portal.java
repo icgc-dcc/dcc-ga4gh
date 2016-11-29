@@ -1,5 +1,7 @@
 package org.collaboratory.ga4gh.loader;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
@@ -8,10 +10,12 @@ import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -51,8 +55,62 @@ public final class Portal {
     return fileMetas.build();
   }
 
+  public static List<ObjectNode> getFileMetasForNumDonors(int numDonors) {
+    checkState(numDonors > 1); // due to bug in Portal api, must be greater than 1
+    val fileMetas = ImmutableList.<ObjectNode> builder();
+
+    int from = 1;
+    val donorIterable = getDonors(numDonors, from);
+
+    int size = PORTAL_FETCH_SIZE;
+    while (true) {
+      val allFilesForDonorsUrl = getFilesForDonersUrl(donorIterable, size, from);
+      val result = read(allFilesForDonorsUrl);
+      val hits = getHits(result);
+      for (val hit : hits) {
+        val fileMeta = (ObjectNode) hit;
+        fileMetas.add(fileMeta);
+      }
+      if (hits.size() < size) {
+        break;
+      }
+      from += size;
+    }
+    return fileMetas.build();
+  }
+
+  private static String getIdFromHit(JsonNode hit) {
+    return hit.path("id").textValue();
+  }
+
+  private static Iterable<String> getDonors(int numDonors, int startPos) {
+    checkState(numDonors > 0);
+    checkState(startPos > 0);
+    val url = getDonersUrl(numDonors, startPos);
+    val result = read(url);
+    val hits = getHits(result);
+    return transform(hits, Portal::getIdFromHit);
+
+  }
+
   private static JsonNode getHits(JsonNode result) {
     return result.get("hits");
+  }
+
+  @SneakyThrows
+  private static URL getDonersUrl(int size, int from) {
+    val endpoint = PORTAL_API + "/api/v1/donors";
+    return new URL(endpoint + "?" + "from=" + from + "&size=" + size + "&order=desc&facetsOnly=false");
+  }
+
+  @SneakyThrows
+  private static URL getFilesForDonersUrl(Iterable<String> donorIterable, int size, int from) {
+    val endpoint = PORTAL_API + "/api/v1/repository/files";
+    String donorsCSV = Lists.newArrayList(donorIterable).stream().collect(Collectors.joining("\",\""));
+    String filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
+        + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]},"
+        + "\"donorId\":{\"is\":[\"" + donorsCSV + "\"]}}}", UTF_8.name());
+    return new URL(endpoint + "?" + "filters=" + filters + "&" + "size=" + size + "&" + "from=" + from);
   }
 
   @SneakyThrows
