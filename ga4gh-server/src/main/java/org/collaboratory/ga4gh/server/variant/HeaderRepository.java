@@ -47,7 +47,7 @@ public class HeaderRepository {
   }
 
   public GetResponse getHeader(String objectId) {
-    val searchRequestBuilder = client.prepareGet("dcc-variants", "callset", objectId);
+    val searchRequestBuilder = client.prepareGet("dcc-variants", "bio_sample", objectId);
     return searchRequestBuilder.get();
   }
 

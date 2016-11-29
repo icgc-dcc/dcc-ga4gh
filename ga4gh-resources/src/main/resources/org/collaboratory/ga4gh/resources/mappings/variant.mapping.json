@@ -33,6 +33,10 @@
 				"type": "keyword",
 				"index": "true"
 			},
+			"call_set_id": {
+				"type": "keyword",
+				"index": "true"
+			},
 			"data_type": {
 				"type": "keyword",
 				"index": "true"

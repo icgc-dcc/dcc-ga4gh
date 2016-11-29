@@ -78,7 +78,7 @@ public class VCF implements Closeable {
   }
 
   private static String createVariantId(VariantContext record) {
-    return record.getStart() + record.getEnd() + record.getContig();
+    return record.getStart() + "_" + record.getEnd() + "_" + record.getContig();
   }
 
   private static String createVariantSetId(String caller_id) {
@@ -95,6 +95,7 @@ public class VCF implements Closeable {
         .with("record", encoder.encode(record))
         .with("caller_id", caller_id)
         .with("variant_set_id", createVariantSetId(caller_id))
+        .with("call_set_id", createCallSetId(this.fileMetaData.getSampleId(), caller_id))
         .with("donor_id", this.fileMetaData.getDonorId())
         .with("data_type", this.fileMetaData.getDataType())
         .with("bio_sample_id", this.fileMetaData.getSampleId())

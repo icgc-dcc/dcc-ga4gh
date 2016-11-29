@@ -83,6 +83,7 @@ public final class Portal {
     return hit.path("id").textValue();
   }
 
+  // TODO: [rtisma] - donorIds retrieved from here are not searchable in repository. need to investigate why
   private static Iterable<String> getDonors(int numDonors, int startPos) {
     checkState(numDonors > 0);
     checkState(startPos > 0);
@@ -107,10 +108,12 @@ public final class Portal {
   private static URL getFilesForDonersUrl(Iterable<String> donorIterable, int size, int from) {
     val endpoint = PORTAL_API + "/api/v1/repository/files";
     String donorsCSV = Lists.newArrayList(donorIterable).stream().collect(Collectors.joining("\",\""));
+    // {"file":{"repoName":{"is":["Collaboratory - Toronto"]},"fileFormat":{"is":["VCF"]},"donorId":{"is":["DO222843"]}}
     String filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
         + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]},"
         + "\"donorId\":{\"is\":[\"" + donorsCSV + "\"]}}}", UTF_8.name());
-    return new URL(endpoint + "?" + "filters=" + filters + "&" + "size=" + size + "&" + "from=" + from);
+    return new URL(
+        endpoint + "?" + "filters=" + filters + "&" + "from=" + from + "&" + "size=" + size + "&sort=id&order=desc");
   }
 
   @SneakyThrows

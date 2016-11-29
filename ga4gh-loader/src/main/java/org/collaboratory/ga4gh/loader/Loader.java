@@ -37,8 +37,8 @@ public class Loader {
   public void load() {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
-    // val fileMetas = Portal.getFileMetas();
-    val fileMetas = Portal.getFileMetasForNumDonors(2);
+    val fileMetas = Portal.getFileMetas();
+    // val fileMetas = Portal.getFileMetasForNumDonors(2);
     val total = fileMetas.size();
     int counter = 1;
     for (val fileMeta : fileMetas) {
@@ -72,8 +72,8 @@ public class Loader {
     val callSets = vcf.readCallSets();
     val header = vcf.getHeader();
 
-    log.info("Indexing header {}...", fileId);
-    indexer.indexHeaders(header, fileId);
+    log.info("Indexing header {}...", sampleId);
+    indexer.indexHeaders(header, sampleId);
 
     log.info("Indexing variants {}...", objectId);
     indexer.indexVariants(variants);

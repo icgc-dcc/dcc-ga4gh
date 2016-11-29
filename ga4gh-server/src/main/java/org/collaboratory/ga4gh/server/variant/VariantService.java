@@ -62,13 +62,13 @@ public class VariantService {
 
   public static void main(String[] args) {
     val request = SearchVariantsRequest.newBuilder()
-        .addCallSetIds("FI671314")
-        .addCallSetIds("FI671316")
-        .setEnd(3353106)
-        .setStart(2353106)
+        .addCallSetIds("SA507473smufin")
+        .addCallSetIds("SA507473dkfz")
+        .setEnd(594523)
+        .setStart(594518)
         .setPageSize(10)
-        .setReferenceName("20")
-        .setVariantSetId("SA507363")
+        .setReferenceName("1")
+        .setVariantSetId("dkfz")
         .build();
     val variantRepo = new VariantRepository();
     val headerRepo = new HeaderRepository();
@@ -115,7 +115,7 @@ public class VariantService {
   @SneakyThrows
   private Builder convertToVariant(@NonNull SearchHit hit) {
     JsonNode json = MAPPER.readTree(hit.getSourceAsString());
-    val response = headerRepository.getHeader(json.get("call_set_id").asText());
+    val response = headerRepository.getHeader(json.get("bio_sample_id").asText());
     val headerString = response.getSource().get("vcf_header").toString();
     byte[] data = Base64.getDecoder().decode(headerString);
     ObjectInputStream ois = new ObjectInputStream(
@@ -134,7 +134,7 @@ public class VariantService {
     val something = vc.getGenotypesOrderedByName();
 
     Builder builder = Variant.newBuilder()
-        .setId(vc.getID())
+        .setId(json.get("id").asText())
         .setVariantSetId(json.get("variant_set_id").asText())
         .setReferenceName(vc.getContig())
         .setReferenceBases(vc.getReference().getBaseString())
