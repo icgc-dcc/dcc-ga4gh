@@ -17,13 +17,16 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
@@ -32,11 +35,15 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.ListValue;
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
 import ga4gh.Variants.Variant;
 import ga4gh.Variants.Variant.Builder;
+import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
@@ -112,6 +119,97 @@ public class VariantService {
     return responseBuilder.build();
   }
 
+  public static class TypeChecker {
+
+    public static boolean isStringInteger(String input) {
+      try {
+        Integer.parseInt(input);
+        return true;
+      } catch (NumberFormatException e) {
+        return false;
+      }
+    }
+
+    public static boolean isStringDouble(String input) {
+      try {
+        Double.parseDouble(input);
+        return true;
+      } catch (NumberFormatException e) {
+        return false;
+      }
+    }
+
+    public static boolean isStringFloat(String input) {
+      try {
+        Float.parseFloat(input);
+        return true;
+      } catch (NumberFormatException e) {
+        return false;
+      }
+    }
+
+    public static boolean isStringBoolean(String input) {
+      try {
+        Boolean.parseBoolean(input);
+        return true;
+      } catch (NumberFormatException e) {
+        return false;
+      }
+    }
+
+    public static boolean isObjectBoolean(Object obj) {
+      return obj instanceof Boolean;
+    }
+
+    public static boolean isObjectInteger(Object obj) {
+      return obj instanceof Integer;
+    }
+
+    public static boolean isObjectDouble(Object obj) {
+      return obj instanceof Double;
+    }
+
+    public static boolean isObjectFloat(Object obj) {
+      return obj instanceof Float;
+    }
+
+    public static boolean isObjectMap(Object obj) {
+      return obj instanceof Map<?, ?>;
+    }
+
+    public static boolean isObjectCollection(Object obj) {
+      return obj instanceof Collection<?>;
+    }
+
+  }
+
+  @SuppressWarnings("unchecked")
+  private static ListValue createListValueFromObject(Object obj) {
+    val listValueBuilder = ListValue.newBuilder();
+    if (TypeChecker.isObjectCollection(obj)) {
+      for (Object elementObj : (Collection<Object>) obj) {
+        listValueBuilder.addValues(Value.newBuilder().setStringValue(elementObj.toString()));
+      }
+    } else if (TypeChecker.isObjectMap(obj)) { // TODO: still incomplete
+      Map<String, Value> map = new HashMap<>();
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) obj).entrySet()) {
+        map.put(entry.getKey().toString(), Value.newBuilder().setStringValue(entry.getValue().toString()).build());
+      }
+      listValueBuilder.addValues(Value.newBuilder().setStructValue(Struct.newBuilder().putAllFields(map)));
+    } else { // Treat everything else as just a string
+      listValueBuilder.addValues(Value.newBuilder().setStringValue(obj.toString()).build());
+    }
+    return listValueBuilder.build();
+  }
+
+  private static Map<String, ListValue> createInfo(CommonInfo commonInfo) {
+    val map = new HashMap<String, ListValue>();
+    for (Map.Entry<String, Object> entry : commonInfo.getAttributes().entrySet()) {
+      map.put(entry.getKey(), createListValueFromObject(entry.getValue()));
+    }
+    return map;
+  }
+
   @SneakyThrows
   private Builder convertToVariant(@NonNull SearchHit hit) {
     JsonNode json = MAPPER.readTree(hit.getSourceAsString());
@@ -128,7 +226,7 @@ public class VariantService {
 
     List<String> alt = vc.getAlternateAlleles().stream()
         .map(al -> al.getBaseString())
-        .collect(toList());
+        .collect(Collectors.toList());
 
     val genotypes = vc.getGenotypes();
     val something = vc.getGenotypesOrderedByName();
@@ -141,6 +239,7 @@ public class VariantService {
         .addAllAlternateBases(alt)
         .setStart(vc.getStart())
         .setEnd(vc.getEnd())
+        .putAllInfo(createInfo(vc.getCommonInfo()))
         .setCreated(0)
         .setUpdated(0);
 
