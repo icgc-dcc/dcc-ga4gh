@@ -31,6 +31,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
@@ -76,7 +77,10 @@ public class VariantRepository {
 
     val constantScoreQuery = constantScoreQuery(boolQuery);
 
-    return searchRequestBuilder.setQuery(constantScoreQuery).get();
+    val agg = AggregationBuilders.terms("by_variant_id").field("id")
+        .subAggregation(AggregationBuilders.terms("by_call_set_id").field("call_set_id"));
+
+    return searchRequestBuilder.setQuery(constantScoreQuery).addAggregation(agg).get();
   }
 
   public SearchResponse findVariantById(@NonNull GetVariantRequest request) {

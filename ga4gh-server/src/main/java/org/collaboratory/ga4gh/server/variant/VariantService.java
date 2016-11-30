@@ -21,6 +21,7 @@ import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,6 +61,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class VariantService {
 
+  private final static int GENOTYPE_NUMBER = 1;
+  private final static String PHASESET_VALUE = "true";
+
   @NonNull
   private final VariantRepository variantRepository;
   @NonNull
@@ -71,8 +76,8 @@ public class VariantService {
     val request = SearchVariantsRequest.newBuilder()
         .addCallSetIds("SA507473smufin")
         .addCallSetIds("SA507473dkfz")
-        .setEnd(594523)
-        .setStart(594518)
+        .setEnd(9594523)
+        .setStart(0)
         .setPageSize(10)
         .setReferenceName("1")
         .setVariantSetId("dkfz")
@@ -114,9 +119,28 @@ public class VariantService {
 
   private SearchVariantsResponse buildResponse(@NonNull SearchResponse searchResponse) {
     val responseBuilder = SearchVariantsResponse.newBuilder();
-    stream(searchResponse.getHits()).map(this::convertToVariant).forEach(v -> responseBuilder.addVariants(v));
+    stream(searchResponse.getAggregations());
+
+    val variantId2CallSetIdsMap = createVariantId2CallSetIdsMap(searchResponse);
+    stream(searchResponse.getHits())
+        .map(x -> convertToVariant(x, variantId2CallSetIdsMap))
+        .forEach(v -> responseBuilder.addVariants(v));
 
     return responseBuilder.build();
+  }
+
+  private static Map<String, List<String>> createVariantId2CallSetIdsMap(@NonNull SearchResponse searchResponse) {
+    Terms byVariantIdAggTerms = searchResponse.getAggregations().get("by_variant_id");
+    val map = new HashMap<String, List<String>>();
+    for (Terms.Bucket vb : byVariantIdAggTerms.getBuckets()) {
+      val list = new ArrayList<String>();
+      Terms byCallsetIdAggTerms = vb.getAggregations().get("by_call_set_id");
+      for (Terms.Bucket cb : byCallsetIdAggTerms.getBuckets()) {
+        list.add(cb.getKey().toString());
+      }
+      map.put(vb.getKey().toString(), list);
+    }
+    return map;
   }
 
   public static class TypeChecker {
@@ -211,7 +235,7 @@ public class VariantService {
   }
 
   @SneakyThrows
-  private Builder convertToVariant(@NonNull SearchHit hit) {
+  private Builder convertToVariant(@NonNull SearchHit hit, @NonNull Map<String, List<String>> variantId2CallSetIdsMap) {
     JsonNode json = MAPPER.readTree(hit.getSourceAsString());
     val response = headerRepository.getHeader(json.get("bio_sample_id").asText());
     val headerString = response.getSource().get("vcf_header").toString();
@@ -245,5 +269,14 @@ public class VariantService {
 
     return builder;
   }
+
+  /*
+   * private Iterable<Call> getCalls(String call_set_id) { // call_set_name call_set_id genotype phaseset val call =
+   * Call.newBuilder() .addGenotype(GENOTYPE_NUMBER) .setPhaseset(PHASESET_VALUE);
+   * 
+   * return null;
+   * 
+   * }
+   */
 
 }
