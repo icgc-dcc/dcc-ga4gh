@@ -4,9 +4,12 @@ import static com.google.common.collect.Iterables.transform;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -20,6 +23,7 @@ import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 
 public class VCF implements Closeable {
@@ -51,6 +55,10 @@ public class VCF implements Closeable {
           .collect(Collectors.toList()));
     }
     return outList;
+  }
+
+  public ObjectNode readBioSample() {
+    return convertBioSamplesNodeObj(this.getHeader());
   }
 
   public Iterable<ObjectNode> readVariants() {
@@ -110,13 +118,7 @@ public class VCF implements Closeable {
         .collect(Collectors.toList());
     val arrayObjBuilder = array();
     for (String caller : caller_list) {
-      arrayObjBuilder.with(
-          object()
-              .with("id", createVariantSetId(caller))
-              .with("name", caller)
-              .with("data_set_id", this.fileMetaData.getDataType())
-              .with("reference_set_id", "something")
-              .end());
+      arrayObjBuilder.with(createVariantSetId(caller));
     }
     return arrayObjBuilder.end();
   }
@@ -138,6 +140,24 @@ public class VCF implements Closeable {
               .end());
     }
     return arrayObjBuilder.end();
+  }
+
+  @SneakyThrows
+  private ObjectNode convertBioSamplesNodeObj(@NonNull VCFHeader header) {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    // TODO: [rtisma]: consider changing this stategy and using the raw header
+    oos.writeObject(header);
+    oos.close();
+    val ser = Base64.getEncoder().encodeToString(baos.toByteArray());
+
+    return object()
+        .with("id", this.fileMetaData.getSampleId())
+        .with("donor_id", this.fileMetaData.getDonorId())
+        .with("data_set_id", this.fileMetaData.getDataType())
+        .with("reference_set_id", "something")
+        .with("vcf_header", ser)
+        .end();
   }
 
   private ObjectNode convertVariantNodeObj(VariantContext record) {

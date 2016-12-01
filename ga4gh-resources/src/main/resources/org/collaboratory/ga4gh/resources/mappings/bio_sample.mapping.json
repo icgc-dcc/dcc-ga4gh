@@ -5,6 +5,18 @@
 				"type": "keyword",
 				"index": "true"
 			},
+			"donor_id": {
+				"type": "keyword",
+				"index": "true"
+			},
+			"data_set_id": {
+				"type": "keyword",
+				"index": "true"
+			},
+			"reference_set_id": {
+				"type": "keyword",
+				"index": "true"
+			},
 			"vcf_header": {
 				"type": "keyword",
 				"index": "false"

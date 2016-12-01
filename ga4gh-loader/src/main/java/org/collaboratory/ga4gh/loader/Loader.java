@@ -70,10 +70,10 @@ public class Loader {
     val vcf = new VCF(file, fileMetaData);
     val variants = vcf.readVariants();
     val callSets = vcf.readCallSets();
-    val header = vcf.getHeader();
+    val bioSample = vcf.readBioSample();
 
     log.info("Indexing header {}...", sampleId);
-    indexer.indexHeaders(header, sampleId);
+    indexer.indexBioSamples(bioSample, sampleId);
 
     log.info("Indexing variants {}...", objectId);
     indexer.indexVariants(variants);

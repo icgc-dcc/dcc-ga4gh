@@ -25,26 +25,9 @@
 				"type": "keyword",
 				"index": "true"
 			},
-			"variant_sets": {
-				"type": "nested",
-				"properties" : {
-					"id" : {
-						"type": "keyword",
-						"index": "true"
-					},
-					"name" : {
-						"type": "keyword",
-						"index": "false"
-					},
-					"data_set_id" : {
-						"type": "keyword",
-						"index": "true"
-					},
-					"reference_set_id" : {
-						"type": "keyword",
-						"index": "true"
-					}
-				}
+			"variant_set_ids": {
+				"type": "keyword",
+				"index": "true"
 			},
 			"calls": {
 				"type": "nested",

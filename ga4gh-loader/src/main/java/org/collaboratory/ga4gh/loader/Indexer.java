@@ -69,17 +69,8 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexHeaders(@NonNull VCFHeader header, String objectId) {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    // TODO: [rtisma]: consider changing this stategy and using the raw header
-    oos.writeObject(header);
-    oos.close();
-    val ser = Base64.getEncoder().encodeToString(baos.toByteArray());
-    val obj = DEFAULT.createObjectNode();
-    obj.put("vcf_header", ser);
-
-    writer.write(new IndexDocument(objectId, obj, new HeaderDocumentType()));
+  public void indexBioSamples(@NonNull ObjectNode bioSample, String objectId) {
+    writer.write(new IndexDocument(objectId, bioSample, new BioSampleDocumentType()));
   }
 
   @SneakyThrows
@@ -118,7 +109,7 @@ public class Indexer {
 
   }
 
-  private static class HeaderDocumentType implements IndexDocumentType {
+  private static class BioSampleDocumentType implements IndexDocumentType {
 
     @Override
     public String getIndexType() {
