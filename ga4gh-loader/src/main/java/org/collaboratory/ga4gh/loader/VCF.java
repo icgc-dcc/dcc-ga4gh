@@ -131,6 +131,8 @@ public class VCF implements Closeable {
               .with("name", createVariantName(record) + ":" + this.fileMetaData.getSampleId() + "_" + caller)
               .with("call_set_id", createCallSetId(this.fileMetaData.getSampleId(), caller))
               .with("call_set_name", createCallSetName(this.fileMetaData.getSampleId(), caller))
+              .with("variant_set_id", createVariantSetId(caller))
+              .with("bio_sample_id", this.fileMetaData.getSampleId())
               .with("phaseset", "false")
               .with("genotype", 1)
               .end());
@@ -146,7 +148,7 @@ public class VCF implements Closeable {
         .with("end", record.getEnd())
         .with("reference_name", record.getContig())
         .with("record", encoder.encode(record))
-        .with("variant_set", convertVariantSetArrayObj(record))
+        .with("variant_sets", convertVariantSetArrayObj(record))
         .with("calls", convertCallArrayNodeObj(record))
         .with("donor_id", this.fileMetaData.getDonorId())
         .with("data_type", this.fileMetaData.getDataType())

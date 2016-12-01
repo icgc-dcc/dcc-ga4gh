@@ -33,7 +33,7 @@ public final class Portal {
    */
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = 2;// PORTAL_FETCH_SIZE;
+    val size = 5;// PORTAL_FETCH_SIZE;
     int from = 1;
     while (from < 2) {
       val url = getUrl(size, from);

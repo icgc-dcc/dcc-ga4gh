@@ -65,6 +65,14 @@
 						"type": "integer",
 						"index": "true"
 					},
+					"variant_set_id" : {
+						"type": "keyword",
+						"index": "true"
+					},
+					"bio_sample_id" : {
+						"type": "keyword",
+						"index": "true"
+					},
 					"phaseset" : {
 						"type": "keyword",
 						"index": "true"
