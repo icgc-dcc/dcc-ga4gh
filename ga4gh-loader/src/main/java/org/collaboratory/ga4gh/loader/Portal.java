@@ -7,17 +7,30 @@ import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.elasticsearch.common.util.set.Sets;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -28,19 +41,107 @@ public final class Portal {
   private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
   private static final String FILE_FORMAT = "VCF";
 
+  public static void main(String[] args) {
+    try (val fileChannel = getFileChannel("target/robi2.txt")) {
+      val fileMetas = getFileMetas();
+      for (ObjectNode fileMeta : fileMetas) {
+        String fileName = PortalFiles.getFileName(fileMeta);
+        myWriterLn(fileChannel, fileName);
+
+      }
+
+    } catch (IOException e) {
+      e.printStackTrace();
+
+    }
+
+  }
+
+  public static FileChannel getFileChannel(String outputFn) throws IOException {
+    Set<StandardOpenOption> options = Sets.newHashSet(
+        StandardOpenOption.APPEND,
+        StandardOpenOption.CREATE);
+    return FileChannel.open(Paths.get(outputFn), options);
+
+  }
+
+  public static void myWriterLn(@NonNull final FileChannel fileChannel, String message) throws IOException {
+    fileChannel.write(ByteBuffer.wrap((message + "\n").getBytes()));
+  }
+
+  public static void myWriter(@NonNull final FileChannel fileChannel, String message) throws IOException {
+    fileChannel.write(ByteBuffer.wrap(message.getBytes()));
+  }
+
+  public static void main2(String[] args) {
+    val donorMap = getDonorFileMetas();
+    for (Map.Entry<String, List<ObjectNode>> entry : donorMap.entrySet()) {
+      System.out.println("DonorId: " + entry.getKey() + " -- NumSamples: " + entry.getValue().size());
+
+    }
+
+  }
+
+  public static Map<String, List<ObjectNode>> getDonorFileMetas() {
+    int donorFrom = 1;
+    final int donorSize = 50;
+    final int fileSize = 100;
+    val donorFileMetaMapList = new HashMap<String, List<ObjectNode>>();
+    while (true) {
+      val donors = getDonors(donorSize, donorFrom);
+      for (String donorId : donors) {
+        System.out.println("Donor: " + donorId);
+        val samplesFileMetas = getSampleFileMetas(donorId, fileSize);
+        if (samplesFileMetas.isEmpty() == false) {
+          donorFileMetaMapList.put(donorId, samplesFileMetas);
+        }
+      }
+      if (Iterables.size(donors) < donorSize) {
+        break;
+      }
+      donorFrom += donorSize;
+    }
+    return donorFileMetaMapList;
+  }
+
+  public static List<ObjectNode> getSampleFileMetas(String donorId, final int fileSize) {
+    val samplesFileMetas = new ArrayList<ObjectNode>();
+    // for donor id, get all files
+    int fileFrom = 1;
+    while (true) {
+      val url = getFilesForDonerUrl(donorId, fileFrom, fileSize);
+      val result = read(url);
+      val hits = getHits(result);
+      for (val hit : hits) {
+        val fileMeta = (ObjectNode) hit;
+        System.out.println(PortalFiles.getFileName(fileMeta));
+        samplesFileMetas.add(fileMeta);
+      }
+
+      if (hits.size() < fileSize) {
+        break;
+      }
+      fileFrom += fileSize;
+
+    }
+    return samplesFileMetas;
+  }
+
   /**
    * Gets all Collaboratory VCF files.
    */
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = 5;// PORTAL_FETCH_SIZE;
+    val size = PORTAL_FETCH_SIZE;
     int from = 1;
-    while (from < 2) {
+    int count = 0;
+    while (true) {
       val url = getUrl(size, from);
       val result = read(url);
       val hits = getHits(result);
 
       for (val hit : hits) {
+        System.out.println("Got FileMeta: " + (++count));
         val fileMeta = (ObjectNode) hit;
         fileMetas.add(fileMeta);
       }
@@ -105,8 +206,21 @@ public final class Portal {
   }
 
   @SneakyThrows
+  private static URL getFilesForDonerUrl(final String donorId, final int from, final int size) {
+    val endpoint = PORTAL_API + "/api/v1/repository/files";
+
+    // {"file":{"repoName":{"is":["Collaboratory - Toronto"]},"fileFormat":{"is":["VCF"]},"donorId":{"is":["DO222843"]}}
+    String filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
+        + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]},"
+        + "\"donorId\":{\"is\":[\"" + donorId + "\"]}}}", UTF_8.name());
+    return new URL(
+        endpoint + "?" + "filters=" + filters + "&" + "from=" + from + "&" + "size=" + size + "&sort=id&order=desc");
+  }
+
+  @SneakyThrows
   private static URL getFilesForDonersUrl(Iterable<String> donorIterable, int size, int from) {
     val endpoint = PORTAL_API + "/api/v1/repository/files";
+
     String donorsCSV = Lists.newArrayList(donorIterable).stream().collect(Collectors.joining("\",\""));
     // {"file":{"repoName":{"is":["Collaboratory - Toronto"]},"fileFormat":{"is":["VCF"]},"donorId":{"is":["DO222843"]}}
     String filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
