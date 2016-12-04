@@ -89,4 +89,8 @@ public final class PortalFiles {
     return file.path(DONORS);
   }
 
+  public static PortalVCFFilenameParser getParser(ObjectNode file) {
+    return new PortalVCFFilenameParser(getFileName(file));
+  }
+
 }
