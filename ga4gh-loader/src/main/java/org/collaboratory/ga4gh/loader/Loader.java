@@ -85,7 +85,7 @@ public class Loader {
     val variants = vcf.readVariants();
     val callMap = vcf.readCalls();
     val callSets = vcf.readCallSets();
-    // val variantSets = vcf.readVariantSets();
+    val variantSet = vcf.readVariantSet();
 
     log.info("Indexing variants {}...", objectId);
     indexer.indexVariants(variants);
@@ -96,9 +96,9 @@ public class Loader {
     log.info("Indexing callsets {}...", objectId);
     indexer.indexCallSet(callSets);
 
-    /*
-     * log.info("Indexing header {}...", sampleId); indexer.indexVariantSets(variantSets, sampleId);
-     */
+    log.info("Indexing variantSets {}...", sampleId);
+    indexer.indexVariantSet(variantSet);
+
   }
 
 }

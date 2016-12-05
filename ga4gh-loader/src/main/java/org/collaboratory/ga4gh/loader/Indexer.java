@@ -82,8 +82,12 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexVariantSets(@NonNull ObjectNode bioSample, String objectId) {
-    writer.write(new IndexDocument(objectId, bioSample, new VariantSetDocumentType()));
+  public void indexVariantSet(@NonNull final ObjectNode variantSet) {
+    val variantSetId = variantSet.path("id").textValue();
+    if (this.variantSetIdCache.contains(variantSetId) == false) {
+      writer.write(new IndexDocument(variantSetId, variantSet, new VariantSetDocumentType()));
+      this.variantSetIdCache.add(variantSetId);
+    }
   }
 
   @SneakyThrows

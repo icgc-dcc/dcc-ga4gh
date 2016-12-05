@@ -94,7 +94,7 @@ public class VCF implements Closeable {
     return map;
   }
 
-  public ObjectNode readVariantSets() {
+  public ObjectNode readVariantSet() {
     return convertVariantSetNodeObj(this.getHeader());
   }
 
@@ -151,7 +151,12 @@ public class VCF implements Closeable {
     return record.getStart() + "_" + record.getEnd() + "_" + record.getContig();
   }
 
+  // TODO: [rtisma] -- temporarily using until implement uuid
   private static String createVariantSetId(String caller_id) {
+    return createVariantSetName(caller_id);
+  }
+
+  private static String createVariantSetName(String caller_id) {
     return caller_id;
   }
 
@@ -218,10 +223,10 @@ public class VCF implements Closeable {
     val ser = Base64.getEncoder().encodeToString(baos.toByteArray());
 
     return object()
-        .with("id", this.fileMetaData.getSampleId())
-        .with("donor_id", this.fileMetaData.getDonorId())
+        .with("id", createVariantSetId(this.fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with("name", createVariantSetName(this.fileMetaData.getVcfFilenameParser().getCallerId()))
         .with("data_set_id", this.fileMetaData.getDataType())
-        .with("reference_set_id", "something")
+        .with("reference_set_id", this.fileMetaData.getReferenceName())
         .with("vcf_header", ser)
         .end();
   }
