@@ -26,12 +26,14 @@ import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 import java.net.InetAddress;
 
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
@@ -66,21 +68,19 @@ public class VariantRepository {
         .addSort("start", SortOrder.ASC)
         .setSize(request.getPageSize());
 
+    val childBoolQuery = boolQuery().must(matchQuery("variant_set_id", request.getVariantSetId()));
+    request.getCallSetIdsList().stream().forEach(x -> childBoolQuery.should(matchQuery("call_set_id", x.toString())));
+    val constChildBoolQuery = constantScoreQuery(childBoolQuery);
+
     val boolQuery = boolQuery()
-        .must(matchQuery("variant_set_id", request.getVariantSetId()))
         .must(matchQuery("reference_name", request.getReferenceName()))
         .must(rangeQuery("start").gte(request.getStart()))
-        .must(rangeQuery("end").lt(request.getEnd()));
-    for (String callSetId : request.getCallSetIdsList()) {
-      boolQuery.should(matchQuery("call_set_id", callSetId));
-    }
+        .must(rangeQuery("end").lt(request.getEnd()))
+        .must(QueryBuilders.hasChildQuery("call", constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
 
     val constantScoreQuery = constantScoreQuery(boolQuery);
 
-    val agg = AggregationBuilders.terms("by_variant_id").field("id")
-        .subAggregation(AggregationBuilders.terms("by_call_set_id").field("call_set_id"));
-
-    return searchRequestBuilder.setQuery(constantScoreQuery).addAggregation(agg).get();
+    return searchRequestBuilder.setQuery(constantScoreQuery).get();
   }
 
   public SearchResponse findVariantById(@NonNull GetVariantRequest request) {

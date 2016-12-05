@@ -74,13 +74,12 @@ public class VariantService {
 
   public static void main(String[] args) {
     val request = SearchVariantsRequest.newBuilder()
-        .addCallSetIds("SA507473smufin")
-        .addCallSetIds("SA507473dkfz")
-        .setEnd(9594523)
+        .setEnd(2000000)
         .setStart(0)
         .setPageSize(10)
         .setReferenceName("1")
-        .setVariantSetId("dkfz")
+        .setVariantSetId("consensus")
+        .addCallSetIds("SA413898")
         .build();
     val variantRepo = new VariantRepository();
     val headerRepo = new HeaderRepository();
