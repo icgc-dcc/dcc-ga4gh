@@ -1,15 +1,22 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Throwables.propagate;
+import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.elasticsearch.client.Client;
+import org.elasticsearch.rest.RestStatus;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
+import org.icgc.dcc.dcc.common.es.json.JacksonFactory;
 import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
@@ -30,6 +37,7 @@ public class Indexer {
   public static final String VARIANT_SET_TYPE_NAME = "variant_set";
   public static final String CALL_TYPE_NAME = "call";
   public static final String VARIANT_TYPE_NAME = "variant";
+  private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
 
   private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
 
@@ -80,10 +88,40 @@ public class Indexer {
   }
 
   @SneakyThrows
+  public void indexCalls(Map<String, ObjectNode> variantId2CallMap) {
+    for (val entry : variantId2CallMap.entrySet()) {
+      val variantId = entry.getKey();
+      val call = entry.getValue();
+      writeCall(variantId, call);
+    }
+  }
+
+  @SneakyThrows
   public void indexVariants(@NonNull Iterable<ObjectNode> variants) {
     for (val variant : variants) {
       writeVariant(variant);
     }
+  }
+
+  private static byte[] createSource(Object document) {
+    try {
+      return BINARY_WRITER.writeValueAsBytes(document);
+    } catch (JsonProcessingException e) {
+      throw propagate(e);
+    }
+  }
+
+  // TODO: [rtisma] make the caller do bulk calls
+  @SneakyThrows
+  private void writeCall(String parent_variant_id, ObjectNode call) {
+    checkState(
+        this.client.prepareIndex(Config.INDEX_NAME, CALL_TYPE_NAME, call.path("id").textValue())
+            .setContentType(SMILE)
+            .setSource(createSource(call))
+            .setParent(parent_variant_id)
+            .setRouting(VARIANT_TYPE_NAME)
+            .get().status().equals(RestStatus.CREATED));
+    // .execute().actionGet().status().equals(RestStatus.OK));
   }
 
   private void writeCallSet(ObjectNode callSet) throws IOException {

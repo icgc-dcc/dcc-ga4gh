@@ -10,7 +10,7 @@
 				"index": "true"
 			},
 			"genotype": {
-				"type": "keyword",
+				"type": "integer",
 				"index": "true"
 			},
 			"phaseset": {
