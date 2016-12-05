@@ -38,4 +38,13 @@ public class FileMetaData {
   @NonNull
   public String dataType;
 
+  @NonNull
+  public String referenceName;
+
+  @NonNull
+  public String genomeBuild;
+
+  @NonNull
+  public PortalVCFFilenameParser vcfFilenameParser;
+
 }

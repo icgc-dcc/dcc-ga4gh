@@ -40,6 +40,9 @@ public final class Portal {
   private static final int PORTAL_FETCH_SIZE = 100;
   private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
   private static final String FILE_FORMAT = "VCF";
+  private static final int DEFAULT_FILE_FROM = 1;
+  private static final int DEFAULT_BUF_FILE_SIZE = 100;
+  private static final int DEFAULT_BUF_DONOR_SIZE = 50;
 
   public static void main(String[] args) {
     try (val fileChannel = getFileChannel("target/robi2.txt")) {
@@ -73,58 +76,75 @@ public final class Portal {
     fileChannel.write(ByteBuffer.wrap(message.getBytes()));
   }
 
-  public static void main2(String[] args) {
-    val donorMap = getDonorFileMetas();
-    for (Map.Entry<String, List<ObjectNode>> entry : donorMap.entrySet()) {
-      System.out.println("DonorId: " + entry.getKey() + " -- NumSamples: " + entry.getValue().size());
-
-    }
-
+  public static Map<String, DonorData> getDonorDataMap() {
+    return getDonorDataMap(1, -1);
   }
 
-  public static Map<String, List<ObjectNode>> getDonorFileMetas() {
-    int donorFrom = 1;
-    final int donorSize = 50;
-    final int fileSize = 100;
-    val donorFileMetaMapList = new HashMap<String, List<ObjectNode>>();
+  // numDonors == -1 means get all the donors possible
+  public static Map<String, DonorData> getDonorDataMap(final int donorStart, final int numDonors) {
+    int localDonorFrom = donorStart;
+    val donorDataMap = new HashMap<String, DonorData>();
+    int donorFrom = donorStart;
     while (true) {
-      val donors = getDonors(donorSize, donorFrom);
+      int buffDonorSize =
+          (numDonors < 0) ? DEFAULT_BUF_DONOR_SIZE : Math.min(donorStart + numDonors - donorFrom,
+              DEFAULT_BUF_DONOR_SIZE);
+      val donors = getDonors(localDonorFrom, buffDonorSize);
       for (String donorId : donors) {
         System.out.println("Donor: " + donorId);
-        val samplesFileMetas = getSampleFileMetas(donorId, fileSize);
-        if (samplesFileMetas.isEmpty() == false) {
-          donorFileMetaMapList.put(donorId, samplesFileMetas);
+        val donorData = new DonorData(donorId);
+        for (FileMetaData sampleFileMetaData : getSampleFileMetas(donorId)) {
+          donorData.addSample(sampleFileMetaData.getSampleId(), sampleFileMetaData);
         }
+        donorDataMap.put(donorId, donorData);
       }
-      if (Iterables.size(donors) < donorSize) {
+      if (Iterables.size(donors) < buffDonorSize) {
         break;
       }
-      donorFrom += donorSize;
+      localDonorFrom += buffDonorSize;
     }
-    return donorFileMetaMapList;
+    return donorDataMap;
   }
 
-  public static List<ObjectNode> getSampleFileMetas(String donorId, final int fileSize) {
-    val samplesFileMetas = new ArrayList<ObjectNode>();
-    // for donor id, get all files
-    int fileFrom = 1;
+  public static List<FileMetaData> getSampleFileMetas(String donorId) {
+    return getSampleFileMetas(donorId, 1, -1);
+  }
+
+  public static List<FileMetaData> getSampleFileMetas(String donorId, final int startFrom, final int numFiles) {
+    val samplesFileMetaDataList = new ArrayList<FileMetaData>();
+    int fileFrom = startFrom;
     while (true) {
-      val url = getFilesForDonerUrl(donorId, fileFrom, fileSize);
+      int buffFileSize =
+          (numFiles < 0) ? DEFAULT_BUF_FILE_SIZE : Math.min(startFrom + numFiles - fileFrom, DEFAULT_BUF_FILE_SIZE);
+      val url = getFilesForDonerUrl(donorId, fileFrom, buffFileSize);
       val result = read(url);
       val hits = getHits(result);
       for (val hit : hits) {
         val fileMeta = (ObjectNode) hit;
-        System.out.println(PortalFiles.getFileName(fileMeta));
-        samplesFileMetas.add(fileMeta);
+        val objectId = PortalFiles.getObjectId(fileMeta);
+        val fileId = PortalFiles.getFileId(fileMeta);
+        val sampleId = PortalFiles.getSampleId(fileMeta);
+        val dataType = PortalFiles.getDataType(fileMeta);
+        val referenceName = PortalFiles.getReferenceName(fileMeta);
+        val genomeBuild = PortalFiles.getGenomeBuild(fileMeta);
+        val vcfFilenameParser = PortalFiles.getParser(fileMeta);
+        samplesFileMetaDataList.add(
+            new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild,
+                vcfFilenameParser));
       }
 
-      if (hits.size() < fileSize) {
+      if (hits.size() < buffFileSize) {
         break;
       }
-      fileFrom += fileSize;
+      fileFrom += buffFileSize;
 
     }
-    return samplesFileMetas;
+    return samplesFileMetaDataList;
+  }
+
+  public static List<DonorData> getDonorDataList() {
+    val donorDataList = ImmutableList.<DonorData> builder();
+    return donorDataList.build();
   }
 
   /**
@@ -161,7 +181,7 @@ public final class Portal {
     val fileMetas = ImmutableList.<ObjectNode> builder();
 
     int from = 1;
-    val donorIterable = getDonors(numDonors, from);
+    val donorIterable = getDonors(from, numDonors);
 
     int size = PORTAL_FETCH_SIZE;
     while (true) {
@@ -185,7 +205,7 @@ public final class Portal {
   }
 
   // TODO: [rtisma] - donorIds retrieved from here are not searchable in repository. need to investigate why
-  private static Iterable<String> getDonors(int numDonors, int startPos) {
+  private static Iterable<String> getDonors(final int startPos, final int numDonors) {
     checkState(numDonors > 0);
     checkState(startPos > 0);
     val url = getDonersUrl(numDonors, startPos);

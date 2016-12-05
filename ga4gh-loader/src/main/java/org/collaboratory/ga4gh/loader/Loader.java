@@ -59,8 +59,12 @@ public class Loader {
     val sampleId = getSampleId(objectNode);
     val donorId = getDonorId(objectNode);
     val dataType = getDataType(objectNode);
+    val referenceName = PortalFiles.getReferenceName(objectNode);
+    val genomeBuild = PortalFiles.getGenomeBuild(objectNode);
+    val vcfFilenameParser = PortalFiles.getParser(objectNode);
 
-    val fileMetaData = new FileMetaData(objectId, fileId, sampleId, donorId, dataType);
+    val fileMetaData =
+        new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild, vcfFilenameParser);
 
     log.info("Downloading file {}...", objectId);
     val file = Storage.downloadFile(objectId);

@@ -38,6 +38,10 @@ public final class PortalFiles {
   private static final String DATA_CATEGORIZATION = "dataCategorization";
   private static final String FILE_NAME = "fileName";
   private static final String FILE_COPIES = "fileCopies";
+  private static final String REFERENCE_GENOME = "referenceGenome";
+  private static final String REFERENCE_NAME = "referenceName";
+  private static final String STUDY = "study";
+  private static final String GENOME_BUILD = "genomeBuild";
 
   public static String getObjectId(@NonNull ObjectNode file) {
     return file.path(OBJECT_ID).textValue();
@@ -69,27 +73,43 @@ public final class PortalFiles {
     return getFirstDonor(file).path(SAMPLE_ID).get(0).textValue();
   }
 
-  private static JsonNode getFirstDonor(ObjectNode file) {
+  public static String getStudy(@NonNull ObjectNode file) {
+    return file.path(STUDY).get(0).textValue();
+  }
+
+  private static JsonNode getFirstDonor(@NonNull ObjectNode file) {
     return getDonors(file).path(0);
   }
 
-  private static JsonNode getFirstFileCopy(ObjectNode file) {
+  private static JsonNode getFirstFileCopy(@NonNull ObjectNode file) {
     return getFileCopies(file).path(0);
   }
 
-  private static JsonNode getDataCategorization(ObjectNode file) {
+  private static JsonNode getDataCategorization(@NonNull ObjectNode file) {
     return file.path(DATA_CATEGORIZATION);
   }
 
-  private static JsonNode getFileCopies(ObjectNode file) {
+  private static JsonNode getFileCopies(@NonNull ObjectNode file) {
     return file.path(FILE_COPIES);
   }
 
-  private static JsonNode getDonors(ObjectNode file) {
+  private static JsonNode getDonors(@NonNull ObjectNode file) {
     return file.path(DONORS);
   }
 
-  public static PortalVCFFilenameParser getParser(ObjectNode file) {
+  public static String getReferenceName(@NonNull ObjectNode file) {
+    return getReferenceGenome(file).path(REFERENCE_NAME).textValue();
+  }
+
+  public static String getGenomeBuild(@NonNull ObjectNode file) {
+    return getReferenceGenome(file).path(GENOME_BUILD).textValue();
+  }
+
+  private static JsonNode getReferenceGenome(@NonNull ObjectNode file) {
+    return file.path(REFERENCE_GENOME);
+  }
+
+  public static PortalVCFFilenameParser getParser(@NonNull ObjectNode file) {
     return new PortalVCFFilenameParser(getFileName(file));
   }
 
