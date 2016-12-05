@@ -8,7 +8,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +29,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
 @Getter
@@ -58,6 +58,7 @@ enum CallerTypes {
   private final String name;
 }
 
+@Slf4j
 public class VCF implements Closeable {
 
   private static final boolean REQUIRE_INDEX_CFG = false;
@@ -81,15 +82,8 @@ public class VCF implements Closeable {
         OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
   }
 
-  public Iterable<ObjectNode> readCallSets() {
-    val outList = new ArrayList<ObjectNode>();
-    for (VariantContext record : vcf) {
-      outList.addAll(record.getCommonInfo().getAttributeAsList("Callers")
-          .stream()
-          .map(c -> convertCallSet(fileMetaData.getSampleId(), c.toString()))
-          .collect(Collectors.toList()));
-    }
-    return outList;
+  public ObjectNode readCallSets() {
+    return convertCallSet(this.fileMetaData.getSampleId());
   }
 
   public Map<String, ObjectNode> readCalls() {
@@ -112,12 +106,12 @@ public class VCF implements Closeable {
     return vcf.getFileHeader();
   }
 
-  private static String createCallSetId(String bio_sample_id, String caller_id) {
-    return createCallSetName(bio_sample_id, caller_id); // TODO: [rtisma] temporary untill get UUID5 working
+  private static String createCallSetId(String bio_sample_id) {
+    return createCallSetName(bio_sample_id); // TODO: [rtisma] temporary untill get UUID5 working
   }
 
-  private static String createCallSetName(String bio_sample_id, String caller_id) {
-    return bio_sample_id + caller_id;
+  private static String createCallSetName(String bio_sample_id) {
+    return bio_sample_id;
   }
 
   private static String createCallName(@NonNull final VariantContext record, final String caller_id,
@@ -133,18 +127,18 @@ public class VCF implements Closeable {
 
   private ObjectNode convertCallSetNested(String bio_sample_id, String caller_id) {
     return object()
-        .with("id", createCallSetId(bio_sample_id, caller_id))
+        .with("id", createCallSetId(bio_sample_id))
         .with("name", bio_sample_id + "_" + caller_id)
         .end();
   }
 
-  private ObjectNode convertCallSet(String bio_sample_id, String caller_id) {
+  private ObjectNode convertCallSet(final String caller_id) {
+
     return object()
-        .with("id", createCallSetId(bio_sample_id, caller_id))
-        .with("name", bio_sample_id + "_" + caller_id)
-        .with("caller_id", caller_id)
+        .with("id", createCallSetId(this.fileMetaData.getSampleId()))
+        .with("name", createCallSetName(this.fileMetaData.getSampleId()))
         .with("variant_set_id", createVariantSetId(caller_id))
-        .with("data_set_id", this.fileMetaData.getDataType())
+        .with("bio_sample_id", this.fileMetaData.getSampleId())
         .end();
 
   }
@@ -187,6 +181,7 @@ public class VCF implements Closeable {
     if (CallerTypes.BROAD.getName().equals(caller_id)) {
 
     } else if (CallerTypes.MUSE.getName().equals(caller_id)) {
+      log.error("CallerType: " + CallerTypes.MUSE.getName() + " not implemented");
     } else if (CallerTypes.CONSENSUS.getName().equals(caller_id)) {
       return object()
           .with("id", createCallId(record, caller_id, bio_sample_id))
@@ -199,9 +194,13 @@ public class VCF implements Closeable {
           .end();
 
     } else if (CallerTypes.EMBL.getName().equals(caller_id)) {
+      log.error("CallerType: " + CallerTypes.EMBL.getName() + " not implemented");
     } else if (CallerTypes.DKFZ.getName().equals(caller_id)) {
+      log.error("CallerType: " + CallerTypes.DKFZ.getName() + " not implemented");
     } else if (CallerTypes.SVCP.getName().equals(caller_id)) {
+      log.error("CallerType: " + CallerTypes.SVCP.getName() + " not implemented");
     } else if (CallerTypes.SVFIX.getName().equals(caller_id)) {
+      log.error("CallerType: " + CallerTypes.SVFIX.getName() + " not implemented");
     } else {
       throw new RuntimeException("Error: the caller_id: " + caller_id + " is not recognized, " + parser.getFilename());
     }

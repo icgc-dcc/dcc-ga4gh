@@ -6,7 +6,9 @@ import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
@@ -57,6 +59,11 @@ public class Indexer {
    */
   private int id = 1;
 
+  private final Set<String> variantIdCache = new HashSet<String>();
+  private final Set<String> variantSetIdCache = new HashSet<String>();
+  private final Set<String> callSetIdCache = new HashSet<String>();
+  private final Set<String> callIdCache = new HashSet<String>();
+
   @SneakyThrows
   public void prepareIndex() {
     log.info("Preparing index {}...", indexName);
@@ -80,10 +87,11 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexCallSets(@NonNull Iterable<ObjectNode> callSets) {
-
-    for (val callSet : callSets) {
+  public void indexCallSet(@NonNull final ObjectNode callSet) {
+    val callSetId = callSet.path("id").textValue();
+    if (this.callSetIdCache.contains(callSetId) == false) {
       writeCallSet(callSet);
+      this.callSetIdCache.add(callSetId);
     }
   }
 
@@ -114,14 +122,17 @@ public class Indexer {
   // TODO: [rtisma] make the caller do bulk calls
   @SneakyThrows
   private void writeCall(String parent_variant_id, ObjectNode call) {
-    checkState(
-        this.client.prepareIndex(Config.INDEX_NAME, CALL_TYPE_NAME, call.path("id").textValue())
-            .setContentType(SMILE)
-            .setSource(createSource(call))
-            .setParent(parent_variant_id)
-            .setRouting(VARIANT_TYPE_NAME)
-            .get().status().equals(RestStatus.CREATED));
-    // .execute().actionGet().status().equals(RestStatus.OK));
+    val callId = call.path("id").textValue();
+    if (this.callIdCache.contains(callId) == false) {
+      checkState(
+          this.client.prepareIndex(Config.INDEX_NAME, CALL_TYPE_NAME, callId)
+              .setContentType(SMILE)
+              .setSource(createSource(call))
+              .setParent(parent_variant_id)
+              .setRouting(VARIANT_TYPE_NAME)
+              .get().status().equals(RestStatus.CREATED));
+      this.callIdCache.add(callId);
+    }
   }
 
   private void writeCallSet(ObjectNode callSet) throws IOException {
@@ -130,7 +141,11 @@ public class Indexer {
 
   // TODO: [rtisma] -- clean this up so not referencing "id" like this
   private void writeVariant(ObjectNode variant) throws IOException {
-    writer.write(new IndexDocument(variant.path("id").textValue(), variant, new VariantDocumentType()));
+    val variant_id = variant.path("id").textValue();
+    if (this.variantIdCache.contains(variant_id) == false) {
+      writer.write(new IndexDocument(variant_id, variant, new VariantDocumentType()));
+      this.variantIdCache.add(variant_id);
+    }
   }
 
   private String nextId() {

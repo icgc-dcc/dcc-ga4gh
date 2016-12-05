@@ -84,7 +84,7 @@ public class Loader {
     val vcf = new VCF(file, fileMetaData);
     val variants = vcf.readVariants();
     val callMap = vcf.readCalls();
-    // val callSets = vcf.readCallSets();
+    val callSets = vcf.readCallSets();
     // val variantSets = vcf.readVariantSets();
 
     log.info("Indexing variants {}...", objectId);
@@ -93,8 +93,8 @@ public class Loader {
     log.info("Indexing calls {}...", vcfFilenameParser.getFilename());
     indexer.indexCalls(callMap);
 
-    // log.info("Indexing callsets {}...", objectId);
-    // indexer.indexCallSets(callSets);
+    log.info("Indexing callsets {}...", objectId);
+    indexer.indexCallSet(callSets);
 
     /*
      * log.info("Indexing header {}...", sampleId); indexer.indexVariantSets(variantSets, sampleId);
