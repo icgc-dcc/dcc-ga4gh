@@ -57,8 +57,8 @@ public class VCF implements Closeable {
     return outList;
   }
 
-  public ObjectNode readBioSample() {
-    return convertBioSamplesNodeObj(this.getHeader());
+  public ObjectNode readVariantSets() {
+    return convertVariantSetNodeObj(this.getHeader());
   }
 
   public Iterable<ObjectNode> readVariants() {
@@ -143,7 +143,7 @@ public class VCF implements Closeable {
   }
 
   @SneakyThrows
-  private ObjectNode convertBioSamplesNodeObj(@NonNull VCFHeader header) {
+  private ObjectNode convertVariantSetNodeObj(@NonNull VCFHeader header) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
     // TODO: [rtisma]: consider changing this stategy and using the raw header
@@ -168,11 +168,6 @@ public class VCF implements Closeable {
         .with("end", record.getEnd())
         .with("reference_name", record.getContig())
         .with("record", encoder.encode(record))
-        .with("variant_sets", convertVariantSetArrayObj(record))
-        .with("calls", convertCallArrayNodeObj(record))
-        .with("donor_id", this.fileMetaData.getDonorId())
-        .with("data_type", this.fileMetaData.getDataType())
-        .with("bio_sample_id", this.fileMetaData.getSampleId())
         .end();
   }
 

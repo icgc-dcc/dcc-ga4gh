@@ -152,16 +152,15 @@ public final class Portal {
    */
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = PORTAL_FETCH_SIZE;
+    val size = 3;// PORTAL_FETCH_SIZE;
     int from = 1;
-    int count = 0;
-    while (true) {
+
+    while (from < 4) {
       val url = getUrl(size, from);
       val result = read(url);
       val hits = getHits(result);
 
       for (val hit : hits) {
-        System.out.println("Got FileMeta: " + (++count));
         val fileMeta = (ObjectNode) hit;
         fileMetas.add(fileMeta);
       }

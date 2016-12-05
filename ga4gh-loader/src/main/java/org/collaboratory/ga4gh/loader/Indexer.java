@@ -3,10 +3,7 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.Base64;
 
 import org.elasticsearch.client.Client;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
@@ -16,7 +13,6 @@ import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
-import htsjdk.variant.vcf.VCFHeader;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -31,7 +27,8 @@ public class Indexer {
    * Constants.
    */
   public static final String CALLSET_TYPE_NAME = "callset";
-  public static final String BIO_SAMPLE_TYPE_NAME = "bio_sample";
+  public static final String VARIANT_SET_TYPE_NAME = "variant_set";
+  public static final String CALL_TYPE_NAME = "call";
   public static final String VARIANT_TYPE_NAME = "variant";
 
   private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
@@ -62,15 +59,16 @@ public class Indexer {
 
     checkState(indexes.prepareCreate(indexName)
         .setSettings(read("index.settings.json").toString())
-        .addMapping(CALLSET_TYPE_NAME, read("callset.mapping.json").toString())
-        .addMapping(BIO_SAMPLE_TYPE_NAME, read("bio_sample.mapping.json").toString())
-        .addMapping(VARIANT_TYPE_NAME, read("variant.mapping.json").toString())
+        .addMapping(CALLSET_TYPE_NAME, read(CALLSET_TYPE_NAME + ".mapping.json").toString())
+        .addMapping(VARIANT_SET_TYPE_NAME, read(VARIANT_SET_TYPE_NAME + ".mapping.json").toString())
+        .addMapping(VARIANT_TYPE_NAME, read(VARIANT_TYPE_NAME + ".mapping.json").toString())
+        .addMapping(CALL_TYPE_NAME, read(CALL_TYPE_NAME + ".mapping.json").toString())
         .execute().actionGet().isAcknowledged());
   }
 
   @SneakyThrows
-  public void indexBioSamples(@NonNull ObjectNode bioSample, String objectId) {
-    writer.write(new IndexDocument(objectId, bioSample, new BioSampleDocumentType()));
+  public void indexVariantSets(@NonNull ObjectNode bioSample, String objectId) {
+    writer.write(new IndexDocument(objectId, bioSample, new VariantSetDocumentType()));
   }
 
   @SneakyThrows
@@ -89,11 +87,12 @@ public class Indexer {
   }
 
   private void writeCallSet(ObjectNode callSet) throws IOException {
-    writer.write(new IndexDocument(nextId(), callSet, new CallSetDocumentType()));
+    writer.write(new IndexDocument(callSet.path("id").textValue(), callSet, new CallSetDocumentType()));
   }
 
+  // TODO: [rtisma] -- clean this up so not referencing "id" like this
   private void writeVariant(ObjectNode variant) throws IOException {
-    writer.write(new IndexDocument(nextId(), variant, new VariantDocumentType()));
+    writer.write(new IndexDocument(variant.path("id").textValue(), variant, new VariantDocumentType()));
   }
 
   private String nextId() {
@@ -109,11 +108,11 @@ public class Indexer {
 
   }
 
-  private static class BioSampleDocumentType implements IndexDocumentType {
+  private static class VariantSetDocumentType implements IndexDocumentType {
 
     @Override
     public String getIndexType() {
-      return BIO_SAMPLE_TYPE_NAME;
+      return VARIANT_SET_TYPE_NAME;
     }
 
   }
