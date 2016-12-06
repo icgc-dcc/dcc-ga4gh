@@ -23,6 +23,9 @@ import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_PORT;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
+import static org.elasticsearch.index.query.QueryBuilders.idsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
@@ -36,7 +39,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
@@ -82,7 +84,7 @@ public class VariantRepository {
         .must(matchQuery("reference_name", request.getReferenceName()))
         .must(rangeQuery("start").gte(request.getStart()))
         .must(rangeQuery("end").lt(request.getEnd()))
-        .must(QueryBuilders.hasChildQuery("call", constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
+        .must(hasChildQuery("call", constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
 
     val constantScoreQuery = constantScoreQuery(boolQuery);
 
@@ -91,10 +93,10 @@ public class VariantRepository {
 
   public SearchResponse findVariantById(@NonNull GetVariantRequest request) {
     val searchRequestBuilder = createSearchRequest(1); // only want one variant
-    val childQuery = QueryBuilders.hasChildQuery("call", QueryBuilders.matchAllQuery(), ScoreMode.None)
+    val childQuery = hasChildQuery("call", matchAllQuery(), ScoreMode.None)
         .innerHit(new InnerHitBuilder());
     val boolQuery = boolQuery()
-        .must(QueryBuilders.idsQuery().addIds(request.getVariantId()))
+        .must(idsQuery().addIds(request.getVariantId()))
         .must(childQuery);
     val constantScoreQuery = constantScoreQuery(boolQuery);
     return searchRequestBuilder.setQuery(constantScoreQuery).get();
