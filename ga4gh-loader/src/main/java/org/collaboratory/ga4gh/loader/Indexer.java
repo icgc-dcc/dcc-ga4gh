@@ -39,6 +39,7 @@ public class Indexer {
   public static final String VARIANT_SET_TYPE_NAME = "variant_set";
   public static final String CALL_TYPE_NAME = "call";
   public static final String VARIANT_TYPE_NAME = "variant";
+  public static final String VCF_HEADER_TYPE_NAME = "vcf_header";
   private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
 
   private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
@@ -77,6 +78,7 @@ public class Indexer {
         .addMapping(CALLSET_TYPE_NAME, read(CALLSET_TYPE_NAME + ".mapping.json").toString())
         .addMapping(VARIANT_SET_TYPE_NAME, read(VARIANT_SET_TYPE_NAME + ".mapping.json").toString())
         .addMapping(VARIANT_TYPE_NAME, read(VARIANT_TYPE_NAME + ".mapping.json").toString())
+        .addMapping(VCF_HEADER_TYPE_NAME, read(VCF_HEADER_TYPE_NAME + ".mapping.json").toString())
         .addMapping(CALL_TYPE_NAME, read(CALL_TYPE_NAME + ".mapping.json").toString())
         .execute().actionGet().isAcknowledged());
   }
@@ -139,6 +141,19 @@ public class Indexer {
     }
   }
 
+  // TODO: [rtisma] make the caller do bulk calls
+  @SneakyThrows
+  public void indexVCFHeader(@NonNull final ObjectNode vcfHeader) {
+    val parent_variant_set_id = vcfHeader.path("variant_set_id").textValue();
+    checkState(
+        this.client.prepareIndex(Config.INDEX_NAME, VCF_HEADER_TYPE_NAME, nextId())
+            .setContentType(SMILE)
+            .setSource(createSource(vcfHeader))
+            .setParent(parent_variant_set_id)
+            .setRouting(VARIANT_SET_TYPE_NAME)
+            .get().status().equals(RestStatus.CREATED));
+  }
+
   private void writeCallSet(ObjectNode callSet) throws IOException {
     writer.write(new IndexDocument(callSet.path("id").textValue(), callSet, new CallSetDocumentType()));
   }
@@ -154,6 +169,15 @@ public class Indexer {
 
   private String nextId() {
     return String.valueOf(id++);
+  }
+
+  private static class VCFHeaderDocumentType implements IndexDocumentType {
+
+    @Override
+    public String getIndexType() {
+      return Indexer.VCF_HEADER_TYPE_NAME;
+    }
+
   }
 
   private static class VariantDocumentType implements IndexDocumentType {

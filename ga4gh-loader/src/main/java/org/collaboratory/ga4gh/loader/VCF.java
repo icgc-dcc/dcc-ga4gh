@@ -94,10 +94,6 @@ public class VCF implements Closeable {
     return map;
   }
 
-  public ObjectNode readVariantSet() {
-    return convertVariantSetNodeObj(this.getHeader());
-  }
-
   public Iterable<ObjectNode> readVariants() {
     return transform(vcf, this::convertVariantNodeObj);
   }
@@ -213,21 +209,29 @@ public class VCF implements Closeable {
 
   }
 
-  @SneakyThrows
-  private ObjectNode convertVariantSetNodeObj(@NonNull VCFHeader header) {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    // TODO: [rtisma]: consider changing this stategy and using the raw header
-    oos.writeObject(header);
-    oos.close();
-    val ser = Base64.getEncoder().encodeToString(baos.toByteArray());
+  public ObjectNode readVariantSet() {
 
     return object()
         .with("id", createVariantSetId(this.fileMetaData.getVcfFilenameParser().getCallerId()))
         .with("name", createVariantSetName(this.fileMetaData.getVcfFilenameParser().getCallerId()))
         .with("data_set_id", this.fileMetaData.getDataType())
         .with("reference_set_id", this.fileMetaData.getReferenceName())
+        .end();
+  }
+
+  @SneakyThrows
+  public ObjectNode readVCFHeader() {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    // TODO: [rtisma]: consider changing this stategy and using the raw header
+    oos.writeObject(this.getHeader());
+    oos.close();
+    val ser = Base64.getEncoder().encodeToString(baos.toByteArray());
+    return object()
         .with("vcf_header", ser)
+        .with("donor_id", this.fileMetaData.getDonorId())
+        .with("bio_sample_id", this.fileMetaData.getSampleId())
+        .with("variant_set_id", createVariantSetId(this.fileMetaData.getVcfFilenameParser().getCallerId()))
         .end();
   }
 
