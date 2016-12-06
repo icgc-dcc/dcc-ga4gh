@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -39,6 +40,7 @@ import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
+import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsResponse;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
@@ -90,6 +92,10 @@ public class VariantService {
         .addCallSetIds("SA413898")
         .build();
 
+    val getVariantSetRequest = GetVariantSetRequest.newBuilder()
+        .setVariantSetId("consensus")
+        .build();
+
     val searchVariantSetRequest = SearchVariantSetsRequest.newBuilder()
         .setDatasetId("SSM")
         .build();
@@ -101,8 +107,10 @@ public class VariantService {
     val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo);
     val searchVariantResponse = variantService.searchVariants(searchVariantRequest);
     val searchVariantSetResponse = variantService.searchVariantSets(searchVariantSetRequest);
+    val variantSet = variantService.getVariantSet(getVariantSetRequest);
     log.info("SearchVariantResponse: {} ", searchVariantResponse);
     log.info("SearchVariantSetResponse: {} ", searchVariantSetResponse);
+    log.info("GetVariantSetResponse: {} ", variantSet);
 
   }
 
@@ -116,17 +124,27 @@ public class VariantService {
     return SearchVariantSetsResponse.newBuilder()
         .setNextPageToken("NIY")
         .addAllVariantSets(
-            Arrays.stream(response.getHits().getHits()).map(h -> convertToVariantSet(h)).collect(Collectors.toList()))
+            Arrays.stream(response.getHits().getHits()).map(h -> convertToVariantSet(h).build())
+                .collect(Collectors.toList()))
         .build();
   }
 
-  private VariantSet convertToVariantSet(@NonNull SearchHit hit) {
+  private static VariantSet.Builder _convertSourceToVariantSet(final String id, @NonNull Map<String, Object> source) {
     return VariantSet.newBuilder()
-        .setId(hit.getId())
-        .setName(hit.getSource().get("name").toString())
-        .setDatasetId(hit.getSource().get("data_set_id").toString())
-        .setReferenceSetId(hit.getSource().get("reference_set_id").toString())
-        .build();
+        .setId(id)
+        .setName(source.get("name").toString())
+        .setDatasetId(source.get("data_set_id").toString())
+        .setReferenceSetId(source.get("reference_set_id").toString());
+  }
+
+  private VariantSet.Builder convertToVariantSet(@NonNull SearchHit hit) {
+    return _convertSourceToVariantSet(hit.getId(), hit.getSource());
+  }
+
+  public VariantSet getVariantSet(@NonNull GetVariantSetRequest request) {
+    log.info("VariantSetId to Get: {}", request.getVariantSetId());
+    GetResponse response = variantSetRepository.findVariantSetById(request);
+    return _convertSourceToVariantSet(response.getId(), response.getSource()).build();
   }
 
   public Variant getVariant(@NonNull GetVariantRequest request) {

@@ -17,15 +17,19 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_PORT;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_SET_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 import java.net.InetAddress;
 
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchAction;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
@@ -34,6 +38,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
 
+import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -56,18 +61,25 @@ public class VariantSetRepository {
         .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
   }
 
-  public SearchResponse findVariantSets(@NonNull SearchVariantSetsRequest request) {
-    val searchRequestBuilder = SearchAction.INSTANCE.newRequestBuilder(client)
-        .setIndices("dcc-variants")
-        .setTypes("variant_set")
+  private SearchRequestBuilder createSearchRequest(final int size) {
+    return SearchAction.INSTANCE.newRequestBuilder(client)
+        .setIndices(INDEX_NAME)
+        .setTypes(VARIANT_SET_TYPE_NAME)
         .addSort("data_set_id", SortOrder.ASC)
-        .setSize(request.getPageSize());
+        .setSize(size);
+  }
 
+  public SearchResponse findVariantSets(@NonNull SearchVariantSetsRequest request) {
+    val searchRequestBuilder = createSearchRequest(request.getPageSize());
     val constantBoolQuery = constantScoreQuery(
         boolQuery()
             .must(
                 matchQuery("data_set_id", request.getDatasetId())));
     return searchRequestBuilder.setQuery(constantBoolQuery).get();
+  }
+
+  public GetResponse findVariantSetById(@NonNull GetVariantSetRequest request) {
+    return client.prepareGet(INDEX_NAME, VARIANT_SET_TYPE_NAME, request.getVariantSetId()).get();
   }
 
 }

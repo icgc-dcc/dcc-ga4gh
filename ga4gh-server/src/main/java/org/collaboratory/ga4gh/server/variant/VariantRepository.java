@@ -17,8 +17,10 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_PORT;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
@@ -28,6 +30,7 @@ import java.net.InetAddress;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchAction;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
@@ -61,13 +64,16 @@ public class VariantRepository {
         .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
   }
 
-  public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
-    val searchRequestBuilder = SearchAction.INSTANCE.newRequestBuilder(client)
-        .setIndices("dcc-variants")
-        .setTypes("variant")
+  private SearchRequestBuilder createSearchRequest(final int size) {
+    return SearchAction.INSTANCE.newRequestBuilder(client)
+        .setIndices(INDEX_NAME)
+        .setTypes(VARIANT_TYPE_NAME)
         .addSort("start", SortOrder.ASC)
-        .setSize(request.getPageSize());
+        .setSize(size);
+  }
 
+  public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
+    val searchRequestBuilder = createSearchRequest(request.getPageSize());
     val childBoolQuery = boolQuery().must(matchQuery("variant_set_id", request.getVariantSetId()));
     request.getCallSetIdsList().stream().forEach(x -> childBoolQuery.should(matchQuery("call_set_id", x.toString())));
     val constChildBoolQuery = constantScoreQuery(childBoolQuery);
@@ -83,13 +89,9 @@ public class VariantRepository {
     return searchRequestBuilder.setQuery(constantScoreQuery).get();
   }
 
+  // TODO: [rtisma] fix so that got a GetRequest on the id, and not a SearchRequest
   public SearchResponse findVariantById(@NonNull GetVariantRequest request) {
-    val searchRequestBuilder = SearchAction.INSTANCE.newRequestBuilder(client)
-        .setIndices("dcc-variants")
-        .setTypes("variant")
-        .addSort("start", SortOrder.ASC)
-        .setSize(1); // only want one variant
-
+    val searchRequestBuilder = createSearchRequest(1); // only want one variant
     val childQuery = QueryBuilders.hasChildQuery("call", QueryBuilders.matchAllQuery(), ScoreMode.None)
         .innerHit(new InnerHitBuilder());
     val boolQuery = boolQuery()

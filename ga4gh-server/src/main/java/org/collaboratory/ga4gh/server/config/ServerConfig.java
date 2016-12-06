@@ -27,7 +27,9 @@ public class ServerConfig {
 
   public static final String INDEX_NAME = "dcc-variants";
   public static final String VARIANT_TYPE_NAME = "variant";
+  public static final String VARIANT_SET_TYPE_NAME = "variant_set";
   public static final String CALLSET_TYPE_NAME = "callset";
+  public static final String CALL_TYPE_NAME = "call";
   public static final String NODE_ADDRESS = System.getProperty("node_address", "localhost");
   public static final int NODE_PORT = Integer.valueOf(System.getProperty("node_port", "9300"));
 
