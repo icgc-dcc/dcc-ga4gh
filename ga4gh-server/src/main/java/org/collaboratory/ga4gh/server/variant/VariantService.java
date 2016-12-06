@@ -18,6 +18,7 @@
 package org.collaboratory.ga4gh.server.variant;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -38,11 +39,14 @@ import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
+import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
+import ga4gh.VariantServiceOuterClass.SearchVariantSetsResponse;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
 import ga4gh.Variants.Call;
 import ga4gh.Variants.Variant;
 import ga4gh.Variants.Variant.Builder;
+import ga4gh.Variants.VariantSet;
 import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
@@ -68,13 +72,16 @@ public class VariantService {
   private final HeaderRepository headerRepository;
 
   @NonNull
-  private final CallRepository callRepository;
+  private final CallSetRepository callsetRepository;
+
+  @NonNull
+  private final VariantSetRepository variantSetRepository;
 
   private final VCFCodec CODEC = new VCFCodec();
   private final ObjectMapper MAPPER = new ObjectMapper();
 
   public static void main(String[] args) {
-    val request = SearchVariantsRequest.newBuilder()
+    val searchVariantRequest = SearchVariantsRequest.newBuilder()
         .setEnd(2000000)
         .setStart(0)
         .setPageSize(10)
@@ -82,14 +89,44 @@ public class VariantService {
         .setVariantSetId("consensus")
         .addCallSetIds("SA413898")
         .build();
+
+    val searchVariantSetRequest = SearchVariantSetsRequest.newBuilder()
+        .setDatasetId("SSM")
+        .build();
     val variantRepo = new VariantRepository();
     val headerRepo = new HeaderRepository();
-    val callRepo = new CallRepository();
+    val callSetRepo = new CallSetRepository();
+    val variantSetRepo = new VariantSetRepository();
 
-    val variantService = new VariantService(variantRepo, headerRepo, callRepo);
-    val searchVariantResponse = variantService.searchVariants(request);
+    val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo);
+    val searchVariantResponse = variantService.searchVariants(searchVariantRequest);
+    val searchVariantSetResponse = variantService.searchVariantSets(searchVariantSetRequest);
     log.info("SearchVariantResponse: {} ", searchVariantResponse);
+    log.info("SearchVariantSetResponse: {} ", searchVariantSetResponse);
 
+  }
+
+  public SearchVariantSetsResponse searchVariantSets(@NonNull SearchVariantSetsRequest request) {
+    log.info("Getting VariantSetIds for data_set_id: " + request.getDatasetId());
+    val response = this.variantSetRepository.findVariantSets(request);
+    return buildSearchVariantSetsResponse(response);
+  }
+
+  private SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
+    return SearchVariantSetsResponse.newBuilder()
+        .setNextPageToken("NIY")
+        .addAllVariantSets(
+            Arrays.stream(response.getHits().getHits()).map(h -> convertToVariantSet(h)).collect(Collectors.toList()))
+        .build();
+  }
+
+  private VariantSet convertToVariantSet(@NonNull SearchHit hit) {
+    return VariantSet.newBuilder()
+        .setId(hit.getId())
+        .setName(hit.getSource().get("name").toString())
+        .setDatasetId(hit.getSource().get("data_set_id").toString())
+        .setReferenceSetId(hit.getSource().get("reference_set_id").toString())
+        .build();
   }
 
   public Variant getVariant(@NonNull GetVariantRequest request) {

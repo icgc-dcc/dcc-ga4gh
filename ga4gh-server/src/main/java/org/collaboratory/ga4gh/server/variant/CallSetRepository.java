@@ -44,7 +44,7 @@ import lombok.val;
  * Perform queries against elasticsearch to find desired variants.
  */
 @Repository
-public class CallsetRepository {
+public class CallSetRepository {
 
   @NonNull
   private final TransportClient client;
@@ -52,7 +52,7 @@ public class CallsetRepository {
   // TODO: rtisma -- put TransportClient construction into commmon module, this is also applies to the loader
   @SuppressWarnings("resource")
   @SneakyThrows
-  public CallsetRepository() {
+  public CallSetRepository() {
     this.client = new PreBuiltTransportClient(Settings.EMPTY)
         .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
   }

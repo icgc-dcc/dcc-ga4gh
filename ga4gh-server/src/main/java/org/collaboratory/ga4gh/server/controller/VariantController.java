@@ -57,7 +57,7 @@ public class VariantController {
 
   @PostMapping("/variantsets/search")
   public SearchVariantSetsResponse searchVariantSets(@RequestBody SearchVariantSetsRequest request) {
-    return SearchVariantSetsResponse.newBuilder().build();
+    return variantService.searchVariantSets(request);
   }
 
   @GetMapping("/variantsets/{variantSetId:(?!search).+}")
