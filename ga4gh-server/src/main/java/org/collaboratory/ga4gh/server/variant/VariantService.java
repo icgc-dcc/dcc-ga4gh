@@ -44,6 +44,8 @@ import ga4gh.Variants.Variant.Builder;
 import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderVersion;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -115,11 +117,9 @@ public class VariantService {
 
     for (val variantSearchHit : searchResponse.getHits()) {
       val variantBuilder = convertToVariant(variantSearchHit);
-      for (val entry : variantSearchHit.getInnerHits().entrySet()) {
-        val key = entry.getKey();
-        val value = entry.getValue();
+      for (val callInnerHit : variantSearchHit.getInnerHits().get("call")) {
+        variantBuilder.addCalls(convertToCall(callInnerHit));
       }
-
       responseBuilder.addVariants(variantBuilder);
     }
     return responseBuilder.build();
@@ -244,6 +244,8 @@ public class VariantService {
   @SneakyThrows
   private Builder convertToVariant(@NonNull SearchHit hit) {
     JsonNode json = MAPPER.readTree(hit.getSourceAsString());
+    // TODO: [rtisma][HACK] - need to find a solution for getting vcfHEader
+    val header = new VCFHeader();
     // val response = headerRepository.getHeader(json.get("bio_sample_id").asText());
     // val headerString = response.getSource().get("vcf_header").toString();
     // byte[] data = Base64.getDecoder().decode(headerString);
@@ -252,7 +254,7 @@ public class VariantService {
     //
     // val header = (VCFHeader) ois.readObject();
     val codec = new VCFCodec();
-    // codec.setVCFHeader(header, VCFHeaderVersion.VCF4_1);
+    codec.setVCFHeader(header, VCFHeaderVersion.VCF4_1);
     VariantContext vc = codec.decode(json.get("record").asText());
 
     List<String> alt = vc.getAlternateAlleles().stream()

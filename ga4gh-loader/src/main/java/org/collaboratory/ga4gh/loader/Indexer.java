@@ -143,10 +143,10 @@ public class Indexer {
 
   // TODO: [rtisma] make the caller do bulk calls
   @SneakyThrows
-  public void indexVCFHeader(@NonNull final ObjectNode vcfHeader) {
+  public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
     val parent_variant_set_id = vcfHeader.path("variant_set_id").textValue();
     checkState(
-        this.client.prepareIndex(Config.INDEX_NAME, VCF_HEADER_TYPE_NAME, nextId())
+        this.client.prepareIndex(Config.INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
             .setContentType(SMILE)
             .setSource(createSource(vcfHeader))
             .setParent(parent_variant_set_id)

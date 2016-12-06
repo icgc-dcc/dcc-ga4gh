@@ -101,7 +101,7 @@ public class Loader {
     indexer.indexVariantSet(variantSet);
 
     log.info("Indexing vcfHeaders {}...", sampleId);
-    indexer.indexVCFHeader(vcfHeader);
+    indexer.indexVCFHeader(objectId, vcfHeader);
 
   }
 
