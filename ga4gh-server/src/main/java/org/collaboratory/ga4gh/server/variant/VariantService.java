@@ -99,6 +99,11 @@ public class VariantService {
     val searchVariantSetRequest = SearchVariantSetsRequest.newBuilder()
         .setDatasetId("SSM")
         .build();
+
+    val getVariantRequest = GetVariantRequest.newBuilder()
+        .setVariantId("4803278_4803278_1")
+        .build();
+
     val variantRepo = new VariantRepository();
     val headerRepo = new HeaderRepository();
     val callSetRepo = new CallSetRepository();
@@ -108,9 +113,11 @@ public class VariantService {
     val searchVariantResponse = variantService.searchVariants(searchVariantRequest);
     val searchVariantSetResponse = variantService.searchVariantSets(searchVariantSetRequest);
     val variantSet = variantService.getVariantSet(getVariantSetRequest);
+    val variant = variantService.getVariant(getVariantRequest);
     log.info("SearchVariantResponse: {} ", searchVariantResponse);
     log.info("SearchVariantSetResponse: {} ", searchVariantSetResponse);
     log.info("GetVariantSetResponse: {} ", variantSet);
+    log.info("GetVariantResponse: {} ", variant);
 
   }
 

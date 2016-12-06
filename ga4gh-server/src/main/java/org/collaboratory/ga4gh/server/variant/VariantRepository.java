@@ -89,13 +89,12 @@ public class VariantRepository {
     return searchRequestBuilder.setQuery(constantScoreQuery).get();
   }
 
-  // TODO: [rtisma] fix so that got a GetRequest on the id, and not a SearchRequest
   public SearchResponse findVariantById(@NonNull GetVariantRequest request) {
     val searchRequestBuilder = createSearchRequest(1); // only want one variant
     val childQuery = QueryBuilders.hasChildQuery("call", QueryBuilders.matchAllQuery(), ScoreMode.None)
         .innerHit(new InnerHitBuilder());
     val boolQuery = boolQuery()
-        .must(matchQuery("id", request.getVariantId()))
+        .must(QueryBuilders.idsQuery().addIds(request.getVariantId()))
         .must(childQuery);
     val constantScoreQuery = constantScoreQuery(boolQuery);
     return searchRequestBuilder.setQuery(constantScoreQuery).get();
