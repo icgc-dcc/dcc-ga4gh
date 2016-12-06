@@ -90,8 +90,11 @@ public class VariantRepository {
         .addSort("start", SortOrder.ASC)
         .setSize(1); // only want one variant
 
+    val childQuery = QueryBuilders.hasChildQuery("call", QueryBuilders.matchAllQuery(), ScoreMode.None)
+        .innerHit(new InnerHitBuilder());
     val boolQuery = boolQuery()
-        .must(matchQuery("id", request.getVariantId()));
+        .must(matchQuery("id", request.getVariantId()))
+        .must(childQuery);
     val constantScoreQuery = constantScoreQuery(boolQuery);
     return searchRequestBuilder.setQuery(constantScoreQuery).get();
   }

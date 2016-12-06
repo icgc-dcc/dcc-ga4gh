@@ -52,8 +52,7 @@ public class VariantController {
 
   @GetMapping("/variants/{variantId:(?!search).+}")
   public Variant getVariant(@PathVariable("variantId") GetVariantRequest request) {
-    val id = request.getVariantId();
-    return Variant.newBuilder().setId(id).build();
+    return variantService.getVariant(request);
   }
 
   @PostMapping("/variantsets/search")

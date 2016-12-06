@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.icgc.dcc.common.core.util.stream.Streams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,7 @@ import com.google.protobuf.ListValue;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 
+import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
 import ga4gh.Variants.Call;
@@ -65,6 +67,9 @@ public class VariantService {
   @NonNull
   private final HeaderRepository headerRepository;
 
+  @NonNull
+  private final CallRepository callRepository;
+
   private final VCFCodec CODEC = new VCFCodec();
   private final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -79,22 +84,26 @@ public class VariantService {
         .build();
     val variantRepo = new VariantRepository();
     val headerRepo = new HeaderRepository();
-    val variantService = new VariantService(variantRepo, headerRepo);
+    val callRepo = new CallRepository();
+
+    val variantService = new VariantService(variantRepo, headerRepo, callRepo);
     val searchVariantResponse = variantService.searchVariants(request);
     log.info("SearchVariantResponse: {} ", searchVariantResponse);
 
   }
 
-  /*
-   * public Variant getVariants(@NonNull GetVariantRequest request) { val variantId = request.getVariantId(); // search
-   * elasticsearch for this variant // populate builder with ES response
-   * 
-   * val variant = Variant.newBuilder() .setId(request.getVariantId()) .setVariantSetId()
-   * 
-   * 
-   * 
-   * }
-   */
+  public Variant getVariant(@NonNull GetVariantRequest request) {
+    log.info("VariantId to Get: {}", request.getVariantId());
+    SearchResponse response = variantRepository.findVariantById(request);
+    assert (response.getHits().getTotalHits() == 1);
+    return convertToVariant(response.getHits().getAt(0))
+        .addAllCalls(
+            Streams.stream(
+                response.getHits().getAt(0).getInnerHits().get("call"))
+                .map(x -> convertToCall(x).build())
+                .collect(Collectors.toList()))
+        .build();
+  }
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
     // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
@@ -109,10 +118,10 @@ public class VariantService {
     log.info("end: {}", request.getEnd());
 
     val response = variantRepository.findVariants(request);
-    return buildResponse(response);
+    return buildSearchVariantResponse(response);
   }
 
-  private SearchVariantsResponse buildResponse(@NonNull SearchResponse searchResponse) {
+  private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
     val responseBuilder = SearchVariantsResponse.newBuilder();
 
     for (val variantSearchHit : searchResponse.getHits()) {
@@ -241,6 +250,9 @@ public class VariantService {
         .setPhaseset(hit.getSource().get("phaseset").toString());
   }
 
+  // TODO: [rtisma] cleaniup
+  // This function is only to be used for searchHits from the SearchVariants service. Its not the same as the GetVariant
+  // service
   @SneakyThrows
   private Builder convertToVariant(@NonNull SearchHit hit) {
     JsonNode json = MAPPER.readTree(hit.getSourceAsString());
@@ -274,14 +286,5 @@ public class VariantService {
 
     return builder;
   }
-
-  /*
-   * private Iterable<Call> getCalls(String call_set_id) { // call_set_name call_set_id genotype phaseset val call =
-   * Call.newBuilder() .addGenotype(GENOTYPE_NUMBER) .setPhaseset(PHASESET_VALUE);
-   * 
-   * return null;
-   * 
-   * }
-   */
 
 }
