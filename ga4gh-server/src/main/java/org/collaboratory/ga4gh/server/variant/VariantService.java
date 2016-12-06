@@ -17,12 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -43,13 +38,12 @@ import com.google.protobuf.Value;
 
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
+import ga4gh.Variants.Call;
 import ga4gh.Variants.Variant;
 import ga4gh.Variants.Variant.Builder;
 import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderVersion;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -118,13 +112,16 @@ public class VariantService {
 
   private SearchVariantsResponse buildResponse(@NonNull SearchResponse searchResponse) {
     val responseBuilder = SearchVariantsResponse.newBuilder();
-    stream(searchResponse.getAggregations());
 
-    val variantId2CallSetIdsMap = createVariantId2CallSetIdsMap(searchResponse);
-    stream(searchResponse.getHits())
-        .map(x -> convertToVariant(x, variantId2CallSetIdsMap))
-        .forEach(v -> responseBuilder.addVariants(v));
+    for (val variantSearchHit : searchResponse.getHits()) {
+      val variantBuilder = convertToVariant(variantSearchHit);
+      for (val entry : variantSearchHit.getInnerHits().entrySet()) {
+        val key = entry.getKey();
+        val value = entry.getValue();
+      }
 
+      responseBuilder.addVariants(variantBuilder);
+    }
     return responseBuilder.build();
   }
 
@@ -234,30 +231,37 @@ public class VariantService {
   }
 
   @SneakyThrows
-  private Builder convertToVariant(@NonNull SearchHit hit, @NonNull Map<String, List<String>> variantId2CallSetIdsMap) {
-    JsonNode json = MAPPER.readTree(hit.getSourceAsString());
-    val response = headerRepository.getHeader(json.get("bio_sample_id").asText());
-    val headerString = response.getSource().get("vcf_header").toString();
-    byte[] data = Base64.getDecoder().decode(headerString);
-    ObjectInputStream ois = new ObjectInputStream(
-        new ByteArrayInputStream(data));
+  private Call.Builder convertToCall(@NonNull SearchHit hit) {
+    return Call.newBuilder()
+        .setCallSetId(hit.getSource().get("call_set_id").toString())
+        .setCallSetName(hit.getSource().get("bio_sample_id").toString()) // TODO: [rtisma] need to add call_set_name to
+                                                                         // ES mapping
+        .addGenotype(1)
+        .addGenotypeLikelihood(0.0)
+        .setPhaseset(hit.getSource().get("phaseset").toString());
+  }
 
-    val header = (VCFHeader) ois.readObject();
+  @SneakyThrows
+  private Builder convertToVariant(@NonNull SearchHit hit) {
+    JsonNode json = MAPPER.readTree(hit.getSourceAsString());
+    // val response = headerRepository.getHeader(json.get("bio_sample_id").asText());
+    // val headerString = response.getSource().get("vcf_header").toString();
+    // byte[] data = Base64.getDecoder().decode(headerString);
+    // ObjectInputStream ois = new ObjectInputStream(
+    // new ByteArrayInputStream(data));
+    //
+    // val header = (VCFHeader) ois.readObject();
     val codec = new VCFCodec();
-    codec.setVCFHeader(header, VCFHeaderVersion.VCF4_1);
+    // codec.setVCFHeader(header, VCFHeaderVersion.VCF4_1);
     VariantContext vc = codec.decode(json.get("record").asText());
 
     List<String> alt = vc.getAlternateAlleles().stream()
         .map(al -> al.getBaseString())
         .collect(Collectors.toList());
 
-    val genotypes = vc.getGenotypes();
-    val something = vc.getGenotypesOrderedByName();
-
     Builder builder = Variant.newBuilder()
-        .setId(json.get("id").asText())
-        .setVariantSetId(json.get("variant_set_id").asText())
-        .setReferenceName(vc.getContig())
+        .setId(hit.getId())
+        .setReferenceName(hit.getSource().get("reference_name").toString())
         .setReferenceBases(vc.getReference().getBaseString())
         .addAllAlternateBases(alt)
         .setStart(vc.getStart())
