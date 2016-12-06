@@ -171,15 +171,6 @@ public class Indexer {
     return String.valueOf(id++);
   }
 
-  private static class VCFHeaderDocumentType implements IndexDocumentType {
-
-    @Override
-    public String getIndexType() {
-      return Indexer.VCF_HEADER_TYPE_NAME;
-    }
-
-  }
-
   private static class VariantDocumentType implements IndexDocumentType {
 
     @Override
