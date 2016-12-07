@@ -170,6 +170,11 @@ public class VariantService {
         .setId(id)
         .setName(source.get("name").toString())
         .setBioSampleId(source.get("bio_sample_id").toString())
+        // TODO: [rtisma] [BUG] need to properly add variant_set_ids if there is more than one
+        .addVariantSetIds(source.get("variant_set_ids").toString())
+        // .addAlVariantSetIds(
+        // Streams.stream(source.).map(vs -> vs.toString())
+        // .collect(Collectors.toList()))
         .setCreated(DEFAULT_CALLSET_CREATED_VALUE)
         .setUpdated(DEFAULT_CALLSET_UPDATED_VALUE);
   }
