@@ -152,7 +152,7 @@ public final class Portal {
    */
   public static List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = 20;// PORTAL_FETCH_SIZE;
+    val size = 100;// PORTAL_FETCH_SIZE;
     int from = 1;
 
     while (from < 21) {

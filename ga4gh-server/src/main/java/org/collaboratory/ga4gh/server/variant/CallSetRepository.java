@@ -27,6 +27,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 import java.net.InetAddress;
 
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -37,6 +38,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
 
+import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.SearchCallSetsRequest;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -71,10 +73,14 @@ public class CallSetRepository {
     val constBoolQuery =
         constantScoreQuery(
             boolQuery()
-                .must(matchQuery("variant_set_id", request.getVariantSetId()))
+                .must(matchQuery("variant_set_ids", request.getVariantSetId()))
                 .must(matchQuery("name", request.getName()))
                 .must(matchQuery("bio_sample_id", request.getBioSampleId())));
     return searchRequestBuilder.setQuery(constBoolQuery).get();
+  }
+
+  public GetResponse findCallSetById(@NonNull GetCallSetRequest request) {
+    return client.prepareGet(INDEX_NAME, CALLSET_TYPE_NAME, request.getCallSetId()).get();
   }
 
 }

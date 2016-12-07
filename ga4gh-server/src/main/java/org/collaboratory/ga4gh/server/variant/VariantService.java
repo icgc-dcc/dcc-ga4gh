@@ -39,13 +39,17 @@ import com.google.protobuf.ListValue;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 
+import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
+import ga4gh.VariantServiceOuterClass.SearchCallSetsRequest;
+import ga4gh.VariantServiceOuterClass.SearchCallSetsResponse;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsResponse;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
 import ga4gh.Variants.Call;
+import ga4gh.Variants.CallSet;
 import ga4gh.Variants.Variant;
 import ga4gh.Variants.Variant.Builder;
 import ga4gh.Variants.VariantSet;
@@ -65,8 +69,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class VariantService {
 
-  private final static int GENOTYPE_NUMBER = 1;
-  private final static String PHASESET_VALUE = "true";
+  private final static long DEFAULT_CALLSET_CREATED_VALUE = 0;
+  private final static long DEFAULT_CALLSET_UPDATED_VALUE = 0;
+  private final static int DEFAULT_CALL_GENOTYPE_VALUE = 1;
+  private final static double DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE = 0.0;
 
   @NonNull
   private final VariantRepository variantRepository;
@@ -92,16 +98,27 @@ public class VariantService {
         .addCallSetIds("SA413898")
         .build();
 
-    val getVariantSetRequest = GetVariantSetRequest.newBuilder()
-        .setVariantSetId("consensus")
-        .build();
-
     val searchVariantSetRequest = SearchVariantSetsRequest.newBuilder()
         .setDatasetId("SSM")
         .build();
 
+    val searchCallSetRequest = SearchCallSetsRequest.newBuilder()
+        .setVariantSetId("consensus")
+        .setBioSampleId("SA413898")
+        .setName("SA413898")
+        .setPageSize(100)
+        .build();
+
     val getVariantRequest = GetVariantRequest.newBuilder()
         .setVariantId("4803278_4803278_1")
+        .build();
+
+    val getVariantSetRequest = GetVariantSetRequest.newBuilder()
+        .setVariantSetId("consensus")
+        .build();
+
+    val getCallSetRequest = GetCallSetRequest.newBuilder()
+        .setCallSetId("SA413898")
         .build();
 
     val variantRepo = new VariantRepository();
@@ -112,12 +129,16 @@ public class VariantService {
     val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo);
     val searchVariantResponse = variantService.searchVariants(searchVariantRequest);
     val searchVariantSetResponse = variantService.searchVariantSets(searchVariantSetRequest);
+    val searchCallSetResponse = variantService.searchCallSets(searchCallSetRequest);
+    val callSet = variantService.getCallSet(getCallSetRequest);
     val variantSet = variantService.getVariantSet(getVariantSetRequest);
     val variant = variantService.getVariant(getVariantRequest);
     log.info("SearchVariantResponse: {} ", searchVariantResponse);
     log.info("SearchVariantSetResponse: {} ", searchVariantSetResponse);
+    log.info("SearchCallSetResponse: {} ", searchCallSetResponse);
     log.info("GetVariantSetResponse: {} ", variantSet);
     log.info("GetVariantResponse: {} ", variant);
+    log.info("GetCallSetResponse: {} ", callSet);
 
   }
 
@@ -129,7 +150,7 @@ public class VariantService {
 
   private SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
     return SearchVariantSetsResponse.newBuilder()
-        .setNextPageToken("NIY")
+        .setNextPageToken("N/A")
         .addAllVariantSets(
             Arrays.stream(response.getHits().getHits()).map(h -> convertToVariantSet(h).build())
                 .collect(Collectors.toList()))
@@ -144,14 +165,48 @@ public class VariantService {
         .setReferenceSetId(source.get("reference_set_id").toString());
   }
 
+  private static CallSet.Builder _convertSourceToCallSet(final String id, @NonNull Map<String, Object> source) {
+    return CallSet.newBuilder()
+        .setId(id)
+        .setName(source.get("name").toString())
+        .setBioSampleId(source.get("bio_sample_id").toString())
+        .setCreated(DEFAULT_CALLSET_CREATED_VALUE)
+        .setUpdated(DEFAULT_CALLSET_UPDATED_VALUE);
+  }
+
   private VariantSet.Builder convertToVariantSet(@NonNull SearchHit hit) {
     return _convertSourceToVariantSet(hit.getId(), hit.getSource());
+  }
+
+  private CallSet.Builder convertToCallSet(@NonNull SearchHit hit) {
+    return _convertSourceToCallSet(hit.getId(), hit.getSource());
+  }
+
+  public SearchCallSetsResponse searchCallSets(@NonNull SearchCallSetsRequest request) {
+    log.info("Getting CallSetIds for variant_set_id: " + request.getVariantSetId());
+    val response = this.callsetRepository.findCallSets(request);
+    return buildSearchCallSetsResponse(response);
+  }
+
+  private SearchCallSetsResponse buildSearchCallSetsResponse(@NonNull SearchResponse response) {
+    return SearchCallSetsResponse.newBuilder()
+        .setNextPageToken("N/A")
+        .addAllCallSets(
+            Arrays.stream(response.getHits().getHits()).map(h -> convertToCallSet(h).build())
+                .collect(Collectors.toList()))
+        .build();
   }
 
   public VariantSet getVariantSet(@NonNull GetVariantSetRequest request) {
     log.info("VariantSetId to Get: {}", request.getVariantSetId());
     GetResponse response = variantSetRepository.findVariantSetById(request);
     return _convertSourceToVariantSet(response.getId(), response.getSource()).build();
+  }
+
+  public CallSet getCallSet(@NonNull GetCallSetRequest request) {
+    log.info("CallSetId to Get: {}", request.getCallSetId());
+    GetResponse response = callsetRepository.findCallSetById(request);
+    return _convertSourceToCallSet(response.getId(), response.getSource()).build();
   }
 
   public Variant getVariant(@NonNull GetVariantRequest request) {
@@ -307,8 +362,8 @@ public class VariantService {
         .setCallSetId(hit.getSource().get("call_set_id").toString())
         .setCallSetName(hit.getSource().get("bio_sample_id").toString()) // TODO: [rtisma] need to add call_set_name to
                                                                          // ES mapping
-        .addGenotype(1)
-        .addGenotypeLikelihood(0.0)
+        .addGenotype(DEFAULT_CALL_GENOTYPE_VALUE)
+        .addGenotypeLikelihood(DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE)
         .setPhaseset(hit.getSource().get("phaseset").toString());
   }
 

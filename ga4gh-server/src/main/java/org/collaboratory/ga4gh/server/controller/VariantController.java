@@ -37,7 +37,6 @@ import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
 import ga4gh.Variants.CallSet;
 import ga4gh.Variants.Variant;
 import ga4gh.Variants.VariantSet;
-import lombok.val;
 
 @RestController
 public class VariantController {
@@ -67,13 +66,12 @@ public class VariantController {
 
   @PostMapping("/callsets/search")
   public SearchCallSetsResponse searchCallSets(@RequestBody SearchCallSetsRequest request) {
-    return SearchCallSetsResponse.newBuilder().build();
+    return variantService.searchCallSets(request);
   }
 
   @GetMapping("/callsets/{callSetId:(?!search).+}")
   public CallSet getCallSet(@PathVariable("callSetId") GetCallSetRequest request) {
-    val id = request.getCallSetId();
-    return CallSet.newBuilder().setId(id).build();
+    return variantService.getCallSet(request);
   }
 
 }
