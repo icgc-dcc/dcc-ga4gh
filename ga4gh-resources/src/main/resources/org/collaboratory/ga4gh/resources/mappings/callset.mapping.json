@@ -9,7 +9,7 @@
 				"type": "keyword",
 				"index": "true"
 			},
-			"variant_set_id": {
+			"variant_set_ids": {
 				"type": "keyword",
 				"index": "true"
 			},

@@ -1,7 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.collect.Iterables.transform;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.io.ByteArrayOutputStream;
@@ -13,11 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.icgc.dcc.common.core.json.JsonNodeBuilders.ObjectNodeBuilder;
-
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -83,7 +78,7 @@ public class VCF implements Closeable {
   }
 
   public ObjectNode readCallSets() {
-    return convertCallSet(this.fileMetaData.getSampleId());
+    return convertCallSet(this.fileMetaData.getVcfFilenameParser().getCallerId());
   }
 
   public Map<String, ObjectNode> readCalls() {
@@ -121,19 +116,12 @@ public class VCF implements Closeable {
     return createCallName(record, caller_id, bio_sample_id);
   }
 
-  private ObjectNode convertCallSetNested(String bio_sample_id, String caller_id) {
-    return object()
-        .with("id", createCallSetId(bio_sample_id))
-        .with("name", bio_sample_id + "_" + caller_id)
-        .end();
-  }
-
   private ObjectNode convertCallSet(final String caller_id) {
 
     return object()
         .with("id", createCallSetId(this.fileMetaData.getSampleId()))
         .with("name", createCallSetName(this.fileMetaData.getSampleId()))
-        .with("variant_set_id", createVariantSetId(caller_id))
+        .with("variant_set_ids", createVariantSetId(caller_id))
         .with("bio_sample_id", this.fileMetaData.getSampleId())
         .end();
 
@@ -154,22 +142,6 @@ public class VCF implements Closeable {
 
   private static String createVariantSetName(String caller_id) {
     return caller_id;
-  }
-
-  private static ObjectNodeBuilder createNodeBuilderFromMap(@NonNull Map<String, String> map) {
-    val objNode = object();
-    map.entrySet().stream().forEach(entry -> objNode.with(entry.getKey(), entry.getValue()));
-    return objNode;
-  }
-
-  private ArrayNode convertVariantSetArrayObj(@NonNull VariantContext record) {
-    val caller_list = record.getCommonInfo().getAttributeAsList("Callers").stream().map(c -> c.toString())
-        .collect(Collectors.toList());
-    val arrayObjBuilder = array();
-    for (String caller : caller_list) {
-      arrayObjBuilder.with(createVariantSetId(caller));
-    }
-    return arrayObjBuilder.end();
   }
 
   private ObjectNode convertCallNodeObj(@NonNull VariantContext record) {
