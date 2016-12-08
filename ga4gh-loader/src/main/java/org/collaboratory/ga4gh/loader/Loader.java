@@ -40,8 +40,10 @@ public class Loader {
   public void load() {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
-    val fileMetas = Portal.getFileMetas();
-    // val fileMetas = Portal.getFileMetasForNumDonors(2);
+     val fileMetas = Portal.getFileMetas();
+    //val fileMetas = Portal.getFileMetasForNumDonors(20);
+    //val map = Portal.createDonorDataMap(20);
+
     val total = fileMetas.size();
     int counter = 1;
     for (val fileMeta : fileMetas) {

@@ -5,7 +5,14 @@ import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -18,6 +25,9 @@ import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregati
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.icgc.dcc.common.core.util.stream.Streams;
+
+import com.google.common.collect.Sets;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -90,6 +100,32 @@ public class Benchmarks {
   private void display(MultiBucketsAggregation aggregation) {
     for (val bucket : aggregation.getBuckets()) {
       log.info("{} = {}", bucket.getKey(), bucket.getDocCount());
+    }
+  }
+
+  public static void writeToNewFile(final String filename, final String message) {
+    writeToFile(filename, message, true);
+  }
+
+  public static void writeToAppendFile(final String filename, final String message) {
+    writeToFile(filename, message, false);
+  }
+
+  @SneakyThrows
+  public static void writeToFile(final String filename, final String message, final boolean overwrite) {
+    val path = Paths.get(filename);
+    val dir = path.getParent();
+    if (Files.exists(dir) == false) {
+      Files.createDirectories(dir);
+    }
+    if (overwrite) {
+      Files.deleteIfExists(path);
+    }
+    try (val fc = FileChannel.open(path, Sets.newHashSet(StandardOpenOption.CREATE, StandardOpenOption.APPEND))) {
+      fc.write(ByteBuffer.wrap(message.getBytes()));
+    } catch (IOException e) {
+      log.error("Message: " + e.getMessage());
+      log.error("ST: " + Streams.stream(e.getStackTrace()).map(x -> x.toString()).collect(Collectors.joining("\n")));
     }
   }
 
