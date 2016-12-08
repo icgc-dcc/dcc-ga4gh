@@ -57,35 +57,38 @@ public class DonorData {
     return sampleDataListMap.get(sampleId);
   }
 
-  public Map<String, List<FileMetaData>> getSampleFileMetaDataByDataType(String sampleId) {
-    return groupByFileMetaOnSample(sampleId, x -> x.getDataType());
+  public Set<String> getCallersForSampleAndDataType(final String sampleId, final String dataType) {
+    return collectFileMetaSet(sampleId, dataType, x -> x.getVcfFilenameParser().toString());
   }
 
-  public Set<String> getCallersForSample(String sampleId) {
-    return collectFileMetaSet(sampleId, x -> x.getVcfFilenameParser().toString());
-  }
-
-  public Set<String> getDataTypesForSample(String sampleId) {
-    return collectFileMetaSet(sampleId, x -> x.getDataType());
-  }
-
-  private Set<String> collectFileMetaSet(String sampleId, Function<? super FileMetaData, ? extends String> functor) {
-    return getSampleFileMetas(sampleId).stream().map(functor)
+  public Set<String> getDataTypesForSample(final String sampleId) {
+    return getSampleFileMetas(sampleId).stream()
+        .map(x -> x.getDataType())
         .collect(Collectors.toSet());
   }
 
-  private Map<String, List<FileMetaData>> groupByFileMetaOnSample(String sampleId,
-      Function<? super FileMetaData, ? extends String> functor) {
-    return getSampleFileMetas(sampleId).stream()
-        .collect(Collectors.groupingBy(functor, Collectors.toList()));
-  }
-
-  public Map<String, List<FileMetaData>> getSampleFileMetaDataByCaller(String sampleId) {
-    return groupByFileMetaOnSample(sampleId, x -> x.getVcfFilenameParser().getCallerId());
+  public Map<String, List<FileMetaData>> getFileMetaDatasByCallerAndDataType(final String sampleId,
+      final String dataType) {
+    return groupByFileMetaOnSample(sampleId, dataType, x -> x.getVcfFilenameParser().getCallerId());
   }
 
   public int numFilesForSample(String sampleId) {
     return getSampleFileMetas(sampleId).size();
+  }
+
+  private Set<String> collectFileMetaSet(final String sampleId, final String dataType,
+      final Function<? super FileMetaData, ? extends String> functor) {
+    return getSampleFileMetas(sampleId).stream()
+        .filter(f -> f.getDataType().equals(dataType))
+        .map(functor)
+        .collect(Collectors.toSet());
+  }
+
+  private Map<String, List<FileMetaData>> groupByFileMetaOnSample(final String sampleId, final String dataType,
+      Function<? super FileMetaData, ? extends String> functor) {
+    return getSampleFileMetas(sampleId).stream()
+        .filter(x -> x.getDataType().equals(dataType))
+        .collect(Collectors.groupingBy(functor, Collectors.toList()));
   }
 
 }
