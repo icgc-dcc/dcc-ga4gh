@@ -10,7 +10,6 @@ import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,36 +36,6 @@ public final class Portal {
 
   public static void main(String[] args) {
 
-  }
-
-  public static Map<String, DonorData> getDonorDataMap() {
-    return getDonorDataMap(1, -1);
-  }
-
-  // numDonors == -1 means get all the donors possible
-  public static Map<String, DonorData> getDonorDataMap(final int donorStart, final int numDonors) {
-    int localDonorFrom = donorStart;
-    val donorDataMap = new HashMap<String, DonorData>();
-    int donorFrom = donorStart;
-    while (true) {
-      int buffDonorSize =
-          (numDonors < 0) ? DEFAULT_BUF_DONOR_SIZE : Math.min(donorStart + numDonors - donorFrom,
-              DEFAULT_BUF_DONOR_SIZE);
-      val donors = getDonorIds(localDonorFrom, buffDonorSize);
-      for (String donorId : donors) {
-        System.out.println("Donor: " + donorId);
-        val donorData = new DonorData(donorId);
-        for (FileMetaData sampleFileMetaData : getAllFileMetaDatasForDonor(donorId)) {
-          donorData.addSample(sampleFileMetaData.getSampleId(), sampleFileMetaData);
-        }
-        donorDataMap.put(donorId, donorData);
-      }
-      if (Iterables.size(donors) < buffDonorSize) {
-        break;
-      }
-      localDonorFrom += buffDonorSize;
-    }
-    return donorDataMap;
   }
 
   private static List<FileMetaData> getAllFileMetaDatasForDonor(String donorId) {
@@ -109,7 +78,7 @@ public final class Portal {
   /**
    * Gets all Collaboratory VCF files.
    */
-  public static List<ObjectNode> getFileMetas() {
+  public static List<ObjectNode> getAllFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
     val size = 100;// PORTAL_FETCH_SIZE;
     int from = 1;
@@ -136,28 +105,12 @@ public final class Portal {
     return s;
   }
 
-  public static Map<String, DonorData> createDonorDataMap(int numDonors) {
-    checkState(numDonors > 1); // due to bug in Portal api, must be greater than 1
-    val fileMetas = ImmutableList.<ObjectNode> builder();
-    int from = 1;
-    val donorIterable = getDonorIds(from, numDonors);
+  public static Map<String, DonorData> getDonorDataMap() {
+    return DonorData.buildDonorDataMap(getAllFileMetas());
+  }
 
-    int size = PORTAL_FETCH_SIZE;
-    while (true) {
-      val allFilesForDonorsUrl = getFilesForDonersUrl(donorIterable, size, from);
-      val result = read(allFilesForDonorsUrl);
-      val hits = getHits(result);
-      for (val hit : hits) {
-        val fileMeta = (ObjectNode) hit;
-        fileMetas.add(fileMeta);
-      }
-      if (hits.size() < size) {
-        break;
-      }
-      from += size;
-    }
-    return FileMetaData.buildDonorDataMap(fileMetas.build());
-
+  public static Map<String, DonorData> getDonorDataMap(int numDonors) {
+    return DonorData.buildDonorDataMap(getFileMetasForNumDonors(numDonors));
   }
 
   public static List<ObjectNode> getFileMetasForNumDonors(int numDonors) {
@@ -196,7 +149,21 @@ public final class Portal {
     val result = read(url);
     val hits = getHits(result);
     return transform(hits, Portal::getIdFromHit);
+  }
 
+  public static Iterable<String> getDonorIds() {
+    int from = 1;
+    int size = DEFAULT_BUF_DONOR_SIZE;
+    val list = new ArrayList<String>();
+    while (true) {
+      val donorList = getDonorIds(from, size);
+      Iterables.addAll(list, donorList);
+      if (Iterables.size(donorList) < size) {
+        break;
+      }
+      from += size;
+    }
+    return list;
   }
 
   private static JsonNode getHits(JsonNode result) {

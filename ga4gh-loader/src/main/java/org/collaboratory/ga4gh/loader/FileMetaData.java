@@ -18,17 +18,12 @@
 package org.collaboratory.ga4gh.loader;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.icgc.dcc.common.core.util.stream.Streams;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -72,56 +67,6 @@ public class FileMetaData {
     val vcfFilenameParser = PortalFiles.getParser(objectNode);
     return new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild,
         vcfFilenameParser);
-  }
-
-  @RequiredArgsConstructor
-  @Value
-  private static class Tuple2<T1, T2> {
-
-    @NonNull
-    private final T1 t1;
-    @NonNull
-    private final T2 t2;
-
-  }
-
-  public static Map<String, DonorData> buildDonorDataMap(Iterable<ObjectNode> objectNodes) {
-    val map = new HashMap<String, DonorData>();
-
-    // Map< List(donorId, sampleId), List<FileMetaData>>
-    Map<Tuple2<String, String>, List<FileMetaData>> tempMap =
-        Streams.stream(objectNodes)
-            .map(o -> build(o))
-            .collect(Collectors.toList()) // List<FileMetaData>
-            .stream()
-            .collect(
-                Collectors.groupingBy(
-                    x -> new Tuple2<String, String>(x.getDonorId(), x.getSampleId()))); // Group by Tuple2 of donorId
-                                                                                        // and sampleId
-
-    // Initialize output map with DonorData objects and keys
-    tempMap.keySet().stream().forEach(k -> map.put(k.getT1(), new DonorData(k.getT1())));
-
-    // Add FileMetaData
-    tempMap.entrySet().stream().forEach(e -> e.getValue().stream().forEach(
-        f -> map.get(e.getKey().getT1()).addSample(e.getKey().getT2(), f)));
-    return map;
-  }
-
-  public static void writeDonorDataMap(final String outputFn, @NonNull Iterable<ObjectNode> objectNodes) {
-    val sb = new StringBuilder();
-    buildDonorDataMap(objectNodes)
-        .values().stream()
-        .forEach(x -> x.getSampleDataListMap().entrySet().stream()
-            .forEach(e -> sb.append(
-                "donorId: " + x.getId()
-                    + "\nsampleId: " + e.getKey()
-                    + " -> [\n\t\t" + e.getValue().stream()
-                        .map(s -> s.toString())
-                        .collect(Collectors.joining("\n\t\t"))
-                    + "\n]\n\n")));
-
-    Benchmarks.writeToNewFile(outputFn, sb.toString());
   }
 
   public static void writeStats(final String outputFn,
