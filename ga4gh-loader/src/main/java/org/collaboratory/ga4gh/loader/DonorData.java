@@ -20,6 +20,8 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +30,12 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
+import org.elasticsearch.shaded.jackson.core.JsonGenerationException;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
@@ -37,11 +45,12 @@ import lombok.val;
 
 @RequiredArgsConstructor
 @Value
+@NotThreadSafe
 public class DonorData {
 
   @RequiredArgsConstructor
   @Value
-  public static class Tuple2<T1, T2> {
+  public static final class Tuple2<T1, T2> {
 
     @NonNull
     private final T1 t1;
@@ -55,53 +64,69 @@ public class DonorData {
 
   private final Map<String, List<FileMetaData>> sampleDataListMap = new HashMap<>();
 
-  public void addSample(String sampleId, @NonNull FileMetaData fileMetaData) {
+  /*
+   * Adds fileMetaData to this Donor
+   */
+  public final void addSample(@NonNull final FileMetaData fileMetaData) {
+    addSample(fileMetaData.getSampleId(), fileMetaData);
+  }
+
+  public final void addSample(final String sampleId, @NonNull final FileMetaData fileMetaData) {
     if (sampleDataListMap.containsKey(sampleId) == false) {
       sampleDataListMap.put(sampleId, new ArrayList<FileMetaData>());
     }
     sampleDataListMap.get(sampleId).add(fileMetaData);
   }
 
-  public Set<String> getSampleSet() {
+  public final Set<String> getSampleIds() {
     return sampleDataListMap.keySet();
   }
 
-  public int getNumSamples() {
-    return getSampleSet().size();
+  public final int getNumSamples() {
+    return getSampleIds().size();
   }
 
-  public long getTotalFileMetaCount() {
-    return getSampleSet().stream()
+  public final long getTotalFileMetaCount() {
+    return getSampleIds().stream()
         .map(this::numFilesForSample)
         .collect(Collectors.summingInt(Integer::intValue));
   }
 
-  public List<FileMetaData> getSampleFileMetas(String sampleId) {
+  /*
+   * Get the list of FileMetaData for a particular sampleId
+   */
+  public final List<FileMetaData> getSampleFileMetas(final String sampleId) {
     checkState(sampleDataListMap.containsKey(sampleId),
         String.format("The sampleId \"%s\" DNE for donorId: %s", sampleId, id));
     return sampleDataListMap.get(sampleId);
   }
 
-  public Set<String> getCallersForSampleAndDataType(final String sampleId, final String dataType) {
+  /*
+   * Get all the names of the callers for a specific dataType and sampleId
+   */
+  public final Set<String> getCallersForSampleAndDataType(final String sampleId, final String dataType) {
     return collectFileMetaSet(sampleId, dataType, x -> x.getVcfFilenameParser().toString());
   }
 
-  public Set<String> getDataTypesForSample(final String sampleId) {
+  /*
+   * Get all the dataTypes for a specific sampleId
+   */
+  public final Set<String> getDataTypesForSample(final String sampleId) {
     return getSampleFileMetas(sampleId).stream()
         .map(x -> x.getDataType())
         .collect(Collectors.toSet());
   }
 
-  public Map<String, List<FileMetaData>> getFileMetaDatasByCallerAndDataType(final String sampleId,
+  public final Map<String, List<FileMetaData>> getFileMetaDatasByCallerAndDataType(final String sampleId,
       final String dataType) {
     return groupByFileMetaOnSample(sampleId, dataType, x -> x.getVcfFilenameParser().getCallerId());
   }
 
-  public int numFilesForSample(String sampleId) {
+  public final int numFilesForSample(final String sampleId) {
     return getSampleFileMetas(sampleId).size();
   }
 
-  private Set<String> collectFileMetaSet(final String sampleId, final String dataType,
+  private final Set<String> collectFileMetaSet(final String sampleId, final String dataType,
       final Function<? super FileMetaData, ? extends String> functor) {
     return getSampleFileMetas(sampleId).stream()
         .filter(f -> f.getDataType().equals(dataType))
@@ -109,18 +134,23 @@ public class DonorData {
         .collect(Collectors.toSet());
   }
 
-  private Map<String, List<FileMetaData>> groupByFileMetaOnSample(final String sampleId, final String dataType,
-      Function<? super FileMetaData, ? extends String> functor) {
+  private final Map<String, List<FileMetaData>> groupByFileMetaOnSample(final String sampleId, final String dataType,
+      final Function<? super FileMetaData, ? extends String> functor) {
     return getSampleFileMetas(sampleId).stream()
         .filter(x -> x.getDataType().equals(dataType))
         .collect(Collectors.groupingBy(functor, Collectors.toList()));
   }
 
-  public static Map<String, DonorData> buildDonorDataMap(Iterable<ObjectNode> objectNodes) {
+  /*
+   * Builds a Map where keys are donorIds and Values are DonorData objects, by converting each input objectNode to a
+   * FileMetaData object, and grouping them by donorId and sampleId. Then traversing the grouped structure, and
+   * populating the Map appropriately
+   */
+  public static final Map<String, DonorData> buildDonorDataMap(Iterable<ObjectNode> objectNodes) {
     val map = new HashMap<String, DonorData>();
 
     // Map< List(donorId, sampleId), List<FileMetaData>>
-    Map<Tuple2<String, String>, List<FileMetaData>> tempMap =
+    final Map<Tuple2<String, String>, List<FileMetaData>> tempMap =
         stream(objectNodes)
             .map(o -> FileMetaData.build(o))
             .collect(Collectors.toList()) // List<FileMetaData>
@@ -138,7 +168,7 @@ public class DonorData {
     return map;
   }
 
-  public static void writeDonorDataMap(final String outputFn, @NonNull Iterable<ObjectNode> objectNodes) {
+  public static final void writeDonorDataMap(final String outputFn, @NonNull Iterable<ObjectNode> objectNodes) {
     val sb = new StringBuilder();
     buildDonorDataMap(objectNodes)
         .values().stream()
@@ -154,6 +184,20 @@ public class DonorData {
                 .append("\n]\n\n")));
 
     Benchmarks.writeToNewFile(outputFn, sb.toString());
+  }
+
+  public File dumpToJson(File file) {
+    val mapper = new ObjectMapper();
+    try {
+      mapper.writerWithDefaultPrettyPrinter().writeValue(file, this);
+    } catch (JsonGenerationException e) {
+      e.printStackTrace();
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return file;
   }
 
 }

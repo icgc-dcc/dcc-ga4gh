@@ -42,6 +42,8 @@ public final class PortalFiles {
   private static final String REFERENCE_NAME = "referenceName";
   private static final String STUDY = "study";
   private static final String GENOME_BUILD = "genomeBuild";
+  private static final String FILE_SIZE = "fileSize";
+  private static final String FILE_MD5SUM = "fileMd5sum";
 
   public static String getObjectId(@NonNull ObjectNode file) {
     return file.path(OBJECT_ID).textValue();
@@ -59,6 +61,14 @@ public final class PortalFiles {
 
   public static String getFileName(@NonNull ObjectNode file) {
     return getFirstFileCopy(file).path(FILE_NAME).textValue();
+  }
+
+  public static long getFileSize(@NonNull ObjectNode file) {
+    return getFirstFileCopy(file).path(FILE_SIZE).asLong(-1);
+  }
+
+  public static String getFileMD5sum(@NonNull ObjectNode file) {
+    return getFirstFileCopy(file).path(FILE_MD5SUM).textValue();
   }
 
   public static String getProjectCode(@NonNull ObjectNode file) {

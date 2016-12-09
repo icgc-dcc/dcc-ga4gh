@@ -54,24 +54,15 @@ public final class Portal {
       val hits = getHits(result);
       for (val hit : hits) {
         val fileMeta = (ObjectNode) hit;
-        val objectId = PortalFiles.getObjectId(fileMeta);
-        val fileId = PortalFiles.getFileId(fileMeta);
-        val sampleId = PortalFiles.getSampleId(fileMeta);
-        val dataType = PortalFiles.getDataType(fileMeta);
-        val referenceName = PortalFiles.getReferenceName(fileMeta);
-        val genomeBuild = PortalFiles.getGenomeBuild(fileMeta);
-        val vcfFilenameParser = PortalFiles.getParser(fileMeta);
-        samplesFileMetaDataList.add(
-            new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild,
-                vcfFilenameParser));
+        samplesFileMetaDataList.add(FileMetaData.build(fileMeta));
       }
 
       if (hits.size() < buffFileSize) {
         break;
       }
       fileFrom += buffFileSize;
-
     }
+
     return samplesFileMetaDataList;
   }
 

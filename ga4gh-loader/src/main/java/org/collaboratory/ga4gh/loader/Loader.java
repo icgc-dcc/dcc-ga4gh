@@ -3,16 +3,10 @@ package org.collaboratory.ga4gh.loader;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
-import static org.collaboratory.ga4gh.loader.PortalFiles.getDataType;
-import static org.collaboratory.ga4gh.loader.PortalFiles.getDonorId;
-import static org.collaboratory.ga4gh.loader.PortalFiles.getFileId;
-import static org.collaboratory.ga4gh.loader.PortalFiles.getObjectId;
-import static org.collaboratory.ga4gh.loader.PortalFiles.getSampleId;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -52,6 +46,7 @@ public class Loader {
     for (val donorDataEntry : donorDataMap.entrySet()) {
       val donorId = donorDataEntry.getKey();
       val donorData = donorDataEntry.getValue();
+      donorData.dumpToJson(new File("target/rob_" + donorId + ".json"));
       log.info("Loading Donor({}): {}/{}", donorId, donorCount, donorTotal);
       int sampleCount = 1;
       int sampleTotal = donorData.getNumSamples();
@@ -84,31 +79,6 @@ public class Loader {
 
   }
 
-  public void load2() {
-    indexer.prepareIndex();
-    log.info("Resolving object ids...");
-    // val fileMetas = Portal.getFileMetas();
-    // val donors = Portal.getDonorIds();
-
-    val fileMetas = Portal.getFileMetasForNumDonors(3);
-    DonorData.writeDonorDataMap("target/rob_fileMetasFor" + 20 + "donors.txt", fileMetas);
-
-    val total = fileMetas.size();
-    int counter = 1;
-    for (val fileMeta : fileMetas) {
-      log.info("Loading {}/{}", counter, total);
-      try {
-        loadFile(fileMeta);
-      } catch (Exception e) {
-        log.warn("Bad VCF with object id: {}", PortalFiles.getObjectId(fileMeta));
-        log.warn("Message: {} ", e.getMessage());
-        log.warn("StackTrace: {} ",
-            Arrays.stream(e.getStackTrace()).map(x -> x.toString()).collect(Collectors.joining("\n")));
-      }
-      counter++;
-    }
-  }
-
   private void loadFile(@NonNull final FileMetaData fileMetaData) {
     log.info("Downloading file {}...", fileMetaData.getVcfFilenameParser().getFilename());
     val file = Storage.downloadFile(fileMetaData.getObjectId());
@@ -138,52 +108,4 @@ public class Loader {
     indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);
 
   }
-
-  private void loadFile(ObjectNode objectNode) {
-    val objectId = getObjectId(objectNode);
-    val fileId = getFileId(objectNode);
-    val sampleId = getSampleId(objectNode);
-    val donorId = getDonorId(objectNode);
-    val dataType = getDataType(objectNode);
-    val referenceName = PortalFiles.getReferenceName(objectNode);
-    val genomeBuild = PortalFiles.getGenomeBuild(objectNode);
-    val vcfFilenameParser = PortalFiles.getParser(objectNode);
-
-    if (vcfFilenameParser.getMutationSubType().equals("indel")) {
-      log.warn("Skipping file {} since its INDEL", vcfFilenameParser.getFilename());
-      return;
-    }
-
-    val fileMetaData =
-        new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild, vcfFilenameParser);
-
-    log.info("Downloading file {}...", vcfFilenameParser.getFilename());
-    val file = Storage.downloadFile(objectId);
-
-    log.info("Reading variants from {}...", file);
-    @Cleanup
-    val vcf = new VCF(file, fileMetaData);
-    val variants = vcf.readVariants();
-    val callMap = vcf.readCalls();
-    val callSets = vcf.readCallSets();
-    val variantSet = vcf.readVariantSet();
-    val vcfHeader = vcf.readVCFHeader();
-
-    log.info("Indexing variants {}...", objectId);
-    indexer.indexVariants(variants);
-
-    log.info("Indexing calls {}...", vcfFilenameParser.getFilename());
-    indexer.indexCalls(callMap);
-
-    log.info("Indexing callsets {}...", objectId);
-    indexer.indexCallSet(callSets);
-
-    log.info("Indexing variantSets {}...", sampleId);
-    indexer.indexVariantSet(variantSet);
-
-    log.info("Indexing vcfHeaders {}...", sampleId);
-    indexer.indexVCFHeader(objectId, vcfHeader);
-
-  }
-
 }
