@@ -17,74 +17,68 @@
  */
 package org.collaboratory.ga4gh.loader;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.val;
 
 /**
  * Takes a fileName from the fileMeta ObjectNode from Portal, and parses certain attributes needed for loading
  */
 public class PortalVCFFilenameParser {
 
-  private static final int OBJECT_ID_POS = 0;
-  private static final int CALLER_ID_POS = 1;
-  private static final int DATE_POS = 2;
-  private static final int MUTATION_TYPE_POS = 3;
-  private static final int MUTATION_SUB_TYPE_POS = 4;
-  private static final int FILE_TYPE_POS = 5;
-  private static final int EXPECTED_NUM_POSITIONS = 6;
+  private static final String OBJECT_ID = "objectId";
+  private static final String CALLER_ID = "callerId";
+  private static final String DATE = "data";
+  private static final String MUTATION_TYPE = "mutationType";
+  private static final String MUTATION_SUB_TYPE = "subMutationType";
+  private static final String FILE_TYPE = "fileType";
+  private static final String REGEX_PATTERN =
+      "(?<" + OBJECT_ID + ">[^\\.]+)\\."
+          + "(?<" + CALLER_ID + ">[^\\.]+)\\."
+          + "(?<" + DATE + ">[^\\.]+)\\."
+          + "(?<" + MUTATION_TYPE + ">[^\\.]+)\\."
+          + "(?<" + MUTATION_SUB_TYPE + ">[^\\.]+)\\."
+          + "(?<" + FILE_TYPE + ">.*)";
 
-  private final String[] filenameArray;
+  private static final Pattern PATTERN = Pattern.compile(REGEX_PATTERN);
 
-  public PortalVCFFilenameParser(@NonNull String filename) {
-    filenameArray = filename.split("\\.");
-  }
+  @Getter
+  private final String filename;
+  private final Matcher matcher;
 
-  // Since stored as array, just reconstruct it
-  public String getFilename() {
-    return Arrays.stream(filenameArray).collect(Collectors.joining("."));
-  }
-
-  public boolean isMinimumLength() {
-    return filenameArray.length >= EXPECTED_NUM_POSITIONS;
-  }
-
-  private String getPos(int position) {
-    if (position >= filenameArray.length) {
-      return "";
-    } else {
-      return filenameArray[position];
+  public PortalVCFFilenameParser(@NonNull final String filename) {
+    this.filename = filename;
+    this.matcher = PATTERN.matcher(filename);
+    if (matcher.find() == false) {
+      throw new IllegalStateException(
+          String.format("The input filename \"%s\" does not match the regex pattern: \n%s", filename, REGEX_PATTERN));
     }
   }
 
   public String getId() {
-    return getPos(OBJECT_ID_POS);
+    return matcher.group(OBJECT_ID);
   }
 
   public String getCallerId() {
-    return getPos(CALLER_ID_POS);
+    return matcher.group(CALLER_ID);
   }
 
   public String getDate() {
-    return getPos(DATE_POS);
+    return matcher.group(DATE);
   }
 
   public String getMutationType() {
-    return getPos(MUTATION_TYPE_POS);
+    return matcher.group(MUTATION_TYPE);
   }
 
   public String getMutationSubType() {
-    return getPos(MUTATION_SUB_TYPE_POS);
+    return matcher.group(MUTATION_SUB_TYPE);
   }
 
   public String getFileType() {
-    val sb = new StringBuilder();
-    for (int i = FILE_TYPE_POS; i < filenameArray.length; i++) {
-      sb.append(getPos(i));
-    }
-    return sb.toString();
+    return matcher.group(FILE_TYPE);
   }
 
 }
