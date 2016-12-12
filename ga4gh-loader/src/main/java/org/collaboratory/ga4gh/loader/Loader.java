@@ -35,7 +35,7 @@ public class Loader {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
 
-    val donorDataMap = Portal.getDonorDataMap(9);
+    val donorDataMap = Portal.getDonorDataMap(10);
     int donorCount = 1;
     int donorTotal = donorDataMap.keySet().size();
     int globalFileMetaDataCount = 1;
@@ -62,7 +62,8 @@ public class Loader {
               globalFileMetaDataCount,
               globalFileMetaDataTotal);
           try {
-            loadFile(fileMetaData);
+            String outputDir = "target/storedVCFs";
+            downloadAndLoadFile(fileMetaData, outputDir);
           } catch (Exception e) {
             log.warn("Bad VCF with fileMetaData: {}", fileMetaData);
             log.warn("Message: {} ", e.getMessage());
@@ -79,9 +80,22 @@ public class Loader {
 
   }
 
-  private void loadFile(@NonNull final FileMetaData fileMetaData) {
+  private void downloadAndLoadFile(@NonNull final FileMetaData fileMetaData) {
     log.info("Downloading file {}...", fileMetaData.getVcfFilenameParser().getFilename());
-    val file = Storage.downloadFile(fileMetaData.getObjectId());
+    File file = Storage.downloadFile(fileMetaData.getObjectId());
+    loadFile(file, fileMetaData);
+  }
+
+  private void downloadAndLoadFile(@NonNull final FileMetaData fileMetaData, final String outputDir) {
+    log.info("[PERSIST_MODE] Downloading file {} to {}...", fileMetaData.getVcfFilenameParser().getFilename(),
+        outputDir);
+    File file = Storage.downloadFileAndPersist(fileMetaData.getObjectId(),
+        outputDir + File.separator + fileMetaData.getVcfFilenameParser().getFilename(),
+        fileMetaData.getFileMd5sum());
+    loadFile(file, fileMetaData);
+  }
+
+  private void loadFile(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
 
     log.info("Reading variants from {}...", file);
     @Cleanup

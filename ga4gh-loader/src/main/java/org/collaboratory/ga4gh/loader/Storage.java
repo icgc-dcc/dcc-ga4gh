@@ -10,6 +10,7 @@ import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -18,6 +19,8 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.elasticsearch.shaded.apache.commons.codec.digest.DigestUtils;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -25,12 +28,15 @@ import lombok.Cleanup;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @NoArgsConstructor(access = PRIVATE)
+@Slf4j
 public final class Storage {
 
-  public static void main(String[] args) {
-
+  public static void main(String[] args) throws Exception {
+    String filename = "target/rob_fileMetasFor20donors.txt";
+    log.info("Filename: {}   Md5Sum: {}", filename, calcMd5Sum(filename));
   }
 
   public static void main2(String[] args) {
@@ -51,7 +57,7 @@ public final class Storage {
   }
 
   @SneakyThrows
-  public static File downloadFile(String objectId, String filename) {
+  public static File downloadFile(final String objectId, final String filename) {
     val objectUrl = getObjectUrl(objectId);
     val output = Paths.get(filename);
 
@@ -63,17 +69,33 @@ public final class Storage {
   }
 
   @SneakyThrows
-  public static File downloadFile(String objectId) {
+  public static File downloadFile(final String objectId) {
     return downloadFile(objectId, "/tmp/file.vcf.gz");
   }
 
   @SneakyThrows
-  public static File downloadFileAndPersist(String objectId, String vcfStorageDirPathname) {
-    if (Files.exists(Paths.get(vcfStorageDirPathname))) {
-
+  public static File downloadFileAndPersist(final String objectId, final String filename, final String expectedMD5Sum) {
+    val path = Paths.get(filename);
+    val dir = path.getParent();
+    if (Files.exists(dir) == false) {
+      Files.createDirectories(dir);
     }
+    if (Files.exists(path)) {
+      if (calcMd5Sum(filename).equals(expectedMD5Sum) == false) {
+        return downloadFile(objectId, filename);
+      } else {
+        log.info("File \"{}\" already exists and matches checksum. Skipping download.", filename);
+        return path.toFile();
+      }
+    } else {
+      return downloadFile(objectId, filename);
+    }
+  }
 
-    return downloadFile(objectId, "/tmp/file.vcf.gz");
+  private static String calcMd5Sum(final String filename) throws IOException {
+    val path = Paths.get(filename);
+    InputStream is = Files.newInputStream(path);
+    return DigestUtils.md5Hex(is);
   }
 
   private static URL getObjectUrl(String objectId) throws IOException {
