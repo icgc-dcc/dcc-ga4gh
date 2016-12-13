@@ -30,12 +30,13 @@ public class Loader {
 
   @NonNull
   private final Indexer indexer;
+  private static final int NUM_DONORS = 10;
 
   public void load() {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
 
-    val donorDataMap = Portal.getDonorDataMap(10);
+    val donorDataMap = Portal.getDonorDataMap(NUM_DONORS);
     int donorCount = 1;
     int donorTotal = donorDataMap.keySet().size();
     int globalFileMetaDataCount = 1;
