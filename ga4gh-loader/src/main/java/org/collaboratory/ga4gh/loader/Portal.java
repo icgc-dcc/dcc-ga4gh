@@ -5,6 +5,7 @@ import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
+import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaData;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.net.URL;
@@ -54,7 +55,7 @@ public final class Portal {
       val hits = getHits(result);
       for (val hit : hits) {
         val fileMeta = (ObjectNode) hit;
-        samplesFileMetaDataList.add(FileMetaData.build(fileMeta));
+        samplesFileMetaDataList.add(buildFileMetaData(fileMeta));
       }
 
       if (hits.size() < buffFileSize) {

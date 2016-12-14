@@ -18,7 +18,8 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static java.util.stream.Collectors.joining;
+import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaData;
 
 import java.io.File;
 import java.io.IOException;
@@ -149,40 +150,38 @@ public class DonorData {
   public static final Map<String, DonorData> buildDonorDataMap(Iterable<ObjectNode> objectNodes) {
     val map = new HashMap<String, DonorData>();
 
-    // Map< List(donorId, sampleId), List<FileMetaData>>
-    final Map<Tuple2<String, String>, List<FileMetaData>> tempMap =
-        stream(objectNodes)
-            .map(o -> FileMetaData.build(o))
-            .collect(Collectors.toList()) // List<FileMetaData>
-            .stream()
-            .collect(
-                Collectors.groupingBy(
-                    x -> new Tuple2<String, String>(x.getDonorId(), x.getSampleId()))); // Group by Tuple2 of donorId
-                                                                                        // and sampleId
-    // Initialize output map with DonorData objects and keys
-    tempMap.keySet().stream().forEach(k -> map.put(k.getT1(), new DonorData(k.getT1())));
+    for (val objectNode : objectNodes) {
+      val fileMetaData = buildFileMetaData(objectNode);
+      val donorId = fileMetaData.getDonorId();
+      val sampleId = fileMetaData.getSampleId();
 
-    // Add FileMetaData
-    tempMap.entrySet().stream().forEach(e -> e.getValue().stream().forEach(
-        f -> map.get(e.getKey().getT1()).addSample(e.getKey().getT2(), f)));
+      DonorData donorData = null;
+      if (map.containsKey(donorId) == false) {
+        donorData = new DonorData(donorId);
+        map.put(donorId, donorData);
+      } else {
+        donorData = map.get(donorId);
+      }
+      donorData.addSample(sampleId, fileMetaData);
+    }
     return map;
   }
 
   public static final void writeDonorDataMap(final String outputFn, @NonNull Iterable<ObjectNode> objectNodes) {
     val sb = new StringBuilder();
-    buildDonorDataMap(objectNodes)
-        .values().stream()
-        .forEach(x -> x.getSampleDataListMap().entrySet().stream()
-            .forEach(e -> sb.append("donorId: ")
-                .append(x.getId())
-                .append("\nsampleId: ")
-                .append(e.getKey())
-                .append(" -> [\n\t\t")
-                .append(e.getValue().stream()
-                    .map(s -> s.toString())
-                    .collect(Collectors.joining("\n\t\t")))
-                .append("\n]\n\n")));
-
+    for (val donorEntry : buildDonorDataMap(objectNodes).entrySet()) {
+      val donorId = donorEntry.getKey();
+      val donorData = donorEntry.getValue();
+      sb.append("donorId: " + donorId);
+      for (val sampleEntry : donorData.getSampleDataListMap().entrySet()) {
+        val sampleId = sampleEntry.getKey();
+        sb.append("\nsampleId: " + sampleId);
+        sb.append(" -> [\n\t\t");
+        val fileMetaDataList = sampleEntry.getValue();
+        sb.append(fileMetaDataList.stream().map(x -> x.toString()).collect(joining("\n\t\t")));
+        sb.append("\n]\n\n");
+      }
+    }
     Benchmarks.writeToNewFile(outputFn, sb.toString());
   }
 

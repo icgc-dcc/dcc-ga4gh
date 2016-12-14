@@ -61,7 +61,7 @@ public class FileMetaData {
   @NonNull
   public final PortalVCFFilenameParser vcfFilenameParser;
 
-  public static FileMetaData build(ObjectNode objectNode) {
+  public static FileMetaData buildFileMetaData(ObjectNode objectNode) {
     val objectId = PortalFiles.getObjectId(objectNode);
     val fileId = PortalFiles.getFileId(objectNode);
     val sampleId = PortalFiles.getSampleId(objectNode);
