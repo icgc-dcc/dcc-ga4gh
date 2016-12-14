@@ -86,38 +86,43 @@ public class Indexer {
   @SneakyThrows
   public void indexVariantSet(@NonNull final ObjectNode variantSet) {
     val variantSetId = variantSet.path("id").textValue();
-    if (this.variantSetIdCache.contains(variantSetId) == false) {
+    if (variantSetIdCache.contains(variantSetId) == false) {
       writer.write(new IndexDocument(variantSetId, variantSet, new VariantSetDocumentType()));
-      this.variantSetIdCache.add(variantSetId);
+      variantSetIdCache.add(variantSetId);
     }
   }
 
   @SneakyThrows
   public void indexCallSet(@NonNull final ObjectNode callSet) {
     val callSetId = callSet.path("id").textValue();
-    if (this.callSetIdCache.contains(callSetId) == false) {
+    if (callSetIdCache.contains(callSetId) == false) {
       writeCallSet(callSet);
-      this.callSetIdCache.add(callSetId);
+      callSetIdCache.add(callSetId);
     }
   }
 
   @SneakyThrows
-  public void indexCalls(Map<String, ObjectNode> variantId2CallMap) {
+  public void indexCalls(@NonNull final Map<String, ObjectNode> variantId2CallMap) {
     for (val entry : variantId2CallMap.entrySet()) {
-      val variantId = entry.getKey();
+      val variantId = entry.getKey().toString();
       val call = entry.getValue();
+      String callId = call.path("id").textValue();
+      checkState(variantIdCache.contains(variantId),
+          String.format(
+              "The variant Id: %s doesnt not exist for this call: %s. Make sure variantId indexed BEFORE call index",
+              variantId, callId));
       writeCall(variantId, call);
     }
   }
 
   @SneakyThrows
-  public void indexVariants(@NonNull Iterable<ObjectNode> variants) {
+  public void indexVariants(@NonNull final Iterable<ObjectNode> variants) {
     for (val variant : variants) {
       writeVariant(variant);
     }
   }
 
-  private static byte[] createSource(Object document) {
+  private static byte[] createSource(@NonNull final Object document) {
     try {
       return BINARY_WRITER.writeValueAsBytes(document);
     } catch (JsonProcessingException e) {
@@ -127,26 +132,26 @@ public class Indexer {
 
   // TODO: [rtisma] make the caller do bulk calls
   @SneakyThrows
-  private void writeCall(String parent_variant_id, ObjectNode call) {
+  private void writeCall(final String parent_variant_id, @NonNull final ObjectNode call) {
     val callId = call.path("id").textValue();
-    if (this.callIdCache.contains(callId) == false) {
+    if (callIdCache.contains(callId) == false) {
       checkState(
-          this.client.prepareIndex(Config.INDEX_NAME, CALL_TYPE_NAME, callId)
+          client.prepareIndex(Config.INDEX_NAME, CALL_TYPE_NAME, callId)
               .setContentType(SMILE)
               .setSource(createSource(call))
               .setParent(parent_variant_id)
-              .setRouting(VARIANT_TYPE_NAME)
               .get().status().equals(RestStatus.CREATED));
-      this.callIdCache.add(callId);
+      callIdCache.add(callId);
     }
   }
 
   // TODO: [rtisma] make the caller do bulk calls
+  // TODO: [rtisma] rethink how will organize this data
   @SneakyThrows
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
     val parent_variant_set_id = vcfHeader.path("variant_set_id").textValue();
     checkState(
-        this.client.prepareIndex(Config.INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
+        client.prepareIndex(Config.INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
             .setContentType(SMILE)
             .setSource(createSource(vcfHeader))
             .setParent(parent_variant_set_id)
@@ -154,16 +159,20 @@ public class Indexer {
             .get().status().equals(RestStatus.CREATED));
   }
 
-  private void writeCallSet(ObjectNode callSet) throws IOException {
-    writer.write(new IndexDocument(callSet.path("id").textValue(), callSet, new CallSetDocumentType()));
+  private void writeCallSet(@NonNull final ObjectNode callSet) throws IOException {
+    val call_set_id = callSet.path("id").textValue();
+    if (callSetIdCache.contains(call_set_id) == false) {
+      writer.write(new IndexDocument(call_set_id, callSet, new CallSetDocumentType()));
+      callSetIdCache.add(call_set_id);
+    }
   }
 
   // TODO: [rtisma] -- clean this up so not referencing "id" like this
-  private void writeVariant(ObjectNode variant) throws IOException {
+  private void writeVariant(@NonNull final ObjectNode variant) throws IOException {
     val variant_id = variant.path("id").textValue();
-    if (this.variantIdCache.contains(variant_id) == false) {
+    if (variantIdCache.contains(variant_id) == false) {
       writer.write(new IndexDocument(variant_id, variant, new VariantDocumentType()));
-      this.variantIdCache.add(variant_id);
+      variantIdCache.add(variant_id);
     }
   }
 
@@ -199,7 +208,7 @@ public class Indexer {
   }
 
   @SneakyThrows
-  private static ObjectNode read(String fileName) {
+  private static ObjectNode read(final String fileName) {
     val url = Resources.getResource(MAPPINGS_DIR + "/" + fileName);
     return (ObjectNode) DEFAULT.readTree(url);
   }

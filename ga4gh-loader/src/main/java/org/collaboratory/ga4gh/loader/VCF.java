@@ -9,9 +9,10 @@ import java.io.File;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -66,9 +67,6 @@ public class VCF implements Closeable {
 
   private final VCFEncoder encoder;
 
-  // TODO: [rtisma] temp
-  private static final Set<String> variantIdCache = new HashSet<String>();
-
   public VCF(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
     this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
     this.fileMetaData = fileMetaData;
@@ -78,7 +76,7 @@ public class VCF implements Closeable {
   }
 
   public ObjectNode readCallSets() {
-    return convertCallSet(this.fileMetaData.getVcfFilenameParser().getCallerId());
+    return convertCallSet(fileMetaData.getVcfFilenameParser().getCallerId());
   }
 
   public Map<String, ObjectNode> readCalls() {
@@ -119,10 +117,10 @@ public class VCF implements Closeable {
   private ObjectNode convertCallSet(final String caller_id) {
 
     return object()
-        .with("id", createCallSetId(this.fileMetaData.getSampleId()))
-        .with("name", createCallSetName(this.fileMetaData.getSampleId()))
+        .with("id", createCallSetId(fileMetaData.getSampleId()))
+        .with("name", createCallSetName(fileMetaData.getSampleId()))
         .with("variant_set_ids", createVariantSetId(caller_id))
-        .with("bio_sample_id", this.fileMetaData.getSampleId())
+        .with("bio_sample_id", fileMetaData.getSampleId())
         .end();
 
   }
@@ -131,8 +129,17 @@ public class VCF implements Closeable {
     return createVariantName(record); // TODO: [rtisma] temporary untill get UUID5 working
   }
 
+  private static String createName(final String delim, @NonNull final Object... array) {
+    return stream(array).map(x -> x.toString()).collect(Collectors.joining(delim));
+  }
+
   private static String createVariantName(VariantContext record) {
-    return record.getStart() + "_" + record.getEnd() + "_" + record.getContig();
+    return createName("_",
+        record.getStart(),
+        record.getEnd(),
+        record.getContig(),
+        record.getReference().getBaseString(),
+        record.getAlternateAlleles().stream().map(al -> al.getBaseString()).collect(Collectors.joining(",")));
   }
 
   // TODO: [rtisma] -- temporarily using until implement uuid
@@ -145,11 +152,11 @@ public class VCF implements Closeable {
   }
 
   private ObjectNode convertCallNodeObj(@NonNull VariantContext record) {
-    val parser = this.fileMetaData.getVcfFilenameParser();
+    val parser = fileMetaData.getVcfFilenameParser();
     val caller_id = parser.getCallerId();
     val mutationType = parser.getMutationType();
     val mutationSubType = parser.getMutationSubType();
-    val bio_sample_id = this.fileMetaData.getSampleId();
+    val bio_sample_id = fileMetaData.getSampleId();
 
     if (CallerTypes.BROAD.getName().equals(caller_id)) {
 
@@ -184,10 +191,10 @@ public class VCF implements Closeable {
   public ObjectNode readVariantSet() {
 
     return object()
-        .with("id", createVariantSetId(this.fileMetaData.getVcfFilenameParser().getCallerId()))
-        .with("name", createVariantSetName(this.fileMetaData.getVcfFilenameParser().getCallerId()))
-        .with("data_set_id", this.fileMetaData.getDataType())
-        .with("reference_set_id", this.fileMetaData.getReferenceName())
+        .with("id", createVariantSetId(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with("name", createVariantSetName(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with("data_set_id", fileMetaData.getDataType())
+        .with("reference_set_id", fileMetaData.getReferenceName())
         .end();
   }
 
@@ -196,20 +203,19 @@ public class VCF implements Closeable {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
     // TODO: [rtisma]: consider changing this stategy and using the raw header
-    oos.writeObject(this.getHeader());
+    oos.writeObject(getHeader());
     oos.close();
     val ser = Base64.getEncoder().encodeToString(baos.toByteArray());
     return object()
         .with("vcf_header", ser)
-        .with("donor_id", this.fileMetaData.getDonorId())
-        .with("bio_sample_id", this.fileMetaData.getSampleId())
-        .with("variant_set_id", createVariantSetId(this.fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with("donor_id", fileMetaData.getDonorId())
+        .with("bio_sample_id", fileMetaData.getSampleId())
+        .with("variant_set_id", createVariantSetId(fileMetaData.getVcfFilenameParser().getCallerId()))
         .end();
   }
 
   private ObjectNode convertVariantNodeObj(VariantContext record) {
     val variantId = createVariantId(record);
-    variantIdCache.add(variantId);
     return object()
         .with("id", variantId)
         .with("start", record.getStart())

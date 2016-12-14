@@ -90,12 +90,12 @@ public class VariantService {
 
   public static void main(String[] args) {
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
-        .setEnd(2000000)
+        .setEnd(50000000)
         .setStart(0)
         .setPageSize(10)
-        .setReferenceName("1")
+        .setReferenceName("7")
         .setVariantSetId("consensus")
-        .addCallSetIds("SA413898")
+        .addCallSetIds("SA557454")
         .build();
 
     val searchVariantSetRequest = SearchVariantSetsRequest.newBuilder()
@@ -104,13 +104,13 @@ public class VariantService {
 
     val searchCallSetRequest = SearchCallSetsRequest.newBuilder()
         .setVariantSetId("consensus")
-        .setBioSampleId("SA413898")
-        .setName("SA413898")
+        .setBioSampleId("SA557454")
+        .setName("SA557454")
         .setPageSize(100)
         .build();
 
     val getVariantRequest = GetVariantRequest.newBuilder()
-        .setVariantId("4803278_4803278_1")
+        .setVariantId("27043136_27043136_7_C_T")
         .build();
 
     val getVariantSetRequest = GetVariantSetRequest.newBuilder()
@@ -118,7 +118,7 @@ public class VariantService {
         .build();
 
     val getCallSetRequest = GetCallSetRequest.newBuilder()
-        .setCallSetId("SA413898")
+        .setCallSetId("SA557454")
         .build();
 
     val variantRepo = new VariantRepository();
