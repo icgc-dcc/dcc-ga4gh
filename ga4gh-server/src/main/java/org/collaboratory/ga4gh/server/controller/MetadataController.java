@@ -17,6 +17,8 @@
  */
 package org.collaboratory.ga4gh.server.controller;
 
+import org.collaboratory.ga4gh.server.variant.MetadataService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,9 +34,12 @@ import lombok.val;
 @RestController
 public class MetadataController {
 
+  @Autowired
+  private MetadataService metadataService;
+
   @PostMapping("/datasets/search")
   public SearchDatasetsResponse searchDatasets(@RequestBody SearchDatasetsRequest request) {
-    return SearchDatasetsResponse.newBuilder().build();
+    return metadataService.searchDatasets(request);
   }
 
   @GetMapping("/datasets/{datasetId:(?!search).+}")

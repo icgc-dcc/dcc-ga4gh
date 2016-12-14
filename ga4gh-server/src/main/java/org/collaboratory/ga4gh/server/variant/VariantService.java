@@ -39,6 +39,9 @@ import com.google.protobuf.ListValue;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 
+import ga4gh.Metadata.Dataset;
+import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
+import ga4gh.MetadataServiceOuterClass.SearchDatasetsResponse;
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
@@ -241,6 +244,23 @@ public class VariantService {
 
     val response = variantRepository.findVariants(request);
     return buildSearchVariantResponse(response);
+  }
+
+  public SearchDatasetsResponse searchDatasets(@NonNull SearchDatasetsRequest request) {
+    val response = variantSetRepository.searchAllDataSets(request);
+    return buildSearchDatasetsResponse(response);
+  }
+
+  private SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
+    Terms datasets = searchResponse.getAggregations().get("by_data_set_id");
+    return SearchDatasetsResponse.newBuilder()
+        .addAllDatasets(datasets.getBuckets().stream()
+            .map(b -> Dataset.newBuilder()
+                .setId(b.getKey().toString())
+                .setName(b.getKey().toString())
+                .build())
+            .collect(Collectors.toList()))
+        .build();
   }
 
   private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {

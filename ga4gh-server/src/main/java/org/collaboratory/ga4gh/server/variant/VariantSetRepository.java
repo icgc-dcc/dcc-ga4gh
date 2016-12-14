@@ -34,10 +34,13 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
 
+import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import lombok.NonNull;
@@ -67,6 +70,17 @@ public class VariantSetRepository {
         .setTypes(VARIANT_SET_TYPE_NAME)
         .addSort("data_set_id", SortOrder.ASC)
         .setSize(size);
+  }
+
+  public SearchResponse searchAllDataSets(@NonNull SearchDatasetsRequest request) {
+    val searchRequestBuilder = createSearchRequest(request.getPageSize());
+    val constantBoolQuery = constantScoreQuery(
+        boolQuery()
+            .must(
+                QueryBuilders.matchAllQuery()));
+
+    val agg = AggregationBuilders.terms("by_data_set_id").field("data_set_id");
+    return searchRequestBuilder.setQuery(constantBoolQuery).addAggregation(agg).get();
   }
 
   public SearchResponse findVariantSets(@NonNull SearchVariantSetsRequest request) {
