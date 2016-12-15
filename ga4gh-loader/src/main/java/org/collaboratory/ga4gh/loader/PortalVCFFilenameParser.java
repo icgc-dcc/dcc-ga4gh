@@ -17,11 +17,12 @@
  */
 package org.collaboratory.ga4gh.loader;
 
+import static java.lang.String.format;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import org.icgc.dcc.common.core.util.stream.Streams;
+import com.google.common.base.Joiner;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -48,7 +49,7 @@ public class PortalVCFFilenameParser {
     val suffix = ">[^\\.]+)\\.";
     val end = ">.*)";
     return prefix
-        + Streams.stream(strings).collect(Collectors.joining(suffix + prefix))
+        + Joiner.on(suffix + prefix).join(strings)
         + end;
   }
 
@@ -61,7 +62,7 @@ public class PortalVCFFilenameParser {
     this.matcher = PATTERN.matcher(filename);
     if (matcher.find() == false) {
       throw new IllegalStateException(
-          String.format("The input filename \"%s\" does not match the regex pattern: \n%s", filename, REGEX_PATTERN));
+          format("The input filename \"%s\" does not match the regex pattern: \n%s", filename, REGEX_PATTERN));
     }
   }
 

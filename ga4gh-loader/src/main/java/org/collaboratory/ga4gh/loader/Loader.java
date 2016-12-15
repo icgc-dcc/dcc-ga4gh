@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import static java.util.stream.Collectors.summingLong;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
@@ -42,7 +43,7 @@ public class Loader {
     int globalFileMetaDataCount = 1;
     long globalFileMetaDataTotal = donorDataMap.values().stream()
         .map(x -> x.getTotalFileMetaCount())
-        .collect(Collectors.summingLong(Long::longValue));
+        .collect(summingLong(Long::longValue));
 
     for (val donorDataEntry : donorDataMap.entrySet()) {
       val donorId = donorDataEntry.getKey();

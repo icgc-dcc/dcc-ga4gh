@@ -17,11 +17,13 @@
  */
 package org.collaboratory.ga4gh.loader;
 
+import static java.util.stream.Collectors.groupingBy;
+
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Joiner;
 
 import lombok.NonNull;
 import lombok.Value;
@@ -83,16 +85,17 @@ public class FileMetaData {
     val sb = new StringBuilder();
     fileMetaList.stream()
         .collect(
-            Collectors.groupingBy(
+            groupingBy(
                 x -> Arrays.asList(x.getDonorId(),
                     x.getSampleId(),
                     x.getVcfFilenameParser().getCallerId())))
         .entrySet()
         .stream().filter(x -> x.getValue().size() > 1)
         .forEach(e -> sb.append(
-            e.getKey().stream().collect(Collectors.joining(",")) +
-                "," + e.getValue().size() + "\t--[\n\t\t" + e.getValue().stream()
-                    .map(y -> y.getVcfFilenameParser().getFilename()).collect(Collectors.joining(",\n\t\t"))
+            Joiner.on(",").join(e.getKey())
+                + "," + e.getValue().size() + "\t--[\n\t\t"
+                + Joiner.on(",\n\t\t").join(e.getValue().stream()
+                    .map(y -> y.getVcfFilenameParser().getFilename()).toArray())
                 + "]\n\n"));
 
     Benchmarks.writeToNewFile(outputFn, sb.toString());

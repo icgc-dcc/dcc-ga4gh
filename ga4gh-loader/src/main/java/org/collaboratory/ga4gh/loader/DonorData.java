@@ -18,8 +18,12 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.summingInt;
 import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaData;
+import static org.collaboratory.ga4gh.loader.utils.ImmutableCollectors.immutableListCollector;
+import static org.collaboratory.ga4gh.loader.utils.ImmutableCollectors.immutableSetCollector;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -90,7 +93,7 @@ public class DonorData {
   public final long getTotalFileMetaCount() {
     return getSampleIds().stream()
         .map(this::numFilesForSample)
-        .collect(Collectors.summingInt(Integer::intValue));
+        .collect(summingInt(Integer::intValue));
   }
 
   /*
@@ -115,7 +118,7 @@ public class DonorData {
   public final Set<String> getDataTypesForSample(final String sampleId) {
     return getSampleFileMetas(sampleId).stream()
         .map(x -> x.getDataType())
-        .collect(Collectors.toSet());
+        .collect(immutableSetCollector());
   }
 
   public final Map<String, List<FileMetaData>> getFileMetaDatasByCallerAndDataType(final String sampleId,
@@ -132,14 +135,16 @@ public class DonorData {
     return getSampleFileMetas(sampleId).stream()
         .filter(f -> f.getDataType().equals(dataType))
         .map(functor)
-        .collect(Collectors.toSet());
+        .collect(immutableSetCollector());
   }
 
-  private final Map<String, List<FileMetaData>> groupByFileMetaOnSample(final String sampleId, final String dataType,
+  private final Map<String, List<FileMetaData>> groupByFileMetaOnSample(final String sampleId,
+      final String dataType,
       final Function<? super FileMetaData, ? extends String> functor) {
+
     return getSampleFileMetas(sampleId).stream()
         .filter(x -> x.getDataType().equals(dataType))
-        .collect(Collectors.groupingBy(functor, Collectors.toList()));
+        .collect(groupingBy(functor, immutableListCollector()));
   }
 
   /*
