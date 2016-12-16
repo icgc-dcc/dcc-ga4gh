@@ -88,17 +88,22 @@ public final class FileMetaData {
     return stream(objectNodes).map(FileMetaData::buildFileMetaData).collect(toImmutableList());
   }
 
-  public static Map<String, List<FileMetaData>> buildFileMetaDatasBySample(
+  public static Map<String, List<FileMetaData>> groupFileMetaDataBySample(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaDatas(fileMetaDatas, FileMetaData::getSampleId);
+    return groupFileMetaData(fileMetaDatas, FileMetaData::getSampleId);
   }
 
-  public static Map<String, List<FileMetaData>> buildFileMetaDatasByDonor(
+  public static Map<String, List<FileMetaData>> groupFileMetaDatasByDonor(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaDatas(fileMetaDatas, FileMetaData::getDonorId);
+    return groupFileMetaData(fileMetaDatas, FileMetaData::getDonorId);
   }
 
-  private static Map<String, List<FileMetaData>> groupFileMetaDatas(
+  public static Map<String, List<FileMetaData>> groupFileMetaDatasByDataType(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaData(fileMetaDatas, FileMetaData::getDataType);
+  }
+
+  public static Map<String, List<FileMetaData>> groupFileMetaData(
       @NonNull final Iterable<FileMetaData> fileMetaDatas,
       final Function<? super FileMetaData, ? extends String> functor) {
     return ImmutableMap.copyOf(stream(fileMetaDatas).collect(groupingBy(functor, toImmutableList())));
