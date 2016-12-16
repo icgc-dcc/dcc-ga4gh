@@ -18,19 +18,15 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingInt;
 import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDataList;
-import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDatasByDonor;
-import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDatasBySample;
-import static org.collaboratory.ga4gh.loader.utils.Gullectors.immutableListCollector;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDataBySample;
+import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDatasByDonor;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.icgc.dcc.common.core.util.stream.Collectors;
 
@@ -50,7 +46,7 @@ public class DonorData {
 
   public DonorData(@NonNull final String id, @NonNull final Iterable<FileMetaData> fileMetaDatas) {
     this.id = id;
-    this.sampleDataListMap = buildFileMetaDatasBySample(fileMetaDatas);
+    this.sampleDataListMap = groupFileMetaDataBySample(fileMetaDatas);
   }
 
   public final Set<String> getSampleIds() {
@@ -76,46 +72,8 @@ public class DonorData {
     return sampleDataListMap.get(sampleId);
   }
 
-  /*
-   * Get all the names of the callers for a specific dataType and sampleId
-   */
-  public final Set<String> getCallersForSampleAndDataType(final String sampleId, final String dataType) {
-    return collectFileMetaSet(sampleId, dataType, x -> x.getVcfFilenameParser().toString());
-  }
-
-  /*
-   * Get all the dataTypes for a specific sampleId
-   */
-  public final Set<String> getDataTypesForSample(final String sampleId) {
-    return getSampleFileMetas(sampleId).stream()
-        .map(x -> x.getDataType())
-        .collect(toImmutableSet());
-  }
-
-  public final Map<String, List<FileMetaData>> getFileMetaDatasByCallerAndDataType(final String sampleId,
-      final String dataType) {
-    return groupByFileMetaOnSample(sampleId, dataType, x -> x.getVcfFilenameParser().getCallerId());
-  }
-
   public final int numFilesForSample(final String sampleId) {
     return getSampleFileMetas(sampleId).size();
-  }
-
-  private final Set<String> collectFileMetaSet(final String sampleId, final String dataType,
-      final Function<? super FileMetaData, ? extends String> functor) {
-    return getSampleFileMetas(sampleId).stream()
-        .filter(f -> f.getDataType().equals(dataType))
-        .map(functor)
-        .collect(toImmutableSet());
-  }
-
-  private final Map<String, List<FileMetaData>> groupByFileMetaOnSample(final String sampleId,
-      final String dataType,
-      final Function<? super FileMetaData, ? extends String> functor) {
-
-    return getSampleFileMetas(sampleId).stream()
-        .filter(x -> x.getDataType().equals(dataType))
-        .collect(groupingBy(functor, immutableListCollector()));
   }
 
   public static DonorData createDonorData(final String donorId, final Iterable<FileMetaData> fileMetaDatas) {
@@ -123,7 +81,7 @@ public class DonorData {
   }
 
   public static final List<DonorData> buildDonorDataList(Iterable<ObjectNode> objectNodes) {
-    return buildFileMetaDatasByDonor(buildFileMetaDataList(objectNodes))
+    return groupFileMetaDatasByDonor(buildFileMetaDataList(objectNodes))
         .entrySet().stream()
         .map(x -> createDonorData(x.getKey(), x.getValue())) // Key is donorId, Value is List<FileMetaData>
         .collect(Collectors.toImmutableList());
