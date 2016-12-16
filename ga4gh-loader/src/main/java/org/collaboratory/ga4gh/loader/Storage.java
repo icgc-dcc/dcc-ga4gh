@@ -16,8 +16,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.elasticsearch.shaded.apache.commons.codec.digest.DigestUtils;
 
@@ -33,28 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = PRIVATE)
 @Slf4j
 public final class Storage {
-
-  public static void main(String[] args) throws Exception {
-    String filename = "target/rob_fileMetasFor20donors.txt";
-    log.info("Filename: {}   Md5Sum: {}", filename, calcMd5Sum(filename));
-  }
-
-  public static void main2(String[] args) {
-    Map<String, String> map = new HashMap<>();
-    map.put("FI671314", "035fba3f-dfef-50be-9f43-0b3831fa983f");
-    map.put("FI671208", "6df08e83-a6e2-5ea5-896b-850b195cf991");
-    for (val entry : map.entrySet()) {
-      String outputFn = "/tmp/rob." + entry.getKey() + ".vcf.gz";
-      String objectId = entry.getValue();
-      try {
-        downloadFile(objectId, outputFn);
-        System.out.println("Successfully downloaded file: " + outputFn);
-      } catch (Exception e) {
-        System.out.println("Failed to download " + outputFn + ":  " + e.getMessage());
-      }
-
-    }
-  }
 
   @SneakyThrows
   public static File downloadFile(final String objectId, final String filename) {

@@ -27,8 +27,6 @@ public final class Portal {
   private static final int PORTAL_FETCH_SIZE = 100;
   private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
   private static final String FILE_FORMAT = "VCF";
-  private static final int DEFAULT_FILE_FROM = 1;
-  private static final int DEFAULT_BUF_FILE_SIZE = 100;
   private static final int DEFAULT_BUF_DONOR_SIZE = 50;
 
   public static void main(String[] args) {
@@ -40,7 +38,7 @@ public final class Portal {
    */
   public static List<ObjectNode> getAllFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
-    val size = 100;// PORTAL_FETCH_SIZE;
+    val size = PORTAL_FETCH_SIZE;
     int from = 1;
 
     while (from < 21) {

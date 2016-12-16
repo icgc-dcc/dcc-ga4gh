@@ -17,13 +17,12 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import java.util.ArrayList;
+import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -35,9 +34,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.ListValue;
-import com.google.protobuf.Struct;
-import com.google.protobuf.Value;
 
 import ga4gh.Metadata.Dataset;
 import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
@@ -54,9 +50,7 @@ import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
 import ga4gh.Variants.Call;
 import ga4gh.Variants.CallSet;
 import ga4gh.Variants.Variant;
-import ga4gh.Variants.Variant.Builder;
 import ga4gh.Variants.VariantSet;
-import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
@@ -76,6 +70,7 @@ public class VariantService {
   private final static long DEFAULT_CALLSET_UPDATED_VALUE = 0;
   private final static int DEFAULT_CALL_GENOTYPE_VALUE = 1;
   private final static double DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE = 0.0;
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @NonNull
   private final VariantRepository variantRepository;
@@ -87,9 +82,6 @@ public class VariantService {
 
   @NonNull
   private final VariantSetRepository variantSetRepository;
-
-  private final VCFCodec CODEC = new VCFCodec();
-  private final ObjectMapper MAPPER = new ObjectMapper();
 
   public static void main(String[] args) {
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
@@ -151,16 +143,17 @@ public class VariantService {
     return buildSearchVariantSetsResponse(response);
   }
 
-  private SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
+  private static SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
     return SearchVariantSetsResponse.newBuilder()
         .setNextPageToken("N/A")
         .addAllVariantSets(
-            Arrays.stream(response.getHits().getHits()).map(h -> convertToVariantSet(h).build())
-                .collect(Collectors.toList()))
+            Arrays.stream(response.getHits().getHits())
+                .map(h -> convertToVariantSet(h).build())
+                .collect(toImmutableList()))
         .build();
   }
 
-  private static VariantSet.Builder _convertSourceToVariantSet(final String id, @NonNull Map<String, Object> source) {
+  private static VariantSet.Builder convertToVariantSet(final String id, @NonNull Map<String, Object> source) {
     return VariantSet.newBuilder()
         .setId(id)
         .setName(source.get("name").toString())
@@ -168,7 +161,7 @@ public class VariantService {
         .setReferenceSetId(source.get("reference_set_id").toString());
   }
 
-  private static CallSet.Builder _convertSourceToCallSet(final String id, @NonNull Map<String, Object> source) {
+  private static CallSet.Builder convertToCallSet(final String id, @NonNull Map<String, Object> source) {
     return CallSet.newBuilder()
         .setId(id)
         .setName(source.get("name").toString())
@@ -182,12 +175,12 @@ public class VariantService {
         .setUpdated(DEFAULT_CALLSET_UPDATED_VALUE);
   }
 
-  private VariantSet.Builder convertToVariantSet(@NonNull SearchHit hit) {
-    return _convertSourceToVariantSet(hit.getId(), hit.getSource());
+  private static VariantSet.Builder convertToVariantSet(@NonNull SearchHit hit) {
+    return convertToVariantSet(hit.getId(), hit.getSource());
   }
 
-  private CallSet.Builder convertToCallSet(@NonNull SearchHit hit) {
-    return _convertSourceToCallSet(hit.getId(), hit.getSource());
+  private static CallSet.Builder convertToCallSet(@NonNull SearchHit hit) {
+    return convertToCallSet(hit.getId(), hit.getSource());
   }
 
   public SearchCallSetsResponse searchCallSets(@NonNull SearchCallSetsRequest request) {
@@ -196,25 +189,26 @@ public class VariantService {
     return buildSearchCallSetsResponse(response);
   }
 
-  private SearchCallSetsResponse buildSearchCallSetsResponse(@NonNull SearchResponse response) {
+  private static SearchCallSetsResponse buildSearchCallSetsResponse(@NonNull SearchResponse response) {
     return SearchCallSetsResponse.newBuilder()
         .setNextPageToken("N/A")
         .addAllCallSets(
-            Arrays.stream(response.getHits().getHits()).map(h -> convertToCallSet(h).build())
-                .collect(Collectors.toList()))
+            Arrays.stream(response.getHits().getHits())
+                .map(h -> convertToCallSet(h).build())
+                .collect(toImmutableList()))
         .build();
   }
 
   public VariantSet getVariantSet(@NonNull GetVariantSetRequest request) {
     log.info("VariantSetId to Get: {}", request.getVariantSetId());
     GetResponse response = variantSetRepository.findVariantSetById(request);
-    return _convertSourceToVariantSet(response.getId(), response.getSource()).build();
+    return convertToVariantSet(response.getId(), response.getSource()).build();
   }
 
   public CallSet getCallSet(@NonNull GetCallSetRequest request) {
     log.info("CallSetId to Get: {}", request.getCallSetId());
     GetResponse response = callsetRepository.findCallSetById(request);
-    return _convertSourceToCallSet(response.getId(), response.getSource()).build();
+    return convertToCallSet(response.getId(), response.getSource()).build();
   }
 
   public Variant getVariant(@NonNull GetVariantRequest request) {
@@ -226,7 +220,7 @@ public class VariantService {
             Streams.stream(
                 response.getHits().getAt(0).getInnerHits().get("call"))
                 .map(x -> convertToCall(x).build())
-                .collect(Collectors.toList()))
+                .collect(toImmutableList()))
         .build();
   }
 
@@ -251,7 +245,7 @@ public class VariantService {
     return buildSearchDatasetsResponse(response);
   }
 
-  private SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
+  private static SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
     Terms datasets = searchResponse.getAggregations().get("by_data_set_id");
     return SearchDatasetsResponse.newBuilder()
         .addAllDatasets(datasets.getBuckets().stream()
@@ -259,13 +253,12 @@ public class VariantService {
                 .setId(b.getKey().toString())
                 .setName(b.getKey().toString())
                 .build())
-            .collect(Collectors.toList()))
+            .collect(toImmutableList()))
         .build();
   }
 
-  private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
+  private static SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
     val responseBuilder = SearchVariantsResponse.newBuilder();
-
     for (val variantSearchHit : searchResponse.getHits()) {
       val variantBuilder = convertToVariant(variantSearchHit);
       for (val callInnerHit : variantSearchHit.getInnerHits().get("call")) {
@@ -276,113 +269,8 @@ public class VariantService {
     return responseBuilder.build();
   }
 
-  private static Map<String, List<String>> createVariantId2CallSetIdsMap(@NonNull SearchResponse searchResponse) {
-    Terms byVariantIdAggTerms = searchResponse.getAggregations().get("by_variant_id");
-    val map = new HashMap<String, List<String>>();
-    for (Terms.Bucket vb : byVariantIdAggTerms.getBuckets()) {
-      val list = new ArrayList<String>();
-      Terms byCallsetIdAggTerms = vb.getAggregations().get("by_call_set_id");
-      for (Terms.Bucket cb : byCallsetIdAggTerms.getBuckets()) {
-        list.add(cb.getKey().toString());
-      }
-      map.put(vb.getKey().toString(), list);
-    }
-    return map;
-  }
-
-  public static class TypeChecker {
-
-    public static boolean isStringInteger(String input) {
-      try {
-        Integer.parseInt(input);
-        return true;
-      } catch (NumberFormatException e) {
-        return false;
-      }
-    }
-
-    public static boolean isStringDouble(String input) {
-      try {
-        Double.parseDouble(input);
-        return true;
-      } catch (NumberFormatException e) {
-        return false;
-      }
-    }
-
-    public static boolean isStringFloat(String input) {
-      try {
-        Float.parseFloat(input);
-        return true;
-      } catch (NumberFormatException e) {
-        return false;
-      }
-    }
-
-    public static boolean isStringBoolean(String input) {
-      try {
-        Boolean.parseBoolean(input);
-        return true;
-      } catch (NumberFormatException e) {
-        return false;
-      }
-    }
-
-    public static boolean isObjectBoolean(Object obj) {
-      return obj instanceof Boolean;
-    }
-
-    public static boolean isObjectInteger(Object obj) {
-      return obj instanceof Integer;
-    }
-
-    public static boolean isObjectDouble(Object obj) {
-      return obj instanceof Double;
-    }
-
-    public static boolean isObjectFloat(Object obj) {
-      return obj instanceof Float;
-    }
-
-    public static boolean isObjectMap(Object obj) {
-      return obj instanceof Map<?, ?>;
-    }
-
-    public static boolean isObjectCollection(Object obj) {
-      return obj instanceof Collection<?>;
-    }
-
-  }
-
-  @SuppressWarnings("unchecked")
-  private static ListValue createListValueFromObject(Object obj) {
-    val listValueBuilder = ListValue.newBuilder();
-    if (TypeChecker.isObjectCollection(obj)) {
-      for (Object elementObj : (Collection<Object>) obj) {
-        listValueBuilder.addValues(Value.newBuilder().setStringValue(elementObj.toString()));
-      }
-    } else if (TypeChecker.isObjectMap(obj)) { // TODO: still incomplete
-      Map<String, Value> map = new HashMap<>();
-      for (Map.Entry<?, ?> entry : ((Map<?, ?>) obj).entrySet()) {
-        map.put(entry.getKey().toString(), Value.newBuilder().setStringValue(entry.getValue().toString()).build());
-      }
-      listValueBuilder.addValues(Value.newBuilder().setStructValue(Struct.newBuilder().putAllFields(map)));
-    } else { // Treat everything else as just a string
-      listValueBuilder.addValues(Value.newBuilder().setStringValue(obj.toString()).build());
-    }
-    return listValueBuilder.build();
-  }
-
-  private static Map<String, ListValue> createInfo(CommonInfo commonInfo) {
-    val map = new HashMap<String, ListValue>();
-    for (Map.Entry<String, Object> entry : commonInfo.getAttributes().entrySet()) {
-      map.put(entry.getKey(), createListValueFromObject(entry.getValue()));
-    }
-    return map;
-  }
-
   @SneakyThrows
-  private Call.Builder convertToCall(@NonNull SearchHit hit) {
+  private static Call.Builder convertToCall(@NonNull SearchHit hit) {
     return Call.newBuilder()
         .setCallSetId(hit.getSource().get("call_set_id").toString())
         .setCallSetName(hit.getSource().get("bio_sample_id").toString()) // TODO: [rtisma] need to add call_set_name to
@@ -396,26 +284,19 @@ public class VariantService {
   // This function is only to be used for searchHits from the SearchVariants service. Its not the same as the GetVariant
   // service
   @SneakyThrows
-  private Builder convertToVariant(@NonNull SearchHit hit) {
+  private static Variant.Builder convertToVariant(@NonNull SearchHit hit) {
     JsonNode json = MAPPER.readTree(hit.getSourceAsString());
     // TODO: [rtisma][HACK] - need to find a solution for getting vcfHEader
-    val header = new VCFHeader();
-    // val response = headerRepository.getHeader(json.get("bio_sample_id").asText());
-    // val headerString = response.getSource().get("vcf_header").toString();
-    // byte[] data = Base64.getDecoder().decode(headerString);
-    // ObjectInputStream ois = new ObjectInputStream(
-    // new ByteArrayInputStream(data));
-    //
-    // val header = (VCFHeader) ois.readObject();
+    val dummyHeader = new VCFHeader();
     val codec = new VCFCodec();
-    codec.setVCFHeader(header, VCFHeaderVersion.VCF4_1);
+    codec.setVCFHeader(dummyHeader, VCFHeaderVersion.VCF4_1);
     VariantContext vc = codec.decode(json.get("record").asText());
 
     List<String> alt = vc.getAlternateAlleles().stream()
         .map(al -> al.getBaseString())
-        .collect(Collectors.toList());
+        .collect(toImmutableList());
 
-    Builder builder = Variant.newBuilder()
+    return Variant.newBuilder()
         .setId(hit.getId())
         .setReferenceName(hit.getSource().get("reference_name").toString())
         .setReferenceBases(vc.getReference().getBaseString())
@@ -425,8 +306,6 @@ public class VariantService {
         .putAllInfo(createInfo(vc.getCommonInfo()))
         .setCreated(0)
         .setUpdated(0);
-
-    return builder;
   }
 
 }

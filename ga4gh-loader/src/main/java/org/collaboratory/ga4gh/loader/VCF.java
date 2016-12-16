@@ -8,11 +8,11 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFEncoder;
@@ -78,11 +78,11 @@ public class VCF implements Closeable {
   }
 
   public Map<String, ObjectNode> readCalls() {
-    val map = new HashMap<String, ObjectNode>();
+    val map = ImmutableMap.<String, ObjectNode> builder();
     for (val record : vcf) {
       map.put(createVariantId(record), convertCallNodeObj(record));
     }
-    return map;
+    return map.build();
   }
 
   public Iterable<ObjectNode> readVariants() {
@@ -113,7 +113,6 @@ public class VCF implements Closeable {
   }
 
   private ObjectNode convertCallSet(final String caller_id) {
-
     return object()
         .with("id", createCallSetId(fileMetaData.getSampleId()))
         .with("name", createCallSetName(fileMetaData.getSampleId()))

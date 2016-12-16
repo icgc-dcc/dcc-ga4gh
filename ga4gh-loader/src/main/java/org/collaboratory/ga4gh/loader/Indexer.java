@@ -71,6 +71,7 @@ public class Indexer {
     val indexes = client.admin().indices();
     if (indexes.prepareExists(indexName).execute().get().isExists()) {
       checkState(indexes.prepareDelete(indexName).execute().get().isAcknowledged());
+      log.info("Deleted existing [{}] index", indexName);
     }
 
     checkState(indexes.prepareCreate(indexName)
@@ -81,6 +82,7 @@ public class Indexer {
         .addMapping(VCF_HEADER_TYPE_NAME, read(VCF_HEADER_TYPE_NAME + ".mapping.json").toString())
         .addMapping(CALL_TYPE_NAME, read(CALL_TYPE_NAME + ".mapping.json").toString())
         .execute().actionGet().isAcknowledged());
+    log.info("Created new index [{}]", indexName);
   }
 
   @SneakyThrows
