@@ -17,77 +17,66 @@
  */
 package org.collaboratory.ga4gh.loader;
 
-import static java.lang.String.format;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.base.Joiner;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.val;
 
 /**
- * Takes a fileName from the fileMeta ObjectNode from Portal, and parses certain attributes needed for loading
+ * Takes a filename, and extracts particular fields characteristic of ICGC VCF files
  */
 public class PortalVCFFilenameParser {
 
-  private static final String OBJECT_ID = "objectId";
-  private static final String CALLER_ID = "callerId";
-  private static final String DATE = "data";
-  private static final String MUTATION_TYPE = "mutationType";
-  private static final String MUTATION_SUB_TYPE = "subMutationType";
-  private static final String FILE_TYPE = "fileType";
-  private static final String REGEX_PATTERN =
-      createFileNameRegex(OBJECT_ID, CALLER_ID, DATE, MUTATION_TYPE, MUTATION_SUB_TYPE, FILE_TYPE);
-
-  private static final Pattern PATTERN = Pattern.compile(REGEX_PATTERN);
-
-  private static String createFileNameRegex(String... strings) {
-    val prefix = "(?<";
-    val suffix = ">[^\\.]+)\\.";
-    val end = ">.*)";
-    return prefix
-        + Joiner.on(suffix + prefix).join(strings)
-        + end;
-  }
+  private static final int MIN_NUM_FIELDS = 6;
+  private static final int OBJECT_ID_POS = 0;
+  private static final int CALLER_ID_POS = 1;
+  private static final int DATE_POS = 2;
+  private static final int MUTATION_TYPE_POS = 3;
+  private static final int MUTATION_SUB_TYPE_POS = 4;
+  private static final int FILE_TYPE_POS = 5;
 
   @Getter
-  private final String filename;
-  private final Matcher matcher;
+  private final String[] array;
 
   public PortalVCFFilenameParser(@NonNull final String filename) {
-    this.filename = filename;
-    this.matcher = PATTERN.matcher(filename);
-    if (matcher.find() == false) {
-      throw new IllegalStateException(
-          format("The input filename \"%s\" does not match the regex pattern: \n%s", filename, REGEX_PATTERN));
-    }
+    array = filename.split("\\.");
+    checkArgument(array.length >= MIN_NUM_FIELDS, String.format(
+        "The filename [%s] has %d fields, but a minimum of %d is expected", filename, array.length, MIN_NUM_FIELDS));
   }
 
-  public String getId() {
-    return matcher.group(OBJECT_ID);
+  public String getObjectId() {
+    return array[OBJECT_ID_POS];
   }
 
   public String getCallerId() {
-    return matcher.group(CALLER_ID);
+    return array[CALLER_ID_POS];
   }
 
   public String getDate() {
-    return matcher.group(DATE);
+    return array[DATE_POS];
   }
 
   public String getMutationType() {
-    return matcher.group(MUTATION_TYPE);
+    return array[MUTATION_TYPE_POS];
   }
 
   public String getMutationSubType() {
-    return matcher.group(MUTATION_SUB_TYPE);
+    return array[MUTATION_SUB_TYPE_POS];
   }
 
   public String getFileType() {
-    return matcher.group(FILE_TYPE);
+    return array[FILE_TYPE_POS];
+  }
+
+  public String getFilename() {
+    return Joiner.on(".").join(array);
+  }
+
+  @Override
+  public String toString() {
+    return getFilename();
   }
 
 }
