@@ -2,6 +2,7 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.collect.Iterables.transform;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -11,8 +12,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -161,7 +160,7 @@ public class VCF implements Closeable {
     if (CallerTypes.BROAD.getName().equals(caller_id)) {
 
     } else if (CallerTypes.MUSE.getName().equals(caller_id)) {
-      log.error("CallerType: " + CallerTypes.MUSE.getName() + " not implemented");
+      log.error("CallerType: {} not implemented", CallerTypes.MUSE.getName());
     } else if (CallerTypes.CONSENSUS.getName().equals(caller_id)) {
       return object()
           .with("id", createCallId(record, caller_id, bio_sample_id))
@@ -174,15 +173,16 @@ public class VCF implements Closeable {
           .end();
 
     } else if (CallerTypes.EMBL.getName().equals(caller_id)) {
-      log.error("CallerType: " + CallerTypes.EMBL.getName() + " not implemented");
+      log.error("CallerType: {} not implemented", CallerTypes.EMBL.getName());
     } else if (CallerTypes.DKFZ.getName().equals(caller_id)) {
-      log.error("CallerType: " + CallerTypes.DKFZ.getName() + " not implemented");
+      log.error("CallerType: {} not implemented", CallerTypes.DKFZ.getName());
     } else if (CallerTypes.SVCP.getName().equals(caller_id)) {
-      log.error("CallerType: " + CallerTypes.SVCP.getName() + " not implemented");
+      log.error("CallerType: {} not implemented", CallerTypes.SVCP.getName());
     } else if (CallerTypes.SVFIX.getName().equals(caller_id)) {
-      log.error("CallerType: " + CallerTypes.SVFIX.getName() + " not implemented");
+      log.error("CallerType: {} not implemented", CallerTypes.SVFIX.getName());
     } else {
-      throw new RuntimeException("Error: the caller_id: " + caller_id + " is not recognized, " + parser.getFilename());
+      throw new RuntimeException(String.format("Error: the caller_id [%s] is not recognzed for filename [%s]",
+          caller_id, parser.getFilename()));
     }
     return null;
 

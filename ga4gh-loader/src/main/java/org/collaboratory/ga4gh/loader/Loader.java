@@ -6,8 +6,6 @@ import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -20,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Loader {
 
   public static void main(String[] args) {
-    log.info("Static Config:\n" + Config.toConfigString());
+    log.info("Static Config:\n{}", Config.toConfigString());
     try (val client = newClient(); val writer = newDocumentWriter(client)) {
       val loader = newLoader(client, writer);
       loader.load();
@@ -69,8 +67,7 @@ public class Loader {
           } catch (Exception e) {
             log.warn("Bad VCF with fileMetaData: {}", fileMetaData);
             log.warn("Message: {} ", e.getMessage());
-            log.warn("StackTrace: {} ",
-                Arrays.stream(e.getStackTrace()).map(x -> x.toString()).collect(Collectors.joining("\n")));
+            log.warn("StackTrace: {} ", e);
           }
           fileMetaDataCount++;
           globalFileMetaDataCount++;

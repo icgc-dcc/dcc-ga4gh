@@ -16,7 +16,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -85,7 +84,7 @@ public final class Storage {
       if (calcMd5Sum(filename).equals(expectedMD5Sum) == false) {
         return downloadFile(objectId, filename);
       } else {
-        log.info("File \"{}\" already exists and matches checksum. Skipping download.", filename);
+        log.info("File [{}] already exists and matches checksum. Skipping download.", filename);
         return path.toFile();
       }
     } else {

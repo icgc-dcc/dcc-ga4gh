@@ -42,8 +42,8 @@ public class PortalVCFFilenameParser {
 
   public PortalVCFFilenameParser(@NonNull final String filename) {
     array = filename.split("\\.");
-    checkArgument(array.length >= MIN_NUM_FIELDS, String.format(
-        "The filename [%s] has %d fields, but a minimum of %d is expected", filename, array.length, MIN_NUM_FIELDS));
+    checkArgument(array.length >= MIN_NUM_FIELDS,
+        "The filename [%s] has %d fields, but a minimum of %d is expected", filename, array.length, MIN_NUM_FIELDS);
   }
 
   public String getObjectId() {
