@@ -17,7 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import java.util.stream.Collectors;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -51,7 +51,7 @@ public class MetadataService {
                 .setId(b.getKey().toString())
                 .setName(b.getKey().toString())
                 .build())
-            .collect(Collectors.toList()))
+            .collect(toImmutableList()))
         .build();
   }
 
