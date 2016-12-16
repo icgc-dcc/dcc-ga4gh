@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -25,7 +24,6 @@ import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregati
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.icgc.dcc.common.core.util.stream.Streams;
 
 import com.google.common.collect.Sets;
 
@@ -124,8 +122,8 @@ public class Benchmarks {
     try (val fc = FileChannel.open(path, Sets.newHashSet(StandardOpenOption.CREATE, StandardOpenOption.APPEND))) {
       fc.write(ByteBuffer.wrap(message.getBytes()));
     } catch (IOException e) {
-      log.error("Message: " + e.getMessage());
-      log.error("ST: " + Streams.stream(e.getStackTrace()).map(x -> x.toString()).collect(Collectors.joining("\n")));
+      log.error("Message: {}", e.getMessage());
+      log.error("ST: {}", e);
     }
   }
 

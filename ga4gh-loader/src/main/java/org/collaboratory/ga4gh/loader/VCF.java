@@ -2,7 +2,6 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.collect.Iterables.transform;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -11,9 +10,9 @@ import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Joiner;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFEncoder;
@@ -128,17 +127,13 @@ public class VCF implements Closeable {
     return createVariantName(record); // TODO: [rtisma] temporary untill get UUID5 working
   }
 
-  private static String createName(final String delim, @NonNull final Object... array) {
-    return stream(array).map(x -> x.toString()).collect(Collectors.joining(delim));
-  }
-
   private static String createVariantName(VariantContext record) {
-    return createName("_",
+    return Joiner.on("_").join(
         record.getStart(),
         record.getEnd(),
         record.getContig(),
         record.getReference().getBaseString(),
-        record.getAlternateAlleles().stream().map(al -> al.getBaseString()).collect(Collectors.joining(",")));
+        Joiner.on(",").join(record.getAlternateAlleles()));
   }
 
   // TODO: [rtisma] -- temporarily using until implement uuid

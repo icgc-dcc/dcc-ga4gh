@@ -18,7 +18,7 @@
 package org.collaboratory.ga4gh.loader;
 
 import static java.util.stream.Collectors.groupingBy;
-import static org.collaboratory.ga4gh.loader.utils.Gullectors.immutableListCollector;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.util.Arrays;
@@ -85,7 +85,7 @@ public final class FileMetaData {
   }
 
   public static List<FileMetaData> buildFileMetaDataList(@NonNull final Iterable<ObjectNode> objectNodes) {
-    return stream(objectNodes).map(FileMetaData::buildFileMetaData).collect(immutableListCollector());
+    return stream(objectNodes).map(FileMetaData::buildFileMetaData).collect(toImmutableList());
   }
 
   public static Map<String, List<FileMetaData>> buildFileMetaDatasBySample(
@@ -101,8 +101,7 @@ public final class FileMetaData {
   private static Map<String, List<FileMetaData>> groupFileMetaDatas(
       @NonNull final Iterable<FileMetaData> fileMetaDatas,
       final Function<? super FileMetaData, ? extends String> functor) {
-    return ImmutableMap.copyOf(stream(fileMetaDatas).collect(groupingBy(functor, immutableListCollector())));
-
+    return ImmutableMap.copyOf(stream(fileMetaDatas).collect(groupingBy(functor, toImmutableList())));
   }
 
   public static void writeStats(final String outputFn,

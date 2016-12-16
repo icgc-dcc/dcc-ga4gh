@@ -9,15 +9,13 @@ import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -108,16 +106,16 @@ public final class Portal {
   public static Iterable<String> getDonorIds() {
     int from = 1;
     int size = DEFAULT_BUF_DONOR_SIZE;
-    val list = new ArrayList<String>();
+    val list = ImmutableList.<String> builder();
     while (true) {
       val donorList = getDonorIds(from, size);
-      Iterables.addAll(list, donorList);
+      list.addAll(donorList);
       if (Iterables.size(donorList) < size) {
         break;
       }
       from += size;
     }
-    return list;
+    return list.build();
   }
 
   private static JsonNode getHits(JsonNode result) {
@@ -146,7 +144,7 @@ public final class Portal {
   private static URL getFilesForDonersUrl(Iterable<String> donorIterable, int size, int from) {
     val endpoint = PORTAL_API + "/api/v1/repository/files";
 
-    String donorsCSV = Lists.newArrayList(donorIterable).stream().collect(Collectors.joining("\",\""));
+    String donorsCSV = Joiner.on("\",\"").join(donorIterable);
     // {"file":{"repoName":{"is":["Collaboratory - Toronto"]},"fileFormat":{"is":["VCF"]},"donorId":{"is":["DO222843"]}}
     String filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
         + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]},"

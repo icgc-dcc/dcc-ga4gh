@@ -24,13 +24,15 @@ import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDataList;
 import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDatasByDonor;
 import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDatasBySample;
 import static org.collaboratory.ga4gh.loader.utils.Gullectors.immutableListCollector;
-import static org.collaboratory.ga4gh.loader.utils.Gullectors.immutableSetCollector;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+
+import org.icgc.dcc.common.core.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -70,7 +72,7 @@ public class DonorData {
    */
   public final List<FileMetaData> getSampleFileMetas(final String sampleId) {
     checkState(sampleDataListMap.containsKey(sampleId),
-        String.format("The sampleId \"%s\" DNE for donorId: %s", sampleId, id));
+        "The sampleId \"%s\" DNE for donorId: %s", sampleId, id);
     return sampleDataListMap.get(sampleId);
   }
 
@@ -87,7 +89,7 @@ public class DonorData {
   public final Set<String> getDataTypesForSample(final String sampleId) {
     return getSampleFileMetas(sampleId).stream()
         .map(x -> x.getDataType())
-        .collect(immutableSetCollector());
+        .collect(toImmutableSet());
   }
 
   public final Map<String, List<FileMetaData>> getFileMetaDatasByCallerAndDataType(final String sampleId,
@@ -104,7 +106,7 @@ public class DonorData {
     return getSampleFileMetas(sampleId).stream()
         .filter(f -> f.getDataType().equals(dataType))
         .map(functor)
-        .collect(immutableSetCollector());
+        .collect(toImmutableSet());
   }
 
   private final Map<String, List<FileMetaData>> groupByFileMetaOnSample(final String sampleId,
@@ -124,7 +126,7 @@ public class DonorData {
     return buildFileMetaDatasByDonor(buildFileMetaDataList(objectNodes))
         .entrySet().stream()
         .map(x -> createDonorData(x.getKey(), x.getValue())) // Key is donorId, Value is List<FileMetaData>
-        .collect(immutableListCollector());
+        .collect(Collectors.toImmutableList());
   }
 
   public File dumpToJson(File file) {
