@@ -119,7 +119,6 @@ public class VCF implements Closeable {
         .with("variant_set_ids", createVariantSetId(caller_id))
         .with("bio_sample_id", fileMetaData.getSampleId())
         .end();
-
   }
 
   private static String createVariantId(VariantContext record) {
@@ -178,8 +177,7 @@ public class VCF implements Closeable {
       throw new RuntimeException(String.format("Error: the caller_id [%s] is not recognzed for filename [%s]",
           caller_id, parser.getFilename()));
     }
-    return null;
-
+    return null;// TODO: [rtisma] - fix this, cannot return null
   }
 
   public ObjectNode readVariantSet() {
@@ -223,5 +221,4 @@ public class VCF implements Closeable {
   public void close() {
     vcf.close();
   }
-
 }

@@ -49,8 +49,6 @@ public final class PortalFiles {
     return file.path(OBJECT_ID).textValue();
   }
 
-  // TODO: [rtisma] - need to also get the file name for consensus discrimination
-
   public static String getDataType(@NonNull ObjectNode file) {
     return getDataCategorization(file).path(DATA_TYPE).textValue();
   }

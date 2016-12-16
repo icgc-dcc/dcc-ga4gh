@@ -78,7 +78,6 @@ public class Loader {
       }
       donorCount++;
     }
-
   }
 
   private void downloadAndLoadFile(@NonNull final FileMetaData fileMetaData) {
@@ -97,7 +96,6 @@ public class Loader {
   }
 
   private void loadFile(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
-
     log.info("Reading variants from {}...", file);
     @Cleanup
     val vcf = new VCF(file, fileMetaData);
@@ -121,6 +119,5 @@ public class Loader {
 
     log.info("Indexing vcfHeaders {}...", fileMetaData.getVcfFilenameParser().getFilename());
     indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);
-
   }
 }

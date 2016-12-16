@@ -187,7 +187,6 @@ public class Indexer {
     public String getIndexType() {
       return Indexer.VARIANT_TYPE_NAME;
     }
-
   }
 
   private static class VariantSetDocumentType implements IndexDocumentType {
@@ -205,7 +204,6 @@ public class Indexer {
     public String getIndexType() {
       return CALLSET_TYPE_NAME;
     }
-
   }
 
   @SneakyThrows
@@ -213,5 +211,4 @@ public class Indexer {
     val url = Resources.getResource(MAPPINGS_DIR + "/" + fileName);
     return (ObjectNode) DEFAULT.readTree(url);
   }
-
 }

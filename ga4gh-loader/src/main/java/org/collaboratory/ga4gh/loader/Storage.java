@@ -76,12 +76,9 @@ public final class Storage {
 
   private static URL getObjectUrl(String objectId) throws IOException {
     val storageUrl = new URL(STORAGE_API + "/download/" + objectId + "?offset=0&length=-1&external=true");
-
     val connection = (HttpURLConnection) storageUrl.openConnection();
     connection.setRequestProperty(AUTHORIZATION, "Bearer " + TOKEN);
-
     val object = readObject(connection);
-
     return getUrl(object);
   }
 
@@ -92,5 +89,4 @@ public final class Storage {
   private static JsonNode readObject(HttpURLConnection connection) throws JsonProcessingException, IOException {
     return DEFAULT.readTree(connection.getInputStream());
   }
-
 }

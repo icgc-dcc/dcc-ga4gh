@@ -29,10 +29,6 @@ public final class Portal {
   private static final String FILE_FORMAT = "VCF";
   private static final int DEFAULT_BUF_DONOR_SIZE = 50;
 
-  public static void main(String[] args) {
-
-  }
-
   /**
    * Gets all Collaboratory VCF files.
    */
@@ -57,10 +53,7 @@ public final class Portal {
 
       from += size;
     }
-
-    val s = fileMetas.build();
-
-    return s;
+    return fileMetas.build();
   }
 
   public static List<ObjectNode> getFileMetasForNumDonors(int numDonors) {
@@ -164,5 +157,4 @@ public final class Portal {
   private static JsonNode read(URL url) {
     return DEFAULT.readTree(url);
   }
-
 }

@@ -134,7 +134,6 @@ public class VariantService {
     log.info("GetVariantSetResponse: {} ", variantSet);
     log.info("GetVariantResponse: {} ", variant);
     log.info("GetCallSetResponse: {} ", callSet);
-
   }
 
   public SearchVariantSetsResponse searchVariantSets(@NonNull SearchVariantSetsRequest request) {

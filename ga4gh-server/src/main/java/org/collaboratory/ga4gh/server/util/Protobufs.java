@@ -19,10 +19,8 @@ package org.collaboratory.ga4gh.server.util;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.protobuf.ListValue;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
@@ -60,5 +58,4 @@ public class Protobufs {
     }
     return map.build();
   }
-
 }

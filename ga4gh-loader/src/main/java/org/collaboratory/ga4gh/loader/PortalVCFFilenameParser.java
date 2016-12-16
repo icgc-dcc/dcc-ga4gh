@@ -78,5 +78,4 @@ public class PortalVCFFilenameParser {
   public String toString() {
     return getFilename();
   }
-
 }

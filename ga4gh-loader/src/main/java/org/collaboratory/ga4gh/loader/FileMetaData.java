@@ -111,7 +111,6 @@ public final class FileMetaData {
 
   public static void writeStats(final String outputFn,
       @NonNull final List<FileMetaData> fileMetaList) {
-
     val sb = new StringBuilder();
     fileMetaList.stream()
         .collect(
