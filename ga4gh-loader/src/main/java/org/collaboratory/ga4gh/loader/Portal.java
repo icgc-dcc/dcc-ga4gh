@@ -5,14 +5,12 @@ import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
-import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaData;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,34 +35,6 @@ public final class Portal {
 
   public static void main(String[] args) {
 
-  }
-
-  private static List<FileMetaData> getAllFileMetaDatasForDonor(String donorId) {
-    return getFileMetaDatasForDonor(donorId, 1, -1);
-  }
-
-  private static List<FileMetaData> getFileMetaDatasForDonor(String donorId, final int startFrom, final int numFiles) {
-    val samplesFileMetaDataList = new ArrayList<FileMetaData>();
-    int fileFrom = startFrom;
-    while (true) {
-      // If numFiles < 0, then get all
-      int buffFileSize =
-          (numFiles < 0) ? DEFAULT_BUF_FILE_SIZE : Math.min(startFrom + numFiles - fileFrom, DEFAULT_BUF_FILE_SIZE);
-      val url = getFilesForDonerUrl(donorId, fileFrom, buffFileSize);
-      val result = read(url);
-      val hits = getHits(result);
-      for (val hit : hits) {
-        val fileMeta = (ObjectNode) hit;
-        samplesFileMetaDataList.add(buildFileMetaData(fileMeta));
-      }
-
-      if (hits.size() < buffFileSize) {
-        break;
-      }
-      fileFrom += buffFileSize;
-    }
-
-    return samplesFileMetaDataList;
   }
 
   /**
@@ -95,14 +65,6 @@ public final class Portal {
     val s = fileMetas.build();
 
     return s;
-  }
-
-  public static Map<String, DonorData> getDonorDataMap() {
-    return DonorData.buildDonorDataMap(getAllFileMetas());
-  }
-
-  public static Map<String, DonorData> getDonorDataMap(int numDonors) {
-    return DonorData.buildDonorDataMap(getFileMetasForNumDonors(numDonors));
   }
 
   public static List<ObjectNode> getFileMetasForNumDonors(int numDonors) {

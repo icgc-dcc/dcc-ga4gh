@@ -18,12 +18,17 @@
 package org.collaboratory.ga4gh.loader;
 
 import static java.util.stream.Collectors.groupingBy;
+import static org.collaboratory.ga4gh.loader.utils.Gullectors.immutableListCollector;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import lombok.NonNull;
 import lombok.Value;
@@ -32,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Value
 @Slf4j
-public class FileMetaData {
+public final class FileMetaData {
 
   @NonNull
   public final String objectId;
@@ -63,7 +68,7 @@ public class FileMetaData {
   @NonNull
   public final PortalVCFFilenameParser vcfFilenameParser;
 
-  public static FileMetaData buildFileMetaData(ObjectNode objectNode) {
+  public static FileMetaData buildFileMetaData(@NonNull final ObjectNode objectNode) {
     val objectId = PortalFiles.getObjectId(objectNode);
     val fileId = PortalFiles.getFileId(objectNode);
     val sampleId = PortalFiles.getSampleId(objectNode);
@@ -77,6 +82,27 @@ public class FileMetaData {
     return new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild, fileSize,
         fileMd5sum,
         vcfFilenameParser);
+  }
+
+  public static List<FileMetaData> buildFileMetaDataList(@NonNull final Iterable<ObjectNode> objectNodes) {
+    return stream(objectNodes).map(FileMetaData::buildFileMetaData).collect(immutableListCollector());
+  }
+
+  public static Map<String, List<FileMetaData>> buildFileMetaDatasBySample(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaDatas(fileMetaDatas, FileMetaData::getSampleId);
+  }
+
+  public static Map<String, List<FileMetaData>> buildFileMetaDatasByDonor(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaDatas(fileMetaDatas, FileMetaData::getDonorId);
+  }
+
+  private static Map<String, List<FileMetaData>> groupFileMetaDatas(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas,
+      final Function<? super FileMetaData, ? extends String> functor) {
+    return ImmutableMap.copyOf(stream(fileMetaDatas).collect(groupingBy(functor, immutableListCollector())));
+
   }
 
   public static void writeStats(final String outputFn,

@@ -1,9 +1,11 @@
 package org.collaboratory.ga4gh.loader;
 
 import static java.util.stream.Collectors.summingLong;
+import static org.collaboratory.ga4gh.loader.DonorData.buildDonorDataList;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
+import static org.collaboratory.ga4gh.loader.Portal.getFileMetasForNumDonors;
 
 import java.io.File;
 
@@ -35,17 +37,17 @@ public class Loader {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
 
-    val donorDataMap = Portal.getDonorDataMap(NUM_DONORS);
+    val fileMetas = getFileMetasForNumDonors(NUM_DONORS);
+    val donorDataList = buildDonorDataList(fileMetas);
     int donorCount = 1;
-    int donorTotal = donorDataMap.keySet().size();
+    int donorTotal = donorDataList.size();
     int globalFileMetaDataCount = 1;
-    long globalFileMetaDataTotal = donorDataMap.values().stream()
+    long globalFileMetaDataTotal = donorDataList.stream()
         .map(x -> x.getTotalFileMetaCount())
         .collect(summingLong(Long::longValue));
 
-    for (val donorDataEntry : donorDataMap.entrySet()) {
-      val donorId = donorDataEntry.getKey();
-      val donorData = donorDataEntry.getValue();
+    for (val donorData : donorDataList) {
+      val donorId = donorData.getId();
       donorData.dumpToJson(new File("target/rob_" + donorId + ".json"));
       log.info("Loading Donor({}): {}/{}", donorId, donorCount, donorTotal);
       int sampleCount = 1;

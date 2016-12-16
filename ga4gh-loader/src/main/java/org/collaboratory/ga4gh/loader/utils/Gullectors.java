@@ -21,15 +21,18 @@ import static lombok.AccessLevel.PRIVATE;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collector;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class ImmutableCollectors {
+public final class Gullectors {
 
   public static <T> Collector<T, ImmutableSet.Builder<T>, Set<T>> immutableSetCollector() {
     return Collector.of(ImmutableSet.Builder<T>::new, ImmutableSet.Builder<T>::add, (s, r) -> s.addAll(r.build()),
@@ -39,6 +42,17 @@ public final class ImmutableCollectors {
   public static <T> Collector<T, ImmutableList.Builder<T>, List<T>> immutableListCollector() {
     return Collector.of(ImmutableList.Builder<T>::new, ImmutableList.Builder<T>::add, (s, r) -> s.addAll(r.build()),
         ImmutableList.Builder<T>::build);
+  }
+
+  public static <T, K, V> Collector<T, ImmutableMap.Builder<K, V>, ImmutableMap<K, V>> immutableMapCollector(
+      Function<? super T, ? extends K> keyMapper,
+      Function<? super T, ? extends V> valueMapper) {
+
+    return Collector.of(ImmutableMap.Builder<K, V>::new,
+        (r, t) -> r.put(keyMapper.apply(t), valueMapper.apply(t)),
+        (l, r) -> l.putAll(r.build()),
+        ImmutableMap.Builder<K, V>::build,
+        Collector.Characteristics.UNORDERED);
   }
 
 }

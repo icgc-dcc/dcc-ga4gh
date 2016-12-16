@@ -19,67 +19,36 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.summingInt;
-import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaData;
-import static org.collaboratory.ga4gh.loader.utils.ImmutableCollectors.immutableListCollector;
-import static org.collaboratory.ga4gh.loader.utils.ImmutableCollectors.immutableSetCollector;
+import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDataList;
+import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDatasByDonor;
+import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDatasBySample;
+import static org.collaboratory.ga4gh.loader.utils.Gullectors.immutableListCollector;
+import static org.collaboratory.ga4gh.loader.utils.Gullectors.immutableSetCollector;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import javax.annotation.concurrent.NotThreadSafe;
-
-import org.elasticsearch.shaded.jackson.core.JsonGenerationException;
-
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.val;
 
-@RequiredArgsConstructor
 @Value
-@NotThreadSafe
 public class DonorData {
 
-  @RequiredArgsConstructor
-  @Value
-  public static final class Tuple2<T1, T2> {
-
-    @NonNull
-    private final T1 t1;
-    @NonNull
-    private final T2 t2;
-
-  }
-
-  @NonNull
   private final String id;
 
-  private final Map<String, List<FileMetaData>> sampleDataListMap = new HashMap<>();
+  private final Map<String, List<FileMetaData>> sampleDataListMap;
 
-  /*
-   * Adds fileMetaData to this Donor
-   */
-  public final void addSample(@NonNull final FileMetaData fileMetaData) {
-    addSample(fileMetaData.getSampleId(), fileMetaData);
-  }
-
-  public final void addSample(final String sampleId, @NonNull final FileMetaData fileMetaData) {
-    if (sampleDataListMap.containsKey(sampleId) == false) {
-      sampleDataListMap.put(sampleId, new ArrayList<FileMetaData>());
-    }
-    sampleDataListMap.get(sampleId).add(fileMetaData);
+  public DonorData(@NonNull final String id, @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    this.id = id;
+    this.sampleDataListMap = buildFileMetaDatasBySample(fileMetaDatas);
   }
 
   public final Set<String> getSampleIds() {
@@ -147,58 +116,22 @@ public class DonorData {
         .collect(groupingBy(functor, immutableListCollector()));
   }
 
-  /*
-   * Builds a Map where keys are donorIds and Values are DonorData objects, by converting each input objectNode to a
-   * FileMetaData object, and grouping them by donorId and sampleId. Then traversing the grouped structure, and
-   * populating the Map appropriately
-   */
-  public static final Map<String, DonorData> buildDonorDataMap(Iterable<ObjectNode> objectNodes) {
-    val map = new HashMap<String, DonorData>();
-
-    for (val objectNode : objectNodes) {
-      val fileMetaData = buildFileMetaData(objectNode);
-      val donorId = fileMetaData.getDonorId();
-      val sampleId = fileMetaData.getSampleId();
-
-      DonorData donorData = null;
-      if (map.containsKey(donorId) == false) {
-        donorData = new DonorData(donorId);
-        map.put(donorId, donorData);
-      } else {
-        donorData = map.get(donorId);
-      }
-      donorData.addSample(sampleId, fileMetaData);
-    }
-    return map;
+  public static DonorData createDonorData(final String donorId, final Iterable<FileMetaData> fileMetaDatas) {
+    return new DonorData(donorId, fileMetaDatas);
   }
 
-  public static final void writeDonorDataMap(final String outputFn, @NonNull Iterable<ObjectNode> objectNodes) {
-    val sb = new StringBuilder();
-    for (val donorEntry : buildDonorDataMap(objectNodes).entrySet()) {
-      val donorId = donorEntry.getKey();
-      val donorData = donorEntry.getValue();
-      sb.append("donorId: " + donorId);
-      for (val sampleEntry : donorData.getSampleDataListMap().entrySet()) {
-        val sampleId = sampleEntry.getKey();
-        sb.append("\nsampleId: " + sampleId);
-        sb.append(" -> [\n\t\t");
-        val fileMetaDataList = sampleEntry.getValue();
-        sb.append(fileMetaDataList.stream().map(x -> x.toString()).collect(joining("\n\t\t")));
-        sb.append("\n]\n\n");
-      }
-    }
-    Benchmarks.writeToNewFile(outputFn, sb.toString());
+  public static final List<DonorData> buildDonorDataList(Iterable<ObjectNode> objectNodes) {
+    return buildFileMetaDatasByDonor(buildFileMetaDataList(objectNodes))
+        .entrySet().stream()
+        .map(x -> createDonorData(x.getKey(), x.getValue())) // Key is donorId, Value is List<FileMetaData>
+        .collect(immutableListCollector());
   }
 
   public File dumpToJson(File file) {
     val mapper = new ObjectMapper();
     try {
       mapper.writerWithDefaultPrettyPrinter().writeValue(file, this);
-    } catch (JsonGenerationException e) {
-      e.printStackTrace();
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
     return file;

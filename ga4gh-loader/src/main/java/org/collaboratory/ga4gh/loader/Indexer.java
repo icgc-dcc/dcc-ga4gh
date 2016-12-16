@@ -108,9 +108,8 @@ public class Indexer {
       val call = entry.getValue();
       String callId = call.path("id").textValue();
       checkState(variantIdCache.contains(variantId),
-          String.format(
-              "The variant Id: %s doesnt not exist for this call: %s. Make sure variantId indexed BEFORE call index",
-              variantId, callId));
+          "The variant Id: %s doesnt not exist for this call: %s. Make sure variantId indexed BEFORE call index",
+          variantId, callId);
       writeCall(variantId, call);
     }
   }
