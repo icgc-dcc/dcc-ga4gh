@@ -22,13 +22,12 @@ import static java.util.stream.Collectors.summingInt;
 import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDataList;
 import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDataBySample;
 import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDatasByDonor;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.icgc.dcc.common.core.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -84,7 +83,7 @@ public class DonorData {
     return groupFileMetaDatasByDonor(buildFileMetaDataList(objectNodes))
         .entrySet().stream()
         .map(x -> createDonorData(x.getKey(), x.getValue())) // Key is donorId, Value is List<FileMetaData>
-        .collect(Collectors.toImmutableList());
+        .collect(toImmutableList());
   }
 
   public File dumpToJson(File file) {
