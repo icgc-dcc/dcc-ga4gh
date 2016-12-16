@@ -13,7 +13,6 @@ Currently only the [References API](http://ga4gh-schemas.readthedocs.io/en/lates
 
 ## Modules
 
-
 The system is comprised of the following modules:
 
 - [ga4gh-schema](ga4gh-schema/README.md)
