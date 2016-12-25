@@ -17,34 +17,20 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_ADDRESS;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_PORT;
-
-import java.net.InetAddress;
-
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.elasticsearch.client.Client;
 import org.springframework.stereotype.Repository;
 
 import lombok.NonNull;
-import lombok.SneakyThrows;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 @Repository
+@RequiredArgsConstructor
 public class HeaderRepository {
 
   @NonNull
-  private final TransportClient client;
-
-  @SuppressWarnings("resource")
-  @SneakyThrows
-  public HeaderRepository() {
-    this.client = new PreBuiltTransportClient(Settings.EMPTY)
-        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
-  }
+  private final Client client;
 
   public GetResponse getHeader(String objectId) {
     val searchRequestBuilder = client.prepareGet("dcc-variants", "vcf_header", objectId);

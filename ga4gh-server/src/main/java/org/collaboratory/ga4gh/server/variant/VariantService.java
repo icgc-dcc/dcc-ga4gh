@@ -17,6 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.server.Factory.newClient;
 import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
@@ -116,10 +117,11 @@ public class VariantService {
         .setCallSetId("SA557454")
         .build();
 
-    val variantRepo = new VariantRepository();
-    val headerRepo = new HeaderRepository();
-    val callSetRepo = new CallSetRepository();
-    val variantSetRepo = new VariantSetRepository();
+    val client = newClient();
+    val variantRepo = new VariantRepository(client);
+    val headerRepo = new HeaderRepository(client);
+    val callSetRepo = new CallSetRepository(client);
+    val variantSetRepo = new VariantSetRepository(client);
 
     val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo);
     val searchVariantResponse = variantService.searchVariants(searchVariantRequest);

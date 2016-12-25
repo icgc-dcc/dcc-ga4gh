@@ -18,51 +18,37 @@
 package org.collaboratory.ga4gh.server.variant;
 
 import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_ADDRESS;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.NODE_PORT;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_SET_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
-import java.net.InetAddress;
-
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.sort.SortOrder;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.stereotype.Repository;
 
 import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import lombok.NonNull;
-import lombok.SneakyThrows;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 /**
  * Perform queries against elasticsearch to find desired variants.
  */
 @Repository
+@RequiredArgsConstructor
 public class VariantSetRepository {
 
   @NonNull
-  private final TransportClient client;
-
-  // TODO: rtisma -- put TransportClient construction into commmon module, this is also applies to the loader
-  @SuppressWarnings("resource")
-  @SneakyThrows
-  public VariantSetRepository() {
-    this.client = new PreBuiltTransportClient(Settings.EMPTY)
-        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
-  }
+  private final Client client;
 
   private SearchRequestBuilder createSearchRequest(final int size) {
     return SearchAction.INSTANCE.newRequestBuilder(client)
