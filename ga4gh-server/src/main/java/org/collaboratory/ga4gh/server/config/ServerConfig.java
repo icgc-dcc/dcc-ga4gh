@@ -32,6 +32,7 @@ public class ServerConfig {
   public static final String VARIANT_SET_TYPE_NAME = "variant_set";
   public static final String CALLSET_TYPE_NAME = "callset";
   public static final String CALL_TYPE_NAME = "call";
+  public static final String HEADER_TYPE_NAME = "vcf_header";
   public static final String NODE_ADDRESS = System.getProperty("node_address", "localhost");
   public static final int NODE_PORT = Integer.valueOf(System.getProperty("node_port", "9300"));
   public static final String FASTA_FILE_LOC = "target/GRCh37.fasta";

@@ -28,7 +28,6 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -53,8 +52,7 @@ public class VariantRepository {
   private final Client client;
 
   private SearchRequestBuilder createSearchRequest(final int size) {
-    return SearchAction.INSTANCE.newRequestBuilder(client)
-        .setIndices(INDEX_NAME)
+    return client.prepareSearch(INDEX_NAME)
         .setTypes(VARIANT_TYPE_NAME)
         .addSort("start", SortOrder.ASC)
         .setSize(size);

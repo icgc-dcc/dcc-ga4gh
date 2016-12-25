@@ -24,7 +24,6 @@ import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -51,8 +50,7 @@ public class VariantSetRepository {
   private final Client client;
 
   private SearchRequestBuilder createSearchRequest(final int size) {
-    return SearchAction.INSTANCE.newRequestBuilder(client)
-        .setIndices(INDEX_NAME)
+    return client.prepareSearch(INDEX_NAME)
         .setTypes(VARIANT_SET_TYPE_NAME)
         .addSort("data_set_id", SortOrder.ASC)
         .setSize(size);

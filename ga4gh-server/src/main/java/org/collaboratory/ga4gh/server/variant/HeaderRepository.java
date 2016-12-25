@@ -17,6 +17,9 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.server.config.ServerConfig.HEADER_TYPE_NAME;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
+
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.springframework.stereotype.Repository;
@@ -33,7 +36,7 @@ public class HeaderRepository {
   private final Client client;
 
   public GetResponse getHeader(String objectId) {
-    val searchRequestBuilder = client.prepareGet("dcc-variants", "vcf_header", objectId);
+    val searchRequestBuilder = client.prepareGet(INDEX_NAME, HEADER_TYPE_NAME, objectId);
     return searchRequestBuilder.get();
   }
 

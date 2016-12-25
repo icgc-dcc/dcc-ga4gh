@@ -44,7 +44,7 @@ public class MetadataService {
   }
 
   private SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
-    Terms datasets = searchResponse.getAggregations().get("by_data_set_id");
+    val datasets = (Terms) searchResponse.getAggregations().get("by_data_set_id");
     return SearchDatasetsResponse.newBuilder()
         .addAllDatasets(datasets.getBuckets().stream()
             .map(b -> Dataset.newBuilder()
