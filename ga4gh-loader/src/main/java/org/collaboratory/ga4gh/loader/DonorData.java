@@ -24,17 +24,14 @@ import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDataBySam
 import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDatasByDonor;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
 import lombok.Value;
-import lombok.val;
 
 @Value
 public class DonorData {
@@ -86,13 +83,4 @@ public class DonorData {
         .collect(toImmutableList());
   }
 
-  public File dumpToJson(File file) {
-    val mapper = new ObjectMapper();
-    try {
-      mapper.writerWithDefaultPrettyPrinter().writeValue(file, this);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return file;
-  }
 }

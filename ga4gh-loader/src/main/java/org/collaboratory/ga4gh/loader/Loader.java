@@ -1,6 +1,7 @@
 package org.collaboratory.ga4gh.loader;
 
 import static java.util.stream.Collectors.summingLong;
+import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
 import static org.collaboratory.ga4gh.loader.DonorData.buildDonorDataList;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
@@ -48,7 +49,7 @@ public class Loader {
 
     for (val donorData : donorDataList) {
       val donorId = donorData.getId();
-      donorData.dumpToJson(new File("target/rob_" + donorId + ".json"));
+      dumpToJson(donorData, "target/rob_" + donorId + ".json");
       log.info("Loading Donor({}): {}/{}", donorId, donorCount, donorTotal);
       int sampleCount = 1;
       int sampleTotal = donorData.getNumSamples();
