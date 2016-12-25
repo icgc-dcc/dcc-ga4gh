@@ -10,17 +10,15 @@ import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.elasticsearch.shaded.apache.commons.codec.digest.DigestUtils;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.hash.Hashing;
 
 import lombok.Cleanup;
 import lombok.NoArgsConstructor;
@@ -70,8 +68,12 @@ public final class Storage {
 
   private static String calcMd5Sum(final String filename) throws IOException {
     val path = Paths.get(filename);
-    InputStream is = Files.newInputStream(path);
-    return DigestUtils.md5Hex(is);
+    val bytes = Files.readAllBytes(path);
+    return Hashing.md5()
+        .newHasher()
+        .putBytes(bytes)
+        .hash()
+        .toString();
   }
 
   private static URL getObjectUrl(String objectId) throws IOException {

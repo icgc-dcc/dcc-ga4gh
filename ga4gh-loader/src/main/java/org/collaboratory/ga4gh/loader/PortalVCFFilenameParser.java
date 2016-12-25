@@ -18,10 +18,11 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.assertj.core.util.Iterables.toArray;
 
 import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.common.core.util.Splitters;
+
+import com.google.common.collect.Iterables;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -43,7 +44,7 @@ public class PortalVCFFilenameParser {
   private final String[] elements;
 
   public PortalVCFFilenameParser(@NonNull final String filename) {
-    elements = toArray(Splitters.DOT.split(filename));
+    elements = Iterables.toArray(Splitters.DOT.split(filename), String.class);
     checkArgument(elements.length >= MIN_NUM_FIELDS,
         "The filename [%s] has %d fields, but a minimum of %d is expected", filename, elements.length, MIN_NUM_FIELDS);
   }
