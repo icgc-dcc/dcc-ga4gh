@@ -19,7 +19,7 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.common.base.Joiner;
+import org.icgc.dcc.common.core.util.Joiners;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -71,7 +71,7 @@ public class PortalVCFFilenameParser {
   }
 
   public String getFilename() {
-    return Joiner.on(".").join(array);
+    return Joiners.DOT.join(array);
   }
 
   @Override

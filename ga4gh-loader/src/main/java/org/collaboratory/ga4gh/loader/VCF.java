@@ -10,8 +10,9 @@ import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.Map;
 
+import org.icgc.dcc.common.core.util.Joiners;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -126,12 +127,12 @@ public class VCF implements Closeable {
   }
 
   private static String createVariantName(VariantContext record) {
-    return Joiner.on("_").join(
+    return Joiners.UNDERSCORE.join(
         record.getStart(),
         record.getEnd(),
         record.getContig(),
         record.getReference().getBaseString(),
-        Joiner.on(",").join(record.getAlternateAlleles()));
+        Joiners.COMMA.join(record.getAlternateAlleles()));
   }
 
   // TODO: [rtisma] -- temporarily using until implement uuid
