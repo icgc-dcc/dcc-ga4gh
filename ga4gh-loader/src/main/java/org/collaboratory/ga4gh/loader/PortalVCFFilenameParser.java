@@ -40,40 +40,40 @@ public class PortalVCFFilenameParser {
   private static final int FILE_TYPE_POS = 5;
 
   @Getter
-  private final String[] array;
+  private final String[] elements;
 
   public PortalVCFFilenameParser(@NonNull final String filename) {
-    array = toArray(Splitters.DOT.split(filename));
-    checkArgument(array.length >= MIN_NUM_FIELDS,
-        "The filename [%s] has %d fields, but a minimum of %d is expected", filename, array.length, MIN_NUM_FIELDS);
+    elements = toArray(Splitters.DOT.split(filename));
+    checkArgument(elements.length >= MIN_NUM_FIELDS,
+        "The filename [%s] has %d fields, but a minimum of %d is expected", filename, elements.length, MIN_NUM_FIELDS);
   }
 
   public String getObjectId() {
-    return array[OBJECT_ID_POS];
+    return elements[OBJECT_ID_POS];
   }
 
   public String getCallerId() {
-    return array[CALLER_ID_POS];
+    return elements[CALLER_ID_POS];
   }
 
   public String getDate() {
-    return array[DATE_POS];
+    return elements[DATE_POS];
   }
 
   public String getMutationType() {
-    return array[MUTATION_TYPE_POS];
+    return elements[MUTATION_TYPE_POS];
   }
 
   public String getMutationSubType() {
-    return array[MUTATION_SUB_TYPE_POS];
+    return elements[MUTATION_SUB_TYPE_POS];
   }
 
   public String getFileType() {
-    return array[FILE_TYPE_POS];
+    return elements[FILE_TYPE_POS];
   }
 
   public String getFilename() {
-    return Joiners.DOT.join(array);
+    return Joiners.DOT.join(elements);
   }
 
   @Override
