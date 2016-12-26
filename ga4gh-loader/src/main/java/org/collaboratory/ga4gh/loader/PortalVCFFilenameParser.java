@@ -44,7 +44,10 @@ public class PortalVCFFilenameParser {
   private final String[] elements;
 
   public PortalVCFFilenameParser(@NonNull final String filename) {
-    elements = Iterables.toArray(Splitters.DOT.split(filename), String.class);
+    checkArgument(filename.equals("") == false, "The filename [%s] is empty", filename);
+    elements = Iterables.toArray(Splitters.DOT
+        .trimResults()
+        .split(filename), String.class);
     checkArgument(elements.length >= MIN_NUM_FIELDS,
         "The filename [%s] has %d fields, but a minimum of %d is expected", filename, elements.length, MIN_NUM_FIELDS);
   }
