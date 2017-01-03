@@ -17,6 +17,9 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.NAME;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.CALLSET_TYPE_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -49,7 +52,7 @@ public class CallSetRepository {
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
         .setTypes(CALLSET_TYPE_NAME)
-        .addSort("name", SortOrder.ASC)
+        .addSort(NAME, SortOrder.ASC)
         .setSize(size);
   }
 
@@ -58,9 +61,9 @@ public class CallSetRepository {
     val constBoolQuery =
         constantScoreQuery(
             boolQuery()
-                .must(matchQuery("variant_set_ids", request.getVariantSetId()))
-                .must(matchQuery("name", request.getName()))
-                .must(matchQuery("bio_sample_id", request.getBioSampleId())));
+                .must(matchQuery(VARIANT_SET_IDS, request.getVariantSetId()))
+                .must(matchQuery(NAME, request.getName()))
+                .must(matchQuery(BIO_SAMPLE_ID, request.getBioSampleId())));
     return searchRequestBuilder.setQuery(constBoolQuery).get();
   }
 

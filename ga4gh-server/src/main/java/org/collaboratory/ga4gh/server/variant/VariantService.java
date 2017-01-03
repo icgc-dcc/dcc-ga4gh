@@ -17,7 +17,18 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BY_DATA_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.CALL_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.DATA_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.NAME;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.PHASESET;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.RECORD;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.server.Factory.newClient;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
 import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
@@ -157,18 +168,18 @@ public class VariantService {
   private static VariantSet.Builder convertToVariantSet(final String id, @NonNull Map<String, Object> source) {
     return VariantSet.newBuilder()
         .setId(id)
-        .setName(source.get("name").toString())
-        .setDatasetId(source.get("data_set_id").toString())
-        .setReferenceSetId(source.get("reference_set_id").toString());
+        .setName(source.get(NAME).toString())
+        .setDatasetId(source.get(DATA_SET_ID).toString())
+        .setReferenceSetId(source.get(REFERENCE_SET_ID).toString());
   }
 
   private static CallSet.Builder convertToCallSet(final String id, @NonNull Map<String, Object> source) {
     return CallSet.newBuilder()
         .setId(id)
-        .setName(source.get("name").toString())
-        .setBioSampleId(source.get("bio_sample_id").toString())
+        .setName(source.get(NAME).toString())
+        .setBioSampleId(source.get(BIO_SAMPLE_ID).toString())
         // TODO: [rtisma] [BUG] need to properly add variant_set_ids if there is more than one
-        .addVariantSetIds(source.get("variant_set_ids").toString())
+        .addVariantSetIds(source.get(VARIANT_SET_IDS).toString())
         // .addAlVariantSetIds(
         // Streams.stream(source.).map(vs -> vs.toString())
         // .collect(Collectors.toList()))
@@ -186,7 +197,7 @@ public class VariantService {
 
   public SearchCallSetsResponse searchCallSets(@NonNull SearchCallSetsRequest request) {
     log.info("Getting CallSetIds for variant_set_id: " + request.getVariantSetId());
-    val response = this.callsetRepository.findCallSets(request);
+    val response = callsetRepository.findCallSets(request);
     return buildSearchCallSetsResponse(response);
   }
 
@@ -219,7 +230,7 @@ public class VariantService {
     return convertToVariant(response.getHits().getAt(0))
         .addAllCalls(
             Streams.stream(
-                response.getHits().getAt(0).getInnerHits().get("call"))
+                response.getHits().getAt(0).getInnerHits().get(CALL_TYPE_NAME))
                 .map(x -> convertToCall(x).build())
                 .collect(toImmutableList()))
         .build();
@@ -246,7 +257,7 @@ public class VariantService {
   }
 
   private static SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
-    Terms datasets = searchResponse.getAggregations().get("by_data_set_id");
+    Terms datasets = searchResponse.getAggregations().get(BY_DATA_SET_ID);
     return SearchDatasetsResponse.newBuilder()
         .addAllDatasets(datasets.getBuckets().stream()
             .map(b -> Dataset.newBuilder()
@@ -261,7 +272,7 @@ public class VariantService {
     val responseBuilder = SearchVariantsResponse.newBuilder();
     for (val variantSearchHit : searchResponse.getHits()) {
       val variantBuilder = convertToVariant(variantSearchHit);
-      for (val callInnerHit : variantSearchHit.getInnerHits().get("call")) {
+      for (val callInnerHit : variantSearchHit.getInnerHits().get(CALL_TYPE_NAME)) {
         variantBuilder.addCalls(convertToCall(callInnerHit));
       }
       responseBuilder.addVariants(variantBuilder);
@@ -272,12 +283,12 @@ public class VariantService {
   @SneakyThrows
   private static Call.Builder convertToCall(@NonNull SearchHit hit) {
     return Call.newBuilder()
-        .setCallSetId(hit.getSource().get("call_set_id").toString())
-        .setCallSetName(hit.getSource().get("bio_sample_id").toString()) // TODO: [rtisma] need to add call_set_name to
-                                                                         // ES mapping
+        .setCallSetId(hit.getSource().get(CALL_SET_ID).toString())
+        .setCallSetName(hit.getSource().get(BIO_SAMPLE_ID).toString()) // TODO: [rtisma] need to add call_set_name to
+                                                                       // ES mapping
         .addGenotype(DEFAULT_CALL_GENOTYPE_VALUE)
         .addGenotypeLikelihood(DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE)
-        .setPhaseset(hit.getSource().get("phaseset").toString());
+        .setPhaseset(hit.getSource().get(PHASESET).toString());
   }
 
   // TODO: [rtisma] cleaniup
@@ -290,7 +301,7 @@ public class VariantService {
     val dummyHeader = new VCFHeader();
     val codec = new VCFCodec();
     codec.setVCFHeader(dummyHeader, VCFHeaderVersion.VCF4_1);
-    VariantContext vc = codec.decode(json.get("record").asText());
+    VariantContext vc = codec.decode(json.get(RECORD).asText());
 
     List<String> alt = vc.getAlternateAlleles().stream()
         .map(al -> al.getBaseString())
@@ -298,7 +309,7 @@ public class VariantService {
 
     return Variant.newBuilder()
         .setId(hit.getId())
-        .setReferenceName(hit.getSource().get("reference_name").toString())
+        .setReferenceName(hit.getSource().get(REFERENCE_NAME).toString())
         .setReferenceBases(vc.getReference().getBaseString())
         .addAllAlternateBases(alt)
         .setStart(vc.getStart())

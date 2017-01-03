@@ -37,6 +37,12 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<artifactId>ga4gh-schema</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.collaboratory</groupId>
+			<artifactId>ga4gh-common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 		<!-- DCC - Common -->
 		<dependency>
 			<groupId>org.icgc.dcc</groupId>

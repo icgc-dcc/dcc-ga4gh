@@ -17,6 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BY_DATA_SET_ID;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import org.elasticsearch.action.search.SearchResponse;
@@ -44,7 +45,7 @@ public class MetadataService {
   }
 
   private SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
-    val datasets = (Terms) searchResponse.getAggregations().get("by_data_set_id");
+    val datasets = (Terms) searchResponse.getAggregations().get(BY_DATA_SET_ID);
     return SearchDatasetsResponse.newBuilder()
         .addAllDatasets(datasets.getBuckets().stream()
             .map(b -> Dataset.newBuilder()

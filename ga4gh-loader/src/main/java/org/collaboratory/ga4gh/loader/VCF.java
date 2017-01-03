@@ -1,21 +1,22 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.collect.Iterables.transform;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.CALL_SET_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.DATA_SET_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.DONOR_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.END;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.GENOTYPE;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.PHASESET;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.RECORD;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.REFERENCE_SET_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.START;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.VARIANT_SET_IDS;
-import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.VCF_HEADER;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.CALL_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.DATA_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.DONOR_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.END;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.GENOTYPE;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.NAME;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.PHASESET;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.RECORD;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.START;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.VCF_HEADER;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.io.ByteArrayOutputStream;

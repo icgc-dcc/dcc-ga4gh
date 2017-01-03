@@ -18,32 +18,66 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.collaboratory</groupId>
-	<artifactId>ga4gh-resources</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<parent>
+		<groupId>org.collaboratory</groupId>
+		<artifactId>ga4gh</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>ga4gh-common</artifactId>
 
 	<name>${project.artifactId}</name>
 	<description>${project.name}</description>
 
-	<build>
-		<plugins>
-        	<!-- Compile -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>default-compile</id>
-						<phase>none</phase>
-					</execution>
-				</executions>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+	<dependencies> 
+		<!-- GA4GH -->
+		<dependency>
+			<groupId>org.collaboratory</groupId>
+			<artifactId>ga4gh-resources</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<!-- DCC - Common -->
+		<dependency>
+			<groupId>org.icgc.dcc</groupId>
+			<artifactId>dcc-common-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.icgc.dcc</groupId>
+			<artifactId>dcc-common-es</artifactId>
+		</dependency>
+
+		<!-- Search -->
+		<dependency>
+			<groupId>org.icgc.dcc</groupId>
+			<artifactId>elasticsearch-shaded</artifactId>
+		</dependency>
+
+		<!-- Genomics -->
+		<dependency>
+			<groupId>com.github.samtools</groupId>
+			<artifactId>htsjdk</artifactId>
+		</dependency>
+
+		<!-- Utilities -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		
+		<!-- Test - Search -->
+		<dependency>
+			<groupId>org.icgc.dcc</groupId>
+			<artifactId>elasticsearch-test-shaded</artifactId>
+		</dependency>
+
+	</dependencies>
 
 	<properties>
    		<!-- Encoding -->

@@ -17,6 +17,8 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BY_DATA_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_SET_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -52,7 +54,7 @@ public class VariantSetRepository {
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
         .setTypes(VARIANT_SET_TYPE_NAME)
-        .addSort("data_set_id", SortOrder.ASC)
+        .addSort(DATA_SET_ID, SortOrder.ASC)
         .setSize(size);
   }
 
@@ -63,7 +65,7 @@ public class VariantSetRepository {
             .must(
                 QueryBuilders.matchAllQuery()));
 
-    val agg = AggregationBuilders.terms("by_data_set_id").field("data_set_id");
+    val agg = AggregationBuilders.terms(BY_DATA_SET_ID).field(DATA_SET_ID);
     return searchRequestBuilder.setQuery(constantBoolQuery).addAggregation(agg).get();
   }
 
@@ -72,7 +74,7 @@ public class VariantSetRepository {
     val constantBoolQuery = constantScoreQuery(
         boolQuery()
             .must(
-                matchQuery("data_set_id", request.getDatasetId())));
+                matchQuery(DATA_SET_ID, request.getDatasetId())));
     return searchRequestBuilder.setQuery(constantBoolQuery).get();
   }
 

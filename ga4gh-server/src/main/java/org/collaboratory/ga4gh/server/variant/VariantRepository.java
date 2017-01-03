@@ -17,6 +17,12 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.CALL_SET_ID;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.END;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.START;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -54,21 +60,21 @@ public class VariantRepository {
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
         .setTypes(VARIANT_TYPE_NAME)
-        .addSort("start", SortOrder.ASC)
+        .addSort(START, SortOrder.ASC)
         .setSize(size);
   }
 
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
     val searchRequestBuilder = createSearchRequest(request.getPageSize());
-    val childBoolQuery = boolQuery().must(matchQuery("variant_set_id", request.getVariantSetId()));
-    request.getCallSetIdsList().stream().forEach(x -> childBoolQuery.should(matchQuery("call_set_id", x.toString())));
+    val childBoolQuery = boolQuery().must(matchQuery(VARIANT_SET_ID, request.getVariantSetId()));
+    request.getCallSetIdsList().stream().forEach(x -> childBoolQuery.should(matchQuery(CALL_SET_ID, x.toString())));
     val constChildBoolQuery = constantScoreQuery(childBoolQuery);
 
     val boolQuery = boolQuery()
-        .must(matchQuery("reference_name", request.getReferenceName()))
-        .must(rangeQuery("start").gte(request.getStart()))
-        .must(rangeQuery("end").lt(request.getEnd()))
-        .must(hasChildQuery("call", constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
+        .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
+        .must(rangeQuery(START).gte(request.getStart()))
+        .must(rangeQuery(END).lt(request.getEnd()))
+        .must(hasChildQuery(CALL_TYPE_NAME, constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
 
     val constantScoreQuery = constantScoreQuery(boolQuery);
 
@@ -77,7 +83,7 @@ public class VariantRepository {
 
   public SearchResponse findVariantById(@NonNull GetVariantRequest request) {
     val searchRequestBuilder = createSearchRequest(1); // only want one variant
-    val childQuery = hasChildQuery("call", matchAllQuery(), ScoreMode.None)
+    val childQuery = hasChildQuery(CALL_TYPE_NAME, matchAllQuery(), ScoreMode.None)
         .innerHit(new InnerHitBuilder());
     val boolQuery = boolQuery()
         .must(idsQuery().addIds(request.getVariantId()))

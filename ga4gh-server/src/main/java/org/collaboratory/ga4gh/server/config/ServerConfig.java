@@ -38,12 +38,15 @@ public class ServerConfig {
   public static final String FASTA_FILE_LOC = "target/GRCh37.fasta";
 
   public static String toConfigString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("INDEX_NAME: " + INDEX_NAME);
-    sb.append("\nTYPE_NAME: " + VARIANT_TYPE_NAME);
-    sb.append("\nNODE_ADDRESS: " + NODE_ADDRESS);
-    sb.append("\nNODE_PORT: " + NODE_PORT);
-    return sb.toString();
+    return String.format(
+        "INDEX_NAME: %s"
+            + "\nTYPE_NAME: %s"
+            + "\nNODE_ADDRESS: %s"
+            + "\nNODE_PORT: %s",
+        INDEX_NAME,
+        VARIANT_TYPE_NAME,
+        NODE_ADDRESS,
+        NODE_PORT);
   }
 
   @Bean
