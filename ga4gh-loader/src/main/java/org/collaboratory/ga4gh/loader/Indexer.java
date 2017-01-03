@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
@@ -64,6 +65,8 @@ public class Indexer {
   private final Set<String> variantSetIdCache = new HashSet<String>();
   private final Set<String> callSetIdCache = new HashSet<String>();
   private final Set<String> callIdCache = new HashSet<String>();
+  private static final String MAPPING_JSON_EXTENTION = ".mapping.json";
+  private static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
 
   @SneakyThrows
   public void prepareIndex() {
@@ -74,15 +77,19 @@ public class Indexer {
       log.info("Deleted existing [{}] index", indexName);
     }
 
-    checkState(indexes.prepareCreate(indexName)
-        .setSettings(read("index.settings.json").toString())
-        .addMapping(CALLSET_TYPE_NAME, read(CALLSET_TYPE_NAME + ".mapping.json").toString())
-        .addMapping(VARIANT_SET_TYPE_NAME, read(VARIANT_SET_TYPE_NAME + ".mapping.json").toString())
-        .addMapping(VARIANT_TYPE_NAME, read(VARIANT_TYPE_NAME + ".mapping.json").toString())
-        .addMapping(VCF_HEADER_TYPE_NAME, read(VCF_HEADER_TYPE_NAME + ".mapping.json").toString())
-        .addMapping(CALL_TYPE_NAME, read(CALL_TYPE_NAME + ".mapping.json").toString())
-        .execute().actionGet().isAcknowledged());
+    val createIndexRequestBuilder = indexes.prepareCreate(indexName)
+        .setSettings(read(INDEX_SETTINGS_JSON_FILENAME).toString());
+    addMapping(createIndexRequestBuilder, CALLSET_TYPE_NAME);
+    addMapping(createIndexRequestBuilder, VARIANT_SET_TYPE_NAME);
+    addMapping(createIndexRequestBuilder, VARIANT_TYPE_NAME);
+    addMapping(createIndexRequestBuilder, VCF_HEADER_TYPE_NAME);
+    addMapping(createIndexRequestBuilder, CALLSET_TYPE_NAME);
+    checkState(createIndexRequestBuilder.execute().actionGet().isAcknowledged());
     log.info("Created new index [{}]", indexName);
+  }
+
+  private static void addMapping(@NonNull final CreateIndexRequestBuilder builder, @NonNull final String typeName) {
+    builder.addMapping(typeName, read(typeName + MAPPING_JSON_EXTENTION).toString());
   }
 
   @SneakyThrows

@@ -109,7 +109,8 @@ public class Benchmarks {
     val writer = new PrintWriter(filename);
     val path = Paths.get(filename);
     val dir = path.getParent();
-    if (Files.exists(dir) == false) {
+    val dirDoesNotExist = !Files.exists(dir);
+    if (dirDoesNotExist) {
       Files.createDirectories(dir);
     }
     writer.write(message);

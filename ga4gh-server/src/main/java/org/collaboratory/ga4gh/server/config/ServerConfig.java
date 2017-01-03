@@ -39,10 +39,10 @@ public class ServerConfig {
 
   public static String toConfigString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("INDEX_NAME: " + INDEX_NAME + "\n");
-    sb.append("TYPE_NAME: " + VARIANT_TYPE_NAME + "\n");
-    sb.append("NODE_ADDRESS: " + NODE_ADDRESS + "\n");
-    sb.append("NODE_PORT: " + NODE_PORT + "\n");
+    sb.append("INDEX_NAME: " + INDEX_NAME);
+    sb.append("\nTYPE_NAME: " + VARIANT_TYPE_NAME);
+    sb.append("\nNODE_ADDRESS: " + NODE_ADDRESS);
+    sb.append("\nNODE_PORT: " + NODE_PORT);
     return sb.toString();
   }
 

@@ -25,6 +25,7 @@ import lombok.val;
 @NoArgsConstructor(access = PRIVATE)
 public final class Portal {
 
+  private static final String REPOSITORY_FILES_ENDPOINT = "/api/v1/repository/files";
   private static final int PORTAL_FETCH_SIZE = 100;
   private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
   private static final String FILE_FORMAT = "VCF";
@@ -121,7 +122,7 @@ public final class Portal {
 
   @SneakyThrows
   private static URL getFilesForDonersUrl(@NonNull Iterable<String> donorIterable, final int size, final int from) {
-    val endpoint = PORTAL_API + "/api/v1/repository/files";
+    val endpoint = PORTAL_API + REPOSITORY_FILES_ENDPOINT;
 
     String donorsCSV = Joiner.on("\",\"").join(donorIterable);
     // {"file":{"repoName":{"is":["Collaboratory - Toronto"]},"fileFormat":{"is":["VCF"]},"donorId":{"is":["DO222843"]}}
@@ -134,7 +135,7 @@ public final class Portal {
 
   @SneakyThrows
   private static URL getUrl(int size, int from) {
-    val endpoint = PORTAL_API + "/api/v1/repository/files";
+    val endpoint = PORTAL_API + REPOSITORY_FILES_ENDPOINT;
     val filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
         + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]}}}", UTF_8.name());
 

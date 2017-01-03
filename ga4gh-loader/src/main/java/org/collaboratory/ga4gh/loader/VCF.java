@@ -1,6 +1,21 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.collect.Iterables.transform;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.CALL_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.DATA_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.DONOR_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.END;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.GENOTYPE;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.NAME;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.PHASESET;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.RECORD;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.START;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.resources.mappings.IndexAttributes.VCF_HEADER;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.io.ByteArrayOutputStream;
@@ -115,10 +130,10 @@ public class VCF implements Closeable {
 
   private ObjectNode convertCallSet(final String caller_id) {
     return object()
-        .with("id", createCallSetId(fileMetaData.getSampleId()))
-        .with("name", createCallSetName(fileMetaData.getSampleId()))
-        .with("variant_set_ids", createVariantSetId(caller_id))
-        .with("bio_sample_id", fileMetaData.getSampleId())
+        .with(ID, createCallSetId(fileMetaData.getSampleId()))
+        .with(NAME, createCallSetName(fileMetaData.getSampleId()))
+        .with(VARIANT_SET_IDS, createVariantSetId(caller_id))
+        .with(BIO_SAMPLE_ID, fileMetaData.getSampleId())
         .end();
   }
 
@@ -157,13 +172,13 @@ public class VCF implements Closeable {
       log.error("CallerType: {} not implemented", CallerTypes.MUSE.getName());
     } else if (CallerTypes.CONSENSUS.getName().equals(caller_id)) {
       return object()
-          .with("id", createCallId(record, caller_id, bio_sample_id))
-          .with("name", createCallName(record, caller_id, bio_sample_id))
-          .with("genotype", 1)
-          .with("phaseset", "false")
-          .with("variant_set_id", caller_id)
-          .with("call_set_id", bio_sample_id)
-          .with("bio_sample_id", bio_sample_id)
+          .with(ID, createCallId(record, caller_id, bio_sample_id))
+          .with(NAME, createCallName(record, caller_id, bio_sample_id))
+          .with(GENOTYPE, 1)
+          .with(PHASESET, "false")
+          .with(VARIANT_SET_ID, caller_id)
+          .with(CALL_SET_ID, bio_sample_id)
+          .with(BIO_SAMPLE_ID, bio_sample_id)
           .end();
 
     } else if (CallerTypes.EMBL.getName().equals(caller_id)) {
@@ -184,10 +199,10 @@ public class VCF implements Closeable {
   public ObjectNode readVariantSet() {
 
     return object()
-        .with("id", createVariantSetId(fileMetaData.getVcfFilenameParser().getCallerId()))
-        .with("name", createVariantSetName(fileMetaData.getVcfFilenameParser().getCallerId()))
-        .with("data_set_id", fileMetaData.getDataType())
-        .with("reference_set_id", fileMetaData.getReferenceName())
+        .with(ID, createVariantSetId(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with(NAME, createVariantSetName(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with(DATA_SET_ID, fileMetaData.getDataType())
+        .with(REFERENCE_SET_ID, fileMetaData.getReferenceName())
         .end();
   }
 
@@ -200,21 +215,21 @@ public class VCF implements Closeable {
     oos.close();
     val ser = Base64.getEncoder().encodeToString(baos.toByteArray());
     return object()
-        .with("vcf_header", ser)
-        .with("donor_id", fileMetaData.getDonorId())
-        .with("bio_sample_id", fileMetaData.getSampleId())
-        .with("variant_set_id", createVariantSetId(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with(VCF_HEADER, ser)
+        .with(DONOR_ID, fileMetaData.getDonorId())
+        .with(BIO_SAMPLE_ID, fileMetaData.getSampleId())
+        .with(VARIANT_SET_ID, createVariantSetId(fileMetaData.getVcfFilenameParser().getCallerId()))
         .end();
   }
 
   private ObjectNode convertVariantNodeObj(VariantContext record) {
     val variantId = createVariantId(record);
     return object()
-        .with("id", variantId)
-        .with("start", record.getStart())
-        .with("end", record.getEnd())
-        .with("reference_name", record.getContig())
-        .with("record", encoder.encode(record))
+        .with(ID, variantId)
+        .with(START, record.getStart())
+        .with(END, record.getEnd())
+        .with(REFERENCE_NAME, record.getContig())
+        .with(RECORD, encoder.encode(record))
         .end();
   }
 

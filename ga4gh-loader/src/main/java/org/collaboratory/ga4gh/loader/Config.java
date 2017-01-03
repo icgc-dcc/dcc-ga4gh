@@ -11,14 +11,20 @@ public class Config {
   public static final String PORTAL_API = "https://dcc.icgc.org";
 
   public static String toConfigString() {
-    return "INDEX_NAME: " + INDEX_NAME + "\n"
-        + "TYPE_NAME: " + Indexer.VARIANT_TYPE_NAME + "\n"
-        + "NODE_ADDRESS: " + NODE_ADDRESS + "\n"
-        + "NODE_PORT: " + NODE_PORT + "\n"
-        + "ES_URL: " + ES_URL + "\n"
-        + "TOKEN: " + TOKEN + "\n"
-        + "STORAGE_API: " + STORAGE_API + "\n"
-        + "PORTAL_API: " + PORTAL_API;
+    return String.format("INDEX_NAME: %s"
+        + "\nNODE_ADDRESS: %s"
+        + "\nNODE_PORT: %s"
+        + "\nES_URL: %s"
+        + "\nTOKEN: %s"
+        + "\nSTORAGE_API: %s"
+        + "\nPORTAL_API: %s",
+        INDEX_NAME,
+        NODE_ADDRESS,
+        NODE_PORT,
+        ES_URL,
+        TOKEN,
+        STORAGE_API,
+        PORTAL_API);
   }
 
 }
