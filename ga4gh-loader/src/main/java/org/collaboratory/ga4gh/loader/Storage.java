@@ -22,6 +22,7 @@ import com.google.common.hash.Hashing;
 
 import lombok.Cleanup;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class Storage {
 
   @SneakyThrows
-  public static File downloadFile(final String objectId, final String filename) {
+  public static File downloadFile(@NonNull final String objectId, @NonNull final String filename) {
     val objectUrl = getObjectUrl(objectId);
     val output = Paths.get(filename);
 
@@ -48,14 +49,17 @@ public final class Storage {
   }
 
   @SneakyThrows
-  public static File downloadFileAndPersist(final String objectId, final String filename, final String expectedMD5Sum) {
+  public static File downloadFileAndPersist(@NonNull final String objectId, @NonNull final String filename,
+      @NonNull final String expectedMD5Sum) {
     val path = Paths.get(filename);
     val dir = path.getParent();
-    if (Files.exists(dir) == false) {
+    val dirDoesNotExist = !Files.exists(dir);
+    if (dirDoesNotExist) {
       Files.createDirectories(dir);
     }
     if (Files.exists(path)) {
-      if (calcMd5Sum(filename).equals(expectedMD5Sum) == false) {
+      val md5Mismatch = !calcMd5Sum(filename).equals(expectedMD5Sum);
+      if (md5Mismatch) {
         return downloadFile(objectId, filename);
       } else {
         log.info("File [{}] already exists and matches checksum. Skipping download.", filename);
@@ -76,7 +80,7 @@ public final class Storage {
         .toString();
   }
 
-  private static URL getObjectUrl(String objectId) throws IOException {
+  private static URL getObjectUrl(final String objectId) throws IOException {
     val storageUrl = new URL(STORAGE_API + "/download/" + objectId + "?offset=0&length=-1&external=true");
     val connection = (HttpURLConnection) storageUrl.openConnection();
     connection.setRequestProperty(AUTHORIZATION, "Bearer " + TOKEN);
@@ -84,11 +88,12 @@ public final class Storage {
     return getUrl(object);
   }
 
-  private static URL getUrl(JsonNode object) throws MalformedURLException {
+  private static URL getUrl(@NonNull final JsonNode object) throws MalformedURLException {
     return new URL(object.get("parts").get(0).get("url").textValue());
   }
 
-  private static JsonNode readObject(HttpURLConnection connection) throws JsonProcessingException, IOException {
+  private static JsonNode readObject(@NonNull final HttpURLConnection connection)
+      throws JsonProcessingException, IOException {
     return DEFAULT.readTree(connection.getInputStream());
   }
 }

@@ -81,7 +81,7 @@ public class ReferenceGenome {
       val text = new String(sequence.getBases());
       return text;
     } catch (Exception e) {
-      throw new RuntimeException(
+      throw new IllegalArgumentException(
           "Error trying to get subsequence at: chr=" + referenceId + " start=" + start + ", end=" + end, e);
     }
   }

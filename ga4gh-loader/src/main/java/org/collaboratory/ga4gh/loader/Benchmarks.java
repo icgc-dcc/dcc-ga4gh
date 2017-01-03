@@ -31,6 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Benchmarks {
 
+  private final Client client;
+  private final String indexName;
+
   @SneakyThrows
   public static void main(String[] args) {
     try (val client = newClient()) {
@@ -40,9 +43,6 @@ public class Benchmarks {
       log.error("Exception running: ", e);
     }
   }
-
-  private final Client client;
-  private final String indexName;
 
   public void execute() {
     count(rangeQuery("start").from(10_000_000).to(20_000_000));

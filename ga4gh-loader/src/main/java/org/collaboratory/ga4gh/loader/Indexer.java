@@ -177,10 +177,6 @@ public class Indexer {
     }
   }
 
-  private String nextId() {
-    return String.valueOf(id++);
-  }
-
   private static class VariantDocumentType implements IndexDocumentType {
 
     @Override

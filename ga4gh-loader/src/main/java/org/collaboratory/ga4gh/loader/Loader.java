@@ -19,6 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Loader {
 
+  private static final int NUM_DONORS = 10;
+
+  @NonNull
+  private final Indexer indexer;
+
   public static void main(String[] args) {
     log.info("Static Config:\n{}", Config.toConfigString());
     try (val client = newClient(); val writer = newDocumentWriter(client)) {
@@ -28,10 +33,6 @@ public class Loader {
       log.error("Exception running: ", e);
     }
   }
-
-  @NonNull
-  private final Indexer indexer;
-  private static final int NUM_DONORS = 10;
 
   public void load() {
     indexer.prepareIndex();

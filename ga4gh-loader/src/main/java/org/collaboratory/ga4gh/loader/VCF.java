@@ -152,7 +152,7 @@ public class VCF implements Closeable {
     val bio_sample_id = fileMetaData.getSampleId();
 
     if (CallerTypes.BROAD.getName().equals(caller_id)) {
-
+      log.error("CallerType: {} not implemented", CallerTypes.BROAD.getName());
     } else if (CallerTypes.MUSE.getName().equals(caller_id)) {
       log.error("CallerType: {} not implemented", CallerTypes.MUSE.getName());
     } else if (CallerTypes.CONSENSUS.getName().equals(caller_id)) {
@@ -175,7 +175,7 @@ public class VCF implements Closeable {
     } else if (CallerTypes.SVFIX.getName().equals(caller_id)) {
       log.error("CallerType: {} not implemented", CallerTypes.SVFIX.getName());
     } else {
-      throw new RuntimeException(String.format("Error: the caller_id [%s] is not recognzed for filename [%s]",
+      throw new IllegalStateException(String.format("Error: the caller_id [%s] is not recognzed for filename [%s]",
           caller_id, parser.getFilename()));
     }
     return null;// TODO: [rtisma] - fix this, cannot return null

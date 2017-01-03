@@ -72,14 +72,16 @@ public class ReferenceController {
       @RequestParam(name = "start", required = false, defaultValue = "0") Long start,
       @RequestParam(name = "end", required = false) Long end,
       @RequestParam(name = "page_token", required = false, defaultValue = "") String pageToken) {
-    if (end == null) {
-      end = getReference(referenceId).getLength();
+
+    Long adjustedEnd = end;
+    if (adjustedEnd == null) {
+      adjustedEnd = getReference(referenceId).getLength();
     }
 
     val request = ListReferenceBasesRequest.newBuilder()
         .setReferenceId(referenceId)
         .setStart(start)
-        .setEnd(end)
+        .setEnd(adjustedEnd)
         .setPageToken(pageToken).build();
 
     return referenceService.listReferenceBases(request);

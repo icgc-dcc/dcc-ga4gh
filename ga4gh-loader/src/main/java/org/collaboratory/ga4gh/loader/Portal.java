@@ -18,6 +18,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -84,7 +85,6 @@ public final class Portal {
     return hit.path("id").textValue();
   }
 
-  // TODO: [rtisma] - donorIds retrieved from here are not searchable in repository. need to investigate why
   private static Iterable<String> getDonorIds(final int startPos, final int numDonors) {
     checkState(numDonors > 0);
     checkState(startPos > 0);
@@ -120,19 +120,7 @@ public final class Portal {
   }
 
   @SneakyThrows
-  private static URL getFilesForDonerUrl(final String donorId, final int from, final int size) {
-    val endpoint = PORTAL_API + "/api/v1/repository/files";
-
-    // {"file":{"repoName":{"is":["Collaboratory - Toronto"]},"fileFormat":{"is":["VCF"]},"donorId":{"is":["DO222843"]}}
-    String filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
-        + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]},"
-        + "\"donorId\":{\"is\":[\"" + donorId + "\"]}}}", UTF_8.name());
-    return new URL(
-        endpoint + "?" + "filters=" + filters + "&" + "from=" + from + "&" + "size=" + size + "&sort=id&order=desc");
-  }
-
-  @SneakyThrows
-  private static URL getFilesForDonersUrl(Iterable<String> donorIterable, int size, int from) {
+  private static URL getFilesForDonersUrl(@NonNull Iterable<String> donorIterable, final int size, final int from) {
     val endpoint = PORTAL_API + "/api/v1/repository/files";
 
     String donorsCSV = Joiner.on("\",\"").join(donorIterable);

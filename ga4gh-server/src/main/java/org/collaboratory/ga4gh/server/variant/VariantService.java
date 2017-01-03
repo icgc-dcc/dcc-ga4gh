@@ -227,7 +227,6 @@ public class VariantService {
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
     // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
-    val nextPageToken = "nextPageToken";
 
     log.info("pageToken: {}", request.getPageToken());
     log.info("pageSize: {}", request.getPageSize());

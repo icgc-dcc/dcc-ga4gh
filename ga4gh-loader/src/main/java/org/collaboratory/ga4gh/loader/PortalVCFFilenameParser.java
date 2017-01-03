@@ -26,6 +26,7 @@ import com.google.common.collect.Iterables;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.val;
 
 /**
  * Takes a filename, and extracts particular fields characteristic of ICGC VCF files
@@ -44,7 +45,8 @@ public class PortalVCFFilenameParser {
   private final String[] elements;
 
   public PortalVCFFilenameParser(@NonNull final String filename) {
-    checkArgument(filename.equals("") == false, "The filename [%s] is empty", filename);
+    val filenameIsEmpty = !("").equals(filename);
+    checkArgument(filenameIsEmpty, "The filename [%s] is empty", filename);
     elements = Iterables.toArray(Splitters.DOT
         .trimResults()
         .split(filename), String.class);
