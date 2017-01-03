@@ -83,7 +83,7 @@ public class Indexer {
     addMapping(createIndexRequestBuilder, VARIANT_SET_TYPE_NAME);
     addMapping(createIndexRequestBuilder, VARIANT_TYPE_NAME);
     addMapping(createIndexRequestBuilder, VCF_HEADER_TYPE_NAME);
-    addMapping(createIndexRequestBuilder, CALLSET_TYPE_NAME);
+    addMapping(createIndexRequestBuilder, CALL_TYPE_NAME);
     checkState(createIndexRequestBuilder.execute().actionGet().isAcknowledged());
     log.info("Created new index [{}]", indexName);
   }
