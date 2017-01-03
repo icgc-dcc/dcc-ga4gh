@@ -17,22 +17,120 @@
  */
 package org.collaboratory.ga4gh.loader;
 
+import static java.util.stream.Collectors.groupingBy;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
+import org.icgc.dcc.common.core.util.Joiners;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+
 import lombok.NonNull;
 import lombok.Value;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Value
-public class FileMetaData {
+@Slf4j
+public final class FileMetaData {
 
   @NonNull
-  public String objectId;
+  public final String objectId;
 
   @NonNull
-  public String fileId;
+  public final String fileId;
 
   @NonNull
-  public String sampleId;
+  public final String sampleId;
 
   @NonNull
-  public String donorId;
+  public final String donorId;
+
+  @NonNull
+  public final String dataType;
+
+  @NonNull
+  public final String referenceName;
+
+  @NonNull
+  public final String genomeBuild;
+
+  public final long fileSize;
+
+  @NonNull
+  public final String fileMd5sum;
+
+  @NonNull
+  public final PortalVCFFilenameParser vcfFilenameParser;
+
+  public static FileMetaData buildFileMetaData(@NonNull final ObjectNode objectNode) {
+    val objectId = PortalFiles.getObjectId(objectNode);
+    val fileId = PortalFiles.getFileId(objectNode);
+    val sampleId = PortalFiles.getSampleId(objectNode);
+    val donorId = PortalFiles.getDonorId(objectNode);
+    val dataType = PortalFiles.getDataType(objectNode);
+    val referenceName = PortalFiles.getReferenceName(objectNode);
+    val genomeBuild = PortalFiles.getGenomeBuild(objectNode);
+    val vcfFilenameParser = PortalFiles.getParser(objectNode);
+    val fileSize = PortalFiles.getFileSize(objectNode);
+    val fileMd5sum = PortalFiles.getFileMD5sum(objectNode);
+    return new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild, fileSize,
+        fileMd5sum,
+        vcfFilenameParser);
+  }
+
+  public static List<FileMetaData> buildFileMetaDataList(@NonNull final Iterable<ObjectNode> objectNodes) {
+    return stream(objectNodes).map(FileMetaData::buildFileMetaData).collect(toImmutableList());
+  }
+
+  public static Map<String, List<FileMetaData>> groupFileMetaDataBySample(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaData(fileMetaDatas, FileMetaData::getSampleId);
+  }
+
+  public static Map<String, List<FileMetaData>> groupFileMetaDatasByDonor(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaData(fileMetaDatas, FileMetaData::getDonorId);
+  }
+
+  public static Map<String, List<FileMetaData>> groupFileMetaDatasByDataType(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaData(fileMetaDatas, FileMetaData::getDataType);
+  }
+
+  public static Map<String, List<FileMetaData>> groupFileMetaData(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas,
+      final Function<? super FileMetaData, ? extends String> functor) {
+    return ImmutableMap.copyOf(stream(fileMetaDatas).collect(groupingBy(functor, toImmutableList())));
+  }
+
+  public static void writeStats(final String outputFn,
+      @NonNull final List<FileMetaData> fileMetaList) {
+    val sb = new StringBuilder();
+    fileMetaList.stream()
+        .collect(
+            groupingBy(
+                x -> Arrays.asList(x.getDonorId(),
+                    x.getSampleId(),
+                    x.getVcfFilenameParser().getCallerId())))
+        .entrySet()
+        .stream().filter(x -> x.getValue().size() > 1)
+        .forEach(e -> sb.append(
+            Joiners.COMMA.join(e.getKey())
+                + "," + e.getValue().size() + "\t--[\n\t\t"
+                + Joiner.on(",\n\t\t").join(e.getValue().stream()
+                    .map(y -> y.getVcfFilenameParser().getFilename()).toArray())
+                + "]\n\n"));
+
+    Benchmarks.writeToNewFile(outputFn, sb.toString());
+    log.info("sdfsdf");
+  }
 
 }

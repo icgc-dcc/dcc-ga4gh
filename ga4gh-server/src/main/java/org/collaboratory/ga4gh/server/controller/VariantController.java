@@ -37,7 +37,6 @@ import ga4gh.VariantServiceOuterClass.SearchVariantsResponse;
 import ga4gh.Variants.CallSet;
 import ga4gh.Variants.Variant;
 import ga4gh.Variants.VariantSet;
-import lombok.val;
 
 @RestController
 public class VariantController {
@@ -52,30 +51,27 @@ public class VariantController {
 
   @GetMapping("/variants/{variantId:(?!search).+}")
   public Variant getVariant(@PathVariable("variantId") GetVariantRequest request) {
-    val id = request.getVariantId();
-    return Variant.newBuilder().setId(id).build();
+    return variantService.getVariant(request);
   }
 
   @PostMapping("/variantsets/search")
   public SearchVariantSetsResponse searchVariantSets(@RequestBody SearchVariantSetsRequest request) {
-    return SearchVariantSetsResponse.newBuilder().build();
+    return variantService.searchVariantSets(request);
   }
 
   @GetMapping("/variantsets/{variantSetId:(?!search).+}")
   public VariantSet getVariantSet(@PathVariable("variantSetId") GetVariantSetRequest request) {
-    val id = request.getVariantSetId();
-    return VariantSet.newBuilder().setId(id).build();
+    return variantService.getVariantSet(request);
   }
 
   @PostMapping("/callsets/search")
   public SearchCallSetsResponse searchCallSets(@RequestBody SearchCallSetsRequest request) {
-    return SearchCallSetsResponse.newBuilder().build();
+    return variantService.searchCallSets(request);
   }
 
   @GetMapping("/callsets/{callSetId:(?!search).+}")
   public CallSet getCallSet(@PathVariable("callSetId") GetCallSetRequest request) {
-    val id = request.getCallSetId();
-    return CallSet.newBuilder().setId(id).build();
+    return variantService.getCallSet(request);
   }
 
 }

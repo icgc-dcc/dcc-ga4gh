@@ -5,6 +5,9 @@ import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.function.Consumer;
 
 import org.elasticsearch.client.Client;
@@ -93,4 +96,23 @@ public class Benchmarks {
     }
   }
 
+  public static void writeToNewFile(final String filename, final String message) {
+    writeToFile(filename, message, true);
+  }
+
+  public static void writeToAppendFile(final String filename, final String message) {
+    writeToFile(filename, message, false);
+  }
+
+  @SneakyThrows
+  public static void writeToFile(final String filename, final String message, final boolean overwrite) {
+    val writer = new PrintWriter(filename);
+    val path = Paths.get(filename);
+    val dir = path.getParent();
+    if (Files.exists(dir) == false) {
+      Files.createDirectories(dir);
+    }
+    writer.write(message);
+    writer.close();
+  }
 }

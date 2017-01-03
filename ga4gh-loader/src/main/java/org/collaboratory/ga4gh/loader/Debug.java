@@ -15,21 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.server;
+package org.collaboratory.ga4gh.loader;
 
-import org.collaboratory.ga4gh.server.config.ServerConfig;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import static lombok.AccessLevel.PRIVATE;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
 
-@SpringBootApplication
-@Slf4j
-public class ServerMain {
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  public static void main(String[] args) {
-    log.info("ServerConfig: {}", ServerConfig.toConfigString());
-    SpringApplication.run(ServerMain.class, args);
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.val;
+
+/**
+ * Functions to aid in debugging
+ */
+@NoArgsConstructor(access = PRIVATE)
+public class Debug {
+
+  public static File dumpToJson(@NonNull Object object, @NonNull File file) {
+    val mapper = new ObjectMapper();
+    try {
+      mapper.writerWithDefaultPrettyPrinter().writeValue(file, object);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return file;
   }
 
+  public static File dumpToJson(@NonNull Object object, @NonNull String filename) {
+    return dumpToJson(object, new File(filename));
+  }
 }

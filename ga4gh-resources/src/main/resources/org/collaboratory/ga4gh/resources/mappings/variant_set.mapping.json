@@ -1,5 +1,5 @@
 {
-	"callset": {
+	"variant_set": {
 		"properties": {
 			"id": {
 				"type": "keyword",
@@ -9,11 +9,11 @@
 				"type": "keyword",
 				"index": "true"
 			},
-			"variant_set_ids": {
+			"data_set_id": {
 				"type": "keyword",
 				"index": "true"
 			},
-			"bio_sample_id": {
+			"reference_set_id": {
 				"type": "keyword",
 				"index": "true"
 			}

@@ -15,37 +15,76 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.server.controller;
+package org.collaboratory.ga4gh.server.util;
 
-import org.collaboratory.ga4gh.server.variant.MetadataService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import static lombok.AccessLevel.PRIVATE;
 
-import ga4gh.Metadata.Dataset;
-import ga4gh.MetadataServiceOuterClass.GetDatasetRequest;
-import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
-import ga4gh.MetadataServiceOuterClass.SearchDatasetsResponse;
-import lombok.val;
+import java.util.Collection;
+import java.util.Map;
 
-@RestController
-public class MetadataController {
+import lombok.NoArgsConstructor;
 
-  @Autowired
-  private MetadataService metadataService;
+@NoArgsConstructor(access = PRIVATE)
+public final class TypeChecker {
 
-  @PostMapping("/datasets/search")
-  public SearchDatasetsResponse searchDatasets(@RequestBody SearchDatasetsRequest request) {
-    return metadataService.searchDatasets(request);
+  public static boolean isStringInteger(String input) {
+    try {
+      Integer.parseInt(input);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
 
-  @GetMapping("/datasets/{datasetId:(?!search).+}")
-  public Dataset getDataset(@PathVariable("datasetId") GetDatasetRequest request) {
-    val id = request.getDatasetId();
-    return Dataset.newBuilder().setId(id).build();
+  public static boolean isStringDouble(String input) {
+    try {
+      Double.parseDouble(input);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  public static boolean isStringFloat(String input) {
+    try {
+      Float.parseFloat(input);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  public static boolean isStringBoolean(String input) {
+    try {
+      Boolean.parseBoolean(input);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  public static boolean isObjectBoolean(Object obj) {
+    return obj instanceof Boolean;
+  }
+
+  public static boolean isObjectInteger(Object obj) {
+    return obj instanceof Integer;
+  }
+
+  public static boolean isObjectDouble(Object obj) {
+    return obj instanceof Double;
+  }
+
+  public static boolean isObjectFloat(Object obj) {
+    return obj instanceof Float;
+  }
+
+  public static boolean isObjectMap(Object obj) {
+    return obj instanceof Map<?, ?>;
+  }
+
+  public static boolean isObjectCollection(Object obj) {
+    return obj instanceof Collection<?>;
   }
 
 }

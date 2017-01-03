@@ -15,29 +15,47 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.server.variant;
+package org.collaboratory.ga4gh.server.util;
 
-import static org.collaboratory.ga4gh.server.config.ServerConfig.HEADER_TYPE_NAME;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
+import java.util.Collection;
+import java.util.Map;
 
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.client.Client;
-import org.springframework.stereotype.Repository;
+import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.ListValue;
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import htsjdk.variant.variantcontext.CommonInfo;
+import lombok.NoArgsConstructor;
 import lombok.val;
 
-@Repository
-@RequiredArgsConstructor
-public class HeaderRepository {
+@NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+public class Protobufs {
 
-  @NonNull
-  private final Client client;
-
-  public GetResponse getHeader(String objectId) {
-    val searchRequestBuilder = client.prepareGet(INDEX_NAME, HEADER_TYPE_NAME, objectId);
-    return searchRequestBuilder.get();
+  @SuppressWarnings("unchecked")
+  public static ListValue createListValueFromObject(Object obj) {
+    val listValueBuilder = ListValue.newBuilder();
+    if (TypeChecker.isObjectCollection(obj)) {
+      for (Object elementObj : (Collection<Object>) obj) {
+        listValueBuilder.addValues(Value.newBuilder().setStringValue(elementObj.toString()));
+      }
+    } else if (TypeChecker.isObjectMap(obj)) { // TODO: still incomplete
+      val map = ImmutableMap.<String, Value> builder();
+      for (val entry : ((Map<?, ?>) obj).entrySet()) {
+        map.put(entry.getKey().toString(), Value.newBuilder().setStringValue(entry.getValue().toString()).build());
+      }
+      listValueBuilder.addValues(Value.newBuilder().setStructValue(Struct.newBuilder().putAllFields(map.build())));
+    } else { // Treat everything else as just a string
+      listValueBuilder.addValues(Value.newBuilder().setStringValue(obj.toString()).build());
+    }
+    return listValueBuilder.build();
   }
 
+  public static Map<String, ListValue> createInfo(CommonInfo commonInfo) {
+    val map = ImmutableMap.<String, ListValue> builder();
+    for (Map.Entry<String, Object> entry : commonInfo.getAttributes().entrySet()) {
+      map.put(entry.getKey(), createListValueFromObject(entry.getValue()));
+    }
+    return map.build();
+  }
 }

@@ -1,21 +1,21 @@
 {
-	"callset": {
+	"vcf_header": {
 		"properties": {
-			"id": {
+			"variant_set_id": {
 				"type": "keyword",
 				"index": "true"
 			},
-			"name": {
-				"type": "keyword",
-				"index": "true"
-			},
-			"variant_set_ids": {
+			"donor_id": {
 				"type": "keyword",
 				"index": "true"
 			},
 			"bio_sample_id": {
 				"type": "keyword",
 				"index": "true"
+			},
+			"vcf_header": {
+				"type": "keyword",
+				"index": "false"
 			}
 		},
 		"_all": {
@@ -23,6 +23,10 @@
 		},
 		"_source": {
 			"enabled": true
+		},
+		"_parent" : {
+			"type" : "variant_set"
 		}
+		
 	}
 }

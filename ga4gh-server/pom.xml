@@ -51,27 +51,27 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>		
-		
+		</dependency>
+
 		<!-- Genomics -->
 		<dependency>
 			<groupId>com.github.samtools</groupId>
 			<artifactId>htsjdk</artifactId>
-		</dependency>		
-		
+		</dependency>
+
 		<!-- Protobuf -->
 		<dependency>
 			<groupId>com.googlecode.protobuf-java-format</groupId>
 			<artifactId>protobuf-java-format</artifactId>
 			<version>${protobuf-java-format.version}</version>
 		</dependency>
-		
+
 		<!-- Search -->
 		<dependency>
 			<groupId>org.icgc.dcc</groupId>
 			<artifactId>elasticsearch-shaded</artifactId>
 		</dependency>
-		
+
 		<!-- Utilities -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -88,7 +88,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<groupId>org.icgc.dcc</groupId>
 			<artifactId>elasticsearch-test-shaded</artifactId>
 		</dependency>
-		
+
 	</dependencies>
 
 	<build>
@@ -99,6 +99,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 				<version>${spring-boot-maven-plugin.version}</version>
 				<configuration>
 					<fork>true</fork>
+					<mainClass>org.collaboratory.ga4gh.server.ServerMain</mainClass>
 				</configuration>
 				<executions>
 					<execution>

@@ -3,39 +3,19 @@
 		"properties": {
 			"id": {
 				"type": "keyword",
-				"index": "false"
-			},
-			"variant_set_id": {
-				"type": "keyword",
-				"index": "false"
-			},
-			"call_set_id": {
-				"type": "keyword",
-				"index": "false"
+				"index": "true"
 			},
 			"start": {
 				"type": "long",
-				"index": "false"
+				"index": "true"
 			},
 			"end": {
 				"type": "long",
-				"index": "false"
+				"index": "true"
 			},
 			"reference_name": {
 				"type": "keyword",
-				"index": "false"
-			},
-			"file_id": {
-				"type": "keyword",
-				"index": "false"
-			},
-			"donor_id": {
-				"type": "keyword",
-				"index": "false"
-			},
-			"sample_id": {
-				"type": "keyword",
-				"index": "false"
+				"index": "true"
 			},
 			"record": {
 				"type": "text",

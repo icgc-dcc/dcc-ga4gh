@@ -35,7 +35,6 @@ public class Factory {
 
   public static Loader newLoader(Client client, DocumentWriter writer) {
     val indexer = new Indexer(client, writer, INDEX_NAME);
-
     return new Loader(indexer);
   }
 

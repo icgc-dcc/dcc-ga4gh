@@ -13,23 +13,27 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.hash.Hashing;
 
 import lombok.Cleanup;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @NoArgsConstructor(access = PRIVATE)
+@Slf4j
 public final class Storage {
 
   @SneakyThrows
-  public static File downloadFile(String objectId) {
+  public static File downloadFile(final String objectId, final String filename) {
     val objectUrl = getObjectUrl(objectId);
-    val output = Paths.get("/tmp/file.vcf.gz");
+    val output = Paths.get(filename);
 
     @Cleanup
     val input = objectUrl.openStream();
@@ -38,14 +42,45 @@ public final class Storage {
     return output.toFile();
   }
 
+  @SneakyThrows
+  public static File downloadFile(final String objectId) {
+    return downloadFile(objectId, "/tmp/file.vcf.gz");
+  }
+
+  @SneakyThrows
+  public static File downloadFileAndPersist(final String objectId, final String filename, final String expectedMD5Sum) {
+    val path = Paths.get(filename);
+    val dir = path.getParent();
+    if (Files.exists(dir) == false) {
+      Files.createDirectories(dir);
+    }
+    if (Files.exists(path)) {
+      if (calcMd5Sum(filename).equals(expectedMD5Sum) == false) {
+        return downloadFile(objectId, filename);
+      } else {
+        log.info("File [{}] already exists and matches checksum. Skipping download.", filename);
+        return path.toFile();
+      }
+    } else {
+      return downloadFile(objectId, filename);
+    }
+  }
+
+  private static String calcMd5Sum(final String filename) throws IOException {
+    val path = Paths.get(filename);
+    val bytes = Files.readAllBytes(path);
+    return Hashing.md5()
+        .newHasher()
+        .putBytes(bytes)
+        .hash()
+        .toString();
+  }
+
   private static URL getObjectUrl(String objectId) throws IOException {
     val storageUrl = new URL(STORAGE_API + "/download/" + objectId + "?offset=0&length=-1&external=true");
-
     val connection = (HttpURLConnection) storageUrl.openConnection();
     connection.setRequestProperty(AUTHORIZATION, "Bearer " + TOKEN);
-
     val object = readObject(connection);
-
     return getUrl(object);
   }
 
@@ -56,5 +91,4 @@ public final class Storage {
   private static JsonNode readObject(HttpURLConnection connection) throws JsonProcessingException, IOException {
     return DEFAULT.readTree(connection.getInputStream());
   }
-
 }

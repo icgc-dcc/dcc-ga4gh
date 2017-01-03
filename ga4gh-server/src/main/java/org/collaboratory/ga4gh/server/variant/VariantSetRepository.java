@@ -18,25 +18,23 @@
 package org.collaboratory.ga4gh.server.variant;
 
 import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_TYPE_NAME;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_SET_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
-import static org.elasticsearch.index.query.QueryBuilders.idsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
-import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
 
-import ga4gh.VariantServiceOuterClass.GetVariantRequest;
-import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
+import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
+import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
+import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -46,44 +44,40 @@ import lombok.val;
  */
 @Repository
 @RequiredArgsConstructor
-public class VariantRepository {
+public class VariantSetRepository {
 
   @NonNull
   private final Client client;
 
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
-        .setTypes(VARIANT_TYPE_NAME)
-        .addSort("start", SortOrder.ASC)
+        .setTypes(VARIANT_SET_TYPE_NAME)
+        .addSort("data_set_id", SortOrder.ASC)
         .setSize(size);
   }
 
-  public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
+  public SearchResponse searchAllDataSets(@NonNull SearchDatasetsRequest request) {
     val searchRequestBuilder = createSearchRequest(request.getPageSize());
-    val childBoolQuery = boolQuery().must(matchQuery("variant_set_id", request.getVariantSetId()));
-    request.getCallSetIdsList().stream().forEach(x -> childBoolQuery.should(matchQuery("call_set_id", x.toString())));
-    val constChildBoolQuery = constantScoreQuery(childBoolQuery);
+    val constantBoolQuery = constantScoreQuery(
+        boolQuery()
+            .must(
+                QueryBuilders.matchAllQuery()));
 
-    val boolQuery = boolQuery()
-        .must(matchQuery("reference_name", request.getReferenceName()))
-        .must(rangeQuery("start").gte(request.getStart()))
-        .must(rangeQuery("end").lt(request.getEnd()))
-        .must(hasChildQuery("call", constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
-
-    val constantScoreQuery = constantScoreQuery(boolQuery);
-
-    return searchRequestBuilder.setQuery(constantScoreQuery).get();
+    val agg = AggregationBuilders.terms("by_data_set_id").field("data_set_id");
+    return searchRequestBuilder.setQuery(constantBoolQuery).addAggregation(agg).get();
   }
 
-  public SearchResponse findVariantById(@NonNull GetVariantRequest request) {
-    val searchRequestBuilder = createSearchRequest(1); // only want one variant
-    val childQuery = hasChildQuery("call", matchAllQuery(), ScoreMode.None)
-        .innerHit(new InnerHitBuilder());
-    val boolQuery = boolQuery()
-        .must(idsQuery().addIds(request.getVariantId()))
-        .must(childQuery);
-    val constantScoreQuery = constantScoreQuery(boolQuery);
-    return searchRequestBuilder.setQuery(constantScoreQuery).get();
+  public SearchResponse findVariantSets(@NonNull SearchVariantSetsRequest request) {
+    val searchRequestBuilder = createSearchRequest(request.getPageSize());
+    val constantBoolQuery = constantScoreQuery(
+        boolQuery()
+            .must(
+                matchQuery("data_set_id", request.getDatasetId())));
+    return searchRequestBuilder.setQuery(constantBoolQuery).get();
+  }
+
+  public GetResponse findVariantSetById(@NonNull GetVariantSetRequest request) {
+    return client.prepareGet(INDEX_NAME, VARIANT_SET_TYPE_NAME, request.getVariantSetId()).get();
   }
 
 }
