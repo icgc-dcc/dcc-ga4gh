@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.ID;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
@@ -25,11 +26,16 @@ import lombok.val;
 @NoArgsConstructor(access = PRIVATE)
 public final class Portal {
 
+  /*
+   * Constants
+   */
   private static final String REPOSITORY_FILES_ENDPOINT = "/api/v1/repository/files";
+  private static final String DONORS_ENDPOINT = "/api/v1/donors";
   private static final int PORTAL_FETCH_SIZE = 100;
   private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
   private static final String FILE_FORMAT = "VCF";
   private static final int DEFAULT_BUF_DONOR_SIZE = 50;
+  private static final String HITS = "hits";
 
   /**
    * Gets all Collaboratory VCF files.
@@ -39,7 +45,7 @@ public final class Portal {
     val size = PORTAL_FETCH_SIZE;
     int from = 1;
 
-    while (from < 21) {
+    while (true) {
       val url = getUrl(size, from);
       val result = read(url);
       val hits = getHits(result);
@@ -83,7 +89,7 @@ public final class Portal {
   }
 
   private static String getIdFromHit(JsonNode hit) {
-    return hit.path("id").textValue();
+    return hit.path(ID).textValue();
   }
 
   private static Iterable<String> getDonorIds(final int startPos, final int numDonors) {
@@ -111,12 +117,12 @@ public final class Portal {
   }
 
   private static JsonNode getHits(JsonNode result) {
-    return result.get("hits");
+    return result.get(HITS);
   }
 
   @SneakyThrows
   private static URL getDonersUrl(int size, int from) {
-    val endpoint = PORTAL_API + "/api/v1/donors";
+    val endpoint = PORTAL_API + DONORS_ENDPOINT;
     return new URL(endpoint + "?" + "from=" + from + "&size=" + size + "&order=desc&facetsOnly=false");
   }
 

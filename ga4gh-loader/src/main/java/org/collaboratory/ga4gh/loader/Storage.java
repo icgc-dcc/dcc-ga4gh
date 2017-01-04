@@ -14,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -52,7 +53,10 @@ public final class Storage {
   public static File downloadFileAndPersist(@NonNull final String objectId, @NonNull final String filename,
       @NonNull final String expectedMD5Sum) {
     val path = Paths.get(filename);
-    val dir = path.getParent();
+    Path dir = path.getParent();
+    if (dir == null) {
+      dir = Paths.get("./");
+    }
     val dirDoesNotExist = !Files.exists(dir);
     if (dirDoesNotExist) {
       Files.createDirectories(dir);

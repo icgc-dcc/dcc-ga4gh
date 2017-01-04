@@ -2,6 +2,7 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
@@ -36,13 +37,14 @@ public class Indexer {
   /**
    * Constants.
    */
+  private static final String MAPPING_JSON_EXTENTION = ".mapping.json";
+  private static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
   public static final String CALLSET_TYPE_NAME = "callset";
   public static final String VARIANT_SET_TYPE_NAME = "variant_set";
   public static final String CALL_TYPE_NAME = "call";
   public static final String VARIANT_TYPE_NAME = "variant";
   public static final String VCF_HEADER_TYPE_NAME = "vcf_header";
   private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
-
   private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/common/mappings";
 
   /**
@@ -56,17 +58,13 @@ public class Indexer {
    */
   private final String indexName;
 
-  /**
-   * State.
+  /*
+   * State
    */
-  private int id = 1;
-
   private final Set<String> variantIdCache = new HashSet<String>();
   private final Set<String> variantSetIdCache = new HashSet<String>();
   private final Set<String> callSetIdCache = new HashSet<String>();
   private final Set<String> callIdCache = new HashSet<String>();
-  private static final String MAPPING_JSON_EXTENTION = ".mapping.json";
-  private static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
 
   @SneakyThrows
   public void prepareIndex() {
@@ -157,7 +155,7 @@ public class Indexer {
   // TODO: [rtisma] rethink how will organize this data
   @SneakyThrows
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
-    val parent_variant_set_id = vcfHeader.path("variant_set_id").textValue();
+    val parent_variant_set_id = vcfHeader.path(VARIANT_SET_ID).textValue();
     checkState(
         client.prepareIndex(Config.INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
             .setContentType(SMILE)

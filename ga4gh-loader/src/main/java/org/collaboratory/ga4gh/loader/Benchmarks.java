@@ -7,6 +7,7 @@ import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
@@ -108,7 +109,11 @@ public class Benchmarks {
   public static void writeToFile(final String filename, final String message, final boolean overwrite) {
     val writer = new PrintWriter(filename);
     val path = Paths.get(filename);
-    val dir = path.getParent();
+    Path dir = path.getParent();
+    if (dir == null) {
+      dir = Paths.get("./");
+    }
+
     val dirDoesNotExist = !Files.exists(dir);
     if (dirDoesNotExist) {
       Files.createDirectories(dir);
