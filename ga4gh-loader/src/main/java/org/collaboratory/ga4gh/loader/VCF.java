@@ -6,6 +6,7 @@ import static org.collaboratory.ga4gh.common.mappings.IndexProperties.CALL_SET_I
 import static org.collaboratory.ga4gh.common.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.common.mappings.IndexProperties.DONOR_ID;
 import static org.collaboratory.ga4gh.common.mappings.IndexProperties.END;
+import static org.collaboratory.ga4gh.common.mappings.IndexProperties.FALSE;
 import static org.collaboratory.ga4gh.common.mappings.IndexProperties.GENOTYPE;
 import static org.collaboratory.ga4gh.common.mappings.IndexProperties.ID;
 import static org.collaboratory.ga4gh.common.mappings.IndexProperties.NAME;
@@ -35,38 +36,48 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
-@Getter
 enum SubMutationTypes {
-  CNV("cnv"), INDEL("indel"), SNV_MNV("snv_mnv"), SV("sv");
+  cnv, indel, snv_mnv, sv;
 
-  @NonNull
-  private final String name;
+  public boolean equals(@NonNull final String name) {
+    return name().equals(name);
+  }
+
+  @Override
+  public String toString() {
+    return name();
+  }
 }
 
-@RequiredArgsConstructor
-@Getter
 enum MutationTypes {
-  SOMATIC("somatic"), GERMLINE("germline");
+  somatic, germline;
 
-  @NonNull
-  private final String name;
+  public boolean equals(@NonNull final String name) {
+    return name().equals(name);
+  }
+
+  @Override
+  public String toString() {
+    return name();
+  }
 }
 
-@RequiredArgsConstructor
-@Getter
 enum CallerTypes {
-  CONSENSUS("consensus"), MUSE("MUSE"), DKFZ("dkfz"), EMBL("embl"), SVFIX("svfix"), SVCP("svcp"), BROAD("broad");
+  consensus, MUSE, dkfz, embl, svfix, svcp, broad;
 
-  @NonNull
-  private final String name;
+  public boolean equals(@NonNull final String name) {
+    return name().equals(name);
+  }
+
+  @Override
+  public String toString() {
+    return name();
+  }
 }
 
 @Slf4j
@@ -82,11 +93,15 @@ public class VCF implements Closeable {
 
   private final VCFEncoder encoder;
 
-  public VCF(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
-    this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
+  public VCF(@NonNull final File file,
+      @NonNull final FileMetaData fileMetaData) {
+    this.vcf = new VCFFileReader(file,
+        REQUIRE_INDEX_CFG);
     this.fileMetaData = fileMetaData;
     this.encoder = new VCFEncoder(vcf.getFileHeader(),
+
         ALLOW_MISSING_FIELDS_IN_HEADER_CFG,
+
         OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
   }
 
@@ -97,13 +112,15 @@ public class VCF implements Closeable {
   public Map<String, ObjectNode> readCalls() {
     val map = ImmutableMap.<String, ObjectNode> builder();
     for (val record : vcf) {
-      map.put(createVariantId(record), convertCallNodeObj(record));
+      map.put(createVariantId(record),
+          convertCallNodeObj(record));
     }
     return map.build();
   }
 
   public Iterable<ObjectNode> readVariants() {
-    return transform(vcf, this::convertVariantNodeObj);
+    return transform(vcf,
+        this::convertVariantNodeObj);
   }
 
   public VCFHeader getHeader() {
@@ -118,15 +135,21 @@ public class VCF implements Closeable {
     return bio_sample_id;
   }
 
-  private static String createCallName(@NonNull final VariantContext record, final String caller_id,
+  private static String createCallName(@NonNull final VariantContext record,
+      final String caller_id,
+
       final String bio_sample_id) {
     return createVariantId(record) + ":" + bio_sample_id + "_" + caller_id;
   }
 
   // TODO: [rtisma] - fix later so proper uuid
-  private static String createCallId(@NonNull final VariantContext record, final String caller_id,
+  private static String createCallId(@NonNull final VariantContext record,
+      final String caller_id,
+
       final String bio_sample_id) {
-    return createCallName(record, caller_id, bio_sample_id);
+    return createCallName(record,
+        caller_id,
+        bio_sample_id);
   }
 
   private ObjectNode convertCallSet(final String caller_id) {
@@ -167,29 +190,30 @@ public class VCF implements Closeable {
     val mutationSubType = parser.getMutationSubType();
     val bio_sample_id = fileMetaData.getSampleId();
 
-    if (CallerTypes.BROAD.getName().equals(caller_id)) {
-      log.error("CallerType: {} not implemented", CallerTypes.BROAD.getName());
-    } else if (CallerTypes.MUSE.getName().equals(caller_id)) {
-      log.error("CallerType: {} not implemented", CallerTypes.MUSE.getName());
-    } else if (CallerTypes.CONSENSUS.getName().equals(caller_id)) {
+    val errorMessage = "CallerType: {} not implemented";
+
+    if (CallerTypes.broad.equals(caller_id)) {
+      log.error(errorMessage, CallerTypes.broad);
+    } else if (CallerTypes.MUSE.equals(caller_id)) {
+      log.error(errorMessage, CallerTypes.MUSE);
+    } else if (CallerTypes.consensus.equals(caller_id)) {
       return object()
           .with(ID, createCallId(record, caller_id, bio_sample_id))
           .with(NAME, createCallName(record, caller_id, bio_sample_id))
           .with(GENOTYPE, 1)
-          .with(PHASESET, "false")
+          .with(PHASESET, FALSE)
           .with(VARIANT_SET_ID, caller_id)
           .with(CALL_SET_ID, bio_sample_id)
           .with(BIO_SAMPLE_ID, bio_sample_id)
           .end();
-
-    } else if (CallerTypes.EMBL.getName().equals(caller_id)) {
-      log.error("CallerType: {} not implemented", CallerTypes.EMBL.getName());
-    } else if (CallerTypes.DKFZ.getName().equals(caller_id)) {
-      log.error("CallerType: {} not implemented", CallerTypes.DKFZ.getName());
-    } else if (CallerTypes.SVCP.getName().equals(caller_id)) {
-      log.error("CallerType: {} not implemented", CallerTypes.SVCP.getName());
-    } else if (CallerTypes.SVFIX.getName().equals(caller_id)) {
-      log.error("CallerType: {} not implemented", CallerTypes.SVFIX.getName());
+    } else if (CallerTypes.embl.equals(caller_id)) {
+      log.error(errorMessage, CallerTypes.embl);
+    } else if (CallerTypes.dkfz.equals(caller_id)) {
+      log.error(errorMessage, CallerTypes.dkfz);
+    } else if (CallerTypes.svcp.equals(caller_id)) {
+      log.error(errorMessage, CallerTypes.svcp);
+    } else if (CallerTypes.svfix.equals(caller_id)) {
+      log.error(errorMessage, CallerTypes.svfix);
     } else {
       throw new IllegalStateException(String.format("Error: the caller_id [%s] is not recognzed for filename [%s]",
           caller_id, parser.getFilename()));
