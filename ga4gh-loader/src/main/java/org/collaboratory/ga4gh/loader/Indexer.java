@@ -45,7 +45,7 @@ public class Indexer {
   public static final String VARIANT_TYPE_NAME = "variant";
   public static final String VCF_HEADER_TYPE_NAME = "vcf_header";
   private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
-  private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/common/mappings";
+  private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
 
   /**
    * Dependencies.
