@@ -17,8 +17,8 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BY_DATA_SET_ID;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.DATA_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BY_DATA_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_SET_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;

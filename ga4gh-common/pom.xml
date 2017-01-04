@@ -25,7 +25,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>ga4gh-common</artifactId>
+	<artifactId>ga4gh-resources</artifactId>
 
 	<name>${project.artifactId}</name>
 	<description>${project.name}</description>

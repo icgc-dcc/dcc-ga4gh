@@ -17,16 +17,16 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.BY_DATA_SET_ID;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.CALL_SET_ID;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.DATA_SET_ID;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.NAME;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.PHASESET;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.RECORD;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.REFERENCE_SET_ID;
-import static org.collaboratory.ga4gh.common.mappings.IndexProperties.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BY_DATA_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.PHASESET;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.RECORD;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.server.Factory.newClient;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
 import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
