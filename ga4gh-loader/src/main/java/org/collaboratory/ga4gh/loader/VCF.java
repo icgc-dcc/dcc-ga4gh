@@ -6,11 +6,10 @@ import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SE
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DONOR_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.FALSE;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.PHASESET;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.RECORD;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_SET_ID;
@@ -32,6 +31,7 @@ import org.icgc.dcc.common.core.util.Joiners;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -74,6 +74,10 @@ enum CallerTypes {
     return name().equals(name);
   }
 
+  public boolean isIn(@NonNull final String name) {
+    return name.matches("^" + name() + ".*");
+  }
+
   @Override
   public String toString() {
     return name();
@@ -86,6 +90,7 @@ public class VCF implements Closeable {
   private static final boolean REQUIRE_INDEX_CFG = false;
   private static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
   private static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
+  private static final Base64.Encoder ENCODER = Base64.getEncoder();
 
   private final VCFFileReader vcf;
 
@@ -119,6 +124,25 @@ public class VCF implements Closeable {
   }
 
   public Iterable<ObjectNode> readVariants() {
+    for (val v : vcf) {
+      log.info("sdfsdf");
+      for (val c : v.getGenotypes()) {
+        val name = c.getSampleName();
+        val map = c.getExtendedAttributes();
+        val alleles = c.getAlleles();
+        val dp = c.getDP();
+        val filters = c.getFilters();
+        val gtString = c.getGenotypeString();
+        val gq = c.getGQ();
+        val lh = c.getLikelihoods();
+        val error = c.getLog10PError();
+        val pl = c.getPL();
+        val ploidy = c.getPloidy();
+        val ad = c.getAD();
+        log.info("sdfsdf2");
+
+      }
+    }
     return transform(vcf,
         this::convertVariantNodeObj);
   }
@@ -135,21 +159,9 @@ public class VCF implements Closeable {
     return bio_sample_id;
   }
 
-  private static String createCallName(@NonNull final VariantContext record,
-      final String caller_id,
-
-      final String bio_sample_id) {
-    return createVariantId(record) + ":" + bio_sample_id + "_" + caller_id;
-  }
-
-  // TODO: [rtisma] - fix later so proper uuid
-  private static String createCallId(@NonNull final VariantContext record,
-      final String caller_id,
-
-      final String bio_sample_id) {
-    return createCallName(record,
-        caller_id,
-        bio_sample_id);
+  private static String createCallName(@NonNull final VariantContext record, final String caller_id,
+      final String bio_sample_id, @NonNull final Genotype genotype) {
+    return String.format("%s:%s:%s:%s", caller_id, bio_sample_id, createVariantId(record), genotype.getSampleName());
   }
 
   private ObjectNode convertCallSet(final String caller_id) {
@@ -183,41 +195,80 @@ public class VCF implements Closeable {
     return caller_id;
   }
 
+  @SneakyThrows
+  private static String base64Serialize(@NonNull final Object o) {
+    val baos = new ByteArrayOutputStream();
+    val oos = new ObjectOutputStream(baos);
+    oos.writeObject(o);
+    oos.close();
+    return ENCODER.encodeToString(baos.toByteArray());
+  }
+
   private ObjectNode convertCallNodeObj(@NonNull VariantContext record) {
     val parser = fileMetaData.getVcfFilenameParser();
     val caller_id = parser.getCallerId();
     val mutationType = parser.getMutationType();
     val mutationSubType = parser.getMutationSubType();
     val bio_sample_id = fileMetaData.getSampleId();
+    val genotypeContext = record.getGenotypes();
+    val commonInfoSer = base64Serialize(record.getCommonInfo());
 
     val errorMessage = "CallerType: {} not implemented";
+    String tumorKey;
+    boolean hasNoCalls = false;
 
-    if (CallerTypes.broad.equals(caller_id)) {
-      log.error(errorMessage, CallerTypes.broad);
-    } else if (CallerTypes.MUSE.equals(caller_id)) {
-      log.error(errorMessage, CallerTypes.MUSE);
-    } else if (CallerTypes.consensus.equals(caller_id)) {
-      return object()
-          .with(ID, createCallId(record, caller_id, bio_sample_id))
-          .with(NAME, createCallName(record, caller_id, bio_sample_id))
-          .with(GENOTYPE, 1)
-          .with(PHASESET, FALSE)
-          .with(VARIANT_SET_ID, caller_id)
-          .with(CALL_SET_ID, bio_sample_id)
-          .with(BIO_SAMPLE_ID, bio_sample_id)
-          .end();
-    } else if (CallerTypes.embl.equals(caller_id)) {
-      log.error(errorMessage, CallerTypes.embl);
-    } else if (CallerTypes.dkfz.equals(caller_id)) {
-      log.error(errorMessage, CallerTypes.dkfz);
-    } else if (CallerTypes.svcp.equals(caller_id)) {
-      log.error(errorMessage, CallerTypes.svcp);
-    } else if (CallerTypes.svfix.equals(caller_id)) {
-      log.error(errorMessage, CallerTypes.svfix);
+    if (MutationTypes.somatic.equals(mutationType) && (SubMutationTypes.indel.equals(mutationSubType)
+        || SubMutationTypes.snv_mnv.equals(mutationSubType))) {
+
+      if (CallerTypes.broad.isIn(caller_id)) {
+        tumorKey = fileMetaData.getVcfFilenameParser().getObjectId() + "T";
+      } else if (CallerTypes.MUSE.isIn(caller_id)) {
+        val objectId = fileMetaData.getVcfFilenameParser().getObjectId();
+        val sampleNameSet = genotypeContext.getSampleNames();
+        val numSamples = sampleNameSet.size();
+        if (numSamples > 2 || numSamples == 0) {
+          log.error("Incorrectly formatted VCF file for {}", fileMetaData.getVcfFilenameParser().getFilename());
+        } else if (numSamples == 2) {
+          for (val name : sampleNameSet) {
+
+          }
+        } else {
+        }
+
+      } else if (CallerTypes.consensus.isIn(caller_id)) {
+
+      } else if (CallerTypes.embl.isIn(caller_id)) {
+        log.error(errorMessage, CallerTypes.embl);
+      } else if (CallerTypes.dkfz.isIn(caller_id)) {
+        log.error(errorMessage, CallerTypes.dkfz);
+      } else if (CallerTypes.svcp.isIn(caller_id)) {
+        log.error(errorMessage, CallerTypes.svcp);
+      } else if (CallerTypes.svfix.isIn(caller_id)) {
+        log.error(errorMessage, CallerTypes.svfix);
+      } else {
+        throw new IllegalStateException(String.format("Error: the caller_id [%s] is not recognzed for filename [%s]",
+            caller_id, parser.getFilename()));
+      }
     } else {
-      throw new IllegalStateException(String.format("Error: the caller_id [%s] is not recognzed for filename [%s]",
-          caller_id, parser.getFilename()));
+      throw new IllegalStateException(String.format(
+          "Error: the mutationType [%s] must be of type [%s], and the subMutationType can be eitheror of [%s ,%s]",
+          mutationType, MutationTypes.somatic, SubMutationTypes.indel, SubMutationTypes.snv_mnv));
     }
+    for (val genotype : genotypeContext) {
+      if (genotype.getSampleName().equals(tumorKey)) {
+        val genotypeSer = base64Serialize(genotype);
+        return object()
+            .with(NAME, createCallName(record, caller_id, bio_sample_id, genotype))
+            .with(VARIANT_SET_ID, caller_id)
+            .with(CALL_SET_ID, bio_sample_id)
+            .with(BIO_SAMPLE_ID, bio_sample_id)
+            .with(INFO, commonInfoSer)
+            .with(GENOTYPE, genotypeSer)
+            .end();
+
+      }
+    }
+
     return null;// TODO: [rtisma] - fix this, cannot return null
   }
 
@@ -247,7 +298,7 @@ public class VCF implements Closeable {
         .end();
   }
 
-  private ObjectNode convertVariantNodeObj(VariantContext record) {
+  private ObjectNode convertVariantNodeObj(@NonNull final VariantContext record) {
     val variantId = createVariantId(record);
     return object()
         .with(ID, variantId)
@@ -256,6 +307,15 @@ public class VCF implements Closeable {
         .with(REFERENCE_NAME, record.getContig())
         .with(RECORD, encoder.encode(record))
         .end();
+  }
+
+  private ObjectNode convertCalls(final VariantContext record) {
+    val genotypeContext = record.getGenotypes();
+    val callInfo = record.getCommonInfo();
+    val callName = createCallName(record);
+
+    return null;
+
   }
 
   @Override

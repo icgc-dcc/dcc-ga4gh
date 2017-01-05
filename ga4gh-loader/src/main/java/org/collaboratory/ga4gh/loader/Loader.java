@@ -65,7 +65,10 @@ public class Loader {
               globalFileMetaDataTotal);
           try {
             String outputDir = "target/storedVCFs";
-            downloadAndLoadFile(fileMetaData, outputDir);
+            if (fileMetaData.getVcfFilenameParser().getFilename()
+                .contains("2790b964-63e3-49aa-bf8c-9a00d3448c25.MUSE_1-0rc-vcf.20151215.somatic.snv_mnv.vcf.gz")) {
+              downloadAndLoadFile(fileMetaData, outputDir);
+            }
           } catch (Exception e) {
             log.warn("Bad VCF with fileMetaData: {}", fileMetaData);
             log.warn("Message: {} ", e.getMessage());
@@ -108,16 +111,17 @@ public class Loader {
     log.info("Indexing variants {}...", fileMetaData.getVcfFilenameParser().getFilename());
     indexer.indexVariants(variants);
 
-    log.info("Indexing calls {}...", fileMetaData.getVcfFilenameParser().getFilename());
-    indexer.indexCalls(callMap);
-
-    log.info("Indexing callsets {}...", fileMetaData.getVcfFilenameParser().getFilename());
-    indexer.indexCallSet(callSets);
-
-    log.info("Indexing variantSets {}...", fileMetaData.getVcfFilenameParser().getFilename());
-    indexer.indexVariantSet(variantSet);
-
-    log.info("Indexing vcfHeaders {}...", fileMetaData.getVcfFilenameParser().getFilename());
-    indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);
+    /*
+     * log.info("Indexing calls {}...", fileMetaData.getVcfFilenameParser().getFilename()); indexer.indexCalls(callMap);
+     * 
+     * log.info("Indexing callsets {}...", fileMetaData.getVcfFilenameParser().getFilename());
+     * indexer.indexCallSet(callSets);
+     * 
+     * log.info("Indexing variantSets {}...", fileMetaData.getVcfFilenameParser().getFilename());
+     * indexer.indexVariantSet(variantSet);
+     * 
+     * log.info("Indexing vcfHeaders {}...", fileMetaData.getVcfFilenameParser().getFilename());
+     * indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);
+     */
   }
 }

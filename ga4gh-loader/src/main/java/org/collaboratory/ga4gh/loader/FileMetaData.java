@@ -42,33 +42,33 @@ import lombok.extern.slf4j.Slf4j;
 public final class FileMetaData {
 
   @NonNull
-  public final String objectId;
+  private final String objectId;
 
   @NonNull
-  public final String fileId;
+  private final String fileId;
 
   @NonNull
-  public final String sampleId;
+  private final String sampleId;
 
   @NonNull
-  public final String donorId;
+  private final String donorId;
 
   @NonNull
-  public final String dataType;
+  private final String dataType;
 
   @NonNull
-  public final String referenceName;
+  private final String referenceName;
 
   @NonNull
-  public final String genomeBuild;
+  private final String genomeBuild;
 
-  public final long fileSize;
-
-  @NonNull
-  public final String fileMd5sum;
+  private final long fileSize;
 
   @NonNull
-  public final PortalVCFFilenameParser vcfFilenameParser;
+  private final String fileMd5sum;
+
+  @NonNull
+  private final PortalVCFFilenameParser vcfFilenameParser;
 
   public static FileMetaData buildFileMetaData(@NonNull final ObjectNode objectNode) {
     val objectId = PortalFiles.getObjectId(objectNode);

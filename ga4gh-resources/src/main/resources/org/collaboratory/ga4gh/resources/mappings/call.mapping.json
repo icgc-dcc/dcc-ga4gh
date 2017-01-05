@@ -1,19 +1,7 @@
 {
 	"call": {
 		"properties": {
-			"id": {
-				"type": "keyword",
-				"index": "true"
-			},
 			"name": {
-				"type": "keyword",
-				"index": "true"
-			},
-			"genotype": {
-				"type": "integer",
-				"index": "true"
-			},
-			"phaseset": {
 				"type": "keyword",
 				"index": "true"
 			},
@@ -28,6 +16,14 @@
 			"bio_sample_id": {
 				"type": "keyword",
 				"index": "true"
+			},
+			"info": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"genotype": {
+				"type": "keyword",
+				"index": "false"
 			}
 		},
 		"_all": {
