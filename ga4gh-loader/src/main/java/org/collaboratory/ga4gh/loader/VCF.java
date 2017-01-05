@@ -1,6 +1,7 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
@@ -32,6 +33,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 
 import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -204,6 +206,7 @@ public class VCF implements Closeable {
     return ENCODER.encodeToString(baos.toByteArray());
   }
 
+  // TODO: [rtisma] - still need to properly implement
   private ObjectNode convertCallNodeObj(@NonNull VariantContext record) {
     val parser = fileMetaData.getVcfFilenameParser();
     val caller_id = parser.getCallerId();
@@ -230,21 +233,26 @@ public class VCF implements Closeable {
           log.error("Incorrectly formatted VCF file for {}", fileMetaData.getVcfFilenameParser().getFilename());
         } else if (numSamples == 2) {
           for (val name : sampleNameSet) {
-
+            if (!name.equals(objectId)) {
+              tumorKey = name;
+              break;
+            }
           }
         } else {
+          tumorKey = sampleNameSet.iterator().next();
         }
 
       } else if (CallerTypes.consensus.isIn(caller_id)) {
-
+        hasNoCalls = true;
       } else if (CallerTypes.embl.isIn(caller_id)) {
-        log.error(errorMessage, CallerTypes.embl);
+        // log.error(errorMessage, CallerTypes.embl);
+        hasNoCalls = true;
       } else if (CallerTypes.dkfz.isIn(caller_id)) {
-        log.error(errorMessage, CallerTypes.dkfz);
+        hasNoCalls = true;
       } else if (CallerTypes.svcp.isIn(caller_id)) {
-        log.error(errorMessage, CallerTypes.svcp);
+        hasNoCalls = true;
       } else if (CallerTypes.svfix.isIn(caller_id)) {
-        log.error(errorMessage, CallerTypes.svfix);
+        hasNoCalls = true;
       } else {
         throw new IllegalStateException(String.format("Error: the caller_id [%s] is not recognzed for filename [%s]",
             caller_id, parser.getFilename()));
@@ -254,22 +262,50 @@ public class VCF implements Closeable {
           "Error: the mutationType [%s] must be of type [%s], and the subMutationType can be eitheror of [%s ,%s]",
           mutationType, MutationTypes.somatic, SubMutationTypes.indel, SubMutationTypes.snv_mnv));
     }
+    // TODO: [rtisma] temporary untill fix above. Take first call, but not correct. Should descriminate by Sample Name
+    // which should be tumorKey
     for (val genotype : genotypeContext) {
-      if (genotype.getSampleName().equals(tumorKey)) {
-        val genotypeSer = base64Serialize(genotype);
-        return object()
-            .with(NAME, createCallName(record, caller_id, bio_sample_id, genotype))
-            .with(VARIANT_SET_ID, caller_id)
-            .with(CALL_SET_ID, bio_sample_id)
-            .with(BIO_SAMPLE_ID, bio_sample_id)
-            .with(INFO, commonInfoSer)
-            .with(GENOTYPE, genotypeSer)
-            .end();
+      // if (genotype.getSampleName().equals(tumorKey)) {
+      val genotypeSer = base64Serialize(genotype);
+      return object()
+          .with(NAME, createCallName(record, caller_id, bio_sample_id, genotype))
+          .with(VARIANT_SET_ID, caller_id)
+          .with(CALL_SET_ID, bio_sample_id)
+          .with(BIO_SAMPLE_ID, bio_sample_id)
+          .with(INFO, commonInfoSer)
+          .with(GENOTYPE, genotypeSer)
+          .end();
 
-      }
+      // }
+    }
+    val refAllele = record.getReference();
+    val altAlleles = record.getAlleles();
+    val alleles = newArrayList(altAlleles);
+    alleles.add(refAllele);
+
+    val genotype = new GenotypeBuilder("DEFAULT", alleles)
+        .noAD()
+        .noDP()
+        .noPL()
+        .noGQ()
+        .phased(false)
+        .noAttributes()
+        .make();
+    val genotypeSer = base64Serialize(genotype);
+    if (hasNoCalls) {
+      return object()
+          .with(NAME, createCallName(record, caller_id, bio_sample_id, genotype))
+          .with(VARIANT_SET_ID, caller_id)
+          .with(CALL_SET_ID, bio_sample_id)
+          .with(BIO_SAMPLE_ID, bio_sample_id)
+          .with(INFO, commonInfoSer)
+          .with(GENOTYPE, genotypeSer)
+          .end();
+    } else {
+      throw new IllegalStateException(
+          String.format("no object was created for \nfileMetaData: [%s]\nvariantContext: [%s]", fileMetaData, record));
     }
 
-    return null;// TODO: [rtisma] - fix this, cannot return null
   }
 
   public ObjectNode readVariantSet() {
