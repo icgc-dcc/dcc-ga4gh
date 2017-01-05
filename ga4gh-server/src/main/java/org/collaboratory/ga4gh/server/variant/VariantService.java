@@ -22,7 +22,6 @@ import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BY_DATA
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.PHASESET;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.RECORD;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_SET_ID;
@@ -81,6 +80,7 @@ public class VariantService {
   private final static long DEFAULT_CALLSET_CREATED_VALUE = 0;
   private final static long DEFAULT_CALLSET_UPDATED_VALUE = 0;
   private final static int DEFAULT_CALL_GENOTYPE_VALUE = 1;
+  private final static String DUMMY_PHASESET = "false";
   private final static double DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE = 0.0;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -288,7 +288,8 @@ public class VariantService {
                                                                        // ES mapping
         .addGenotype(DEFAULT_CALL_GENOTYPE_VALUE)
         .addGenotypeLikelihood(DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE)
-        .setPhaseset(hit.getSource().get(PHASESET).toString());
+        .putAllInfo(values)
+        .setPhaseset(DUMMY_PHASESET);
   }
 
   // TODO: [rtisma] cleaniup

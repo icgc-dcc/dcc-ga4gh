@@ -19,7 +19,6 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.summingInt;
-import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDataList;
 import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDataBySample;
 import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDatasByDonor;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -27,8 +26,6 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
 import lombok.Value;
@@ -76,11 +73,10 @@ public class DonorData {
     return new DonorData(donorId, fileMetaDatas);
   }
 
-  public static final List<DonorData> buildDonorDataList(Iterable<ObjectNode> objectNodes) {
-    return groupFileMetaDatasByDonor(buildFileMetaDataList(objectNodes))
+  public static final List<DonorData> buildDonorDataList(Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaDatasByDonor(fileMetaDatas)
         .entrySet().stream()
         .map(x -> createDonorData(x.getKey(), x.getValue())) // Key is donorId, Value is List<FileMetaData>
         .collect(toImmutableList());
   }
-
 }

@@ -32,12 +32,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
+import lombok.Data;
 import lombok.NonNull;
-import lombok.Value;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-@Value
+@Data
 @Slf4j
 public final class FileMetaData {
 
@@ -69,6 +69,11 @@ public final class FileMetaData {
 
   @NonNull
   private final PortalVCFFilenameParser vcfFilenameParser;
+
+  /*
+   * State
+   */
+  private boolean corrupted = false;
 
   public static FileMetaData buildFileMetaData(@NonNull final ObjectNode objectNode) {
     val objectId = PortalFiles.getObjectId(objectNode);
@@ -103,6 +108,16 @@ public final class FileMetaData {
   public static Map<String, List<FileMetaData>> groupFileMetaDatasByDataType(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
     return groupFileMetaData(fileMetaDatas, FileMetaData::getDataType);
+  }
+
+  public static Map<String, List<FileMetaData>> groupFileMetaDatasByMutationType(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getMutationType());
+  }
+
+  public static Map<String, List<FileMetaData>> groupFileMetaDatasBySubMutationType(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getMutationSubType());
   }
 
   public static Map<String, List<FileMetaData>> groupFileMetaData(
