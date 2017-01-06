@@ -152,7 +152,7 @@ public class VCF implements Closeable {
     return ENCODER.encodeToString(baos.toByteArray());
   }
 
-  // TODO: [rtisma] - still need to properly implement
+  // TODO: [rtisma] - this method is wayyyyyyyyyyyy to big and doing to many things. refactoring needed
   private ObjectNode convertCallNodeObj(@NonNull VariantContext record) {
     val parser = fileMetaData.getVcfFilenameParser();
     val callerTypeString = parser.getCallerId();
