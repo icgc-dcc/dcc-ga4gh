@@ -31,7 +31,9 @@ import ga4gh.MetadataServiceOuterClass.SearchDatasetsResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class MetadataService {
@@ -46,14 +48,21 @@ public class MetadataService {
 
   private SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
     val datasets = (Terms) searchResponse.getAggregations().get(BY_DATA_SET_ID);
-    return SearchDatasetsResponse.newBuilder()
-        .addAllDatasets(datasets.getBuckets().stream()
-            .map(b -> Dataset.newBuilder()
-                .setId(b.getKey().toString())
-                .setName(b.getKey().toString())
-                .build())
-            .collect(toImmutableList()))
-        .build();
+    val buckets = datasets.getBuckets();
+    val hasBuckets = buckets.size() > 0;
+    if (hasBuckets) {
+      log.info("Datasets");
+      return SearchDatasetsResponse.newBuilder()
+          .addAllDatasets(datasets.getBuckets().stream()
+              .map(b -> Dataset.newBuilder()
+                  .setId(b.getKey().toString())
+                  .setName(b.getKey().toString())
+                  .build())
+              .collect(toImmutableList()))
+          .build();
+    } else {
+      return SearchDatasetsResponse.newBuilder().build();
+    }
   }
 
 }

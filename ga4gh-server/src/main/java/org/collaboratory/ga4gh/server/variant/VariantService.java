@@ -20,7 +20,6 @@ package org.collaboratory.ga4gh.server.variant;
 import static org.collaboratory.ga4gh.common.Base64Codec.deserialize;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BY_DATA_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
@@ -44,7 +43,6 @@ import java.util.Map;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.icgc.dcc.common.core.util.stream.Streams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,9 +50,6 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
-import ga4gh.Metadata.Dataset;
-import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
-import ga4gh.MetadataServiceOuterClass.SearchDatasetsResponse;
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
@@ -200,7 +195,11 @@ public class VariantService {
   }
 
   private static VariantSet convertToVariantSet(@NonNull SearchHit hit) {
-    return convertToVariantSet(hit.getId(), hit.getSource());
+    if (hit.hasSource()) {
+      return convertToVariantSet(hit.getId(), hit.getSource());
+    } else {
+      return EMPTY_VARIANT_SET;
+    }
   }
 
   private static CallSet convertToCallSet(@NonNull SearchHit hit) {
@@ -212,6 +211,8 @@ public class VariantService {
     }
   }
 
+  // TODO: [rtisma] -- should return 204 No content status code if no results. To indicate request was ok, just no
+  // results
   public SearchCallSetsResponse searchCallSets(@NonNull SearchCallSetsRequest request) {
     log.info("Getting CallSetIds for variant_set_id: " + request.getVariantSetId());
     val response = callsetRepository.findCallSets(request);
@@ -277,23 +278,6 @@ public class VariantService {
 
     val response = variantRepository.findVariants(request);
     return buildSearchVariantResponse(response);
-  }
-
-  public SearchDatasetsResponse searchDatasets(@NonNull SearchDatasetsRequest request) {
-    val response = variantSetRepository.searchAllDataSets(request);
-    return buildSearchDatasetsResponse(response);
-  }
-
-  private static SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
-    Terms datasets = searchResponse.getAggregations().get(BY_DATA_SET_ID);
-    return SearchDatasetsResponse.newBuilder()
-        .addAllDatasets(datasets.getBuckets().stream()
-            .map(b -> Dataset.newBuilder()
-                .setId(b.getKey().toString())
-                .setName(b.getKey().toString())
-                .build())
-            .collect(toImmutableList()))
-        .build();
   }
 
   private static SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
