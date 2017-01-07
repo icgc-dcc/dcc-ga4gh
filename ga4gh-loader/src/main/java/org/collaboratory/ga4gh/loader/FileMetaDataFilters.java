@@ -39,18 +39,13 @@ public class FileMetaDataFilters {
    * Filters by MutationType==somatic, SubMutationType==(snv_mnv or indel)
    */
   public static List<FileMetaData> filterSomaticSSMs(@NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return filter(fileMetaDatas,
-        f -> (compareMutationType(f, MutationTypes.somatic)
-            && (compareSubMutationType(f, SubMutationTypes.indel)
-                || compareSubMutationType(f, SubMutationTypes.snv_mnv))));
+    return filter(fileMetaDatas, f -> isSomaticSSM(f));
   }
 
-  private static boolean compareMutationType(final FileMetaData f, final MutationTypes type) {
-    return f.getVcfFilenameParser().getMutationType().equals(type.toString());
-  }
-
-  private static boolean compareSubMutationType(final FileMetaData f, final SubMutationTypes type) {
-    return f.getVcfFilenameParser().getMutationSubType().equals(type.toString());
+  private static boolean isSomaticSSM(final FileMetaData f) {
+    return f.compare(MutationTypes.somatic)
+        && (f.compare(SubMutationTypes.indel)
+            || f.compare(SubMutationTypes.snv_mnv));
   }
 
 }

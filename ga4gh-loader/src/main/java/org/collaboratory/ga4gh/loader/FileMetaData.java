@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.collaboratory.ga4gh.loader.enums.CallerTypes;
+import org.collaboratory.ga4gh.loader.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,6 +41,7 @@ import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+//TODO: [rtisma] -- consider storing the CallerTypes, MutationTypes and MutationSubTypes enum values instead of string representation. Or atleast keep strings, just create functions to compare the string against the enum
 @Data
 @Slf4j
 public final class FileMetaData {
@@ -152,6 +156,34 @@ public final class FileMetaData {
 
     Benchmarks.writeToNewFile(outputFn, sb.toString());
     log.info("sdfsdf");
+  }
+
+  public boolean compare(final MutationTypes type) {
+    return getVcfFilenameParser().getMutationType().equals(type.toString());
+  }
+
+  public boolean compare(final SubMutationTypes type) {
+    return getVcfFilenameParser().getMutationSubType().equals(type.toString());
+  }
+
+  public boolean compare(final CallerTypes type) {
+    return getVcfFilenameParser().getCallerId().equals(type.toString());
+  }
+
+  private static String getStartsWithRegex(final String keyword) {
+    return "^" + keyword + ".*";
+  }
+
+  public boolean startsWith(final MutationTypes type) {
+    return getVcfFilenameParser().getMutationType().matches(getStartsWithRegex(type.toString()));
+  }
+
+  public boolean startsWith(final SubMutationTypes type) {
+    return getVcfFilenameParser().getMutationSubType().matches(getStartsWithRegex(type.toString()));
+  }
+
+  public boolean startsWith(final CallerTypes type) {
+    return getVcfFilenameParser().getCallerId().matches(getStartsWithRegex(type.toString()));
   }
 
 }

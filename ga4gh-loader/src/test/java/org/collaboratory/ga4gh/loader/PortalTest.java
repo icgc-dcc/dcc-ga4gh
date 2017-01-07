@@ -17,6 +17,8 @@
  */
 package org.collaboratory.ga4gh.loader;
 
+import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
+
 import org.junit.Test;
 
 import lombok.val;
@@ -26,7 +28,7 @@ public class PortalTest {
   @Test
   public void testFileMetaDataFilter() {
     int numDonors = 20;
-    val fileMetaDatas = Portal.getFileMetaDatasForNumDonors(numDonors);
+    val fileMetaDatas = getFileMetaDatasForNumDonors(numDonors);
     int maxFileSizeBytes = 700000;
 
     // If size > 0, use only files less than or equal to maxFileSizeBytes
