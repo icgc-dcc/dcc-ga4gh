@@ -5,6 +5,7 @@ import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
+import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDataList;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
@@ -62,6 +63,10 @@ public final class Portal {
       from += size;
     }
     return fileMetas.build();
+  }
+
+  public static List<FileMetaData> getFileMetaDatasForNumDonors(int numDonors) {
+    return buildFileMetaDataList(getFileMetasForNumDonors(numDonors));
   }
 
   public static List<ObjectNode> getFileMetasForNumDonors(int numDonors) {

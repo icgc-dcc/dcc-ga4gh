@@ -8,22 +8,14 @@ import static org.collaboratory.ga4gh.loader.DonorData.buildDonorDataList;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
-import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDataList;
-import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDatasByMutationType;
-import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDatasBySubMutationType;
-import static org.collaboratory.ga4gh.loader.Portal.getFileMetasForNumDonors;
+import static org.collaboratory.ga4gh.loader.FileMetaDataFilters.filterBySize;
+import static org.collaboratory.ga4gh.loader.FileMetaDataFilters.filterSomaticSSMs;
 import static org.collaboratory.ga4gh.loader.Storage.downloadFile;
 import static org.collaboratory.ga4gh.loader.Storage.downloadFileAndPersist;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.File;
 import java.util.List;
-
-import org.collaboratory.ga4gh.loader.enums.MutationTypes;
-import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
-
-import com.google.common.collect.ImmutableList;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -64,38 +56,6 @@ public class Loader {
     }
   }
 
-  private static List<FileMetaData> filterFileMetaDataBySize(@NonNull final Iterable<FileMetaData> fileMetaDatas,
-      final long maxSizeBytes) {
-    return stream(fileMetaDatas).filter(f -> f.getFileSize() <= maxSizeBytes).collect(toImmutableList());
-  }
-
-  /*
-   * Filters by MutationType==somatic, SubMutationType==(snv_mnv or indel)
-   */
-  private static List<FileMetaData> filterFileMetaData(@NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    val listBuilder = ImmutableList.<FileMetaData> builder();
-    val mutationGrouping = groupFileMetaDatasByMutationType(fileMetaDatas);
-    if (mutationGrouping.containsKey(MutationTypes.somatic.toString())) {
-      val somaticMutationsFileMetaDatas = mutationGrouping.get(MutationTypes.somatic.toString());
-      val subMutationGrouping = groupFileMetaDatasBySubMutationType(somaticMutationsFileMetaDatas);
-      boolean foundAtLeastOne = false;
-      if (subMutationGrouping.containsKey(SubMutationTypes.indel.toString())) {
-        foundAtLeastOne = true;
-        listBuilder.addAll(subMutationGrouping.get(SubMutationTypes.indel.toString()));
-      }
-      if (subMutationGrouping.containsKey(SubMutationTypes.snv_mnv.toString())) {
-        foundAtLeastOne = true;
-        listBuilder.addAll(subMutationGrouping.get(SubMutationTypes.snv_mnv.toString()));
-      }
-      if (!foundAtLeastOne) {
-        log.error("The input somatic filemetadatas does not have any indel or snv_mnv submutation types");
-      }
-    } else {
-      log.error("The input filemetadatas does not have any somatic mutation types");
-    }
-    return listBuilder.build();
-  }
-
   private void resetGlobalFileMetaDataCounters(@NonNull final List<DonorData> donorDataList) {
     globalFileMetaDataCount = 1;
     globalFileMetaDataTotal = donorDataList.stream()
@@ -103,21 +63,16 @@ public class Loader {
         .collect(summingLong(Long::longValue));
   }
 
-  private List<FileMetaData> fetchFileMetaData(final int numDonors) {
-    val fileMetas = getFileMetasForNumDonors(numDonors);
-    return buildFileMetaDataList(fileMetas);
-  }
-
   private List<DonorData> fetchDonorData(final int numDonors, final long maxFileSizeBytes) {
-    val fileMetaDatas = fetchFileMetaData(numDonors);
+    val fileMetaDatas = Portal.getFileMetaDatasForNumDonors(numDonors);
     writeToNewFile("./target/all_list.txt",
         stream(fileMetaDatas).map(x -> x.getVcfFilenameParser().getFilename())
             .collect(joining("\n")));
 
     // If size > 0, use only files less than or equal to maxFileSizeBytes
     val filteredFileMetaDatasBySize =
-        (maxFileSizeBytes < 0) ? fileMetaDatas : filterFileMetaDataBySize(fileMetaDatas, maxFileSizeBytes);
-    val filteredFileMetaDatas = filterFileMetaData(filteredFileMetaDatasBySize);
+        (maxFileSizeBytes < 0) ? fileMetaDatas : filterBySize(fileMetaDatas, maxFileSizeBytes);
+    val filteredFileMetaDatas = filterSomaticSSMs(filteredFileMetaDatasBySize);
     writeToNewFile("./target/filtered_list.txt",
         stream(filteredFileMetaDatas).map(x -> x.getVcfFilenameParser().getFilename())
             .collect(joining("\n")));

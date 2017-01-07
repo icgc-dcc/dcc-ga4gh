@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.icgc.dcc.common.core.util.Joiners;
 
@@ -89,6 +90,11 @@ public final class FileMetaData {
     return new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild, fileSize,
         fileMd5sum,
         vcfFilenameParser);
+  }
+
+  public static List<FileMetaData> filter(@NonNull final Iterable<FileMetaData> fileMetaDatas,
+      @NonNull final Predicate<? super FileMetaData> predicate) {
+    return stream(fileMetaDatas).filter(predicate).collect(toImmutableList());
   }
 
   public static List<FileMetaData> buildFileMetaDataList(@NonNull final Iterable<ObjectNode> objectNodes) {
