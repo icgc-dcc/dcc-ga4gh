@@ -54,6 +54,15 @@ public class Protobufs {
     return listValueBuilder.build();
   }
 
+  public static ListValue createListValueFromDoubles(final Iterable<Double> doubles) {
+    val listValueBuilder = ListValue.newBuilder();
+    for (val d : doubles) {
+      listValueBuilder.addValues(
+          Value.newBuilder().setNumberValue(d));
+    }
+    return listValueBuilder.build();
+  }
+
   public static Map<String, ListValue> createInfo(CommonInfo commonInfo) {
     val map = ImmutableMap.<String, ListValue> builder();
     for (Map.Entry<String, Object> entry : commonInfo.getAttributes().entrySet()) {
