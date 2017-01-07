@@ -17,14 +17,20 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
+import static org.collaboratory.ga4gh.common.Base64Codec.deserialize;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BY_DATA_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.RECORD;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.server.Factory.newClient;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
@@ -43,8 +49,8 @@ import org.icgc.dcc.common.core.util.stream.Streams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 
 import ga4gh.Metadata.Dataset;
 import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
@@ -62,10 +68,8 @@ import ga4gh.Variants.Call;
 import ga4gh.Variants.CallSet;
 import ga4gh.Variants.Variant;
 import ga4gh.Variants.VariantSet;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderVersion;
+import htsjdk.variant.variantcontext.CommonInfo;
+import htsjdk.variant.variantcontext.Genotype;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -95,6 +99,11 @@ public class VariantService {
   @NonNull
   private final VariantSetRepository variantSetRepository;
 
+  private static final Variant EMPTY_VARIANT = Variant.newBuilder().build();
+  private static final VariantSet EMPTY_VARIANT_SET = VariantSet.newBuilder().build();
+  private static final CallSet EMPTY_CALL_SET = CallSet.newBuilder().build();
+  private static final Call EMPTY_CALL = Call.newBuilder().build();
+
   public static void main(String[] args) {
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
         .setEnd(50000000)
@@ -117,7 +126,8 @@ public class VariantService {
         .build();
 
     val getVariantRequest = GetVariantRequest.newBuilder()
-        .setVariantId("27043136_27043136_7_C_T")
+        // .setVariantId("27043136_27043136_7_C_T")
+        .setVariantId("933202_7933203_1_TA_T")
         .build();
 
     val getVariantSetRequest = GetVariantSetRequest.newBuilder()
@@ -160,20 +170,21 @@ public class VariantService {
         .setNextPageToken("N/A")
         .addAllVariantSets(
             Arrays.stream(response.getHits().getHits())
-                .map(h -> convertToVariantSet(h).build())
+                .map(h -> convertToVariantSet(h))
                 .collect(toImmutableList()))
         .build();
   }
 
-  private static VariantSet.Builder convertToVariantSet(final String id, @NonNull Map<String, Object> source) {
+  private static VariantSet convertToVariantSet(final String id, @NonNull Map<String, Object> source) {
     return VariantSet.newBuilder()
         .setId(id)
         .setName(source.get(NAME).toString())
         .setDatasetId(source.get(DATA_SET_ID).toString())
-        .setReferenceSetId(source.get(REFERENCE_SET_ID).toString());
+        .setReferenceSetId(source.get(REFERENCE_SET_ID).toString())
+        .build();
   }
 
-  private static CallSet.Builder convertToCallSet(final String id, @NonNull Map<String, Object> source) {
+  private static CallSet convertToCallSet(final String id, @NonNull Map<String, Object> source) {
     return CallSet.newBuilder()
         .setId(id)
         .setName(source.get(NAME).toString())
@@ -184,15 +195,21 @@ public class VariantService {
         // Streams.stream(source.).map(vs -> vs.toString())
         // .collect(Collectors.toList()))
         .setCreated(DEFAULT_CALLSET_CREATED_VALUE)
-        .setUpdated(DEFAULT_CALLSET_UPDATED_VALUE);
+        .setUpdated(DEFAULT_CALLSET_UPDATED_VALUE)
+        .build();
   }
 
-  private static VariantSet.Builder convertToVariantSet(@NonNull SearchHit hit) {
+  private static VariantSet convertToVariantSet(@NonNull SearchHit hit) {
     return convertToVariantSet(hit.getId(), hit.getSource());
   }
 
-  private static CallSet.Builder convertToCallSet(@NonNull SearchHit hit) {
-    return convertToCallSet(hit.getId(), hit.getSource());
+  private static CallSet convertToCallSet(@NonNull SearchHit hit) {
+    // TODO: [rtisma] confirm that hasSource means "more than one hit". Point is that it returns an empty response
+    if (hit.hasSource()) {
+      return convertToCallSet(hit.getId(), hit.getSource());
+    } else {
+      return EMPTY_CALL_SET;
+    }
   }
 
   public SearchCallSetsResponse searchCallSets(@NonNull SearchCallSetsRequest request) {
@@ -206,7 +223,7 @@ public class VariantService {
         .setNextPageToken("N/A")
         .addAllCallSets(
             Arrays.stream(response.getHits().getHits())
-                .map(h -> convertToCallSet(h).build())
+                .map(h -> convertToCallSet(h))
                 .collect(toImmutableList()))
         .build();
   }
@@ -214,26 +231,37 @@ public class VariantService {
   public VariantSet getVariantSet(@NonNull GetVariantSetRequest request) {
     log.info("VariantSetId to Get: {}", request.getVariantSetId());
     GetResponse response = variantSetRepository.findVariantSetById(request);
-    return convertToVariantSet(response.getId(), response.getSource()).build();
+    if (response.isSourceEmpty()) {
+      return EMPTY_VARIANT_SET;
+    } else {
+      return convertToVariantSet(response.getId(), response.getSource());
+    }
   }
 
   public CallSet getCallSet(@NonNull GetCallSetRequest request) {
     log.info("CallSetId to Get: {}", request.getCallSetId());
     GetResponse response = callsetRepository.findCallSetById(request);
-    return convertToCallSet(response.getId(), response.getSource()).build();
+    if (response.isSourceEmpty()) {
+      return EMPTY_CALL_SET;
+    } else {
+      return convertToCallSet(response.getId(), response.getSource());
+    }
   }
 
   public Variant getVariant(@NonNull GetVariantRequest request) {
     log.info("VariantId to Get: {}", request.getVariantId());
     SearchResponse response = variantRepository.findVariantById(request);
-    assert (response.getHits().getTotalHits() == 1);
-    return convertToVariant(response.getHits().getAt(0))
-        .addAllCalls(
-            Streams.stream(
-                response.getHits().getAt(0).getInnerHits().get(CALL_TYPE_NAME))
-                .map(x -> convertToCall(x).build())
-                .collect(toImmutableList()))
-        .build();
+    if (response.getHits().getTotalHits() == 1) {
+      return convertToVariant(response.getHits().getAt(0))
+          .addAllCalls(
+              Streams.stream(
+                  response.getHits().getAt(0).getInnerHits().get(CALL_TYPE_NAME))
+                  .map(x -> convertToCall(x).build())
+                  .collect(toImmutableList()))
+          .build();
+    } else {
+      return EMPTY_VARIANT;
+    }
   }
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
@@ -280,44 +308,73 @@ public class VariantService {
     return responseBuilder.build();
   }
 
+  private static List<Integer> convertNonRefAlleles(@NonNull final Genotype genotype) {
+    // TODO: [rtisma] -- verify this logic is correct. Allele has some other states that might need to be considered
+    val allelesBuilder = ImmutableList.<Integer> builder();
+    for (int i = 0; i < genotype.getAlleles().size(); i++) {
+      val allele = genotype.getAllele(i);
+      if (allele.isNonReference()) {
+        allelesBuilder.add(i);
+      }
+    }
+    return allelesBuilder.build();
+  }
+
+  private static void mergeAttributes(@NonNull final CommonInfo info, Map<String, ?> attributes) {
+    info.putAttributes(attributes);
+  }
+
   @SneakyThrows
   private static Call.Builder convertToCall(@NonNull SearchHit hit) {
+    val genotypeSer = hit.getSource().get(GENOTYPE).toString();
+    val commonInfoSer = hit.getSource().get(INFO).toString();
+    val genotype = (Genotype) deserialize(genotypeSer);
+    val commonInfoFromVariant = (CommonInfo) deserialize(commonInfoSer);
+    // TODO: [rtisma] what about non-extended (or regular) attributes? how do you get those?
+    val callExtendedAttributes = genotype.getExtendedAttributes();
+    mergeAttributes(commonInfoFromVariant, callExtendedAttributes);
+
+    val nonRefAlleles = convertNonRefAlleles(genotype);
+    val likelihood = genotype.getLikelihoods();
+
+    // TODO: [rtisma] need to extract data from genotype and put into call
     return Call.newBuilder()
         .setCallSetId(hit.getSource().get(CALL_SET_ID).toString())
         .setCallSetName(hit.getSource().get(BIO_SAMPLE_ID).toString()) // TODO: [rtisma] need to add call_set_name to
-                                                                       // ES mapping
-        .addGenotype(DEFAULT_CALL_GENOTYPE_VALUE)
-        .addGenotypeLikelihood(DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE)
-        .putAllInfo(values)
-        .setPhaseset(DUMMY_PHASESET);
+        .addAllGenotype(nonRefAlleles)
+        .addGenotypeLikelihood(genotype.getLog10PError())
+        .putAllInfo(createInfo(commonInfoFromVariant))
+        .setPhaseset(Boolean.toString(genotype.isPhased()));
   }
 
-  // TODO: [rtisma] cleaniup
-  // This function is only to be used for searchHits from the SearchVariants service. Its not the same as the GetVariant
-  // service
+  private static String getHitAsString(final SearchHit hit, String attr) {
+    return hit.getSource().get(attr).toString();
+  }
+
+  private static Long getHitAsLong(final SearchHit hit, String attr) {
+    return Long.parseLong(hit.getSource().get(attr).toString());
+  }
+
+  // TODO: [rtisma] verify this is the correct way to extract an array result
+  @SuppressWarnings("unchecked")
+  private static List<Object> getHitArray(final SearchHit hit, String field) {
+    return (List<Object>) hit.getSource().get(field);
+  }
+
   @SneakyThrows
   private static Variant.Builder convertToVariant(@NonNull SearchHit hit) {
-    JsonNode json = MAPPER.readTree(hit.getSourceAsString());
-    // TODO: [rtisma][HACK] - need to find a solution for getting vcfHEader
-    val dummyHeader = new VCFHeader();
-    val codec = new VCFCodec();
-    codec.setVCFHeader(dummyHeader, VCFHeaderVersion.VCF4_1);
-    VariantContext vc = codec.decode(json.get(RECORD).asText());
-
-    List<String> alt = vc.getAlternateAlleles().stream()
-        .map(al -> al.getBaseString())
+    List<String> alternateBases = getHitArray(hit, ALTERNATIVE_BASES).stream()
+        .map(o -> o.toString())
         .collect(toImmutableList());
 
     return Variant.newBuilder()
         .setId(hit.getId())
-        .setReferenceName(hit.getSource().get(REFERENCE_NAME).toString())
-        .setReferenceBases(vc.getReference().getBaseString())
-        .addAllAlternateBases(alt)
-        .setStart(vc.getStart())
-        .setEnd(vc.getEnd())
-        .putAllInfo(createInfo(vc.getCommonInfo()))
+        .setReferenceName(getHitAsString(hit, REFERENCE_NAME))
+        .setReferenceBases(getHitAsString(hit, REFERENCE_BASES))
+        .addAllAlternateBases(alternateBases)
+        .setStart(getHitAsLong(hit, START))
+        .setEnd(getHitAsLong(hit, END))
         .setCreated(0)
         .setUpdated(0);
   }
-
 }
