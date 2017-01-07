@@ -3,6 +3,8 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
+import static org.collaboratory.ga4gh.common.Base64Codec.serialize;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
@@ -12,14 +14,16 @@ import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYP
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.RECORD;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VCF_HEADER;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -39,6 +43,7 @@ import com.google.common.collect.ImmutableMap;
 
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -56,7 +61,6 @@ public class VCF implements Closeable {
   private static final boolean REQUIRE_INDEX_CFG = false;
   private static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
   private static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
-  private static final Base64.Encoder ENCODER = Base64.getEncoder();
   private static final double DEFAULT_GENOTYPE_LIKELYHOOD = 0.1;
 
   private final VCFFileReader vcf;
@@ -143,13 +147,11 @@ public class VCF implements Closeable {
     return caller_id;
   }
 
-  @SneakyThrows
-  private static String base64Serialize(@NonNull final Object o) {
-    val baos = new ByteArrayOutputStream();
-    val oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
-    return ENCODER.encodeToString(baos.toByteArray());
+  private boolean isMutationTypesCorrect() {
+    val mutationTypeString = fileMetaData.getVcfFilenameParser().getMutationType();
+    val mutationSubTypeString = fileMetaData.getVcfFilenameParser().getMutationSubType();
+    return MutationTypes.somatic.equals(mutationTypeString) && (SubMutationTypes.indel.equals(mutationSubTypeString)
+        || SubMutationTypes.snv_mnv.equals(mutationSubTypeString));
   }
 
   // TODO: [rtisma] - this method is wayyyyyyyyyyyy to big and doing to many things. refactoring needed
@@ -159,59 +161,58 @@ public class VCF implements Closeable {
     val mutationTypeString = parser.getMutationType();
     val mutationSubTypeString = parser.getMutationSubType();
     val genotypeContext = record.getGenotypes();
-    val commonInfoSer = base64Serialize(record.getCommonInfo());
+    val commonInfoSer = serialize(record.getCommonInfo());
 
     val errorMessage = "CallerType: {} not implemented";
     String tumorKey;
     boolean hasCalls = true;
     boolean foundCallerTypes = true;
-    boolean foundMutationTypes = true;
+    boolean foundMutationTypes = isMutationTypesCorrect();
 
-    if (MutationTypes.somatic.equals(mutationTypeString) && (SubMutationTypes.indel.equals(mutationSubTypeString)
-        || SubMutationTypes.snv_mnv.equals(mutationSubTypeString))) {
-
-      if (CallerTypes.broad.isIn(callerTypeString)) {
-        tumorKey = fileMetaData.getVcfFilenameParser().getObjectId() + "T";
-      } else if (CallerTypes.MUSE.isIn(callerTypeString)) {
-        val objectId = fileMetaData.getVcfFilenameParser().getObjectId();
-        val sampleNameSet = genotypeContext.getSampleNames();
-        val numSamples = sampleNameSet.size();
-        if (numSamples > 2 || numSamples == 0) {
-          log.error("Incorrectly formatted VCF file for {}", fileMetaData.getVcfFilenameParser().getFilename());
-        } else if (numSamples == 2) {
-          for (val name : sampleNameSet) {
-            if (!name.equals(objectId)) {
-              tumorKey = name;
-              break;
-            }
+    if (CallerTypes.broad.isIn(callerTypeString)) {
+      tumorKey = fileMetaData.getVcfFilenameParser().getObjectId() + "T";
+    } else if (CallerTypes.MUSE.isIn(callerTypeString)) {
+      val objectId = fileMetaData.getVcfFilenameParser().getObjectId();
+      val sampleNameSet = genotypeContext.getSampleNames();
+      val numSamples = sampleNameSet.size();
+      if (numSamples > 2 || numSamples == 0) {
+        log.error("Incorrectly formatted VCF file for {}", fileMetaData.getVcfFilenameParser().getFilename());
+      } else if (numSamples == 2) {
+        for (val name : sampleNameSet) {
+          if (!name.equals(objectId)) {
+            tumorKey = name;
+            break;
           }
-        } else {
-          tumorKey = sampleNameSet.iterator().next();
         }
-
-      } else if (CallerTypes.consensus.isIn(callerTypeString)) {
-        hasCalls = false;
-      } else if (CallerTypes.embl.isIn(callerTypeString)) {
-        // log.error(errorMessage, CallerTypes.embl);
-        hasCalls = false;
-      } else if (CallerTypes.dkfz.isIn(callerTypeString)) {
-        hasCalls = false;
-      } else if (CallerTypes.svcp.isIn(callerTypeString)) {
-        hasCalls = false;
-      } else if (CallerTypes.svfix.isIn(callerTypeString)) {
-        hasCalls = false;
       } else {
-        foundCallerTypes = false;
+        tumorKey = sampleNameSet.iterator().next();
       }
+
+    } else if (CallerTypes.consensus.isIn(callerTypeString)) {
+      hasCalls = false;
+    } else if (CallerTypes.embl.isIn(callerTypeString)) {
+      // log.error(errorMessage, CallerTypes.embl);
+      hasCalls = false;
+    } else if (CallerTypes.dkfz.isIn(callerTypeString)) {
+      hasCalls = false;
+    } else if (CallerTypes.svcp.isIn(callerTypeString)) {
+      hasCalls = false;
+    } else if (CallerTypes.svfix.isIn(callerTypeString)) {
+      hasCalls = false;
     } else {
-      foundMutationTypes = false;
+      foundCallerTypes = false;
     }
 
-    checkState(foundCallerTypes, "Error: the caller_id [%s] is not recognzed for filename [%s]", callerTypeString,
+    checkState(foundCallerTypes, "Error: the caller_id [%s] is not recognzed for filename [%s]",
+        callerTypeString,
         parser.getFilename());
     checkState(foundMutationTypes,
-        "Error: the mutationType [%s] must be of type [%s], and the subMutationType can be eitheror of [%s ,%s]",
-        mutationTypeString, MutationTypes.somatic, SubMutationTypes.indel, SubMutationTypes.snv_mnv);
+        "Error: the mutationType(%s) must be of type [%s], and the subMutationType(%s) can be eitheror of [%s ,%s]",
+        mutationTypeString,
+        MutationTypes.somatic,
+        mutationSubTypeString,
+        SubMutationTypes.indel,
+        SubMutationTypes.snv_mnv);
 
     val refAllele = record.getReference();
     val altAlleles = record.getAlleles();
@@ -237,7 +238,7 @@ public class VCF implements Closeable {
               fileMetaData.getVcfFilenameParser().getFilename(),
               e.getClass().getName(),
               e.getMessage());
-          fileMetaData.setCorrupted(true);
+          fileMetaData.setCorrupted(true); // Set to corrupted state so that dont have to log again
         }
         return createCallObjectNode(fileMetaData, record, commonInfoSer, createDefaultGenotype(refAllele));
       }
@@ -249,6 +250,15 @@ public class VCF implements Closeable {
 
   }
 
+  private static ObjectNode convertInfo(@NonNull final CommonInfo info) {
+    val obj = object();
+    info.getAttributes().entrySet().stream()
+        .forEach(e -> obj.with(e.getKey(), e.getValue().toString())); // TODO: [rtisma] -- ensure value is not
+                                                                      // collection or array. If is, then need further
+                                                                      // implmentation
+    return obj.end();
+  }
+
   private static ObjectNode createCallObjectNode(@NonNull final FileMetaData fileMetaData,
       @NonNull VariantContext record,
       @NonNull String info,
@@ -257,7 +267,7 @@ public class VCF implements Closeable {
     val callerTypeString = parser.getCallerId();
     val bioSampleId = fileMetaData.getSampleId();
 
-    val genotypeSer = base64Serialize(genotype);
+    val genotypeSer = serialize(genotype);
     return object()
         .with(ID, createCallName(record, callerTypeString, bioSampleId, genotype))
         .with(NAME, createCallName(record, callerTypeString, bioSampleId, genotype))
@@ -314,7 +324,11 @@ public class VCF implements Closeable {
         .with(START, record.getStart())
         .with(END, record.getEnd())
         .with(REFERENCE_NAME, record.getContig())
-        .with(RECORD, encoder.encode(record))
+        .with(REFERENCE_BASES, record.getReference().getBaseString())
+        .with(ALTERNATIVE_BASES, array()
+            .with(record.getAlternateAlleles().stream()
+                .map(a -> a.getBaseString())
+                .collect(toImmutableList())))
         .end();
   }
 
