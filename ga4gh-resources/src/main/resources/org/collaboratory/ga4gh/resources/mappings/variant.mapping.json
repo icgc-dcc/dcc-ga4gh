@@ -17,8 +17,12 @@
 				"type": "keyword",
 				"index": "true"
 			},
-			"record": {
-				"type": "text",
+			"reference_bases": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"alternate_bases": {
+				"type": "keyword",
 				"index": "false"
 			}
 		},
