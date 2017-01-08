@@ -17,6 +17,7 @@
  */
 package org.collaboratory.ga4gh.loader;
 
+import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.FileMetaData.filter;
 
 import java.util.List;
@@ -24,24 +25,33 @@ import java.util.List;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
+/*
+ * Functions for filtering lists of FileMetaDatas
+ */
+@NoArgsConstructor(access = PRIVATE)
 public class FileMetaDataFilters {
 
+  /*
+   * Filters input list of FileMetaDatas to be less than specified size
+   */
   public static List<FileMetaData> filterBySize(@NonNull final Iterable<FileMetaData> fileMetaDatas,
       final long maxSizeBytes) {
-    return filter(fileMetaDatas, f -> f.getFileSize() <= maxSizeBytes);
+    return filter(fileMetaDatas, f -> f.getFileSize() < maxSizeBytes);
   }
 
   /*
-   * Filters by MutationType==somatic, SubMutationType==(snv_mnv or indel)
+   * Filters input list of FileMetaDatas by MutationType==somatic, SubMutationType==(snv_mnv or indel)
    */
   public static List<FileMetaData> filterSomaticSSMs(@NonNull final Iterable<FileMetaData> fileMetaDatas) {
     return filter(fileMetaDatas, f -> isSomaticSSM(f));
   }
 
+  /*
+   * Checks if FileMetaData is classified as somatic and indel or snv_mnv
+   */
   public static boolean isSomaticSSM(final FileMetaData f) {
     return f.compare(MutationTypes.somatic)
         && (f.startsWith(SubMutationTypes.indel)
