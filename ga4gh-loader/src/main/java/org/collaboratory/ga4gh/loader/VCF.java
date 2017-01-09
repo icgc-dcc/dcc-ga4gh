@@ -35,6 +35,7 @@ import java.util.Map;
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
+import org.collaboratory.ga4gh.loader.filemetadata.FileMetaData;
 import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;

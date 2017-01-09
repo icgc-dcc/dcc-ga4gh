@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,35 +15,52 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader;
+package org.collaboratory.ga4gh.loader.filemetadata;
 
-import org.assertj.core.api.Assertions;
-import org.collaboratory.ga4gh.loader.test.BaseElasticsearchTest;
-import org.junit.Test;
+import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
+import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
+import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaDataFilters.filterBySize;
+import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaDataFilters.filterSomaticSSMs;
 
+import java.util.List;
+
+import lombok.Builder;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class LoaderTest extends BaseElasticsearchTest {
+@Builder
+public class FileMetaDataFetcher {
 
-  @Test
-      public void testLoad() {
-        log.info("Creating index...");
-        createIndex();
-    
-        log.info("Loading data...");
-        indexData();
-    
-        val response = getVariant("035fba3f-dfef-50be-9f43-0b3831fa983f");
-        log.info("Response: {}", response);
-    
-        Assertions.assertThat(response.isExists());
-      }
+  private int numDonors = -1;
+  private long maxFileSizeBytes = -1;
+  private boolean somaticSSMsOnly = false;
 
-  @Test
-  public void testFileMetaDataFiltering() {
-
+  /*
+   * Return true if set to Non-default numDonor value
+   */
+  private boolean numDonorsUpdated() {
+    return numDonors > -1;
   }
 
+  /*
+   * Return true if set to Non-default maxFileSizeBytes value
+   */
+  private boolean maxFileSizeUpdated() {
+    return maxFileSizeBytes > -1;
+  }
+
+  /*
+   * Fetch list of FileMetaData object, based on filter configuration
+   */
+  public List<FileMetaData> fetch() {
+    val fileMetaDatas = numDonorsUpdated() ? getFileMetaDatasForNumDonors(numDonors) : getAllFileMetaDatas();
+
+    // If size > 0, use only files less than or equal to maxFileSizeBytes
+    val filteredFileMetaDatasBySize =
+        maxFileSizeUpdated() ? filterBySize(fileMetaDatas, maxFileSizeBytes) : fileMetaDatas;
+
+    val filteredFileMetaDatas =
+        somaticSSMsOnly ? filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
+
+    return filteredFileMetaDatas;
+  }
 }

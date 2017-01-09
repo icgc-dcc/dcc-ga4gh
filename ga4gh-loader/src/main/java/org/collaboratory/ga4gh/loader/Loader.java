@@ -1,21 +1,19 @@
 package org.collaboratory.ga4gh.loader;
 
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.summingLong;
-import static org.collaboratory.ga4gh.loader.Benchmarks.writeToNewFile;
 import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
 import static org.collaboratory.ga4gh.loader.DonorData.buildDonorDataList;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
-import static org.collaboratory.ga4gh.loader.FileMetaDataFilters.filterBySize;
-import static org.collaboratory.ga4gh.loader.FileMetaDataFilters.filterSomaticSSMs;
 import static org.collaboratory.ga4gh.loader.Storage.downloadFile;
 import static org.collaboratory.ga4gh.loader.Storage.downloadFileAndPersist;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.File;
 import java.util.List;
+
+import org.collaboratory.ga4gh.loader.filemetadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.filemetadata.FileMetaDataFetcher;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -29,22 +27,25 @@ public class Loader {
 
   private static final int NUM_DONORS = 30;
   private static final long DEBUG_FILEMETADATA_MAX_SIZE = 7000000;
-
-  /*
-   * State
-   */
-  private long globalFileMetaDataCount = -1;
-  private long globalFileMetaDataTotal = -1;
+  private static final String DOWNLOADED_VCFS_DIR = "target/storedVCFs";
 
   @NonNull
   private final Indexer indexer;
+
+  private long globalFileMetaDataCount = -1;
+  private long globalFileMetaDataTotal = -1;
 
   public static void main(String[] args) {
     log.info("Static Config:\n{}", Config.toConfigString());
     try (val client = newClient(); val writer = newDocumentWriter(client)) {
       val loader = newLoader(client, writer);
       val startMs = System.currentTimeMillis();
-      loader.load();
+      val dataFetcher = FileMetaDataFetcher.builder()
+          .numDonors(NUM_DONORS)
+          .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
+          .somaticSSMsOnly(true)
+          .build();
+      loader.load(dataFetcher);
       val endMs = System.currentTimeMillis();
       val durationSec = (endMs - startMs) / 1000;
       val durationMin = (endMs - startMs) / (60000);
@@ -61,31 +62,6 @@ public class Loader {
     globalFileMetaDataTotal = donorDataList.stream()
         .map(x -> x.getTotalFileMetaCount())
         .collect(summingLong(Long::longValue));
-  }
-
-  private List<DonorData> fetchDonorData(final int numDonors, final long maxFileSizeBytes) {
-    val fileMetaDatas = Portal.getFileMetaDatasForNumDonors(numDonors);
-    writeToNewFile("./target/all_list.txt",
-        stream(fileMetaDatas).map(x -> x.getVcfFilenameParser().getFilename())
-            .collect(joining("\n")));
-
-    // If size > 0, use only files less than or equal to maxFileSizeBytes
-    val filteredFileMetaDatasBySize =
-        (maxFileSizeBytes < 0) ? fileMetaDatas : filterBySize(fileMetaDatas, maxFileSizeBytes);
-    val filteredFileMetaDatas = filterSomaticSSMs(filteredFileMetaDatasBySize);
-    writeToNewFile("./target/filtered_list.txt",
-        stream(filteredFileMetaDatas).map(x -> x.getVcfFilenameParser().getFilename())
-            .collect(joining("\n")));
-
-    val donorDataList = buildDonorDataList(filteredFileMetaDatas);
-
-    // Reset the counters for total global filemeta data objects
-    resetGlobalFileMetaDataCounters(donorDataList);
-    return donorDataList;
-  }
-
-  private List<DonorData> fetchDonorData(final int numDonors) {
-    return fetchDonorData(numDonors, -1);
   }
 
   private void loadSample(@NonNull final List<FileMetaData> fileMetaDatas) {
@@ -116,9 +92,7 @@ public class Loader {
 
   private void loadFileMetaData(@NonNull final FileMetaData fileMetaData) {
     try {
-      String outputDir = "target/storedVCFs";
-      downloadAndLoadFile(fileMetaData, outputDir);
-      // downloadFileOnly(fileMetaData, outputDir);
+      downloadAndLoadFile(fileMetaData, DOWNLOADED_VCFS_DIR);
     } catch (Exception e) {
       log.warn("Bad VCF with fileMetaData: {}", fileMetaData);
       log.warn("Message [{}]: {} ", e.getClass().getName(), e.getMessage());
@@ -128,10 +102,11 @@ public class Loader {
     }
   }
 
-  public void load() {
+  public void load(@NonNull final FileMetaDataFetcher dataFetcher) {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
-    val donorDataList = fetchDonorData(NUM_DONORS, DEBUG_FILEMETADATA_MAX_SIZE);
+    val donorDataList = buildDonorDataList(dataFetcher.fetch());
+    resetGlobalFileMetaDataCounters(donorDataList);
     dumpToJson(donorDataList, "target/donorDataList.json");
     int donorCount = 1;
     int donorTotal = donorDataList.size();

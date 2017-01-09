@@ -15,10 +15,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader;
+package org.collaboratory.ga4gh.loader.filemetadata;
 
 import static lombok.AccessLevel.PRIVATE;
-import static org.collaboratory.ga4gh.loader.FileMetaData.filter;
+import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaData.filter;
 
 import java.util.List;
 

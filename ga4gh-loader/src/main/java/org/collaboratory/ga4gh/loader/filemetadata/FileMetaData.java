@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader;
+package org.collaboratory.ga4gh.loader.filemetadata;
 
 import static java.util.stream.Collectors.groupingBy;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.collaboratory.ga4gh.loader.Benchmarks;
+import org.collaboratory.ga4gh.loader.PortalFiles;
+import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;

@@ -19,13 +19,15 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.summingInt;
-import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDataBySample;
-import static org.collaboratory.ga4gh.loader.FileMetaData.groupFileMetaDatasByDonor;
+import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaData.groupFileMetaDataBySample;
+import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaData.groupFileMetaDatasByDonor;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.collaboratory.ga4gh.loader.filemetadata.FileMetaData;
 
 import lombok.NonNull;
 import lombok.Value;

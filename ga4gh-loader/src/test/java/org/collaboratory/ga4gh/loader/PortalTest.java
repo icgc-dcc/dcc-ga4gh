@@ -26,6 +26,8 @@ import java.util.Set;
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
+import org.collaboratory.ga4gh.loader.filemetadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.filemetadata.FileMetaDataFilters;
 import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
 

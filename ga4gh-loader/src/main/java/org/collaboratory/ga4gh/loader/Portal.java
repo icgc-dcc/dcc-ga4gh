@@ -5,13 +5,15 @@ import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
-import static org.collaboratory.ga4gh.loader.FileMetaData.buildFileMetaDataList;
+import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaData.buildFileMetaDataList;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
+
+import org.collaboratory.ga4gh.loader.filemetadata.FileMetaData;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -67,6 +69,10 @@ public final class Portal {
 
   public static List<FileMetaData> getFileMetaDatasForNumDonors(int numDonors) {
     return buildFileMetaDataList(getFileMetasForNumDonors(numDonors));
+  }
+
+  public static List<FileMetaData> getAllFileMetaDatas() {
+    return buildFileMetaDataList(getAllFileMetas());
   }
 
   public static List<ObjectNode> getFileMetasForNumDonors(int numDonors) {
@@ -131,6 +137,8 @@ public final class Portal {
     return new URL(endpoint + "?" + "from=" + from + "&size=" + size + "&order=desc&facetsOnly=false");
   }
 
+  // TODO: [rtisma] -- need to updated this. When request N donors, sometimes get < N donors back. Make sure filtering
+  // correctly for SSM only
   @SneakyThrows
   private static URL getFilesForDonersUrl(@NonNull Iterable<String> donorIterable, final int size, final int from) {
     val endpoint = PORTAL_API + REPOSITORY_FILES_ENDPOINT;
