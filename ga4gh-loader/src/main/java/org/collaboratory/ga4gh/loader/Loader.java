@@ -2,18 +2,19 @@ package org.collaboratory.ga4gh.loader;
 
 import static java.util.stream.Collectors.summingLong;
 import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
-import static org.collaboratory.ga4gh.loader.DonorData.buildDonorDataList;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 import static org.collaboratory.ga4gh.loader.Storage.downloadFile;
 import static org.collaboratory.ga4gh.loader.Storage.downloadFileAndPersist;
+import static org.collaboratory.ga4gh.loader.metadata.DonorData.buildDonorDataList;
 
 import java.io.File;
 import java.util.List;
 
-import org.collaboratory.ga4gh.loader.filemetadata.FileMetaData;
-import org.collaboratory.ga4gh.loader.filemetadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.metadata.DonorData;
+import org.collaboratory.ga4gh.loader.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.metadata.FileMetaDataFetcher;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -75,7 +76,6 @@ public class Loader {
       loadFileMetaData(fileMetaData);
       fileMetaDataCount++;
     }
-
   }
 
   private void loadDonor(@NonNull final DonorData donorData) {

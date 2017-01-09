@@ -15,52 +15,47 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.filemetadata;
+package org.collaboratory.ga4gh.loader.metadata;
 
-import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
-import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
-import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaDataFilters.filterBySize;
-import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaDataFilters.filterSomaticSSMs;
+import static lombok.AccessLevel.PRIVATE;
+import static org.collaboratory.ga4gh.loader.metadata.FileMetaData.filter;
 
 import java.util.List;
 
-import lombok.Builder;
-import lombok.val;
+import org.collaboratory.ga4gh.loader.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 
-@Builder
-public class FileMetaDataFetcher {
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-  private int numDonors = -1;
-  private long maxFileSizeBytes = -1;
-  private boolean somaticSSMsOnly = false;
+/*
+ * Functions for filtering lists of FileMetaDatas
+ */
+@NoArgsConstructor(access = PRIVATE)
+public class FileMetaDataFilters {
 
   /*
-   * Return true if set to Non-default numDonor value
+   * Filters input list of FileMetaDatas to be less than specified size
    */
-  private boolean numDonorsUpdated() {
-    return numDonors > -1;
+  public static List<FileMetaData> filterBySize(@NonNull final Iterable<FileMetaData> fileMetaDatas,
+      final long maxSizeBytes) {
+    return filter(fileMetaDatas, f -> f.getFileSize() < maxSizeBytes);
   }
 
   /*
-   * Return true if set to Non-default maxFileSizeBytes value
+   * Filters input list of FileMetaDatas by MutationType==somatic, SubMutationType==(snv_mnv or indel)
    */
-  private boolean maxFileSizeUpdated() {
-    return maxFileSizeBytes > -1;
+  public static List<FileMetaData> filterSomaticSSMs(@NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return filter(fileMetaDatas, f -> isSomaticSSM(f));
   }
 
   /*
-   * Fetch list of FileMetaData object, based on filter configuration
+   * Checks if FileMetaData is classified as somatic and indel or snv_mnv
    */
-  public List<FileMetaData> fetch() {
-    val fileMetaDatas = numDonorsUpdated() ? getFileMetaDatasForNumDonors(numDonors) : getAllFileMetaDatas();
-
-    // If size > 0, use only files less than or equal to maxFileSizeBytes
-    val filteredFileMetaDatasBySize =
-        maxFileSizeUpdated() ? filterBySize(fileMetaDatas, maxFileSizeBytes) : fileMetaDatas;
-
-    val filteredFileMetaDatas =
-        somaticSSMsOnly ? filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
-
-    return filteredFileMetaDatas;
+  public static boolean isSomaticSSM(final FileMetaData f) {
+    return f.compare(MutationTypes.somatic)
+        && (f.compare(SubMutationTypes.indel)
+            || f.compare(SubMutationTypes.snv_mnv));
   }
+
 }

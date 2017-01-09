@@ -15,19 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader;
+package org.collaboratory.ga4gh.loader.metadata;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.summingInt;
-import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaData.groupFileMetaDataBySample;
-import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaData.groupFileMetaDatasByDonor;
+import static org.collaboratory.ga4gh.loader.metadata.FileMetaData.groupFileMetaDataBySample;
+import static org.collaboratory.ga4gh.loader.metadata.FileMetaData.groupFileMetaDatasByDonor;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.collaboratory.ga4gh.loader.filemetadata.FileMetaData;
 
 import lombok.NonNull;
 import lombok.Value;

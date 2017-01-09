@@ -5,7 +5,7 @@ import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
-import static org.collaboratory.ga4gh.loader.filemetadata.FileMetaData.buildFileMetaDataList;
+import static org.collaboratory.ga4gh.loader.metadata.FileMetaData.buildFileMetaDataList;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
@@ -13,7 +13,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
 
-import org.collaboratory.ga4gh.loader.filemetadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.metadata.FileMetaData;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
