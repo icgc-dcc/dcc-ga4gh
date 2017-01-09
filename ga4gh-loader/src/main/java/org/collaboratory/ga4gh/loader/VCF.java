@@ -149,7 +149,7 @@ public class VCF implements Closeable {
 
   private boolean isMutationTypesCorrect() {
     val mutationTypeString = fileMetaData.getVcfFilenameParser().getMutationType();
-    val mutationSubTypeString = fileMetaData.getVcfFilenameParser().getMutationSubType();
+    val mutationSubTypeString = fileMetaData.getVcfFilenameParser().getSubMutationType();
     return MutationTypes.somatic.equals(mutationTypeString) && (SubMutationTypes.indel.equals(mutationSubTypeString)
         || SubMutationTypes.snv_mnv.equals(mutationSubTypeString));
   }
@@ -159,7 +159,7 @@ public class VCF implements Closeable {
     val parser = fileMetaData.getVcfFilenameParser();
     val callerTypeString = parser.getCallerId();
     val mutationTypeString = parser.getMutationType();
-    val mutationSubTypeString = parser.getMutationSubType();
+    val mutationSubTypeString = parser.getSubMutationType();
     val genotypeContext = record.getGenotypes();
     val commonInfoSer = serialize(record.getCommonInfo());
 

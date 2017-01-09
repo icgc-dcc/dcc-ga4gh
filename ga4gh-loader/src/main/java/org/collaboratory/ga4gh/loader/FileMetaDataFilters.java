@@ -54,8 +54,8 @@ public class FileMetaDataFilters {
    */
   public static boolean isSomaticSSM(final FileMetaData f) {
     return f.compare(MutationTypes.somatic)
-        && (f.startsWith(SubMutationTypes.indel)
-            || f.startsWith(SubMutationTypes.snv_mnv));
+        && (f.compare(SubMutationTypes.indel)
+            || f.compare(SubMutationTypes.snv_mnv));
   }
 
 }

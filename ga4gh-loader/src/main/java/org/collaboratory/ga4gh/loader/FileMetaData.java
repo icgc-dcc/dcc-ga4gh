@@ -42,8 +42,8 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 //TODO: [rtisma] -- consider storing the CallerTypes, MutationTypes and MutationSubTypes enum values instead of string representation. Or atleast keep strings, just create functions to compare the string against the enum
-@Data
 @Slf4j
+@Data
 public final class FileMetaData {
 
   @NonNull
@@ -127,7 +127,7 @@ public final class FileMetaData {
 
   public static Map<String, List<FileMetaData>> groupFileMetaDatasBySubMutationType(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getMutationSubType());
+    return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getSubMutationType());
   }
 
   public static Map<String, List<FileMetaData>> groupFileMetaData(
@@ -163,7 +163,7 @@ public final class FileMetaData {
   }
 
   public boolean compare(final SubMutationTypes type) {
-    return getVcfFilenameParser().getMutationSubType().equals(type.toString());
+    return getVcfFilenameParser().getSubMutationType().equals(type.toString());
   }
 
   public boolean compare(final CallerTypes type) {
@@ -179,7 +179,7 @@ public final class FileMetaData {
   }
 
   public boolean startsWith(final SubMutationTypes type) {
-    return getVcfFilenameParser().getMutationSubType().matches(getStartsWithRegex(type.toString()));
+    return getVcfFilenameParser().getSubMutationType().matches(getStartsWithRegex(type.toString()));
   }
 
   public boolean startsWith(final CallerTypes type) {

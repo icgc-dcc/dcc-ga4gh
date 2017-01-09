@@ -38,7 +38,7 @@ public class PortalVCFFilenameParser {
   private static final int CALLER_ID_POS = 1;
   private static final int DATE_POS = 2;
   private static final int MUTATION_TYPE_POS = 3;
-  private static final int MUTATION_SUB_TYPE_POS = 4;
+  private static final int SUB_MUTATION_TYPE_POS = 4;
   private static final int FILE_TYPE_POS = 5;
 
   @Getter
@@ -70,8 +70,8 @@ public class PortalVCFFilenameParser {
     return elements[MUTATION_TYPE_POS];
   }
 
-  public String getMutationSubType() {
-    return elements[MUTATION_SUB_TYPE_POS];
+  public String getSubMutationType() {
+    return elements[SUB_MUTATION_TYPE_POS];
   }
 
   public String getFileType() {
