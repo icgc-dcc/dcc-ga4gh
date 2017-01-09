@@ -17,13 +17,38 @@
  */
 package org.collaboratory.ga4gh.loader;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
 
+import java.util.List;
+import java.util.Set;
+
+import org.collaboratory.ga4gh.loader.enums.CallerTypes;
+import org.collaboratory.ga4gh.loader.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
+import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
 
-import lombok.val;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class PortalTest {
+
+  private static List<String> filenameGenerator(final CallerTypes caller, final MutationTypes mutation,
+      final SubMutationTypes subMutation) {
+    val builder = ImmutableList.<String> builder();
+    val objectId = "myObjectId";
+    val dateId = "myDataId";
+    val ext = "vcf.gz";
+    builder.add(Joiners.DOT.join(objectId, caller, dateId, mutation, subMutation, ext));
+    builder.add(Joiners.DOT.join(objectId, caller + "_some_extra", dateId, mutation, subMutation, ext));
+    builder.add(Joiners.DOT.join(objectId, "some_extra_" + caller, dateId, mutation, subMutation, ext));
+    return builder.build();
+  }
 
   @Test
   public void testFileMetaDataFilter() {
@@ -35,6 +60,46 @@ public class PortalTest {
     // val filteredFileMetaDatasBySize =
     // (maxFileSizeBytes < 0) ? fileMetaDatas : filterBySize(fileMetaDatas, maxFileSizeBytes);
     // val filteredFileMetaDatas = filterSomaticSSMs(filteredFileMetaDatasBySize);
+
+  }
+
+  private static Set<FileMetaData> expectedFilterSomaticSSMs(final Iterable<FileMetaData> fileMetaDatas) {
+    val builder = ImmutableSet.<FileMetaData> builder();
+    for (val fileMetaData : fileMetaDatas) {
+      if (FileMetaDataFilters.isSomaticSSM(fileMetaData)) {
+        builder.add(fileMetaData);
+      }
+    }
+    return builder.build();
+  }
+
+  private static boolean isExpectedSomaticSSMClassification(final MutationTypes mutation,
+      final SubMutationTypes subMutation) {
+    return mutation == MutationTypes.somatic
+        && (subMutation == SubMutationTypes.indel || subMutation == SubMutationTypes.snv_mnv);
+  }
+
+  private static FileMetaData createDummyFileMetaDataForParserAndSize(final PortalVCFFilenameParser parser,
+      final long size) {
+    return new FileMetaData("", "", "", "", "", "", "", size, "", parser);
+  }
+
+  @Test
+  public void testSomaticSSMLogic() {
+    for (val caller : CallerTypes.values()) {
+      for (val mutation : MutationTypes.values()) {
+        for (val subMutation : SubMutationTypes.values()) {
+          val isExpectedSomaticSSM = isExpectedSomaticSSMClassification(mutation, subMutation);
+          for (val filename : filenameGenerator(caller, mutation, subMutation)) {
+            val parser = new PortalVCFFilenameParser(filename);
+            val fileMetaData = createDummyFileMetaDataForParserAndSize(parser, 700000);
+            val isActualSomaticSSM = FileMetaDataFilters.isSomaticSSM(fileMetaData);
+            log.info("Tesing Filename : {}", filename);
+            assertThat(isExpectedSomaticSSM == isActualSomaticSSM);
+          }
+        }
+      }
+    }
 
   }
 
