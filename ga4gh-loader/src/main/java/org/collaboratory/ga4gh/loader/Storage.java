@@ -1,9 +1,9 @@
 package org.collaboratory.ga4gh.loader;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static java.nio.file.Files.copy;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_API;
 import static org.collaboratory.ga4gh.loader.Config.TOKEN;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
@@ -17,23 +17,56 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.collaboratory.ga4gh.loader.metadata.FileMetaData;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.hash.Hashing;
 
 import lombok.Cleanup;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-@NoArgsConstructor(access = PRIVATE)
 @Slf4j
+@Value
 public final class Storage {
 
+  private final boolean persist;
+
+  private final Path outputDir;
+
+  public Storage(final boolean persist, @NonNull final String outputDirName) {
+    this.persist = persist;
+    this.outputDir = Paths.get(outputDirName).toAbsolutePath();
+    initDir(outputDir);
+  }
+
   @SneakyThrows
-  public static File downloadFile(@NonNull final String objectId, @NonNull final String filename) {
+  private static void initDir(@NonNull final Path dir) {
+    val dirDoesNotExist = !Files.exists(dir);
+    if (dirDoesNotExist) {
+      Files.createDirectories(dir);
+    }
+  }
+
+  // Used for subdirectories inside outputDir
+  private void initParentDir(@NonNull Path file) {
+    if (!file.isAbsolute()) {
+      file = file.toAbsolutePath();
+    }
+    checkState(file.startsWith(outputDir),
+        "The file [%s] must have the parent directory [%s] in its path",
+        file, outputDir);
+    val parentDir = file.getParent();
+    initDir(parentDir);
+  }
+
+  // Download file regardless of persist mode
+  @SneakyThrows
+  private static File downloadFileByObjectId(@NonNull final String objectId, @NonNull final String filename) {
     val objectUrl = getObjectUrl(objectId);
     val output = Paths.get(filename);
 
@@ -45,38 +78,27 @@ public final class Storage {
   }
 
   @SneakyThrows
-  public static File downloadFile(final String objectId) {
-    return downloadFile(objectId, "/tmp/file.vcf.gz");
-  }
-
-  @SneakyThrows
-  public static File downloadFileAndPersist(@NonNull final String objectId, @NonNull final String filename,
-      @NonNull final String expectedMD5Sum) {
-    val path = Paths.get(filename);
-    Path dir = path.getParent();
-    if (dir == null) {
-      dir = Paths.get("./");
-    }
-    val dirDoesNotExist = !Files.exists(dir);
-    if (dirDoesNotExist) {
-      Files.createDirectories(dir);
-    }
-    if (Files.exists(path)) {
-      val md5Mismatch = !calcMd5Sum(filename).equals(expectedMD5Sum);
-      if (md5Mismatch) {
-        return downloadFile(objectId, filename);
-      } else {
-        log.info("File [{}] already exists and matches checksum. Skipping download.", filename);
-        return path.toFile();
-      }
+  public File downloadFile(@NonNull final FileMetaData fileMetaData) {
+    val objectId = fileMetaData.getObjectId();
+    val expectedMD5Sum = fileMetaData.getFileMd5sum();
+    val relativeFilename = fileMetaData.getVcfFilenameParser().getFilename();
+    val relativeFile = Paths.get(relativeFilename);
+    val absFile = outputDir.resolve(relativeFile).toAbsolutePath();
+    val absFilename = absFile.toString();
+    initParentDir(absFile);
+    val fileExists = Files.exists(absFile);
+    val md5Match = fileExists && calcMd5Sum(absFile).equals(expectedMD5Sum); // Short circuit
+    if (persist && md5Match) {
+      log.info("File [{}] already exists and matches checksum. Skipping download.", absFile);
+      return absFile.toFile();
     } else {
-      return downloadFile(objectId, filename);
+      return downloadFileByObjectId(objectId, absFilename);
     }
   }
 
-  private static String calcMd5Sum(final String filename) throws IOException {
-    val path = Paths.get(filename);
-    val bytes = Files.readAllBytes(path);
+  private static String calcMd5Sum(@NonNull final Path file) throws IOException {
+    checkState(file.toFile().isFile(), "The input path [%s] is not a file", file);
+    val bytes = Files.readAllBytes(file);
     return Hashing.md5()
         .newHasher()
         .putBytes(bytes)

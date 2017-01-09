@@ -5,8 +5,6 @@ import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
-import static org.collaboratory.ga4gh.loader.Storage.downloadFile;
-import static org.collaboratory.ga4gh.loader.Storage.downloadFileAndPersist;
 import static org.collaboratory.ga4gh.loader.metadata.DonorData.buildDonorDataList;
 
 import java.io.File;
@@ -28,10 +26,12 @@ public class Loader {
 
   private static final int NUM_DONORS = 30;
   private static final long DEBUG_FILEMETADATA_MAX_SIZE = 7000000;
-  private static final String DOWNLOADED_VCFS_DIR = "target/storedVCFs";
 
   @NonNull
   private final Indexer indexer;
+
+  @NonNull
+  private final Storage storage;
 
   private long globalFileMetaDataCount = -1;
   private long globalFileMetaDataTotal = -1;
@@ -46,7 +46,8 @@ public class Loader {
           .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
           .somaticSSMsOnly(true)
           .build();
-      loader.load(dataFetcher);
+      // loader.loadUsingDonorDatas(dataFetcher);
+      loader.loadUsingFileMetaDatas(dataFetcher);
       val endMs = System.currentTimeMillis();
       val durationSec = (endMs - startMs) / 1000;
       val durationMin = (endMs - startMs) / (60000);
@@ -92,7 +93,7 @@ public class Loader {
 
   private void loadFileMetaData(@NonNull final FileMetaData fileMetaData) {
     try {
-      downloadAndLoadFile(fileMetaData, DOWNLOADED_VCFS_DIR);
+      downloadAndLoadFile(fileMetaData);
     } catch (Exception e) {
       log.warn("Bad VCF with fileMetaData: {}", fileMetaData);
       log.warn("Message [{}]: {} ", e.getClass().getName(), e.getMessage());
@@ -102,7 +103,20 @@ public class Loader {
     }
   }
 
-  public void load(@NonNull final FileMetaDataFetcher dataFetcher) {
+  public void loadUsingFileMetaDatas(@NonNull final FileMetaDataFetcher dataFetcher) {
+    indexer.prepareIndex();
+    log.info("Resolving object ids...");
+    val fileMetaDatas = dataFetcher.fetch();
+    int count = 1;
+    int total = fileMetaDatas.size();
+    for (val fileMetaData : fileMetaDatas) {
+      log.info("Loading FileMetaData {}/{}: {}", count, total, fileMetaData.getVcfFilenameParser().getFilename());
+      loadFileMetaData(fileMetaData);
+      count++;
+    }
+  }
+
+  public void loadUsingDonorDatas(@NonNull final FileMetaDataFetcher dataFetcher) {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
     val donorDataList = buildDonorDataList(dataFetcher.fetch());
@@ -119,27 +133,13 @@ public class Loader {
   }
 
   private void downloadAndLoadFile(@NonNull final FileMetaData fileMetaData) {
-    log.info("Downloading file {}...", fileMetaData.getVcfFilenameParser().getFilename());
-    File file = downloadFile(fileMetaData.getObjectId());
-    loadFile(file, fileMetaData);
-  }
-
-  private static File downloadFileOnly(@NonNull final FileMetaData fileMetaData, final String outputDir) {
-    log.info("[PERSIST_MODE] Downloading file {} to {}...", fileMetaData.getVcfFilenameParser().getFilename(),
-        outputDir);
-    return downloadFileAndPersist(fileMetaData.getObjectId(),
-        outputDir + File.separator + fileMetaData.getVcfFilenameParser().getFilename(),
-        fileMetaData.getFileMd5sum());
-  }
-
-  private void downloadAndLoadFile(@NonNull final FileMetaData fileMetaData, final String outputDir) {
-    val file = downloadFileOnly(fileMetaData, outputDir);
-    log.info("Loading file {} to {}...", fileMetaData.getVcfFilenameParser().getFilename(), outputDir);
+    val file = storage.downloadFile(fileMetaData);
+    log.info("Loading file {} ...", file.getAbsolutePath());
     loadFile(file, fileMetaData);
   }
 
   private void loadFile(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
-    log.info("Reading variants from {}...", file);
+    log.info("\tReading variants ...");
     @Cleanup
     val vcf = new VCF(file, fileMetaData);
     val variants = vcf.readVariants();
@@ -148,19 +148,19 @@ public class Loader {
     val variantSet = vcf.readVariantSet();
     val vcfHeader = vcf.readVCFHeader();
 
-    log.info("Indexing variants {}...", fileMetaData.getVcfFilenameParser().getFilename());
+    log.info("\t\tIndexing variants ...");
     indexer.indexVariants(variants);
 
-    log.info("Indexing calls {}...", fileMetaData.getVcfFilenameParser().getFilename());
+    log.info("\t\tIndexing calls ...");
     indexer.indexCalls(callMap);
 
-    log.info("Indexing callsets {}...", fileMetaData.getVcfFilenameParser().getFilename());
+    log.info("\t\tIndexing callsets ...");
     indexer.indexCallSet(callSets);
 
-    log.info("Indexing variantSets {}...", fileMetaData.getVcfFilenameParser().getFilename());
+    log.info("\t\tIndexing variantSets ...");
     indexer.indexVariantSet(variantSet);
 
-    log.info("Indexing vcfHeaders {}...", fileMetaData.getVcfFilenameParser().getFilename());
+    log.info("\t\tIndexing vcfHeaders ...");
     indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);
   }
 }
