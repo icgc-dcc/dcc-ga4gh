@@ -49,7 +49,8 @@ public class Config {
   public static final boolean DATA_FETCHER_SHUFFLE = true;
   public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
   public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = 700000;
-  public static final int DATA_FETCHER_NUM_DONORS = 30;
+  public static final int DATA_FETCHER_NUM_DONORS = -1;
+  public static final int DATA_FETCHER_LIMIT = 100;
   public static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
 
 }

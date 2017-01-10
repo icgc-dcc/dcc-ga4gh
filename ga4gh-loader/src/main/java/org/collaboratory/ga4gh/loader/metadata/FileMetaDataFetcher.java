@@ -37,14 +37,16 @@ import lombok.val;
 @Builder
 public class FileMetaDataFetcher {
 
-  private static final int DEFAULT_NUM_DONORS = -1;
-  private static final int DEFAULT_MAX_FILESIZE_BYTES = -1;
+  public static final int DEFAULT_NUM_DONORS = 0;
+  public static final int DEFAULT_MAX_FILESIZE_BYTES = 0;
+  public static final int DEFAULT_LIMIT_NUM_FILES = 0;
 
   private final int numDonors;
   private final long maxFileSizeBytes;
   private final boolean somaticSSMsOnly;
   private final boolean shuffle;
   private final long seed;
+  private final int limit;
 
   public static final long generateSeed() {
     return System.currentTimeMillis();
@@ -57,6 +59,7 @@ public class FileMetaDataFetcher {
         .numDonors(DEFAULT_NUM_DONORS)
         .somaticSSMsOnly(false)
         .seed(generateSeed())
+        .limit(DEFAULT_LIMIT_NUM_FILES)
         .shuffle(false);
   }
 
@@ -75,6 +78,13 @@ public class FileMetaDataFetcher {
   }
 
   /*
+   * Return true if set to Non-default limitNumFiles
+   */
+  private boolean limitNumFilesUpdated() {
+    return limit > DEFAULT_LIMIT_NUM_FILES;
+  }
+
+  /*
    * Fetch list of FileMetaData object, based on filter configuration
    */
   public List<FileMetaData> fetch() {
@@ -90,12 +100,12 @@ public class FileMetaDataFetcher {
     val filteredFileMetaDatas =
         somaticSSMsOnly ? filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
 
+    List<FileMetaData> outputList = filteredFileMetaDatas;
     if (shuffle) {
       val list = Lists.newArrayList(filteredFileMetaDatas);
       Collections.shuffle(list, rand);
-      return ImmutableList.copyOf(list);
+      outputList = ImmutableList.copyOf(list);
     }
-
-    return filteredFileMetaDatas;
+    return limitNumFilesUpdated() ? outputList.subList(0, limit) : outputList;
   }
 }

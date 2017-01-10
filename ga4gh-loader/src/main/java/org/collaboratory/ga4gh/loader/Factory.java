@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_LIMIT;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_NUM_DONORS;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SHUFFLE;
@@ -9,6 +10,7 @@ import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
 import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
+import static org.collaboratory.ga4gh.loader.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
 import java.net.InetAddress;
@@ -56,16 +58,29 @@ public class Factory {
     return new Storage(PERSIST_MODE, OUTPUT_VCF_STORAGE_DIR);
   }
 
-  public static FileMetaDataFetcher newFileMetaDataFetcher() {
-    long seed = FileMetaDataFetcher.generateSeed();
+  public static FileMetaDataFetcher newFileMetaDataFetcherCustom() {
+    long seed = generateSeed();
     if (DATA_FETCHER_SHUFFLE) {
-      log.info("Using seed [{}] for FileMetaDataFetcher instance");
+      log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
     }
     return FileMetaDataFetcher.builder()
         .shuffle(DATA_FETCHER_SHUFFLE)
         .maxFileSizeBytes(DATA_FETCHER_MAX_FILESIZE_BYTES)
         .seed(seed)
         .numDonors(DATA_FETCHER_NUM_DONORS)
+        .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
+        .limit(DATA_FETCHER_LIMIT)
+        .build();
+  }
+
+  public static FileMetaDataFetcher newFileMetaDataFetcherAll() {
+    long seed = generateSeed();
+    if (DATA_FETCHER_SHUFFLE) {
+      log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
+    }
+    return FileMetaDataFetcher.builder()
+        .shuffle(DATA_FETCHER_SHUFFLE)
+        .seed(seed)
         .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
         .build();
   }
