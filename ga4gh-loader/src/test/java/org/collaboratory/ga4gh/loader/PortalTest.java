@@ -27,7 +27,6 @@ import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.metadata.FileMetaData;
-import org.collaboratory.ga4gh.loader.metadata.FileMetaDataFetcher;
 import org.collaboratory.ga4gh.loader.metadata.FileMetaDataFilters;
 import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
@@ -51,62 +50,6 @@ public class PortalTest {
     builder.add(Joiners.DOT.join(objectId, caller + "_some_extra", dateId, mutation, subMutation, ext));
     builder.add(Joiners.DOT.join(objectId, "some_extra_" + caller, dateId, mutation, subMutation, ext));
     return builder.build();
-  }
-
-  @Test
-  public void testFetcherShuffler() {
-    int numDonors = 30;
-    val dataFetcherShuffle1 = FileMetaDataFetcher.builder()
-        .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
-        .somaticSSMsOnly(true)
-        .shuffle(true)
-        .build();
-    val dataFetcherShuffle2 = FileMetaDataFetcher.builder()
-        .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
-        .somaticSSMsOnly(true)
-        .shuffle(true)
-        .build();
-    val dataFetcherShuffle2_withSeed2 = FileMetaDataFetcher.builder()
-        .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
-        .somaticSSMsOnly(true)
-        .seed(dataFetcherShuffle2.getSeed())
-        .shuffle(true)
-        .build();
-
-    val dataFetcherNonShuffle1 = FileMetaDataFetcher.builder()
-        .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
-        .somaticSSMsOnly(true)
-        .shuffle(false)
-        .build();
-    val dataFetcherNonShuffle2 = FileMetaDataFetcher.builder()
-        .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
-        .somaticSSMsOnly(true)
-        .shuffle(false)
-        .build();
-
-    val fmdShuffle1 = dataFetcherShuffle1.fetch();
-    val fmdShuffle2 = dataFetcherShuffle2.fetch();
-    val fmdShuffle2_withSeed2 = dataFetcherShuffle2_withSeed2.fetch();
-    val fmdNonShuffle1 = dataFetcherNonShuffle1.fetch();
-    val fmdNonShuffle2 = dataFetcherNonShuffle2.fetch();
-
-    // Assert that 2 dataFetchers with same parameters except for SEED values, and shuffle ON,
-    // result in FileMetaData lists that are DIFFERENT, therefore NOT EQUAL
-    assertThat(!fmdShuffle1.equals(fmdShuffle2));
-
-    // Assert that 2 dataFetchers with same parameters, regardless of SEED values, and shuffle OFF,
-    // result in FileMetaData lists that are the SAME, therefore EQUAL
-    assertThat(fmdNonShuffle1.equals(fmdNonShuffle2));
-
-    // Assert that 2 dataFetchers with same parameters, included same SEED values, and shuffle ON,
-    // result in FileMetaData lists that are the SAME, therefore EQUAL
-    assertThat(fmdShuffle2.equals(fmdShuffle2_withSeed2));
-
   }
 
   @Test
