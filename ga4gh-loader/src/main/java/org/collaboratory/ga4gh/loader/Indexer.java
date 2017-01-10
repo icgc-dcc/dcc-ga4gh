@@ -141,17 +141,11 @@ public class Indexer {
   private void writeCall(final String parent_variant_id, @NonNull final ObjectNode call) {
     val callId = call.path("id").textValue();
     if (callIdCache.contains(callId) == false) {
-      checkState(
-          client.prepareIndex(Config.INDEX_NAME, CALL_TYPE_NAME, callId)
-              .setContentType(SMILE)
-              .setSource(createSource(call))
-              .setParent(parent_variant_id)
-              .get().status().equals(RestStatus.CREATED));
+      writer.write(new IndexDocument(callId, call, new CallDocumentType(), parent_variant_id));
       callIdCache.add(callId);
     }
   }
 
-  // TODO: [rtisma] make the caller do bulk calls
   // TODO: [rtisma] rethink how will organize this data
   @SneakyThrows
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
@@ -204,6 +198,14 @@ public class Indexer {
     @Override
     public String getIndexType() {
       return CALLSET_TYPE_NAME;
+    }
+  }
+
+  private static class CallDocumentType implements IndexDocumentType {
+
+    @Override
+    public String getIndexType() {
+      return CALL_TYPE_NAME;
     }
   }
 
