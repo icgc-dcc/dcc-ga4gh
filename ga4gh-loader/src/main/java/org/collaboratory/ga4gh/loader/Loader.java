@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.summingLong;
 import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
+import static org.collaboratory.ga4gh.loader.Factory.newFileMetaDataFetcher;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 import static org.collaboratory.ga4gh.loader.metadata.DonorData.buildDonorDataList;
 
@@ -24,9 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Loader {
 
-  private static final int NUM_DONORS = 30;
-  private static final long DEBUG_FILEMETADATA_MAX_SIZE = 7000000;
-
   @NonNull
   private final Indexer indexer;
 
@@ -41,11 +39,7 @@ public class Loader {
     try (val client = newClient(); val writer = newDocumentWriter(client)) {
       val loader = newLoader(client, writer);
       val startMs = System.currentTimeMillis();
-      val dataFetcher = FileMetaDataFetcher.builder()
-          .numDonors(NUM_DONORS)
-          // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
-          .somaticSSMsOnly(true)
-          .build();
+      val dataFetcher = newFileMetaDataFetcher();
       log.info("dataFetcher: {}", dataFetcher);
       // loader.loadUsingDonorDatas(dataFetcher);
       loader.loadUsingFileMetaDatas(dataFetcher);

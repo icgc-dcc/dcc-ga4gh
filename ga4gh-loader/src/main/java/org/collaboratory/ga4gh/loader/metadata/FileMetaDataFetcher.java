@@ -46,7 +46,7 @@ public class FileMetaDataFetcher {
   private final boolean shuffle;
   private final long seed;
 
-  private static final long generateSeed() {
+  public static final long generateSeed() {
     return System.currentTimeMillis();
   }
 

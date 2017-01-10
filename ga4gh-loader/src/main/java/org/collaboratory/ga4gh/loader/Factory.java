@@ -1,12 +1,19 @@
 package org.collaboratory.ga4gh.loader;
 
+import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
+import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_NUM_DONORS;
+import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SHUFFLE;
+import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SOMATIC_SSMS_ONLY;
 import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
+import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
+import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
 import java.net.InetAddress;
 
+import org.collaboratory.ga4gh.loader.metadata.FileMetaDataFetcher;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -20,11 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Factory {
-
-  private static final int NUM_THREADS = 4;
-  private static final int BULK_SIZE_MB = 250;
-  private static final boolean PERSIST_MODE = false;
-  private static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
 
   @SuppressWarnings("resource")
   @SneakyThrows
@@ -40,8 +42,8 @@ public class Factory {
     return createDocumentWriter(new DocumentWriterConfiguration()
         .client(client)
         .indexName(INDEX_NAME)
-        .bulkSizeMb(BULK_SIZE_MB)
-        .threadsNum(NUM_THREADS));
+        .bulkSizeMb(Config.BULK_SIZE_MB)
+        .threadsNum(Config.NUM_THREADS));
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer) {
@@ -52,5 +54,19 @@ public class Factory {
 
   public static Storage newStorage() {
     return new Storage(PERSIST_MODE, OUTPUT_VCF_STORAGE_DIR);
+  }
+
+  public static FileMetaDataFetcher newFileMetaDataFetcher() {
+    long seed = FileMetaDataFetcher.generateSeed();
+    if (DATA_FETCHER_SHUFFLE) {
+      log.info("Using seed [{}] for FileMetaDataFetcher instance");
+    }
+    return FileMetaDataFetcher.builder()
+        .shuffle(DATA_FETCHER_SHUFFLE)
+        .maxFileSizeBytes(DATA_FETCHER_MAX_FILESIZE_BYTES)
+        .seed(seed)
+        .numDonors(DATA_FETCHER_NUM_DONORS)
+        .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
+        .build();
   }
 }
