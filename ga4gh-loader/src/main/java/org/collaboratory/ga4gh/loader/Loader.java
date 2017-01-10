@@ -43,9 +43,10 @@ public class Loader {
       val startMs = System.currentTimeMillis();
       val dataFetcher = FileMetaDataFetcher.builder()
           .numDonors(NUM_DONORS)
-          .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
+          // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
           .somaticSSMsOnly(true)
           .build();
+      log.info("dataFetcher: {}", dataFetcher);
       // loader.loadUsingDonorDatas(dataFetcher);
       loader.loadUsingFileMetaDatas(dataFetcher);
       val endMs = System.currentTimeMillis();

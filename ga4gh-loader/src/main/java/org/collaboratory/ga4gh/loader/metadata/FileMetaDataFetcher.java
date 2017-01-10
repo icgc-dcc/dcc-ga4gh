@@ -22,36 +22,65 @@ import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors
 import static org.collaboratory.ga4gh.loader.metadata.FileMetaDataFilters.filterBySize;
 import static org.collaboratory.ga4gh.loader.metadata.FileMetaDataFilters.filterSomaticSSMs;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import lombok.Builder;
+import lombok.Data;
 import lombok.val;
 
+@Data
 @Builder
 public class FileMetaDataFetcher {
 
-  private int numDonors = -1;
-  private long maxFileSizeBytes = -1;
-  private boolean somaticSSMsOnly = false;
+  private static final int DEFAULT_NUM_DONORS = -1;
+  private static final int DEFAULT_MAX_FILESIZE_BYTES = -1;
+
+  private final int numDonors;
+  private final long maxFileSizeBytes;
+  private final boolean somaticSSMsOnly;
+  private final boolean shuffle;
+  private final long seed;
+
+  private static final long generateSeed() {
+    return System.currentTimeMillis();
+  }
+
+  // Define default builder
+  public static FileMetaDataFetcherBuilder builder() {
+    return new FileMetaDataFetcherBuilder()
+        .maxFileSizeBytes(DEFAULT_MAX_FILESIZE_BYTES)
+        .numDonors(DEFAULT_NUM_DONORS)
+        .somaticSSMsOnly(false)
+        .seed(generateSeed())
+        .shuffle(false);
+  }
 
   /*
    * Return true if set to Non-default numDonor value
    */
   private boolean numDonorsUpdated() {
-    return numDonors > -1;
+    return numDonors > DEFAULT_NUM_DONORS;
   }
 
   /*
    * Return true if set to Non-default maxFileSizeBytes value
    */
   private boolean maxFileSizeUpdated() {
-    return maxFileSizeBytes > -1;
+    return maxFileSizeBytes > DEFAULT_MAX_FILESIZE_BYTES;
   }
 
   /*
    * Fetch list of FileMetaData object, based on filter configuration
    */
   public List<FileMetaData> fetch() {
+    val rand = new Random();
+    rand.setSeed(seed);
+
     val fileMetaDatas = numDonorsUpdated() ? getFileMetaDatasForNumDonors(numDonors) : getAllFileMetaDatas();
 
     // If size > 0, use only files less than or equal to maxFileSizeBytes
@@ -60,6 +89,12 @@ public class FileMetaDataFetcher {
 
     val filteredFileMetaDatas =
         somaticSSMsOnly ? filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
+
+    if (shuffle) {
+      val list = Lists.newArrayList(filteredFileMetaDatas);
+      Collections.shuffle(list, rand);
+      return ImmutableList.copyOf(list);
+    }
 
     return filteredFileMetaDatas;
   }

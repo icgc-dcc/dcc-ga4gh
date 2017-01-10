@@ -21,9 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Factory {
 
-  private static final int NUM_THREADS = 3;
-  private static final int BULK_SIZE_MB = 100;
-  private static final boolean PERSIST_MODE = true;
+  private static final int NUM_THREADS = 4;
+  private static final int BULK_SIZE_MB = 250;
+  private static final boolean PERSIST_MODE = false;
   private static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
 
   @SuppressWarnings("resource")
