@@ -30,19 +30,16 @@ public class FileMetaDataFetcherTest {
     int numDonors = 30;
     val dataFetcherShuffle1 = FileMetaDataFetcher.builder()
         .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
         .somaticSSMsOnly(true)
         .shuffle(true)
         .build();
     val dataFetcherShuffle2 = FileMetaDataFetcher.builder()
         .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
         .somaticSSMsOnly(true)
         .shuffle(true)
         .build();
     val dataFetcherShuffle2_withSeed2 = FileMetaDataFetcher.builder()
         .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
         .somaticSSMsOnly(true)
         .seed(dataFetcherShuffle2.getSeed())
         .shuffle(true)
@@ -50,13 +47,11 @@ public class FileMetaDataFetcherTest {
 
     val dataFetcherNonShuffle1 = FileMetaDataFetcher.builder()
         .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
         .somaticSSMsOnly(true)
         .shuffle(false)
         .build();
     val dataFetcherNonShuffle2 = FileMetaDataFetcher.builder()
         .numDonors(numDonors)
-        // .maxFileSizeBytes(DEBUG_FILEMETADATA_MAX_SIZE)
         .somaticSSMsOnly(true)
         .shuffle(false)
         .build();
