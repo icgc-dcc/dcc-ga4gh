@@ -17,6 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import org.collaboratory.ga4gh.loader.metadata.FileMetaData;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,16 +34,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
+@NotThreadSafe
 public final class Storage {
 
   private final boolean persist;
 
   private final Path outputDir;
 
+  private final long currentTime;
+
+  private final Path tempFile;
+
+  private static final String tempFilename = "tmp.vcf.gz";
+
   public Storage(final boolean persist, @NonNull final String outputDirName) {
     this.persist = persist;
     this.outputDir = Paths.get(outputDirName).toAbsolutePath();
     initDir(outputDir);
+    this.currentTime = System.currentTimeMillis();
+    this.tempFile = outputDir.resolve(tempFilename);
   }
 
   @SneakyThrows
@@ -52,14 +63,17 @@ public final class Storage {
     }
   }
 
-  // Used for subdirectories inside outputDir
-  private void initParentDir(@NonNull Path file) {
+  private void checkForParentDir(@NonNull Path file) {
     if (!file.isAbsolute()) {
       file = file.toAbsolutePath();
     }
     checkState(file.startsWith(outputDir),
         "The file [%s] must have the parent directory [%s] in its path",
         file, outputDir);
+  }
+
+  // Used for subdirectories inside outputDir
+  private static void initParentDir(@NonNull Path file) {
     val parentDir = file.getParent();
     initDir(parentDir);
   }
@@ -85,14 +99,19 @@ public final class Storage {
     val relativeFile = Paths.get(relativeFilename);
     val absFile = outputDir.resolve(relativeFile).toAbsolutePath();
     val absFilename = absFile.toString();
+    checkForParentDir(absFile);
     initParentDir(absFile);
     val fileExists = Files.exists(absFile);
     val md5Match = fileExists && calcMd5Sum(absFile).equals(expectedMD5Sum); // Short circuit
-    if (persist && md5Match) {
-      log.info("File [{}] already exists and matches checksum. Skipping download.", absFile);
-      return absFile.toFile();
+    if (persist) {
+      if (md5Match) {
+        log.info("File [{}] already exists and matches checksum. Skipping download.", absFile);
+        return absFile.toFile();
+      } else {
+        return downloadFileByObjectId(objectId, absFilename);
+      }
     } else {
-      return downloadFileByObjectId(objectId, absFilename);
+      return downloadFileByObjectId(objectId, tempFile.toAbsolutePath().toString());
     }
   }
 
