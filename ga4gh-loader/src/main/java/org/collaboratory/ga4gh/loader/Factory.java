@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_LIMIT;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_NUM_DONORS;
@@ -8,6 +9,7 @@ import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SOMATIC_SSMS_ON
 import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
+import static org.collaboratory.ga4gh.loader.Config.NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.metadata.FileMetaDataFetcher.generateSeed;
@@ -44,8 +46,8 @@ public class Factory {
     return createDocumentWriter(new DocumentWriterConfiguration()
         .client(client)
         .indexName(INDEX_NAME)
-        .bulkSizeMb(Config.BULK_SIZE_MB)
-        .threadsNum(Config.NUM_THREADS));
+        .bulkSizeMb(BULK_SIZE_MB)
+        .threadsNum(NUM_THREADS));
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer) {
