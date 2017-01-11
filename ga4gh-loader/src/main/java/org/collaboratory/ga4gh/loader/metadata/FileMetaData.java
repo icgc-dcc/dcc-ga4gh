@@ -216,4 +216,8 @@ public final class FileMetaData {
     return getVcfFilenameParser().getCallerId().matches(getStartsWithRegex(type.toString()));
   }
 
+  public double getFileSizeMb() {
+    return (double) getFileSize() / (1024 * 1024);
+  }
+
 }

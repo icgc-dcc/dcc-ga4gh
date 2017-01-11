@@ -65,10 +65,11 @@ public class Loader {
     int fileMetaDataCount = 1;
     int fileMetaDataTotal = fileMetaDatas.size();
     for (val fileMetaData : fileMetaDatas) {
-      log.info("\t\tLoading File({}): {}/{} | (Total {}/{})", fileMetaData.getFileId(), fileMetaDataCount,
+      log.info("\t\tLoading File({}): {}/{} | (Total {}/{}) -- {}", fileMetaData.getFileId(), fileMetaDataCount,
           fileMetaDataTotal,
           globalFileMetaDataCount,
-          globalFileMetaDataTotal);
+          globalFileMetaDataTotal,
+          fileMetaData.getFileSizeMb());
       loadFileMetaData(fileMetaData);
       fileMetaDataCount++;
     }
@@ -102,10 +103,12 @@ public class Loader {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
     val fileMetaDatas = dataFetcher.fetch();
+    Debug.dumpToJson(fileMetaDatas, "target/sorted_filemetaDatas.json");
     int count = 1;
     int total = fileMetaDatas.size();
     for (val fileMetaData : fileMetaDatas) {
-      log.info("Loading FileMetaData {}/{}: {}", count, total, fileMetaData.getVcfFilenameParser().getFilename());
+      log.info("Loading FileMetaData {}/{}: {} -- {}", count, total, fileMetaData.getVcfFilenameParser().getFilename(),
+          fileMetaData.getFileSizeMb());
       loadFileMetaData(fileMetaData);
       count++;
     }
