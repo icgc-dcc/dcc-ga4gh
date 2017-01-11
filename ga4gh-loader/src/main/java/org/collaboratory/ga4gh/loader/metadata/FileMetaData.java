@@ -22,6 +22,8 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -37,10 +39,13 @@ import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import lombok.Data;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -131,6 +136,28 @@ public final class FileMetaData {
   public static Map<String, List<FileMetaData>> groupFileMetaDatasBySubMutationType(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
     return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getSubMutationType());
+  }
+
+  public static List<FileMetaData> sortByFileSize(@NonNull final Iterable<FileMetaData> fileMetaDatas,
+      final boolean ascending) {
+    val list = Lists.newArrayList(fileMetaDatas);
+    Collections.sort(list, new FileSizeComparator(ascending));
+    return ImmutableList.copyOf(list);
+  }
+
+  @RequiredArgsConstructor
+  private static class FileSizeComparator implements Comparator<FileMetaData> {
+
+    private final boolean ascending;
+
+    @Override
+    public int compare(FileMetaData f1, FileMetaData f2) {
+      if (ascending) {
+        return Long.compare(f1.getFileSize(), f2.getFileSize());
+      } else {
+        return Long.compare(f2.getFileSize(), f1.getFileSize());
+      }
+    }
   }
 
   public static Map<String, List<FileMetaData>> groupFileMetaData(

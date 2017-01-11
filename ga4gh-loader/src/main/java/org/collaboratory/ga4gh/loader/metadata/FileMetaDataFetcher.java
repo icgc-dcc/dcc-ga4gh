@@ -17,6 +17,7 @@
  */
 package org.collaboratory.ga4gh.loader.metadata;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
 import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
 import static org.collaboratory.ga4gh.loader.metadata.FileMetaDataFilters.filterBySize;
@@ -47,6 +48,8 @@ public class FileMetaDataFetcher {
   private final boolean shuffle;
   private final long seed;
   private final int limit;
+  private final boolean sort;
+  private final boolean ascending;
 
   public static final long generateSeed() {
     return System.currentTimeMillis();
@@ -60,6 +63,8 @@ public class FileMetaDataFetcher {
         .somaticSSMsOnly(false)
         .seed(generateSeed())
         .limit(DEFAULT_LIMIT_NUM_FILES)
+        .sort(false)
+        .ascending(false)
         .shuffle(false);
   }
 
@@ -84,12 +89,18 @@ public class FileMetaDataFetcher {
     return limit > DEFAULT_LIMIT_NUM_FILES;
   }
 
+  private void checkConfig() {
+    val sortAndShuffle = shuffle && sort;
+    checkState(!sortAndShuffle,
+        "Cannot sort and shuffle the list. These are mutually exclusive configurations");
+
+  }
+
   /*
    * Fetch list of FileMetaData object, based on filter configuration
    */
   public List<FileMetaData> fetch() {
-    val rand = new Random();
-    rand.setSeed(seed);
+    checkConfig();
 
     val fileMetaDatas = numDonorsUpdated() ? getFileMetaDatasForNumDonors(numDonors) : getAllFileMetaDatas();
 
@@ -102,10 +113,14 @@ public class FileMetaDataFetcher {
 
     List<FileMetaData> outputList = filteredFileMetaDatas;
     if (shuffle) {
+      val rand = new Random();
+      rand.setSeed(seed);
       val list = Lists.newArrayList(filteredFileMetaDatas);
       Collections.shuffle(list, rand);
       outputList = ImmutableList.copyOf(list);
+    } else if (sort) {
+      outputList = FileMetaData.sortByFileSize(filteredFileMetaDatas, ascending);
     }
-    return limitNumFilesUpdated() ? outputList.subList(0, limit) : outputList;
+    return limitNumFilesUpdated() ? outputList.subList(0, Math.min(limit, outputList.size())) : outputList;
   }
 }
