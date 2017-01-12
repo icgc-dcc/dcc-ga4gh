@@ -22,7 +22,10 @@ import static com.google.common.collect.Maps.newHashMap;
 
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+
 import lombok.NonNull;
+import lombok.val;
 
 public class IdCache<T> {
 
@@ -72,5 +75,15 @@ public class IdCache<T> {
     } else {
       throw new NullPointerException("The following key doesnt not exist in the cache: \n" + t);
     }
+  }
+
+  public Map<Long, T> getReverseCache() {
+    val map = ImmutableMap.<Long, T> builder();
+    for (val entry : cache.entrySet()) {
+      val key = entry.getKey();
+      val idValue = entry.getValue();
+      map.put(idValue, key);
+    }
+    return map.build();
   }
 }
