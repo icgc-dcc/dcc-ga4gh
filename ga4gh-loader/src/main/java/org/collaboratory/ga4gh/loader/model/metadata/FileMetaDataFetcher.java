@@ -15,13 +15,11 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.metadata;
+package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
 import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
-import static org.collaboratory.ga4gh.loader.metadata.FileMetaDataFilters.filterBySize;
-import static org.collaboratory.ga4gh.loader.metadata.FileMetaDataFilters.filterSomaticSSMs;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +32,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.val;
 
+/*
+ * TODO: [rtisma] Temporary untill learn Portal api. Everything here can probably done via portal api
+ * and then once get back ObjectNodes can convert to FileMetaData object, and then delete this class
+ */
 @Data
 @Builder
 public class FileMetaDataFetcher {
@@ -41,6 +43,7 @@ public class FileMetaDataFetcher {
   public static final int DEFAULT_NUM_DONORS = 0;
   public static final int DEFAULT_MAX_FILESIZE_BYTES = 0;
   public static final int DEFAULT_LIMIT_NUM_FILES = 0;
+  public static final String DEFAULT_FROM_FILE = null;
 
   private final int numDonors;
   private final long maxFileSizeBytes;
@@ -50,9 +53,32 @@ public class FileMetaDataFetcher {
   private final int limit;
   private final boolean sort;
   private final boolean ascending;
+  private final String fromFile;
 
   public static final long generateSeed() {
     return System.currentTimeMillis();
+  }
+
+  public FileMetaDataFetcher(
+      int numDonors,
+      long maxFileSizeBytes,
+      boolean somaticSSMsOnly,
+      boolean shuffle,
+      long seed,
+      int limit,
+      boolean sort,
+      boolean ascending,
+      String fromFile) {
+    this.numDonors = numDonors;
+    this.maxFileSizeBytes = maxFileSizeBytes;
+    this.somaticSSMsOnly = somaticSSMsOnly;
+    this.shuffle = shuffle;
+    this.seed = seed;
+    this.limit = limit;
+    this.sort = sort;
+    this.ascending = ascending;
+    this.fromFile = fromFile;
+    checkConfig();
   }
 
   // Define default builder
@@ -65,7 +91,15 @@ public class FileMetaDataFetcher {
         .limit(DEFAULT_LIMIT_NUM_FILES)
         .sort(false)
         .ascending(false)
+        .fromFile(DEFAULT_FROM_FILE)
         .shuffle(false);
+  }
+
+  /*
+   * Return true if set to Non-default fromFile value
+   */
+  private boolean fromFileUpdated() {
+    return fromFile != DEFAULT_FROM_FILE;
   }
 
   /*
@@ -94,24 +128,33 @@ public class FileMetaDataFetcher {
     checkState(!sortAndShuffle,
         "Cannot sort and shuffle the list. These are mutually exclusive configurations");
 
+    val numDonorsAndFromFile = fromFileUpdated() && numDonorsUpdated();
+    checkState(!numDonorsAndFromFile,
+        "Cannot set numDonors and fromFile at the same time as they are mutually exclusive");
   }
 
   /*
    * Fetch list of FileMetaData object, based on filter configuration
    */
   public List<FileMetaData> fetch() {
-    checkConfig();
 
-    val fileMetaDatas = numDonorsUpdated() ? getFileMetaDatasForNumDonors(numDonors) : getAllFileMetaDatas();
+    Iterable<FileMetaData> fileMetaDatas = null;
+
+    if (fromFileUpdated()) {
+      fileMetaDatas = FileMetaData.restore(fromFile);
+    } else {
+      fileMetaDatas = numDonorsUpdated() ? getFileMetaDatasForNumDonors(numDonors) : getAllFileMetaDatas();
+    }
 
     // If size > 0, use only files less than or equal to maxFileSizeBytes
     val filteredFileMetaDatasBySize =
-        maxFileSizeUpdated() ? filterBySize(fileMetaDatas, maxFileSizeBytes) : fileMetaDatas;
+        maxFileSizeUpdated() ? FileMetaDataFilters.filterBySize(fileMetaDatas, maxFileSizeBytes) : fileMetaDatas;
 
     val filteredFileMetaDatas =
-        somaticSSMsOnly ? filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
+        somaticSSMsOnly ? FileMetaDataFilters
+            .filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
 
-    List<FileMetaData> outputList = filteredFileMetaDatas;
+    List<FileMetaData> outputList = ImmutableList.copyOf(filteredFileMetaDatas);
     if (shuffle) {
       val rand = new Random();
       rand.setSeed(seed);

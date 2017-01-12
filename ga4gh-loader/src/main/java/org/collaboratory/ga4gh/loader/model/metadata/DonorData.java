@@ -15,12 +15,12 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.metadata;
+package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.summingInt;
-import static org.collaboratory.ga4gh.loader.metadata.FileMetaData.groupFileMetaDataBySample;
-import static org.collaboratory.ga4gh.loader.metadata.FileMetaData.groupFileMetaDatasByDonor;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.groupFileMetaDataBySample;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.groupFileMetaDatasByDonor;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.util.List;

@@ -19,7 +19,7 @@ import java.nio.file.Paths;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import org.collaboratory.ga4gh.loader.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -125,7 +125,7 @@ public final class Storage {
         .toString();
   }
 
-  private static URL getObjectUrl(final String objectId) throws IOException {
+  public static URL getObjectUrl(final String objectId) throws IOException {
     val storageUrl = new URL(STORAGE_API + "/download/" + objectId + "?offset=0&length=-1&external=true");
     val connection = (HttpURLConnection) storageUrl.openConnection();
     connection.setRequestProperty(AUTHORIZATION, "Bearer " + TOKEN);

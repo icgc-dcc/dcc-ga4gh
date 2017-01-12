@@ -5,14 +5,14 @@ import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
-import static org.collaboratory.ga4gh.loader.metadata.DonorData.buildDonorDataList;
+import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
 
 import java.io.File;
 import java.util.List;
 
-import org.collaboratory.ga4gh.loader.metadata.DonorData;
-import org.collaboratory.ga4gh.loader.metadata.FileMetaData;
-import org.collaboratory.ga4gh.loader.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.model.metadata.DonorData;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -34,6 +34,7 @@ public class Loader {
   private long globalFileMetaDataTotal = -1;
 
   public static void main(String[] args) {
+
     log.info("Static Config:\n{}", Config.toConfigString());
     try (val client = newClient(); val writer = newDocumentWriter(client)) {
       val loader = newLoader(client, writer);

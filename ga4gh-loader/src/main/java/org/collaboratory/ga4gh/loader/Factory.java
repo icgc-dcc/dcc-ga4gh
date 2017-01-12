@@ -12,12 +12,12 @@ import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
 import static org.collaboratory.ga4gh.loader.Config.NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
-import static org.collaboratory.ga4gh.loader.metadata.FileMetaDataFetcher.generateSeed;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
 import java.net.InetAddress;
 
-import org.collaboratory.ga4gh.loader.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -84,6 +84,19 @@ public class Factory {
         .shuffle(DATA_FETCHER_SHUFFLE)
         .seed(seed)
         .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
+        .build();
+  }
+
+  public static FileMetaDataFetcher newFileMetaDataFetcherFirst10Biggest() {
+    long seed = generateSeed();
+    if (DATA_FETCHER_SHUFFLE) {
+      log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
+    }
+    return FileMetaDataFetcher.builder()
+        .sort(true)
+        .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
+        .ascending(true)
+        .limit(10)
         .build();
   }
 }

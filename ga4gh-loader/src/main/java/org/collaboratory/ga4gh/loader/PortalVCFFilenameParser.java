@@ -19,6 +19,8 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.Serializable;
+
 import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.common.core.util.Splitters;
 
@@ -31,7 +33,9 @@ import lombok.val;
 /**
  * Takes a filename, and extracts particular fields characteristic of ICGC VCF files
  */
-public class PortalVCFFilenameParser {
+public class PortalVCFFilenameParser implements Serializable {
+
+  private static final long serialVersionUID = 1484172857L;
 
   private static final int MIN_NUM_FIELDS = 6;
   private static final int OBJECT_ID_POS = 0;

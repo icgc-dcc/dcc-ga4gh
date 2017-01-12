@@ -15,15 +15,66 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.metadata;
+package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
 
-import lombok.val;
+import com.google.common.collect.Sets;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class FileMetaDataFetcherTest {
+
+  @Test
+  public void testSerializer() {
+    int numDonors = 30;
+    val dataFetcherShuffle1 = FileMetaDataFetcher.builder()
+        .numDonors(numDonors)
+        .somaticSSMsOnly(true)
+        .shuffle(true)
+        .build();
+    val fileMetaDatasOrig = dataFetcherShuffle1.fetch();
+    val filename = "target/fileMetaDatas.testSerializer.bin";
+    FileMetaData.store(fileMetaDatasOrig, filename);
+    val fileMetaDatasNew = FileMetaData.restore(filename);
+    val setOrig = Sets.newHashSet(fileMetaDatasOrig);
+    val setNew = Sets.newHashSet(fileMetaDatasNew);
+    assertThat(setOrig.containsAll(setNew));
+    assertThat(setNew.containsAll(setOrig));
+    log.info("OLD: \n{}", Joiners.NEWLINE.join(fileMetaDatasOrig));
+    log.info("NEW: \n{}", Joiners.NEWLINE.join(fileMetaDatasNew));
+  }
+
+  @Test
+  public void testRestore() {
+    final int numDonors = 8;
+    val filename = "target/fileMetaDatas.testRestore.bin";
+    val dataFetcherShuffle1 = FileMetaDataFetcher.builder()
+        .numDonors(numDonors)
+        .somaticSSMsOnly(true)
+        .shuffle(true)
+        .build();
+    val fileMetaDatasOrig = dataFetcherShuffle1.fetch();
+    FileMetaData.store(fileMetaDatasOrig, filename);
+
+    val dataFetcherRestore = FileMetaDataFetcher.builder()
+        .fromFile(filename)
+        .build();
+    val fileMetaDatasNew = dataFetcherRestore.fetch();
+
+    val setOrig = Sets.newHashSet(fileMetaDatasOrig);
+    val setNew = Sets.newHashSet(fileMetaDatasNew);
+    assertThat(setOrig.containsAll(setNew));
+    assertThat(setNew.containsAll(setOrig));
+    log.info("OLD: \n{}", Joiners.NEWLINE.join(fileMetaDatasOrig));
+    log.info("NEW: \n{}", Joiners.NEWLINE.join(fileMetaDatasNew));
+
+  }
 
   @Test
   public void testShuffler() {

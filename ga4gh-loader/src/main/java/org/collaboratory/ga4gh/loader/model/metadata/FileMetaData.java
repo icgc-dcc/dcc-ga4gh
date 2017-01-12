@@ -15,12 +15,18 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.metadata;
+package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static java.util.stream.Collectors.groupingBy;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,7 +58,9 @@ import lombok.extern.slf4j.Slf4j;
 //TODO: [rtisma] -- consider storing the CallerTypes, MutationTypes and MutationSubTypes enum values instead of string representation. Or atleast keep strings, just create functions to compare the string against the enum
 @Slf4j
 @Data
-public final class FileMetaData {
+public final class FileMetaData implements Serializable {
+
+  private static final long serialVersionUID = 1484172786L;
 
   @NonNull
   private final String objectId;
@@ -218,6 +226,69 @@ public final class FileMetaData {
 
   public double getFileSizeMb() {
     return (double) getFileSize() / (1024 * 1024);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<FileMetaData> restore(final String filename) {
+    FileInputStream fin = null;
+    ObjectInputStream ois = null;
+    try {
+      fin = new FileInputStream(filename);
+      ois = new ObjectInputStream(fin);
+      ImmutableList<FileMetaData> fileMetaDatas = (ImmutableList<FileMetaData>) ois.readObject();
+      log.info("Restored FileMetaDatas from {}", filename);
+      return fileMetaDatas;
+    } catch (Exception e) {
+      log.error("[{}] - Message - {}:\n{}", e.getClass().getName(), e.getMessage(), e);
+    } finally {
+      if (fin != null) {
+        try {
+          fin.close();
+        } catch (IOException e) {
+          log.error("[{}] - Message - {}:\n{}", e.getClass().getName(), e.getMessage(), e);
+        }
+      }
+
+      if (ois != null) {
+        try {
+          ois.close();
+        } catch (IOException e) {
+          log.error("[{}] - Message - {}:\n{}", e.getClass().getName(), e.getMessage(), e);
+        }
+      }
+    }
+    return null;
+  }
+
+  public static void store(final Iterable<FileMetaData> fileMetaDatas, final String filename) {
+    FileOutputStream fout = null;
+    ObjectOutputStream oos = null;
+    try {
+      fout = new FileOutputStream(filename);
+      oos = new ObjectOutputStream(fout);
+      ImmutableList<FileMetaData> list = ImmutableList.copyOf(fileMetaDatas);
+      oos.writeObject(list);
+      log.info("Saved FileMetaDatas to {}", filename);
+    } catch (Exception e) {
+      log.error("[{}] - Message - {}:\n{}", e.getClass().getName(), e.getMessage(), e);
+    } finally {
+
+      if (fout != null) {
+        try {
+          fout.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+
+      if (oos != null) {
+        try {
+          oos.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    }
   }
 
 }

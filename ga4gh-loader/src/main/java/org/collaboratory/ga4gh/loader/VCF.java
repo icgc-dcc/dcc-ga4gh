@@ -3,16 +3,12 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
-import static org.collaboratory.ga4gh.common.Base64Codec.serialize;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DONOR_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
@@ -35,7 +31,8 @@ import java.util.Map;
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
-import org.collaboratory.ga4gh.loader.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.model.es.EsCall;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -86,8 +83,10 @@ public class VCF implements Closeable {
     return convertCallSet(fileMetaData.getVcfFilenameParser().getCallerId());
   }
 
-  public Map<String, ObjectNode> readCalls() {
-    val map = ImmutableMap.<String, ObjectNode> builder();
+  // TODO: [rtisma] -- handle case where variantId already exists. If variantId exists,
+  // then its corrupted as thats not allowed
+  public Map<String, EsCall> readCalls() {
+    val map = ImmutableMap.<String, EsCall> builder();
     for (val record : vcf) {
       map.put(createVariantId(record),
           convertCallNodeObj(record));
@@ -156,13 +155,13 @@ public class VCF implements Closeable {
   }
 
   // TODO: [rtisma] - this method is wayyyyyyyyyyyy to big and doing to many things. refactoring needed
-  private ObjectNode convertCallNodeObj(@NonNull VariantContext record) {
+  private EsCall convertCallNodeObj(@NonNull VariantContext record) {
     val parser = fileMetaData.getVcfFilenameParser();
     val callerTypeString = parser.getCallerId();
     val mutationTypeString = parser.getMutationType();
     val mutationSubTypeString = parser.getSubMutationType();
     val genotypeContext = record.getGenotypes();
-    val commonInfoSer = serialize(record.getCommonInfo());
+    val commonInfo = record.getCommonInfo();
 
     val errorMessage = "CallerType: {} not implemented";
     String tumorKey;
@@ -229,10 +228,10 @@ public class VCF implements Closeable {
       try {
         for (val genotype : genotypeContext) {
           // if (genotype.getSampleName().equals(tumorKey)) {
-          return createCallObjectNode(fileMetaData, record, commonInfoSer, genotype);
+          return createCallObjectNode(fileMetaData, record, commonInfo, genotype);
           // }
         }
-        return createCallObjectNode(fileMetaData, record, commonInfoSer, createDefaultGenotype(refAllele));
+        return createCallObjectNode(fileMetaData, record, commonInfo, createDefaultGenotype(refAllele));
       } catch (TribbleException e) {
         if (!fileMetaData.isCorrupted()) {
           log.error("CORRUPTED VCF [{}] -- Message [{}]: {}",
@@ -241,10 +240,10 @@ public class VCF implements Closeable {
               e.getMessage());
           fileMetaData.setCorrupted(true); // Set to corrupted state so that dont have to log again
         }
-        return createCallObjectNode(fileMetaData, record, commonInfoSer, createDefaultGenotype(refAllele));
+        return createCallObjectNode(fileMetaData, record, commonInfo, createDefaultGenotype(refAllele));
       }
     } else {
-      return createCallObjectNode(fileMetaData, record, commonInfoSer, createDefaultGenotype(refAllele));
+      return createCallObjectNode(fileMetaData, record, commonInfo, createDefaultGenotype(refAllele));
     }
     // checkState(!hasCalls, "The variant [%s] should not have any calls.\nfileMetaData: [%s]",
     // record, fileMetaData);
@@ -260,24 +259,33 @@ public class VCF implements Closeable {
     return obj.end();
   }
 
-  private static ObjectNode createCallObjectNode(@NonNull final FileMetaData fileMetaData,
+  private static EsCall createCallObjectNode(@NonNull final FileMetaData fileMetaData,
       @NonNull VariantContext record,
-      @NonNull String info,
+      @NonNull CommonInfo info,
       @NonNull Genotype genotype) {
     val parser = fileMetaData.getVcfFilenameParser();
     val callerTypeString = parser.getCallerId();
     val bioSampleId = fileMetaData.getSampleId();
 
-    val genotypeSer = serialize(genotype);
-    return object()
-        .with(ID, createCallName(record, callerTypeString, bioSampleId, genotype))
-        .with(NAME, createCallName(record, callerTypeString, bioSampleId, genotype))
-        .with(VARIANT_SET_ID, callerTypeString)
-        .with(CALL_SET_ID, bioSampleId)
-        .with(BIO_SAMPLE_ID, bioSampleId)
-        .with(INFO, info)
-        .with(GENOTYPE, genotypeSer)
-        .end();
+    return EsCall.builder()
+        .id(createCallName(record, callerTypeString, bioSampleId, genotype))
+        .name(createCallName(record, callerTypeString, bioSampleId, genotype))
+        .variantSetId(callerTypeString)
+        .callSetId(bioSampleId)
+        .bioSampleId(bioSampleId)
+        .info(info)
+        .genotype(genotype)
+        .build();
+
+    // return object()
+    // .with(ID, createCallName(record, callerTypeString, bioSampleId, genotype))
+    // .with(NAME, createCallName(record, callerTypeString, bioSampleId, genotype))
+    // .with(VARIANT_SET_ID, callerTypeString)
+    // .with(CALL_SET_ID, bioSampleId)
+    // .with(BIO_SAMPLE_ID, bioSampleId)
+    // .with(INFO, info)
+    // .with(GENOTYPE, genotypeSer)
+    // .end();
   }
 
   private static Genotype createDefaultGenotype(@NonNull final Allele refAllele) {
