@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
+import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.es.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -145,24 +146,30 @@ public class Indexer {
   public void indexCalls(final Map<String, EsCall> variantName2CallMap) {
     startWatch();
     for (val entry : variantName2CallMap.entrySet()) {
-      val variantName = entry.getKey().toString();
+      val parentVariantName = entry.getKey().toString();
       val call = entry.getValue();
       String callName = call.getName();
-      val doesVariantNameAlreadyExist = variantIdCache.contains(variantName);
+      val doesVariantNameAlreadyExist = variantIdCache.contains(parentVariantName);
       checkState(doesVariantNameAlreadyExist,
-          "The variant Id: %s doesnt not exist for this call: %s. Make sure variantId indexed BEFORE call index",
-          variantName, callName);
-      writeCall(variantName, call);
+          "The variant Name: %s doesnt not exist for this call: %s. Make sure variantName indexed BEFORE call index",
+          parentVariantName, callName);
+      val parentVariantId = variantIdCache.getIdAsString(parentVariantName);
+      writeCall(parentVariantId, call);
     }
     stopWatch();
     log.info("[StopWatch][indexCalls][{}]: {} ms", variantName2CallMap.values().size(), durationWatch());
   }
 
   @SneakyThrows
-  public void indexVariants(@NonNull final Iterable<ObjectNode> variants) {
+  public void indexVariants(@NonNull final Iterable<EsVariant> variants) {
     startWatch();
     for (val variant : variants) {
-      writeVariant(variant);
+      val variantName = variant.getName();
+      val isNewVariantId = variantIdCache.add(variantName);
+      if (isNewVariantId) {
+        val variantId = variantIdCache.getIdAsString(variantName);
+        writeVariant(variantId, variant);
+      }
     }
     stopWatch();
     log.info("[StopWatch][indexVariants]: {} ms", durationWatch());
@@ -178,12 +185,13 @@ public class Indexer {
 
   // TODO: [rtisma] make the caller do bulk calls
   @SneakyThrows
-  private void writeCall(final String parent_variant_name, @NonNull final EsCall call) {
+  private void writeCall(final String parentVariantId, @NonNull final EsCall call) {
     val callName = call.getName();
     val isNewCallId = callIdCache.add(callName);
     if (isNewCallId) {
-      writer.write(new IndexDocument(callIdCache.getIdAsString(callName), call.toObjectNode(), new CallDocumentType(),
-          parent_variant_name));
+      val callId = callIdCache.getIdAsString(callName);
+      writer.write(new IndexDocument(callId, call.toObjectNode(), new CallDocumentType(),
+          parentVariantId));
     }
   }
 
@@ -207,13 +215,8 @@ public class Indexer {
     writer.write(new IndexDocument(callSetId, callSet.toObjectNode(), new CallSetDocumentType()));
   }
 
-  // TODO: [rtisma] -- clean this up so not referencing "id" like this
-  private void writeVariant(@NonNull final ObjectNode variant) throws IOException {
-    val variant_id = variant.path("id").textValue();
-    if (variantIdCache.contains(variant_id) == false) {
-      writer.write(new IndexDocument(variant_id, variant, new VariantDocumentType()));
-      variantIdCache.add(variant_id);
-    }
+  private void writeVariant(final String variantId, @NonNull final EsVariant variant) throws IOException {
+    writer.write(new IndexDocument(variantId, variant.toObjectNode(), new VariantDocumentType()));
   }
 
   private static class VariantDocumentType implements IndexDocumentType {

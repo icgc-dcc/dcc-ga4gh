@@ -52,10 +52,15 @@ public class IdCache<T> {
     checkState(id < Long.MAX_VALUE, "The id %d must be < %d", id, Long.MAX_VALUE);
   }
 
+  /*
+   * Adds an object to the cache only if it doesnt exist. If successfully added, returns true, otherwise false
+   */
   public boolean add(final T t) {
     checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
     if (!cache.containsKey(t)) {
-      cache.put(t, id++);
+      val yo = id.longValue();
+      cache.put(t, yo);
+      id++;
       return true;
     }
     return false;
@@ -70,8 +75,8 @@ public class IdCache<T> {
   }
 
   public Long getId(@NonNull T t) {
-    if (cache.containsKey(t) == false) {
-      return id;
+    if (cache.containsKey(t)) {
+      return cache.get(t);
     } else {
       throw new NullPointerException("The following key doesnt not exist in the cache: \n" + t);
     }

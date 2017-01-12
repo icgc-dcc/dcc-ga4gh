@@ -3,17 +3,10 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DONOR_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VCF_HEADER;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
@@ -30,6 +23,7 @@ import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
+import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.common.core.util.Joiners;
@@ -99,7 +93,7 @@ public class VCF implements Closeable {
     return ImmutableMap.copyOf(map);
   }
 
-  public Iterable<ObjectNode> readVariants() {
+  public Iterable<EsVariant> readVariants() {
     return transform(vcf,
         this::convertVariantNodeObj);
   }
@@ -325,19 +319,20 @@ public class VCF implements Closeable {
         .end();
   }
 
-  private ObjectNode convertVariantNodeObj(@NonNull final VariantContext record) {
-    val variantId = createVariantId(record);
-    return object()
-        .with(ID, variantId)
-        .with(START, record.getStart())
-        .with(END, record.getEnd())
-        .with(REFERENCE_NAME, record.getContig())
-        .with(REFERENCE_BASES, record.getReference().getBaseString())
-        .with(ALTERNATIVE_BASES, array()
-            .with(record.getAlternateAlleles().stream()
+  private EsVariant convertVariantNodeObj(@NonNull final VariantContext record) {
+    val variantName = createVariantName(record);
+    return EsVariant.builder()
+        .name(variantName)
+        .start(record.getStart())
+        .end(record.getEnd())
+        .referenceName(record.getContig())
+        .referenceBases(record.getReference().getBaseString())
+        .alternativeBases(
+            record.getAlternateAlleles()
+                .stream()
                 .map(a -> a.getBaseString())
-                .collect(toImmutableList())))
-        .end();
+                .collect(toImmutableList()))
+        .build();
   }
 
   private ObjectNode convertCalls(final VariantContext record) {

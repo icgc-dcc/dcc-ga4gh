@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.val;
 
+//TODO: [rtisma]  move this to ga4gh-core, along with everything under model.es. 
 public interface EsModel {
 
   ObjectNode toObjectNode();
