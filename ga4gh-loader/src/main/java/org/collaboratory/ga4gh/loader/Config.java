@@ -25,7 +25,8 @@ public class Config {
         + "\nDATA_FETCHER_SOMATIC_SSMS_ONLY: %s"
         + "\nDATA_FETCHER_MAX_FILESIZE_BYTES: %s"
         + "\nDATA_FETCHER_NUM_DONORS: %s"
-        + "\nOUTPUT_VCF_STORAGE_DIR: %s",
+        + "\nOUTPUT_VCF_STORAGE_DIR: %s"
+        + "\nFILE_META_DATA_STORE_FILENAME: %s",
         INDEX_NAME,
         NODE_ADDRESS,
         NODE_PORT,
@@ -40,7 +41,8 @@ public class Config {
         DATA_FETCHER_SOMATIC_SSMS_ONLY,
         DATA_FETCHER_MAX_FILESIZE_BYTES,
         DATA_FETCHER_NUM_DONORS,
-        OUTPUT_VCF_STORAGE_DIR);
+        OUTPUT_VCF_STORAGE_DIR,
+        DEFAULT_FILE_META_DATA_STORE_FILENAME);
   }
 
   public static final int NUM_THREADS = 4;
@@ -52,5 +54,6 @@ public class Config {
   public static final int DATA_FETCHER_NUM_DONORS = 30;
   public static final int DATA_FETCHER_LIMIT = 100;
   public static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
+  public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
 
 }

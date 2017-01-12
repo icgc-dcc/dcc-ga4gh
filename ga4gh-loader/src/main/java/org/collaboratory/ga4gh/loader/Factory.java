@@ -6,6 +6,7 @@ import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BY
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_NUM_DONORS;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SHUFFLE;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SOMATIC_SSMS_ONLY;
+import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
 import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
@@ -31,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Factory {
+
+  private static final String FILE_META_DATA_STORE_FILENAME = "allFileMetaDatas.bin";
 
   @SuppressWarnings("resource")
   @SneakyThrows
@@ -83,6 +86,7 @@ public class Factory {
     return FileMetaDataFetcher.builder()
         .shuffle(DATA_FETCHER_SHUFFLE)
         .seed(seed)
+        .fromFilename(DEFAULT_FILE_META_DATA_STORE_FILENAME)
         .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
         .build();
   }

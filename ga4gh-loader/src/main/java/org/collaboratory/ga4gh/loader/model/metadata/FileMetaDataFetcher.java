@@ -18,9 +18,10 @@
 package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
 import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
-import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
 
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -43,7 +44,7 @@ public class FileMetaDataFetcher {
   public static final int DEFAULT_NUM_DONORS = 0;
   public static final int DEFAULT_MAX_FILESIZE_BYTES = 0;
   public static final int DEFAULT_LIMIT_NUM_FILES = 0;
-  public static final String DEFAULT_FROM_FILE = null;
+  public static final String DEFAULT_FROM_FILE = DEFAULT_FILE_META_DATA_STORE_FILENAME;
 
   private final int numDonors;
   private final long maxFileSizeBytes;
@@ -53,7 +54,7 @@ public class FileMetaDataFetcher {
   private final int limit;
   private final boolean sort;
   private final boolean ascending;
-  private final String fromFile;
+  private final String fromFilename;
 
   public static final long generateSeed() {
     return System.currentTimeMillis();
@@ -77,7 +78,7 @@ public class FileMetaDataFetcher {
     this.limit = limit;
     this.sort = sort;
     this.ascending = ascending;
-    this.fromFile = fromFile;
+    this.fromFilename = fromFile;
     checkConfig();
   }
 
@@ -91,15 +92,15 @@ public class FileMetaDataFetcher {
         .limit(DEFAULT_LIMIT_NUM_FILES)
         .sort(false)
         .ascending(false)
-        .fromFile(DEFAULT_FROM_FILE)
+        .fromFilename(DEFAULT_FROM_FILE)
         .shuffle(false);
   }
 
   /*
    * Return true if set to Non-default fromFile value
    */
-  private boolean fromFileUpdated() {
-    return fromFile != DEFAULT_FROM_FILE;
+  private boolean fromFilenameUpdated() {
+    return !fromFilename.equals(DEFAULT_FROM_FILE);
   }
 
   /*
@@ -128,22 +129,45 @@ public class FileMetaDataFetcher {
     checkState(!sortAndShuffle,
         "Cannot sort and shuffle the list. These are mutually exclusive configurations");
 
-    val numDonorsAndFromFile = fromFileUpdated() && numDonorsUpdated();
+    val numDonorsAndFromFile = fromFilenameUpdated() && numDonorsUpdated();
     checkState(!numDonorsAndFromFile,
         "Cannot set numDonors and fromFile at the same time as they are mutually exclusive");
+  }
+
+  private static List<FileMetaData> getForDonorNum(List<FileMetaData> fileMetaDatas, final int numDonors) {
+    val donorGrouping = FileMetaData.groupFileMetaDatasByDonor(fileMetaDatas);
+    val list = ImmutableList.<FileMetaData> builder();
+    int count = 0;
+    for (val donorId : donorGrouping.keySet()) {
+      if (count >= numDonors) {
+        break;
+      }
+      val donorFileMetaDatas = donorGrouping.get(donorId);
+      list.addAll(donorFileMetaDatas);
+      count++;
+    }
+    return list.build();
   }
 
   /*
    * Fetch list of FileMetaData object, based on filter configuration
    */
+  // TODO: [rtisma] need to update and use Decorator pattern...too much going on
   public List<FileMetaData> fetch() {
 
-    Iterable<FileMetaData> fileMetaDatas = null;
+    List<FileMetaData> fileMetaDatas = null;
 
-    if (fromFileUpdated()) {
-      fileMetaDatas = FileMetaData.restore(fromFile);
+    val fromFile = Paths.get(fromFilename).toFile();
+    val fileExists = fromFile.exists() && fromFile.isFile();
+    if (fileExists) {
+      fileMetaDatas = FileMetaData.restore(fromFilename);
     } else {
-      fileMetaDatas = numDonorsUpdated() ? getFileMetaDatasForNumDonors(numDonors) : getAllFileMetaDatas();
+      fileMetaDatas = getAllFileMetaDatas();
+      FileMetaData.store(fileMetaDatas, fromFilename);
+    }
+
+    if (numDonorsUpdated()) {
+      fileMetaDatas = getForDonorNum(fileMetaDatas, numDonors);
     }
 
     // If size > 0, use only files less than or equal to maxFileSizeBytes

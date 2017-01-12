@@ -63,7 +63,7 @@ public class FileMetaDataFetcherTest {
     FileMetaData.store(fileMetaDatasOrig, filename);
 
     val dataFetcherRestore = FileMetaDataFetcher.builder()
-        .fromFile(filename)
+        .fromFilename(filename)
         .build();
     val fileMetaDatasNew = dataFetcherRestore.fetch();
 

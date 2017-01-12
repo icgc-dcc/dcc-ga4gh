@@ -56,7 +56,7 @@ public final class Storage {
   }
 
   @SneakyThrows
-  private static void initDir(@NonNull final Path dir) {
+  public static void initDir(@NonNull final Path dir) {
     val dirDoesNotExist = !Files.exists(dir);
     if (dirDoesNotExist) {
       Files.createDirectories(dir);
@@ -73,7 +73,7 @@ public final class Storage {
   }
 
   // Used for subdirectories inside outputDir
-  private static void initParentDir(@NonNull Path file) {
+  public static void initParentDir(@NonNull Path file) {
     val parentDir = file.getParent();
     initDir(parentDir);
   }
