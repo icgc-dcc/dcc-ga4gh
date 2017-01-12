@@ -5,14 +5,11 @@ import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DONOR_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VCF_HEADER;
@@ -33,6 +30,7 @@ import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
+import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.common.core.util.Joiners;
 
@@ -303,14 +301,12 @@ public class VCF implements Closeable {
         .make();
   }
 
-  public ObjectNode readVariantSet() {
-
-    return object()
-        .with(ID, createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
-        .with(NAME, createVariantSetName(fileMetaData.getVcfFilenameParser().getCallerId()))
-        .with(DATA_SET_ID, fileMetaData.getDataType())
-        .with(REFERENCE_SET_ID, fileMetaData.getReferenceName())
-        .end();
+  public EsVariantSet readVariantSet() {
+    return EsVariantSet.builder()
+        .name(createVariantSetName(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .dataSetId(fileMetaData.getDataType())
+        .referenceSetId(fileMetaData.getReferenceName())
+        .build();
   }
 
   @SneakyThrows

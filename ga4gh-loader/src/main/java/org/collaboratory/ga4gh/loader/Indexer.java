@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
+import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.es.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -97,16 +98,17 @@ public class Indexer {
     builder.addMapping(typeName, read(typeName + MAPPING_JSON_EXTENTION).toString());
   }
 
-  private void writeVariantSet(final String variantSetId, @NonNull final ObjectNode variantSet) throws IOException {
-    writer.write(new IndexDocument(variantSetId, variantSet, new VariantSetDocumentType()));
+  private void writeVariantSet(final String variantSetId, @NonNull final EsVariantSet variantSet) throws IOException {
+    writer.write(new IndexDocument(variantSetId, variantSet.toObjectNode(), new VariantSetDocumentType()));
   }
 
   @SneakyThrows
-  public void indexVariantSet(@NonNull final ObjectNode variantSet) {
+  public void indexVariantSet(@NonNull final EsVariantSet variantSet) {
     startWatch();
-    val variantSetId = variantSet.path("id").textValue();
-    if (variantSetIdCache.contains(variantSetId) == false) {
-      variantSetIdCache.add(variantSetId);
+    val variantSetName = variantSet.getName();
+    val isNewVariantSetId = variantSetIdCache.add(variantSetName);
+    if (isNewVariantSetId) {
+      val variantSetId = variantSetIdCache.getIdAsString(variantSetName);
       writeVariantSet(variantSetId, variantSet);
     }
     stopWatch();
