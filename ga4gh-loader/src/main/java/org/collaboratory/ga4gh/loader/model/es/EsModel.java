@@ -29,7 +29,7 @@ public interface EsModel {
 
   ObjectNode toObjectNode();
 
-  String getName(); // Every model must have a uniqly identifying name is a certain scope
+  String getName(); // Every model must have a uniquely identifying name is a certain scope
 
   public static ArrayNode createStringArrayNode(Iterable<String> values) {
     return JsonNodeBuilders.array(values).end();
