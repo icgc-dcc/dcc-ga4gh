@@ -1,10 +1,6 @@
 {
 	"variant": {
 		"properties": {
-			"id": {
-				"type": "keyword",
-				"index": "true"
-			},
 			"start": {
 				"type": "long",
 				"index": "true"
