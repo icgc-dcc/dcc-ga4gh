@@ -45,8 +45,8 @@ public class Config {
         DEFAULT_FILE_META_DATA_STORE_FILENAME);
   }
 
-  public static final int NUM_THREADS = 4;
-  public static final int BULK_SIZE_MB = 250;
+  public static final int NUM_THREADS = 5;
+  public static final int BULK_SIZE_MB = 50;
   public static final boolean PERSIST_MODE = false;
   public static final boolean DATA_FETCHER_SHUFFLE = true;
   public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;

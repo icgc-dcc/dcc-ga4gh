@@ -26,6 +26,7 @@ import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 
 import htsjdk.samtools.util.StopWatch;
@@ -172,7 +173,8 @@ public class Indexer {
       }
     }
     stopWatch();
-    log.info("[StopWatch][indexVariants]: {} ms", durationWatch());
+    val size = Iterables.size(variants);
+    log.info("[StopWatch][indexVariants][{}]: {} ms", size, durationWatch());
   }
 
   private static byte[] createSource(@NonNull final Object document) {
