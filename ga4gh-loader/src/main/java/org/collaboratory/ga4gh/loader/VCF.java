@@ -26,6 +26,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
@@ -86,12 +87,18 @@ public class VCF implements Closeable {
   // TODO: [rtisma] -- handle case where variantId already exists. If variantId exists,
   // then its corrupted as thats not allowed
   public Map<String, EsCall> readCalls() {
-    val map = ImmutableMap.<String, EsCall> builder();
+    val map = new HashMap<String, EsCall>();
     for (val record : vcf) {
-      map.put(createVariantId(record),
-          convertCallNodeObj(record));
+      val variantId = createVariantId(record);
+      val duplicateVariantId = map.containsKey(variantId);
+      if (duplicateVariantId) {
+        log.error("Detected duplicate variantId entry  [{}]. Ignoring it and moving on", variantId);
+      } else {
+        map.put(variantId,
+            convertCallNodeObj(record));
+      }
     }
-    return map.build();
+    return ImmutableMap.copyOf(map);
   }
 
   public Iterable<ObjectNode> readVariants() {
