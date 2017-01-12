@@ -21,7 +21,6 @@ import static org.collaboratory.ga4gh.common.Base64Codec.serialize;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
@@ -39,9 +38,8 @@ import lombok.Value;
  */
 @Builder
 @Value
-public final class EsCall {
+public class EsCall implements EsModel {
 
-  private String id;
   private String name;
   private String variantSetId;
   private String callSetId;
@@ -49,9 +47,9 @@ public final class EsCall {
   private CommonInfo info;
   private Genotype genotype;
 
+  @Override
   public ObjectNode toObjectNode() {
     return object()
-        .with(ID, id)
         .with(NAME, name)
         .with(VARIANT_SET_ID, variantSetId)
         .with(CALL_SET_ID, callSetId)

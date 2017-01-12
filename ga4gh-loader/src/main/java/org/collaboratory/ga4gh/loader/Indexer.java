@@ -2,16 +2,17 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
-import static com.google.common.collect.Sets.newConcurrentHashSet;
+import static org.collaboratory.ga4gh.loader.model.es.IdCache.newIdCache;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
+import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
+import org.collaboratory.ga4gh.loader.model.es.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
@@ -48,6 +49,7 @@ public class Indexer {
   public static final String VCF_HEADER_TYPE_NAME = "vcf_header";
   private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
   private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
+  private static final long INITIAL_ID = 1L;
 
   /**
    * Dependencies.
@@ -63,10 +65,11 @@ public class Indexer {
   /*
    * State
    */
-  private final Set<String> variantIdCache = newConcurrentHashSet();
-  private final Set<String> variantSetIdCache = newConcurrentHashSet();
-  private final Set<String> callSetIdCache = newConcurrentHashSet();
-  private final Set<String> callIdCache = newConcurrentHashSet();
+  // Keys are strings NAMES, since those should never collide
+  private final IdCache<String> variantIdCache = IdCache.newIdCache(INITIAL_ID);
+  private final IdCache<String> variantSetIdCache = newIdCache(INITIAL_ID);
+  private final IdCache<String> callSetIdCache = newIdCache(INITIAL_ID);
+  private final IdCache<String> callIdCache = newIdCache(INITIAL_ID);
 
   private final StopWatch watch = new StopWatch();
 
@@ -94,25 +97,30 @@ public class Indexer {
     builder.addMapping(typeName, read(typeName + MAPPING_JSON_EXTENTION).toString());
   }
 
+  private void writeVariantSet(final String variantSetId, @NonNull final ObjectNode variantSet) throws IOException {
+    writer.write(new IndexDocument(variantSetId, variantSet, new VariantSetDocumentType()));
+  }
+
   @SneakyThrows
   public void indexVariantSet(@NonNull final ObjectNode variantSet) {
     startWatch();
     val variantSetId = variantSet.path("id").textValue();
     if (variantSetIdCache.contains(variantSetId) == false) {
-      writer.write(new IndexDocument(variantSetId, variantSet, new VariantSetDocumentType()));
       variantSetIdCache.add(variantSetId);
+      writeVariantSet(variantSetId, variantSet);
     }
     stopWatch();
     log.info("[StopWatch][indexVariantSet]: {} ms", durationWatch());
   }
 
   @SneakyThrows
-  public void indexCallSet(@NonNull final ObjectNode callSet) {
+  public void indexCallSet(@NonNull final EsCallSet callSet) {
     startWatch();
-    val callSetId = callSet.path("id").textValue();
-    if (callSetIdCache.contains(callSetId) == false) {
-      writeCallSet(callSet);
-      callSetIdCache.add(callSetId);
+    val callSetName = callSet.getName();
+    val isNewCallSetId = callSetIdCache.add(callSetName);
+    if (isNewCallSetId) {
+      val callSetId = callSetIdCache.getIdAsString(callSetName);
+      writeCallSet(callSetId, callSet);
     }
     stopWatch();
     log.info("[StopWatch][indexCallSet]: {} ms", durationWatch());
@@ -132,19 +140,20 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexCalls(final Map<String, EsCall> variantId2CallMap) {
+  public void indexCalls(final Map<String, EsCall> variantName2CallMap) {
     startWatch();
-    for (val entry : variantId2CallMap.entrySet()) {
-      val variantId = entry.getKey().toString();
+    for (val entry : variantName2CallMap.entrySet()) {
+      val variantName = entry.getKey().toString();
       val call = entry.getValue();
-      String callId = call.getId();
-      checkState(variantIdCache.contains(variantId),
+      String callName = call.getName();
+      val doesVariantNameAlreadyExist = variantIdCache.contains(variantName);
+      checkState(doesVariantNameAlreadyExist,
           "The variant Id: %s doesnt not exist for this call: %s. Make sure variantId indexed BEFORE call index",
-          variantId, callId);
-      writeCall(variantId, call);
+          variantName, callName);
+      writeCall(variantName, call);
     }
     stopWatch();
-    log.info("[StopWatch][indexCalls][{}]: {} ms", variantId2CallMap.values().size(), durationWatch());
+    log.info("[StopWatch][indexCalls][{}]: {} ms", variantName2CallMap.values().size(), durationWatch());
   }
 
   @SneakyThrows
@@ -167,11 +176,12 @@ public class Indexer {
 
   // TODO: [rtisma] make the caller do bulk calls
   @SneakyThrows
-  private void writeCall(final String parent_variant_id, @NonNull final EsCall call) {
-    val callId = call.getId();
-    if (callIdCache.contains(callId) == false) {
-      writer.write(new IndexDocument(callId, call.toObjectNode(), new CallDocumentType(), parent_variant_id));
-      callIdCache.add(callId);
+  private void writeCall(final String parent_variant_name, @NonNull final EsCall call) {
+    val callName = call.getName();
+    val isNewCallId = callIdCache.add(callName);
+    if (isNewCallId) {
+      writer.write(new IndexDocument(callIdCache.getIdAsString(callName), call.toObjectNode(), new CallDocumentType(),
+          parent_variant_name));
     }
   }
 
@@ -191,12 +201,8 @@ public class Indexer {
     log.info("[StopWatch][indexVCFHeader]: {} ms", durationWatch());
   }
 
-  private void writeCallSet(@NonNull final ObjectNode callSet) throws IOException {
-    val call_set_id = callSet.path("id").textValue();
-    if (callSetIdCache.contains(call_set_id) == false) {
-      writer.write(new IndexDocument(call_set_id, callSet, new CallSetDocumentType()));
-      callSetIdCache.add(call_set_id);
-    }
+  private void writeCallSet(final String callSetId, @NonNull final EsCallSet callSet) throws IOException {
+    writer.write(new IndexDocument(callSetId, callSet.toObjectNode(), new CallSetDocumentType()));
   }
 
   // TODO: [rtisma] -- clean this up so not referencing "id" like this

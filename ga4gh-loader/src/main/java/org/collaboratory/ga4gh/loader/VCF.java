@@ -15,7 +15,6 @@ import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFEREN
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VCF_HEADER;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
@@ -33,6 +32,7 @@ import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
+import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.common.core.util.Joiners;
 
@@ -80,8 +80,8 @@ public class VCF implements Closeable {
         OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
   }
 
-  public ObjectNode readCallSets() {
-    return convertCallSet(fileMetaData.getVcfFilenameParser().getCallerId());
+  public EsCallSet readCallSets() {
+    return convertCallSet(fileMetaData);
   }
 
   // TODO: [rtisma] -- handle case where variantId already exists. If variantId exists,
@@ -110,12 +110,9 @@ public class VCF implements Closeable {
     return vcf.getFileHeader();
   }
 
-  private static String createCallSetId(String bio_sample_id) {
-    return createCallSetName(bio_sample_id); // TODO: [rtisma] temporary untill get UUID5 working
-  }
-
-  private static String createCallSetName(String bio_sample_id) {
-    return bio_sample_id;
+  // ASSUMPTION: the CallSetName is a unique string
+  private static String createCallSetName(final FileMetaData fileMetaData) {
+    return fileMetaData.getSampleId();
   }
 
   private static String createCallName(@NonNull final VariantContext record, final String caller_id,
@@ -123,19 +120,19 @@ public class VCF implements Closeable {
     return String.format("%s:%s:%s:%s", caller_id, bio_sample_id, createVariantId(record), genotype.getSampleName());
   }
 
-  private ObjectNode convertCallSet(final String caller_id) {
-    return object()
-        .with(ID, createCallSetId(fileMetaData.getSampleId()))
-        .with(NAME, createCallSetName(fileMetaData.getSampleId()))
-        .with(VARIANT_SET_IDS, createVariantSetId(caller_id))
-        .with(BIO_SAMPLE_ID, fileMetaData.getSampleId())
-        .end();
+  private static EsCallSet convertCallSet(final FileMetaData fileMetaData) {
+    return EsCallSet.builder()
+        .name(createCallSetName(fileMetaData))
+        .variantSetId(createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .bioSampleId(fileMetaData.getSampleId())
+        .build();
   }
 
   private static String createVariantId(VariantContext record) {
     return createVariantName(record); // TODO: [rtisma] temporary untill get UUID5 working
   }
 
+  // ASSUMPTION: the VariantName is a unique string
   private static String createVariantName(VariantContext record) {
     return Joiners.UNDERSCORE.join(
         record.getStart(),
@@ -146,7 +143,7 @@ public class VCF implements Closeable {
   }
 
   // TODO: [rtisma] -- temporarily using until implement uuid
-  private static String createVariantSetId(String caller_id) {
+  private static String createVariantSetIds(String caller_id) {
     return createVariantSetName(caller_id);
   }
 
@@ -229,7 +226,7 @@ public class VCF implements Closeable {
     val numGenotypes = genotypeContext.size();
 
     // TODO: [rtisma] temporary untill fix above. Take first call, but not correct. Should descriminate by Sample Name
-    // which should be tumorKey
+    // which should be tumorKey. Assumption is the there is ATMOST 2 calls per variant
     if (hasCalls) {
       checkState(numGenotypes > 0, "The variant [%s] should have calls for fileMetaData [%s]", record, fileMetaData);
       try {
@@ -275,7 +272,6 @@ public class VCF implements Closeable {
     val bioSampleId = fileMetaData.getSampleId();
 
     return EsCall.builder()
-        .id(createCallName(record, callerTypeString, bioSampleId, genotype))
         .name(createCallName(record, callerTypeString, bioSampleId, genotype))
         .variantSetId(callerTypeString)
         .callSetId(bioSampleId)
@@ -310,7 +306,7 @@ public class VCF implements Closeable {
   public ObjectNode readVariantSet() {
 
     return object()
-        .with(ID, createVariantSetId(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with(ID, createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
         .with(NAME, createVariantSetName(fileMetaData.getVcfFilenameParser().getCallerId()))
         .with(DATA_SET_ID, fileMetaData.getDataType())
         .with(REFERENCE_SET_ID, fileMetaData.getReferenceName())
@@ -329,7 +325,7 @@ public class VCF implements Closeable {
         .with(VCF_HEADER, ser)
         .with(DONOR_ID, fileMetaData.getDonorId())
         .with(BIO_SAMPLE_ID, fileMetaData.getSampleId())
-        .with(VARIANT_SET_ID, createVariantSetId(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with(VARIANT_SET_ID, createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
         .end();
   }
 
