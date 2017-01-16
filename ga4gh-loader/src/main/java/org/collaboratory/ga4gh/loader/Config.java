@@ -2,7 +2,7 @@ package org.collaboratory.ga4gh.loader;
 
 public class Config {
 
-  public static final String INDEX_NAME = "dcc-variants";
+  public static final String INDEX_NAME = "dcc-variants2";
   public static final String NODE_ADDRESS = System.getProperty("node_address", "localhost");
   public static final int NODE_PORT = Integer.valueOf(System.getProperty("node_port", "9300"));
   public static final String ES_URL = "es://" + NODE_ADDRESS + ":" + NODE_PORT;
