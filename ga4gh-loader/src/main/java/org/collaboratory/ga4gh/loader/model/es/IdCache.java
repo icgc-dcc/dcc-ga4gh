@@ -58,9 +58,7 @@ public class IdCache<T> {
   public boolean add(final T t) {
     checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
     if (!cache.containsKey(t)) {
-      val yo = id.longValue();
-      cache.put(t, yo);
-      id++;
+      cache.put(t, id++);
       return true;
     }
     return false;
