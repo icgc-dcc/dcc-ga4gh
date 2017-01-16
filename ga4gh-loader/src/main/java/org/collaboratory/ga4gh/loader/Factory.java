@@ -1,5 +1,7 @@
 package org.collaboratory.ga4gh.loader;
 
+import static com.google.common.io.Resources.getResource;
+import static java.nio.file.Files.newInputStream;
 import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_LIMIT;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
@@ -16,7 +18,11 @@ import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Properties;
 
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.elasticsearch.client.Client;
@@ -33,13 +39,38 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Factory {
 
-  private static final String FILE_META_DATA_STORE_FILENAME = "allFileMetaDatas.bin";
+  private static final String TRANSPORT_SETTINGS_FILENAME =
+      "org/collaboratory/ga4gh/resources/settings/transport.properties";
+
+  private static Path newResourcePath(final String filename) {
+    val transportSettingsResource = getResource(filename);
+    return Paths.get(transportSettingsResource.getFile()).toAbsolutePath();
+  }
+
+  private static Properties newResourceProperties(final String filename) throws IOException {
+    val path = newResourcePath(filename);
+    val prop = new Properties();
+    prop.load(newInputStream(path));
+    return prop;
+  }
+
+  public static Settings newEmptySettings() throws IOException {
+    return Settings.EMPTY;
+  }
+
+  public static Settings newSettings() throws IOException {
+    val settingsProp = newResourceProperties(TRANSPORT_SETTINGS_FILENAME);
+    return Settings.builder()
+        .put(settingsProp)
+        .build();
+  }
 
   @SuppressWarnings("resource")
   @SneakyThrows
   // TODO: rtisma -- put this in a common module, so that every one can reference
   public static Client newClient() {
-    val client = new PreBuiltTransportClient(Settings.EMPTY)
+    val settings = newEmptySettings();
+    val client = new PreBuiltTransportClient(settings)
         .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(NODE_ADDRESS), NODE_PORT));
 
     return client;
@@ -84,10 +115,14 @@ public class Factory {
       log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
     }
     return FileMetaDataFetcher.builder()
-        .shuffle(DATA_FETCHER_SHUFFLE)
+        // .shuffle(DATA_FETCHER_SHUFFLE)
+        .sort(true)
+        .ascending(true)
         .seed(seed)
         .fromFilename(DEFAULT_FILE_META_DATA_STORE_FILENAME)
         .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
+        // .limit(5)
+        // .maxFileSizeBytes(108349046)
         .build();
   }
 
