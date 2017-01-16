@@ -45,14 +45,16 @@ public final class Storage {
 
   private final Path tempFile;
 
-  private static final String tempFilename = "tmp.vcf.gz";
+  private static String createTempFilename() {
+    return "tmp." + System.currentTimeMillis() + ".vcf.gz";
+  }
 
   public Storage(final boolean persist, @NonNull final String outputDirName) {
     this.persist = persist;
     this.outputDir = Paths.get(outputDirName).toAbsolutePath();
     initDir(outputDir);
     this.currentTime = System.currentTimeMillis();
-    this.tempFile = outputDir.resolve(tempFilename);
+    this.tempFile = outputDir.resolve(createTempFilename());
   }
 
   @SneakyThrows
