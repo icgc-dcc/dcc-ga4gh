@@ -2,7 +2,7 @@ package org.collaboratory.ga4gh.loader;
 
 public class Config {
 
-  public static final String INDEX_NAME = "dcc-variants2";
+  public static final String INDEX_NAME = "dcc-variants3";
   public static final String NODE_ADDRESS = System.getProperty("node_address", "localhost");
   public static final int NODE_PORT = Integer.valueOf(System.getProperty("node_port", "9300"));
   public static final String ES_URL = "es://" + NODE_ADDRESS + ":" + NODE_PORT;
@@ -45,8 +45,8 @@ public class Config {
         DEFAULT_FILE_META_DATA_STORE_FILENAME);
   }
 
-  public static final int NUM_THREADS = 5;
-  public static final int BULK_SIZE_MB = 50;
+  public static final int NUM_THREADS = 0;
+  public static final int BULK_SIZE_MB = 10;
   public static final boolean PERSIST_MODE = false;
   public static final boolean DATA_FETCHER_SHUFFLE = true;
   public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
