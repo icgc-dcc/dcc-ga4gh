@@ -3,6 +3,7 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DONOR_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
@@ -15,8 +16,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
@@ -24,13 +25,14 @@ import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.common.core.util.Joiners;
+import org.icgc.dcc.common.core.util.stream.Streams;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.Allele;
@@ -60,6 +62,8 @@ public class VCF implements Closeable {
 
   private final VCFEncoder encoder;
 
+  private final Set<String> variantIdSet;
+
   public VCF(@NonNull final File file,
       @NonNull final FileMetaData fileMetaData) {
     this.vcf = new VCFFileReader(file,
@@ -70,27 +74,34 @@ public class VCF implements Closeable {
         ALLOW_MISSING_FIELDS_IN_HEADER_CFG,
 
         OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
+    this.variantIdSet = newHashSet();
   }
 
   public EsCallSet readCallSets() {
     return convertCallSet(fileMetaData);
   }
 
+  private boolean isDuplicateVariantId(final VariantContext vc) {
+    val variantId = createVariantId(vc);
+    val duplicateVariantId = variantIdSet.contains(variantId);
+    if (duplicateVariantId) {
+      log.error("Detected duplicate variantId entry  [{}]. Ignoring it and moving on", variantId);
+    } else {
+      variantIdSet.add(variantId);
+    }
+    return duplicateVariantId;
+  }
+
+  private EsVariantCallPair createVariantCallPair(final VariantContext record) {
+    return new EsVariantCallPair(createVariantId(record), convertCallNodeObj(record));
+  }
+
   // TODO: [rtisma] -- handle case where variantId already exists. If variantId exists,
   // then its corrupted as thats not allowed
-  public Map<String, EsCall> readCalls() {
-    val map = new HashMap<String, EsCall>();
-    for (val record : vcf) {
-      val variantId = createVariantId(record);
-      val duplicateVariantId = map.containsKey(variantId);
-      if (duplicateVariantId) {
-        log.error("Detected duplicate variantId entry  [{}]. Ignoring it and moving on", variantId);
-      } else {
-        map.put(variantId,
-            convertCallNodeObj(record));
-      }
-    }
-    return ImmutableMap.copyOf(map);
+  public Stream<EsVariantCallPair> streamCalls() {
+    return Streams.stream(vcf.iterator())
+        .filter(v -> !isDuplicateVariantId(v))
+        .map(v -> createVariantCallPair(v));
   }
 
   public Iterable<EsVariant> readVariants() {

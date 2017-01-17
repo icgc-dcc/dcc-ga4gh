@@ -2,6 +2,7 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
+import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.model.es.IdCache.newIdCache;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
@@ -9,10 +10,12 @@ import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.es.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -27,9 +30,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Resources;
 
 import htsjdk.samtools.util.StopWatch;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -143,8 +147,50 @@ public class Indexer {
     return watch.getElapsedTime();
   }
 
+  private void processEsVariantCallPair(final EsVariantCallPair pair, final Counter counter) {
+    val parentVariantName = pair.getParentVariantName();
+    val call = pair.getCall();
+    val callName = call.getName();
+    val doesVariantNameAlreadyExist = variantIdCache.contains(parentVariantName);
+    checkState(doesVariantNameAlreadyExist,
+        "The variant Name: %s doesnt not exist for this call: %s. Make sure variantName indexed BEFORE call index",
+        parentVariantName, callName);
+    val parentVariantId = variantIdCache.getIdAsString(parentVariantName);
+    writeCall(parentVariantId, call);
+    counter.incr();
+  }
+
+  @Getter
+  @AllArgsConstructor
+  private static class Counter {
+
+    private int count;
+
+    public Counter() {
+      this(0);
+    }
+
+    public void incr() {
+      count++;
+    }
+
+    public void incr(final int amount) {
+      count += amount;
+    }
+
+  }
+
   @SneakyThrows
-  public void indexCalls(final Map<String, EsCall> variantName2CallMap) {
+  public void indexCalls(final Stream<EsVariantCallPair> stream) {
+    startWatch();
+    val counter = new Counter(0);
+    stream.forEach(p -> processEsVariantCallPair(p, counter));
+    stopWatch();
+    log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), durationWatch());
+  }
+
+  @SneakyThrows
+  public void indexCallsOLD(final Map<String, EsCall> variantName2CallMap) {
     startWatch();
     for (val entry : variantName2CallMap.entrySet()) {
       val parentVariantName = entry.getKey().toString();
@@ -256,7 +302,7 @@ public class Indexer {
 
   @SneakyThrows
   private static ObjectNode read(final String fileName) {
-    val url = Resources.getResource(MAPPINGS_DIR + "/" + fileName);
+    val url = getResource(MAPPINGS_DIR + "/" + fileName);
     return (ObjectNode) DEFAULT.readTree(url);
   }
 }

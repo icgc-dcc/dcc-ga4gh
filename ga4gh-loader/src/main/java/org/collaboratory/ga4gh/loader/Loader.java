@@ -138,13 +138,22 @@ public class Loader {
   }
 
   private void loadFile(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
-    log.info("\tReading variants ...");
     @Cleanup
     val vcf = new VCF(file, fileMetaData);
+
+    log.info("\tReading variants ...");
     val variants = vcf.readVariants();
-    val callMap = vcf.readCalls();
+
+    log.info("\tReading calls...");
+    val callMap = vcf.streamCalls();
+
+    log.info("\tReading call_sets ...");
     val callSets = vcf.readCallSets();
+
+    log.info("\tReading variant_sets ...");
     val variantSet = vcf.readVariantSet();
+
+    log.info("\tReading vcf_headers ...");
     val vcfHeader = vcf.readVCFHeader();
 
     log.info("\t\tIndexing variants ...");
