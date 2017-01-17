@@ -1,12 +1,14 @@
 package org.collaboratory.ga4gh.loader;
 
+import static java.lang.System.getProperty;
+
 public class Config {
 
-  public static final String INDEX_NAME = "dcc-variants3";
-  public static final String NODE_ADDRESS = System.getProperty("node_address", "localhost");
-  public static final int NODE_PORT = Integer.valueOf(System.getProperty("node_port", "9300"));
+  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants3");
+  public static final String NODE_ADDRESS = getProperty("node_address", "localhost");
+  public static final int NODE_PORT = Integer.valueOf(getProperty("node_port", "9300"));
   public static final String ES_URL = "es://" + NODE_ADDRESS + ":" + NODE_PORT;
-  public static final String TOKEN = System.getProperty("token");
+  public static final String TOKEN = getProperty("token");
   public static final String STORAGE_API = "https://storage.cancercollaboratory.org";
   public static final String PORTAL_API = "https://dcc.icgc.org";
 
@@ -21,6 +23,8 @@ public class Config {
         + "\nNUM_THREADS: %s"
         + "\nBULK_SIZE_MB: %s"
         + "\nPERSIST_MODE: %s"
+        + "\nSORT_MODE: %s"
+        + "\nASCENDING_MODE: %s"
         + "\nDATA_FETCHER_SHUFFLE: %s"
         + "\nDATA_FETCHER_SOMATIC_SSMS_ONLY: %s"
         + "\nDATA_FETCHER_MAX_FILESIZE_BYTES: %s"
@@ -37,6 +41,8 @@ public class Config {
         NUM_THREADS,
         BULK_SIZE_MB,
         PERSIST_MODE,
+        SORT_MODE,
+        ASCENDING_MODE,
         DATA_FETCHER_SHUFFLE,
         DATA_FETCHER_SOMATIC_SSMS_ONLY,
         DATA_FETCHER_MAX_FILESIZE_BYTES,
@@ -45,10 +51,12 @@ public class Config {
         DEFAULT_FILE_META_DATA_STORE_FILENAME);
   }
 
-  public static final int NUM_THREADS = 0;
-  public static final int BULK_SIZE_MB = 10;
-  public static final boolean PERSIST_MODE = false;
-  public static final boolean DATA_FETCHER_SHUFFLE = true;
+  public static final int NUM_THREADS = Integer.valueOf(getProperty("num_threads", "0"));
+  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "10"));
+  public static final boolean PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", "false"));
+  public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", "true"));
+  public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", "false"));
+  public static final boolean DATA_FETCHER_SHUFFLE = !SORT_MODE;
   public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
   public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = 700000;
   public static final int DATA_FETCHER_NUM_DONORS = 30;

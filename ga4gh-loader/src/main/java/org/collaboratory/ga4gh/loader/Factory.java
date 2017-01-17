@@ -1,6 +1,7 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.io.Resources.getResource;
+import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_LIMIT;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
@@ -14,6 +15,7 @@ import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
 import static org.collaboratory.ga4gh.loader.Config.NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
+import static org.collaboratory.ga4gh.loader.Config.SORT_MODE;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
@@ -107,14 +109,11 @@ public class Factory {
       log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
     }
     return FileMetaDataFetcher.builder()
-        // .shuffle(DATA_FETCHER_SHUFFLE)
-        .sort(true)
-        .ascending(false)
+        .sort(SORT_MODE)
+        .ascending(ASCENDING_MODE)
         .seed(seed)
         .fromFilename(DEFAULT_FILE_META_DATA_STORE_FILENAME)
         .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
-        // .limit(5)
-        // .maxFileSizeBytes(108349046)
         .build();
   }
 
