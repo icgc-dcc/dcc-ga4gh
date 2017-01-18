@@ -3,7 +3,6 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.io.Resources.getResource;
-import static org.collaboratory.ga4gh.loader.model.es.IdCache.newIdCache;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
@@ -12,12 +11,12 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.collaboratory.ga4gh.loader.idcache.IdCache;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
-import org.collaboratory.ga4gh.loader.model.es.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
@@ -61,22 +60,29 @@ public class Indexer {
   /**
    * Dependencies.
    */
+  @NonNull
   private final Client client;
+  @NonNull
   private final DocumentWriter writer;
 
   /**
    * Configuration.
    */
+  @NonNull
   private final String indexName;
 
   /*
    * State
    */
   // Keys are strings NAMES, since those should never collide
-  private final IdCache<String> variantIdCache = IdCache.newIdCache(INITIAL_ID);
-  private final IdCache<String> variantSetIdCache = newIdCache(INITIAL_ID);
-  private final IdCache<String> callSetIdCache = newIdCache(INITIAL_ID);
-  private final IdCache<String> callIdCache = newIdCache(INITIAL_ID);
+  @NonNull
+  private final IdCache<String> variantIdCache;
+  @NonNull
+  private final IdCache<String> variantSetIdCache;
+  @NonNull
+  private final IdCache<String> callSetIdCache;
+  @NonNull
+  private final IdCache<String> callIdCache;
 
   private final StopWatch watch = new StopWatch();
 
@@ -112,8 +118,9 @@ public class Indexer {
   public void indexVariantSet(@NonNull final EsVariantSet variantSet) {
     startWatch();
     val variantSetName = variantSet.getName();
-    val isNewVariantSetId = variantSetIdCache.add(variantSetName);
+    val isNewVariantSetId = !variantSetIdCache.contains(variantSetName);
     if (isNewVariantSetId) {
+      variantSetIdCache.add(variantSetName);
       val variantSetId = variantSetIdCache.getIdAsString(variantSetName);
       writeVariantSet(variantSetId, variantSet);
     }
@@ -125,8 +132,9 @@ public class Indexer {
   public void indexCallSet(@NonNull final EsCallSet callSet) {
     startWatch();
     val callSetName = callSet.getName();
-    val isNewCallSetId = callSetIdCache.add(callSetName);
+    val isNewCallSetId = !callSetIdCache.contains(callSetName);
     if (isNewCallSetId) {
+      callSetIdCache.add(callSetName);
       val callSetId = callSetIdCache.getIdAsString(callSetName);
       writeCallSet(callSetId, callSet);
     }
@@ -212,8 +220,9 @@ public class Indexer {
     startWatch();
     for (val variant : variants) {
       val variantName = variant.getName();
-      val isNewVariantId = variantIdCache.add(variantName);
+      val isNewVariantId = !variantIdCache.contains(variantName);
       if (isNewVariantId) {
+        variantIdCache.add(variantName);
         val variantId = variantIdCache.getIdAsString(variantName);
         writeVariant(variantId, variant);
       }
@@ -235,8 +244,9 @@ public class Indexer {
   @SneakyThrows
   private void writeCall(final String parentVariantId, @NonNull final EsCall call) {
     val callName = call.getName();
-    val isNewCallId = callIdCache.add(callName);
+    val isNewCallId = !callIdCache.contains(callName);
     if (isNewCallId) {
+      callIdCache.add(callName);
       val callId = callIdCache.getIdAsString(callName);
       writer.write(new IndexDocument(callId, call.toObjectNode(), new CallDocumentType(),
           parentVariantId));

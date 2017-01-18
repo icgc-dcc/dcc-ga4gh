@@ -2,6 +2,7 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
+import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_LIMIT;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
@@ -12,10 +13,10 @@ import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE
 import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
-import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.SORT_MODE;
+import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
@@ -23,6 +24,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Properties;
 
+import org.collaboratory.ga4gh.loader.idcache.IdCache;
+import org.collaboratory.ga4gh.loader.idcache.IdCacheImpl;
+import org.collaboratory.ga4gh.loader.idcache.IdHashCodeCache;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
@@ -78,10 +82,25 @@ public class Factory {
         .threadsNum(BULK_NUM_THREADS));
   }
 
+  public static IdCache<String> newIdHashCodeCache(final long init_id) {
+    return new IdHashCodeCache<String>(IdCacheImpl.<Integer> newIdCache(init_id));
+  }
+
+  public static Indexer newIndexer(Client client, DocumentWriter writer, boolean useMapDB) {
+    if (useMapDB) {
+      log.info("sdfsdfsdf");
+    } else {
+    }
+    return new Indexer(client, writer, INDEX_NAME,
+        newIdHashCodeCache(1L),
+        newIdHashCodeCache(1L),
+        newIdHashCodeCache(1L),
+        newIdHashCodeCache(1L));
+
+  }
+
   public static Loader newLoader(Client client, DocumentWriter writer) {
-    val indexer = new Indexer(client, writer, INDEX_NAME);
-    val storage = newStorage();
-    return new Loader(indexer, storage);
+    return new Loader(newIndexer(client, writer, USE_MAP_DB), newStorage());
   }
 
   public static Storage newStorage() {

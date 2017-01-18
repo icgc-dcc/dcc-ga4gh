@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.model.es;
+package org.collaboratory.ga4gh.loader.idcache;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.newHashMap;
@@ -27,51 +27,48 @@ import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 import lombok.val;
 
-public class IdCache<T> {
+public class IdCacheImpl<T> implements IdCache<T> {
 
   public static <T> IdCache<T> newIdCache(final Long id) {
-    return new IdCache<T>(id);
+    return new IdCacheImpl<T>(id);
   }
 
-  private final Map<T, Long> cache;
+  protected final Map<T, Long> cache;
 
-  private Long id;
+  protected Long id;
 
-  public IdCache(final Long id) {
+  public IdCacheImpl(final Long id) {
     this.id = id;
     this.checkIdLowerBound();
     this.checkIdUpperBound();
     this.cache = newHashMap();
   }
 
-  private void checkIdLowerBound() {
+  protected void checkIdLowerBound() {
     checkState(id >= Long.MIN_VALUE, "The id %d must be >= %d", id, Long.MIN_VALUE);
   }
 
-  private void checkIdUpperBound() {
+  protected void checkIdUpperBound() {
     checkState(id < Long.MAX_VALUE, "The id %d must be < %d", id, Long.MAX_VALUE);
   }
 
-  /*
-   * Adds an object to the cache only if it doesnt exist. If successfully added, returns true, otherwise false
-   */
-  public boolean add(final T t) {
+  @Override
+  public void add(final T t) {
     checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
-    if (!cache.containsKey(t)) {
-      cache.put(t, id++);
-      return true;
-    }
-    return false;
+    cache.put(t, id++);
   }
 
+  @Override
   public boolean contains(final T t) {
     return cache.containsKey(t);
   }
 
+  @Override
   public String getIdAsString(@NonNull T t) {
     return getId(t).toString();
   }
 
+  @Override
   public Long getId(@NonNull T t) {
     if (cache.containsKey(t)) {
       return cache.get(t);
