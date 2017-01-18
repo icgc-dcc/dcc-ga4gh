@@ -16,12 +16,14 @@ import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
 import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.SORT_MODE;
+import static org.collaboratory.ga4gh.loader.Config.USE_HASH_CODE;
 import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Map;
 import java.util.Properties;
 
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
@@ -34,6 +36,8 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.icgc.dcc.dcc.common.es.DocumentWriterConfiguration;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
+
+import com.google.common.collect.Maps;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -82,21 +86,32 @@ public class Factory {
         .threadsNum(BULK_NUM_THREADS));
   }
 
-  public static IdCache<String> newIdHashCodeCache(final long init_id) {
-    return new IdHashCodeCache<String>(IdCacheImpl.<Integer> newIdCache(init_id));
+  public static IdCache<String> newIdCache(final long init_id, boolean useHashCode,
+      boolean useMapDB) {
+    if (useHashCode) {
+      return new IdHashCodeCache<String>(IdCacheImpl.<Integer> newIdCache(newMap(useMapDB), init_id));
+    } else {
+      return IdCacheImpl.<String> newIdCache(newMap(useMapDB), init_id);
+    }
+  }
+
+  public static <K, V> Map<K, V> newMap(boolean useMapDB) {
+    Map<K, V> cache;
+    if (useMapDB) {
+      log.info("sdfsdfsdf");
+      cache = Maps.newHashMap();
+    } else {
+      cache = Maps.newHashMap();
+    }
+    return cache;
   }
 
   public static Indexer newIndexer(Client client, DocumentWriter writer, boolean useMapDB) {
-    if (useMapDB) {
-      log.info("sdfsdfsdf");
-    } else {
-    }
     return new Indexer(client, writer, INDEX_NAME,
-        newIdHashCodeCache(1L),
-        newIdHashCodeCache(1L),
-        newIdHashCodeCache(1L),
-        newIdHashCodeCache(1L));
-
+        newIdCache(1L, USE_HASH_CODE, USE_MAP_DB),
+        newIdCache(1L, USE_HASH_CODE, USE_MAP_DB),
+        newIdCache(1L, USE_HASH_CODE, USE_MAP_DB),
+        newIdCache(1L, USE_HASH_CODE, USE_MAP_DB));
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer) {

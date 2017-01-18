@@ -30,7 +30,9 @@ public class Config {
         + "\nDATA_FETCHER_MAX_FILESIZE_BYTES: %s"
         + "\nDATA_FETCHER_NUM_DONORS: %s"
         + "\nOUTPUT_VCF_STORAGE_DIR: %s"
-        + "\nFILE_META_DATA_STORE_FILENAME: %s",
+        + "\nFILE_META_DATA_STORE_FILENAME: %s"
+        + "\nUSE_MAP_DB: %s"
+        + "\nUSE_HASH_CODE: %s",
         INDEX_NAME,
         NODE_ADDRESS,
         NODE_PORT,
@@ -48,7 +50,10 @@ public class Config {
         DATA_FETCHER_MAX_FILESIZE_BYTES,
         DATA_FETCHER_NUM_DONORS,
         OUTPUT_VCF_STORAGE_DIR,
-        DEFAULT_FILE_META_DATA_STORE_FILENAME);
+        DEFAULT_FILE_META_DATA_STORE_FILENAME,
+        USE_MAP_DB,
+        USE_HASH_CODE);
+
   }
 
   public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "5"));
@@ -64,5 +69,6 @@ public class Config {
   public static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
   public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
   public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", "false"));
+  public static final boolean USE_HASH_CODE = Boolean.valueOf(getProperty("use_hash_code", "true"));
 
 }

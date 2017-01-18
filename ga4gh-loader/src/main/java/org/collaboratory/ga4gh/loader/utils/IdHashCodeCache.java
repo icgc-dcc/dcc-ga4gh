@@ -17,6 +17,8 @@
  */
 package org.collaboratory.ga4gh.loader.utils;
 
+import java.util.Map;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -27,8 +29,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class IdHashCodeCache<T> implements IdCache<T> {
 
-  public static <T> IdCache<T> newIdCache(final long init_id) {
-    return new IdHashCodeCache<T>(IdCacheImpl.<Integer> newIdCache(init_id));
+  public static <T> IdCache<T> newIdCache(Map<Integer, Long> cache, final long init_id) {
+    return new IdHashCodeCache<T>(IdCacheImpl.<Integer> newIdCache(cache, init_id));
   }
 
   @NonNull

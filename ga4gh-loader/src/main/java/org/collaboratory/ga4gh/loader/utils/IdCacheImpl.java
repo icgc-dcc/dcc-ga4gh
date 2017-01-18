@@ -18,7 +18,6 @@
 package org.collaboratory.ga4gh.loader.utils;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Maps.newHashMap;
 
 import java.util.Map;
 
@@ -29,26 +28,26 @@ import lombok.val;
 
 public class IdCacheImpl<T> implements IdCache<T> {
 
-  public static <T> IdCache<T> newIdCache(final Long id) {
-    return new IdCacheImpl<T>(id);
+  public static <T> IdCache<T> newIdCache(Map<T, Long> cache, final Long id) {
+    return new IdCacheImpl<T>(cache, id);
   }
 
-  protected final Map<T, Long> cache;
+  private final Map<T, Long> cache;
 
-  protected Long id;
+  private Long id;
 
-  public IdCacheImpl(final Long id) {
+  public IdCacheImpl(@NonNull final Map<T, Long> cache, final Long id) {
     this.id = id;
     this.checkIdLowerBound();
     this.checkIdUpperBound();
-    this.cache = newHashMap();
+    this.cache = cache;
   }
 
-  protected void checkIdLowerBound() {
+  private void checkIdLowerBound() {
     checkState(id >= Long.MIN_VALUE, "The id %d must be >= %d", id, Long.MIN_VALUE);
   }
 
-  protected void checkIdUpperBound() {
+  private void checkIdUpperBound() {
     checkState(id < Long.MAX_VALUE, "The id %d must be < %d", id, Long.MAX_VALUE);
   }
 
