@@ -24,10 +24,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Properties;
 
-import org.collaboratory.ga4gh.loader.idcache.IdCache;
-import org.collaboratory.ga4gh.loader.idcache.IdCacheImpl;
-import org.collaboratory.ga4gh.loader.idcache.IdHashCodeCache;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.utils.IdCache;
+import org.collaboratory.ga4gh.loader.utils.IdCacheImpl;
+import org.collaboratory.ga4gh.loader.utils.IdHashCodeCache;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;

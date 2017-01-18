@@ -15,43 +15,16 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.idcache;
+package org.collaboratory.ga4gh.loader.utils;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+public interface IdCache<T> {
 
-/*
- * Decorator for IdCache. Basically use IdObjectCache<Integer> instance, and converts the object 
- * passed to each member method to a hashCode (integer) and then that interacts with IdObjectCache<Integer>
- */
-@RequiredArgsConstructor
-public class IdHashCodeCache<T> implements IdCache<T> {
+  void add(T t);
 
-  public static <T> IdCache<T> newIdCache(final long init_id) {
-    return new IdHashCodeCache<T>(IdCacheImpl.<Integer> newIdCache(init_id));
-  }
+  boolean contains(T t);
 
-  @NonNull
-  private final IdCache<Integer> idCache;
+  String getIdAsString(T t);
 
-  @Override
-  public void add(T t) {
-    idCache.add(t.hashCode());
-  }
-
-  @Override
-  public boolean contains(T t) {
-    return idCache.contains(t.hashCode());
-  }
-
-  @Override
-  public String getIdAsString(T t) {
-    return idCache.getIdAsString(t.hashCode());
-  }
-
-  @Override
-  public Long getId(T t) {
-    return idCache.getId(t.hashCode());
-  }
+  Long getId(T t);
 
 }

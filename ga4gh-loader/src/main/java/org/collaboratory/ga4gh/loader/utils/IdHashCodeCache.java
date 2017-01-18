@@ -15,75 +15,43 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.idcache;
-
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Maps.newHashMap;
-
-import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
+package org.collaboratory.ga4gh.loader.utils;
 
 import lombok.NonNull;
-import lombok.val;
+import lombok.RequiredArgsConstructor;
 
-public class IdCacheImpl<T> implements IdCache<T> {
+/*
+ * Decorator for IdCache. Basically use IdObjectCache<Integer> instance, and converts the object 
+ * passed to each member method to a hashCode (integer) and then that interacts with IdObjectCache<Integer>
+ */
+@RequiredArgsConstructor
+public class IdHashCodeCache<T> implements IdCache<T> {
 
-  public static <T> IdCache<T> newIdCache(final Long id) {
-    return new IdCacheImpl<T>(id);
+  public static <T> IdCache<T> newIdCache(final long init_id) {
+    return new IdHashCodeCache<T>(IdCacheImpl.<Integer> newIdCache(init_id));
   }
 
-  protected final Map<T, Long> cache;
+  @NonNull
+  private final IdCache<Integer> idCache;
 
-  protected Long id;
-
-  public IdCacheImpl(final Long id) {
-    this.id = id;
-    this.checkIdLowerBound();
-    this.checkIdUpperBound();
-    this.cache = newHashMap();
-  }
-
-  protected void checkIdLowerBound() {
-    checkState(id >= Long.MIN_VALUE, "The id %d must be >= %d", id, Long.MIN_VALUE);
-  }
-
-  protected void checkIdUpperBound() {
-    checkState(id < Long.MAX_VALUE, "The id %d must be < %d", id, Long.MAX_VALUE);
+  @Override
+  public void add(T t) {
+    idCache.add(t.hashCode());
   }
 
   @Override
-  public void add(final T t) {
-    checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
-    cache.put(t, id++);
+  public boolean contains(T t) {
+    return idCache.contains(t.hashCode());
   }
 
   @Override
-  public boolean contains(final T t) {
-    return cache.containsKey(t);
+  public String getIdAsString(T t) {
+    return idCache.getIdAsString(t.hashCode());
   }
 
   @Override
-  public String getIdAsString(@NonNull T t) {
-    return getId(t).toString();
+  public Long getId(T t) {
+    return idCache.getId(t.hashCode());
   }
 
-  @Override
-  public Long getId(@NonNull T t) {
-    if (cache.containsKey(t)) {
-      return cache.get(t);
-    } else {
-      throw new NullPointerException("The following key doesnt not exist in the cache: \n" + t);
-    }
-  }
-
-  public Map<Long, T> getReverseCache() {
-    val map = ImmutableMap.<Long, T> builder();
-    for (val entry : cache.entrySet()) {
-      val key = entry.getKey();
-      val idValue = entry.getValue();
-      map.put(idValue, key);
-    }
-    return map.build();
-  }
 }

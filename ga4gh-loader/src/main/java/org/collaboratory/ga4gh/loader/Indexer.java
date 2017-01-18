@@ -11,12 +11,12 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.collaboratory.ga4gh.loader.idcache.IdCache;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
+import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
