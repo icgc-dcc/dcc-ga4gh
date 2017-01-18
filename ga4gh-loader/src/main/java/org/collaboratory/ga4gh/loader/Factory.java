@@ -12,7 +12,7 @@ import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE
 import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
-import static org.collaboratory.ga4gh.loader.Config.NUM_THREADS;
+import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.SORT_MODE;
@@ -75,7 +75,7 @@ public class Factory {
         .client(client)
         .indexName(INDEX_NAME)
         .bulkSizeMb(BULK_SIZE_MB)
-        .threadsNum(NUM_THREADS));
+        .threadsNum(BULK_NUM_THREADS));
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer) {

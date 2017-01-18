@@ -20,7 +20,7 @@ public class Config {
         + "\nTOKEN: %s"
         + "\nSTORAGE_API: %s"
         + "\nPORTAL_API: %s"
-        + "\nNUM_THREADS: %s"
+        + "\nBULK_NUM_THREADS: %s"
         + "\nBULK_SIZE_MB: %s"
         + "\nPERSIST_MODE: %s"
         + "\nSORT_MODE: %s"
@@ -38,7 +38,7 @@ public class Config {
         TOKEN,
         STORAGE_API,
         PORTAL_API,
-        NUM_THREADS,
+        BULK_NUM_THREADS,
         BULK_SIZE_MB,
         PERSIST_MODE,
         SORT_MODE,
@@ -51,8 +51,8 @@ public class Config {
         DEFAULT_FILE_META_DATA_STORE_FILENAME);
   }
 
-  public static final int NUM_THREADS = Integer.valueOf(getProperty("num_threads", "0"));
-  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "10"));
+  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "5"));
+  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "5"));
   public static final boolean PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", "false"));
   public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", "true"));
   public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", "false"));
