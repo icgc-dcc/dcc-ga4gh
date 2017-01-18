@@ -16,6 +16,8 @@ import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
+import org.collaboratory.ga4gh.loader.utils.Counter;
+import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -31,8 +33,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterables;
 
 import htsjdk.samtools.util.StopWatch;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -168,30 +168,11 @@ public class Indexer {
     counter.incr();
   }
 
-  @Getter
-  @AllArgsConstructor
-  private static class Counter {
-
-    private int count;
-
-    public Counter() {
-      this(0);
-    }
-
-    public void incr() {
-      count++;
-    }
-
-    public void incr(final int amount) {
-      count += amount;
-    }
-
-  }
-
   @SneakyThrows
   public void indexCalls(final Stream<EsVariantCallPair> stream) {
     startWatch();
     val counter = new Counter(0);
+
     stream.forEach(p -> processEsVariantCallPair(p, counter));
     stopWatch();
     log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), durationWatch());
@@ -217,7 +198,9 @@ public class Indexer {
 
   @SneakyThrows
   public void indexVariants(@NonNull final Iterable<EsVariant> variants) {
-    startWatch();
+    val counter = new Counter(0);
+    val monitor = new CounterMonitor("Variant", counter, new StopWatch(), log, 10);
+    monitor.start();
     for (val variant : variants) {
       val variantName = variant.getName();
       val isNewVariantId = !variantIdCache.contains(variantName);
@@ -225,9 +208,10 @@ public class Indexer {
         variantIdCache.add(variantName);
         val variantId = variantIdCache.getIdAsString(variantName);
         writeVariant(variantId, variant);
+        counter.incr();
       }
     }
-    stopWatch();
+    monitor.stop();
     val size = Iterables.size(variants);
     log.info("[StopWatch][indexVariants][{}]: {} ms", size, durationWatch());
   }
