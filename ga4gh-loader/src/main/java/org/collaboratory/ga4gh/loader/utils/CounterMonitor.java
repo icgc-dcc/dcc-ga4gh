@@ -74,6 +74,9 @@ public class CounterMonitor {
             } catch (Exception e) {
 
             }
+            if (!isRunning) {
+              log.info("CounterMonitor[{}] stopped running", name);
+            }
 
           }
         }
