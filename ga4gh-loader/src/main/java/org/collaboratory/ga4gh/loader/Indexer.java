@@ -19,6 +19,7 @@ import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.utils.Counter;
+import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -31,7 +32,6 @@ import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Iterables;
 
 import htsjdk.samtools.util.StopWatch;
 import lombok.NonNull;
@@ -56,7 +56,6 @@ public class Indexer {
   public static final String VCF_HEADER_TYPE_NAME = "vcf_header";
   private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
   private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
-  private static final long INITIAL_ID = 1L;
 
   /**
    * Dependencies.
@@ -86,6 +85,12 @@ public class Indexer {
   private final IdCache<String> callIdCache;
 
   private final StopWatch watch = new StopWatch();
+
+  private final CounterMonitor callMonitor = newMonitor("CallIndexing", MONITOR_INTERVAL_SECONDS);
+  private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_SECONDS);
+  private final CounterMonitor variantSetMonitor = newMonitor("VariantSetIndexing", MONITOR_INTERVAL_SECONDS);
+  private final CounterMonitor callSetMonitor = newMonitor("CallSetIndexing", MONITOR_INTERVAL_SECONDS);
+  private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", MONITOR_INTERVAL_SECONDS);
 
   @SneakyThrows
   public void prepareIndex() {
@@ -117,8 +122,7 @@ public class Indexer {
 
   @SneakyThrows
   public void indexVariantSet(@NonNull final EsVariantSet variantSet) {
-    val monitor = newMonitor("VariantSetIndexing", MONITOR_INTERVAL_SECONDS);
-    monitor.start();
+    variantSetMonitor.start();
     val variantSetName = variantSet.getName();
     val isNewVariantSetId = !variantSetIdCache.contains(variantSetName);
     if (isNewVariantSetId) {
@@ -126,15 +130,14 @@ public class Indexer {
       val variantSetId = variantSetIdCache.getIdAsString(variantSetName);
       writeVariantSet(variantSetId, variantSet);
     }
-    monitor.stop();
-    log.info("[StopWatch][indexVariantSet]: {} ms", monitor.getElapsedTimeSeconds());
+    variantSetMonitor.stop();
+    log.info("[StopWatch][indexVariantSet]: {} ms", variantSetMonitor.getElapsedTimeSeconds());
     variantSetIdCache.purge();
   }
 
   @SneakyThrows
   public void indexCallSet(@NonNull final EsCallSet callSet) {
-    val monitor = newMonitor("CallSetIndexing", MONITOR_INTERVAL_SECONDS);
-    monitor.start();
+    callSetMonitor.start();
     val callSetName = callSet.getName();
     val isNewCallSetId = !callSetIdCache.contains(callSetName);
     if (isNewCallSetId) {
@@ -142,22 +145,9 @@ public class Indexer {
       val callSetId = callSetIdCache.getIdAsString(callSetName);
       writeCallSet(callSetId, callSet);
     }
-    monitor.stop();
-    log.info("[StopWatch][indexCallSet]: {} ms", monitor.getElapsedTimeSeconds());
+    callSetMonitor.stop();
+    log.info("[StopWatch][indexCallSet]: {} ms", callSetMonitor.getElapsedTimeSeconds());
     callSetIdCache.purge();
-  }
-
-  private void startWatch() {
-    watch.reset();
-    watch.start();
-  }
-
-  private void stopWatch() {
-    watch.stop();
-  }
-
-  private long durationWatch() {
-    return watch.getElapsedTime();
   }
 
   private void processEsVariantCallPair(final EsVariantCallPair pair, final Counter counter) {
@@ -175,20 +165,18 @@ public class Indexer {
 
   @SneakyThrows
   public void indexCalls(final Stream<EsVariantCallPair> stream) {
-    val monitor = newMonitor("CallsIndexing", MONITOR_INTERVAL_SECONDS);
-    val counter = monitor.getCounter();
-    monitor.start();
+    callMonitor.start();
+    val counter = callMonitor.getCounter();
     stream.forEach(p -> processEsVariantCallPair(p, counter));
-    monitor.stop();
-    log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), monitor.getElapsedTimeSeconds());
+    callMonitor.stop();
+    log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), callMonitor.getElapsedTimeSeconds());
     callIdCache.purge();
   }
 
   @SneakyThrows
   public void indexCallsOLD(final Map<String, EsCall> variantName2CallMap) {
-    val monitor = newMonitor("CallsIndexing", MONITOR_INTERVAL_SECONDS);
-    monitor.start();
-    val counter = monitor.getCounter();
+    callMonitor.start();
+    val counter = callMonitor.getCounter();
     for (val entry : variantName2CallMap.entrySet()) {
       val parentVariantName = entry.getKey().toString();
       val call = entry.getValue();
@@ -201,15 +189,15 @@ public class Indexer {
       writeCall(parentVariantId, call);
       counter.incr();
     }
-    monitor.stop();
-    log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), monitor.getElapsedTimeSeconds());
+    callMonitor.stop();
+    log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), callMonitor.getElapsedTimeSeconds());
+    callIdCache.purge();
   }
 
   @SneakyThrows
   public void indexVariants(@NonNull final Iterable<EsVariant> variants) {
-    val monitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_SECONDS);
-    monitor.start();
-    val counter = monitor.getCounter();
+    variantMonitor.start();
+    val counter = variantMonitor.getCounter();
     for (val variant : variants) {
       val variantName = variant.getName();
       val isNewVariantId = !variantIdCache.contains(variantName);
@@ -220,9 +208,10 @@ public class Indexer {
         counter.incr();
       }
     }
-    monitor.stop();
-    val size = Iterables.size(variants);
-    log.info("[StopWatch][indexVariants][{}]: {} ms", size, durationWatch());
+    variantMonitor.stop();
+    log.info("[StopWatch][indexVariants][{}]: {} ms", counter.getCount(), variantMonitor.getElapsedTimeSeconds());
+    // NOTE: variant is not purged since the scope of variant ids is ALL files, where as
+    // scope of call ids, callSet ids and variantSet ids are limited to currently processing file
   }
 
   private static byte[] createSource(@NonNull final Object document) {
@@ -249,7 +238,6 @@ public class Indexer {
   // TODO: [rtisma] rethink how will organize this data
   @SneakyThrows
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
-    startWatch();
     val parent_variant_set_id = vcfHeader.path(VARIANT_SET_ID).textValue();
     checkState(
         client.prepareIndex(Config.INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
@@ -258,8 +246,6 @@ public class Indexer {
             .setParent(parent_variant_set_id)
             .setRouting(VARIANT_SET_TYPE_NAME)
             .get().status().equals(RestStatus.CREATED));
-    stopWatch();
-    log.info("[StopWatch][indexVCFHeader]: {} ms", durationWatch());
   }
 
   private void writeCallSet(final String callSetId, @NonNull final EsCallSet callSet) throws IOException {

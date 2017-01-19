@@ -1,13 +1,18 @@
 package org.collaboratory.ga4gh.loader.utils;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@Getter
-@AllArgsConstructor
 public class Counter {
 
+  private final int initVal;
+
+  @Getter
   private int count;
+
+  public Counter(final int initVal) {
+    this.initVal = initVal;
+    this.count = initVal;
+  }
 
   public Counter() {
     this(0);
@@ -19,6 +24,10 @@ public class Counter {
 
   public void incr(final int amount) {
     count += amount;
+  }
+
+  public void reset() {
+    count = initVal;
   }
 
 }

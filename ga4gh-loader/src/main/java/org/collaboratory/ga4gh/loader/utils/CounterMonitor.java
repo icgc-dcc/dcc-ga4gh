@@ -50,8 +50,14 @@ public class CounterMonitor {
   private boolean isRunning = false;
   private long start = 0;
 
-  public void start() {
+  public void reset() {
     watch.reset();
+    counter.reset();
+  }
+
+  public void start() {
+    reset(); // TODO: [rtisma] Take this out once implement Delta feature to track progress between intervals, and not
+             // just averages
     start = 0;
     if (!isRunning) {
       setRunningState(true);
