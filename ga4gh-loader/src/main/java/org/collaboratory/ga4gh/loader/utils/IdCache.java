@@ -17,6 +17,8 @@
  */
 package org.collaboratory.ga4gh.loader.utils;
 
+import java.util.Map;
+
 public interface IdCache<T> {
 
   void add(T t);
@@ -26,5 +28,7 @@ public interface IdCache<T> {
   String getIdAsString(T t);
 
   Long getId(T t);
+
+  Map<Long, T> getReverseCache();
 
 }

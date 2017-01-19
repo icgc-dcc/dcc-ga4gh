@@ -76,6 +76,7 @@ public class IdCacheImpl<T> implements IdCache<T> {
     }
   }
 
+  @Override
   public Map<Long, T> getReverseCache() {
     val map = ImmutableMap.<Long, T> builder();
     for (val entry : cache.entrySet()) {
