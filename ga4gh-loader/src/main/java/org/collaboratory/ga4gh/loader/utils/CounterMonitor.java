@@ -7,9 +7,31 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
+@Slf4j
 public class CounterMonitor {
+
+  private static final int DEFAULT_INTERVAL_SECONDS = 30;
+  private static final int DEFAULT_INITAL_COUNT = 0;
+
+  public static CounterMonitor newMonitor(String name, Logger logger, int intervalSeconds) {
+    return new CounterMonitor(name, new Counter(DEFAULT_INITAL_COUNT), new StopWatch(), logger, intervalSeconds);
+  }
+
+  public static CounterMonitor newMonitor(String name, Logger logger) {
+    return newMonitor(name, logger, DEFAULT_INTERVAL_SECONDS);
+  }
+
+  public static CounterMonitor newMonitor(String name, int intervalSeconds) {
+    return newMonitor(name, log, intervalSeconds);
+  }
+
+  public static CounterMonitor newMonitor(String name) {
+    return newMonitor(name, log, DEFAULT_INTERVAL_SECONDS);
+
+  }
 
   @NonNull
   private final String name;

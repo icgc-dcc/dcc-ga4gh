@@ -172,7 +172,6 @@ public class Indexer {
   public void indexCalls(final Stream<EsVariantCallPair> stream) {
     startWatch();
     val counter = new Counter(0);
-
     stream.forEach(p -> processEsVariantCallPair(p, counter));
     stopWatch();
     log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), durationWatch());
