@@ -56,8 +56,8 @@ public class Config {
 
   }
 
-  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "5"));
-  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "5"));
+  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "6"));
+  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "200"));
   public static final boolean PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", "false"));
   public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", "true"));
   public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", "false"));
@@ -68,7 +68,7 @@ public class Config {
   public static final int DATA_FETCHER_LIMIT = 100;
   public static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
   public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
-  public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", "false"));
-  public static final boolean USE_HASH_CODE = Boolean.valueOf(getProperty("use_hash_code", "true"));
+  public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", "true"));
+  public static final boolean USE_HASH_CODE = Boolean.valueOf(getProperty("use_hash_code", "false"));
 
 }

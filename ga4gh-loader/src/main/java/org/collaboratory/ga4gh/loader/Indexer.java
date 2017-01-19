@@ -209,9 +209,6 @@ public class Indexer {
         val variantId = variantIdCache.getIdAsString(variantName);
         writeVariant(variantId, variant);
         counter.incr();
-        log.info("NEWWWWWWWWW:  {} -- hashcode: {}", variantName, variantName.hashCode());
-      } else {
-        log.info("Already EXISTS:  {} --  hashcode: {}", variantName, variantName.hashCode());
       }
     }
     monitor.stop();

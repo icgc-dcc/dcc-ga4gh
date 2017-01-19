@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
@@ -21,6 +22,7 @@ import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
@@ -36,8 +38,9 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.icgc.dcc.dcc.common.es.DocumentWriterConfiguration;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
-
-import com.google.common.collect.Maps;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -86,32 +89,46 @@ public class Factory {
         .threadsNum(BULK_NUM_THREADS));
   }
 
-  public static IdCache<String> newIdCache(final long init_id, boolean useHashCode,
+  public static IdCache<String> newIdCache(String name, final long init_id, boolean useHashCode,
       boolean useMapDB) {
     if (useHashCode) {
-      return new IdHashCodeCache<String>(IdCacheImpl.<Integer> newIdCache(newMap(useMapDB), init_id));
+      return new IdHashCodeCache<String>(IdCacheImpl.<Integer> newIdCache(newIntegerMap(), init_id));
+    } else if (useMapDB) {
+      return IdCacheImpl.<String> newIdCache(newDBMap(name, "target/" + name + ".db"), init_id);
     } else {
-      return IdCacheImpl.<String> newIdCache(newMap(useMapDB), init_id);
+      return IdCacheImpl.<String> newIdCache(newStringMap(), init_id);
     }
   }
 
-  public static <K, V> Map<K, V> newMap(boolean useMapDB) {
-    Map<K, V> cache;
-    if (useMapDB) {
-      log.info("sdfsdfsdf");
-      cache = Maps.newHashMap();
-    } else {
-      cache = Maps.newHashMap();
-    }
-    return cache;
+  private static DB createEntityDB(String filename) {
+    val file = new File(filename);
+    return DBMaker
+        .fileDB(file)
+        .concurrencyDisable()
+        .fileMmapEnable()
+        .make();
+  }
+
+  private static Map<String, Long> newDBMap(String name, String filename) {
+    return createEntityDB(filename)
+        .hashMap(name, Serializer.STRING_ASCII, Serializer.LONG)
+        .createOrOpen();
+  }
+
+  private static Map<Integer, Long> newIntegerMap() {
+    return newHashMap();
+  }
+
+  private static Map<String, Long> newStringMap() {
+    return newHashMap();
   }
 
   public static Indexer newIndexer(Client client, DocumentWriter writer, boolean useMapDB) {
     return new Indexer(client, writer, INDEX_NAME,
-        newIdCache(1L, USE_HASH_CODE, USE_MAP_DB),
-        newIdCache(1L, USE_HASH_CODE, USE_MAP_DB),
-        newIdCache(1L, USE_HASH_CODE, USE_MAP_DB),
-        newIdCache(1L, USE_HASH_CODE, USE_MAP_DB));
+        newIdCache("variantIdCache", 1L, USE_HASH_CODE, USE_MAP_DB),
+        newIdCache("variantSetIdCache", 1L, USE_HASH_CODE, USE_MAP_DB),
+        newIdCache("callSetIdCache", 1L, USE_HASH_CODE, USE_MAP_DB),
+        newIdCache("callIdCache", 1L, USE_HASH_CODE, USE_MAP_DB));
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer) {
