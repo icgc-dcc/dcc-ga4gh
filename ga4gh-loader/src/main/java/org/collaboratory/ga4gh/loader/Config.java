@@ -32,7 +32,7 @@ public class Config {
         + "\nOUTPUT_VCF_STORAGE_DIR: %s"
         + "\nFILE_META_DATA_STORE_FILENAME: %s"
         + "\nUSE_MAP_DB: %s"
-        + "\nUSE_HASH_CODE: %s",
+        + "\nMONITOR_INTERVAL_SECONDS: %s",
         INDEX_NAME,
         NODE_ADDRESS,
         NODE_PORT,
@@ -52,12 +52,12 @@ public class Config {
         OUTPUT_VCF_STORAGE_DIR,
         DEFAULT_FILE_META_DATA_STORE_FILENAME,
         USE_MAP_DB,
-        USE_HASH_CODE);
+        MONITOR_INTERVAL_SECONDS);
 
   }
 
-  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "6"));
-  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "200"));
+  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "10"));
+  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "250"));
   public static final boolean PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", "false"));
   public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", "true"));
   public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", "false"));
@@ -69,6 +69,6 @@ public class Config {
   public static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
   public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
   public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", "true"));
-  public static final boolean USE_HASH_CODE = Boolean.valueOf(getProperty("use_hash_code", "false"));
+  public static final int MONITOR_INTERVAL_SECONDS = 30;
 
 }

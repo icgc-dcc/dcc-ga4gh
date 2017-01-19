@@ -48,9 +48,11 @@ public class CounterMonitor {
   private final int intervalSeconds;
 
   private boolean isRunning = false;
+  private long start = 0;
 
   public void start() {
     watch.reset();
+    start = 0;
     if (!isRunning) {
       setRunningState(true);
       val runnable = new Runnable() {
@@ -85,6 +87,10 @@ public class CounterMonitor {
   public void stop() {
     setRunningState(false);
     watch.stop();
+  }
+
+  public long getElapsedTimeSeconds() {
+    return watch.getElapsedTimeSecs();
   }
 
   private synchronized void setRunningState(boolean isRunning) {
