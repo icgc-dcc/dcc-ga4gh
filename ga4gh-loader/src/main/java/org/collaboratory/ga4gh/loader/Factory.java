@@ -1,13 +1,9 @@
 package org.collaboratory.ga4gh.loader;
 
-import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
-import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_LIMIT;
-import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
-import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_NUM_DONORS;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SHUFFLE;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SOMATIC_SSMS_ONLY;
 import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
@@ -29,9 +25,6 @@ import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdDiskCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
-import org.collaboratory.ga4gh.loader.utils.IdCache;
-import org.collaboratory.ga4gh.loader.utils.IdRamCache;
-import org.collaboratory.ga4gh.loader.utils.IdDiskCache;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -54,10 +47,6 @@ public class Factory {
     val prop = new Properties();
     prop.load(uri.openStream());
     return prop;
-  }
-
-  public static Settings newEmptySettings() throws IOException {
-    return Settings.EMPTY;
   }
 
   public static Settings newSettings() throws IOException {
@@ -84,14 +73,6 @@ public class Factory {
         .indexName(INDEX_NAME)
         .bulkSizeMb(BULK_SIZE_MB)
         .threadsNum(BULK_NUM_THREADS));
-  }
-
-  public static IdCache<String> newIdCache(String name) throws Exception {
-    val defaultInitId = 1L;
-    val defaultStorageDirname = "target";
-    return USE_MAP_DB ? new IdDiskCache(name, defaultStorageDirname, defaultInitId) : IdRamCache.<String> newIdCache(
-        newHashMap(),
-        defaultInitId);
   }
 
   public static IdCacheFactory newIdCacheFactory() {
@@ -121,22 +102,7 @@ public class Factory {
     return new Storage(PERSIST_MODE, OUTPUT_VCF_STORAGE_DIR);
   }
 
-  public static FileMetaDataFetcher newFileMetaDataFetcherCustom() {
-    long seed = generateSeed();
-    if (DATA_FETCHER_SHUFFLE) {
-      log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
-    }
-    return FileMetaDataFetcher.builder()
-        .shuffle(DATA_FETCHER_SHUFFLE)
-        .maxFileSizeBytes(DATA_FETCHER_MAX_FILESIZE_BYTES)
-        .seed(seed)
-        .numDonors(DATA_FETCHER_NUM_DONORS)
-        .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
-        .limit(DATA_FETCHER_LIMIT)
-        .build();
-  }
-
-  public static FileMetaDataFetcher newFileMetaDataFetcherAll() {
+  public static FileMetaDataFetcher newFileMetaDataFetcher() {
     long seed = generateSeed();
     if (DATA_FETCHER_SHUFFLE) {
       log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
@@ -150,16 +116,4 @@ public class Factory {
         .build();
   }
 
-  public static FileMetaDataFetcher newFileMetaDataFetcherFirst10Biggest() {
-    long seed = generateSeed();
-    if (DATA_FETCHER_SHUFFLE) {
-      log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
-    }
-    return FileMetaDataFetcher.builder()
-        .sort(true)
-        .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
-        .ascending(true)
-        .limit(10)
-        .build();
-  }
 }
