@@ -25,9 +25,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Properties;
 
+import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
+import org.collaboratory.ga4gh.loader.factory.IdDiskCacheFactory;
+import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
-import org.collaboratory.ga4gh.loader.utils.IdCacheImpl;
+import org.collaboratory.ga4gh.loader.utils.IdRamCache;
 import org.collaboratory.ga4gh.loader.utils.IdDiskCache;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
@@ -83,20 +86,35 @@ public class Factory {
         .threadsNum(BULK_NUM_THREADS));
   }
 
-  public static IdCache<String> newIdCache(String name, final long init_id, boolean useMapDB) {
-    return useMapDB ? new IdDiskCache(name, "target", init_id) : IdCacheImpl.<String> newIdCache(newHashMap(), init_id);
+  public static IdCache<String> newIdCache(String name) throws Exception {
+    val defaultInitId = 1L;
+    val defaultStorageDirname = "target";
+    return USE_MAP_DB ? new IdDiskCache(name, defaultStorageDirname, defaultInitId) : IdRamCache.<String> newIdCache(
+        newHashMap(),
+        defaultInitId);
   }
 
-  public static Indexer newIndexer(Client client, DocumentWriter writer, boolean useMapDB) {
+  public static IdCacheFactory newIdCacheFactory() {
+    val defaultInitId = 1L;
+    val defaultStorageDirname = "target";
+    if (USE_MAP_DB) {
+      return new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
+    } else {
+      return new IdRamCacheFactory(defaultInitId);
+    }
+  }
+
+  public static Indexer newIndexer(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory)
+      throws Exception {
     return new Indexer(client, writer, INDEX_NAME,
-        newIdCache("variantIdCache", 1L, USE_MAP_DB),
-        newIdCache("variantSetIdCache", 1L, USE_MAP_DB),
-        newIdCache("callSetIdCache", 1L, USE_MAP_DB),
-        newIdCache("callIdCache", 1L, USE_MAP_DB));
+        idCacheFactory.getVariantIdCache(),
+        idCacheFactory.getVariantSetIdCache(),
+        idCacheFactory.getCallSetIdCache(),
+        idCacheFactory.getCallIdCache());
   }
 
-  public static Loader newLoader(Client client, DocumentWriter writer) {
-    return new Loader(newIndexer(client, writer, USE_MAP_DB), newStorage());
+  public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory) throws Exception {
+    return new Loader(newIndexer(client, writer, idCacheFactory), newStorage());
   }
 
   public static Storage newStorage() {

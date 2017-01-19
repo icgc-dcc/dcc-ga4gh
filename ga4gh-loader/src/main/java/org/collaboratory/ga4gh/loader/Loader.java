@@ -4,6 +4,8 @@ import static java.util.stream.Collectors.summingLong;
 import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
+import static org.collaboratory.ga4gh.loader.Factory.newFileMetaDataFetcherAll;
+import static org.collaboratory.ga4gh.loader.Factory.newIdCacheFactory;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
 
@@ -36,11 +38,13 @@ public class Loader {
   public static void main(String[] args) {
 
     log.info("Static Config:\n{}", Config.toConfigString());
-    try (val client = newClient(); val writer = newDocumentWriter(client)) {
-      val loader = newLoader(client, writer);
+    try (val client = newClient();
+        val idCacheFactory = newIdCacheFactory().init();
+        val writer = newDocumentWriter(client)) {
+      val loader = newLoader(client, writer, idCacheFactory);
       val startMs = System.currentTimeMillis();
       // val dataFetcher = Factory.newFileMetaDataFetcherCustom();
-      val dataFetcher = Factory.newFileMetaDataFetcherAll();
+      val dataFetcher = newFileMetaDataFetcherAll();
       log.info("dataFetcher: {}", dataFetcher);
       // loader.loadUsingDonorDatas(dataFetcher);
       loader.loadUsingFileMetaDatas(dataFetcher);

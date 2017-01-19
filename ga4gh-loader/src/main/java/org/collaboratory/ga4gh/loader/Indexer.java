@@ -128,6 +128,7 @@ public class Indexer {
     }
     monitor.stop();
     log.info("[StopWatch][indexVariantSet]: {} ms", monitor.getElapsedTimeSeconds());
+    variantSetIdCache.purge();
   }
 
   @SneakyThrows
@@ -143,6 +144,7 @@ public class Indexer {
     }
     monitor.stop();
     log.info("[StopWatch][indexCallSet]: {} ms", monitor.getElapsedTimeSeconds());
+    callSetIdCache.purge();
   }
 
   private void startWatch() {
@@ -179,6 +181,7 @@ public class Indexer {
     stream.forEach(p -> processEsVariantCallPair(p, counter));
     monitor.stop();
     log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), monitor.getElapsedTimeSeconds());
+    callIdCache.purge();
   }
 
   @SneakyThrows
@@ -305,4 +308,5 @@ public class Indexer {
     val url = getResource(MAPPINGS_DIR + "/" + fileName);
     return (ObjectNode) DEFAULT.readTree(url);
   }
+
 }

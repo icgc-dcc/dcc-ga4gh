@@ -18,6 +18,7 @@
 package org.collaboratory.ga4gh.loader.utils;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Maps.newHashMap;
 
 import java.util.Map;
 
@@ -26,17 +27,17 @@ import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 import lombok.val;
 
-public class IdCacheImpl<T> implements IdCache<T> {
+public class IdRamCache<T> implements IdCache<T> {
 
   public static <T> IdCache<T> newIdCache(Map<T, Long> cache, final Long id) {
-    return new IdCacheImpl<T>(cache, id);
+    return new IdRamCache<T>(cache, id);
   }
 
-  private final Map<T, Long> cache;
+  private Map<T, Long> cache;
 
   private Long id;
 
-  public IdCacheImpl(@NonNull final Map<T, Long> cache, final Long id) {
+  public IdRamCache(@NonNull final Map<T, Long> cache, final Long id) {
     this.id = id;
     this.checkIdLowerBound();
     this.checkIdUpperBound();
@@ -85,5 +86,10 @@ public class IdCacheImpl<T> implements IdCache<T> {
       map.put(idValue, key);
     }
     return map.build();
+  }
+
+  @Override
+  public void purge() {
+    cache = newHashMap();
   }
 }
