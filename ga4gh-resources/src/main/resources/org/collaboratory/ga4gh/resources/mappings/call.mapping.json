@@ -10,11 +10,11 @@
 				"index": "true"
 			},
 			"info": {
-				"type": "keyword",
+				"type": "binary",
 				"index": "false"
 			},
 			"genotype": {
-				"type": "keyword",
+				"type": "binary",
 				"index": "false"
 			}
 		},

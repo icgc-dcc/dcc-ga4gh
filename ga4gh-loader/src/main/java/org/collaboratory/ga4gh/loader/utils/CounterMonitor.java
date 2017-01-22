@@ -108,7 +108,7 @@ public class CounterMonitor implements Countable<Integer> {
         val instRate = getInstRate();
         val avgRate = getAvgRate();
         logger.info(
-            "[CounterMonitor-{}] -- CountInterval: {}   Count: {}   TotalElapsedTime: {}   IntervalElapsedTime: {}   InstantaeousRate: {}  AvgRate: {}",
+            "[CounterMonitor-{}] -- CountInterval: {}   Count: {}   TotalElapsedTime(s): {}   IntervalElapsedTime(s): {}   InstantaeousRate(count/sec): {}  AvgRate(count/sec): {}",
             name,
             countInterval,
             currentCount,
