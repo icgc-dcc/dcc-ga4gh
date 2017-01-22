@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.utils.Countable;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
@@ -151,9 +150,8 @@ public class Indexer {
     callSetIdCache.purge();
   }
 
-  private void processEsVariantCallPair(final EsVariantCallPair pair, final Countable<Integer> counter) {
-    val parentVariantName = pair.getParentVariantName();
-    val call = pair.getCall();
+  private void processEsCall(final EsCall call, final Countable<Integer> counter) {
+    val parentVariantName = call.getParentVariant().getName();
     val callName = call.getName();
     val doesVariantNameAlreadyExist = variantIdCache.contains(parentVariantName);
     checkState(doesVariantNameAlreadyExist,
@@ -165,9 +163,9 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexCalls(final Stream<EsVariantCallPair> stream) {
+  public void indexCalls(final Stream<EsCall> stream) {
     callMonitor.start();
-    stream.forEach(p -> processEsVariantCallPair(p, callMonitor));
+    stream.forEach(c -> processEsCall(c, callMonitor));
     callMonitor.stop();
     log.info("[SUMMARY]: {}", callMonitor);
     callMonitor.reset();

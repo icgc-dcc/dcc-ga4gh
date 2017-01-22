@@ -17,14 +17,15 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
+import static java.util.Objects.requireNonNull;
 import static org.collaboratory.ga4gh.common.Base64Codec.serialize;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+
+import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -40,22 +41,34 @@ import lombok.Value;
 @Value
 public class EsCall implements EsModel {
 
-  private String name;
+  private EsVariant parentVariant;
   private String variantSetId;
   private String callSetId;
-  private String bioSampleId;
   private CommonInfo info;
   private Genotype genotype;
+
+  public EsCall(EsVariant parentVariant, String variantSetId, String callSetId, CommonInfo info, Genotype genotype) {
+    this.parentVariant = requireNonNull(parentVariant);
+    this.variantSetId = variantSetId;
+    this.callSetId = callSetId;
+    this.info = requireNonNull(info);
+    this.genotype = requireNonNull(genotype);
+  }
 
   @Override
   public ObjectNode toObjectNode() {
     return object()
-        .with(NAME, name)
         .with(VARIANT_SET_ID, variantSetId)
         .with(CALL_SET_ID, callSetId)
-        .with(BIO_SAMPLE_ID, bioSampleId)
         .with(INFO, serialize(info))
         .with(GENOTYPE, serialize(genotype))
         .end();
   }
+
+  @Override
+  public String getName() {
+    return Joiners.COLON.join(
+        variantSetId, callSetId, parentVariant.getName(), genotype.getSampleName());
+  }
+
 }

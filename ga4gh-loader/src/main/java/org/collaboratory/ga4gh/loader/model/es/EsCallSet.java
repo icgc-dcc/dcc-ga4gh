@@ -34,10 +34,10 @@ import lombok.Value;
 public final class EsCallSet implements EsModel {
 
   private String name;
+  private String bioSampleId;
 
   @Singular
   private Iterable<String> variantSetIds;
-  private String bioSampleId;
 
   @Override
   public ObjectNode toObjectNode() {

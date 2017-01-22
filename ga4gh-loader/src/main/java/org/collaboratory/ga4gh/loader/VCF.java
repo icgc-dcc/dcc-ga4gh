@@ -25,7 +25,6 @@ import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.common.core.util.Joiners;
@@ -92,21 +91,17 @@ public class VCF implements Closeable {
     return duplicateVariantId;
   }
 
-  private EsVariantCallPair createVariantCallPair(final VariantContext record) {
-    return new EsVariantCallPair(createVariantId(record), convertCallNodeObj(record));
-  }
-
   // TODO: [rtisma] -- handle case where variantId already exists. If variantId exists,
   // then its corrupted as thats not allowed
-  public Stream<EsVariantCallPair> streamCalls() {
+  public Stream<EsCall> streamCalls() {
     return Streams.stream(vcf.iterator())
         .filter(v -> !isDuplicateVariantId(v))
-        .map(v -> createVariantCallPair(v));
+        .map(v -> convertCallNodeObj(v));
   }
 
   public Iterable<EsVariant> readVariants() {
     return transform(vcf,
-        this::convertVariantNodeObj);
+        VCF::convertVariantNodeObj);
   }
 
   public VCFHeader getHeader() {
@@ -124,10 +119,11 @@ public class VCF implements Closeable {
   }
 
   private static EsCallSet convertCallSet(final FileMetaData fileMetaData) {
+    val name = createCallSetName(fileMetaData);
     return EsCallSet.builder()
-        .name(createCallSetName(fileMetaData))
+        .name(name)
         .variantSetId(createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
-        .bioSampleId(fileMetaData.getSampleId())
+        .bioSampleId(name) // bio_sample_id == call_set_name
         .build();
   }
 
@@ -275,10 +271,10 @@ public class VCF implements Closeable {
     val bioSampleId = fileMetaData.getSampleId();
 
     return EsCall.builder()
-        .name(createCallName(record, callerTypeString, bioSampleId, genotype))
+        .parentVariant(convertVariantNodeObj(record)) // TODO: [OPTIMIZE] once merge call and variant indexing, this
+                                                      // will be non-redundant
         .variantSetId(callerTypeString)
         .callSetId(bioSampleId)
-        .bioSampleId(bioSampleId)
         .info(info)
         .genotype(genotype)
         .build();
@@ -330,10 +326,8 @@ public class VCF implements Closeable {
         .end();
   }
 
-  private EsVariant convertVariantNodeObj(@NonNull final VariantContext record) {
-    val variantName = createVariantName(record);
+  private static EsVariant convertVariantNodeObj(@NonNull final VariantContext record) {
     return EsVariant.builder()
-        .name(variantName)
         .start(record.getStart())
         .end(record.getEnd())
         .referenceName(record.getContig())
