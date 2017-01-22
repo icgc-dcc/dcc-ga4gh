@@ -3,7 +3,7 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.io.Resources.getResource;
-import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_SECONDS;
+import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
@@ -18,7 +18,7 @@ import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
-import org.collaboratory.ga4gh.loader.utils.Counter;
+import org.collaboratory.ga4gh.loader.utils.Countable;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -33,7 +33,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import htsjdk.samtools.util.StopWatch;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -84,13 +83,11 @@ public class Indexer {
   @NonNull
   private final IdCache<String> callIdCache;
 
-  private final StopWatch watch = new StopWatch();
-
-  private final CounterMonitor callMonitor = newMonitor("CallIndexing", MONITOR_INTERVAL_SECONDS);
-  private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_SECONDS);
-  private final CounterMonitor variantSetMonitor = newMonitor("VariantSetIndexing", MONITOR_INTERVAL_SECONDS);
-  private final CounterMonitor callSetMonitor = newMonitor("CallSetIndexing", MONITOR_INTERVAL_SECONDS);
-  private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", MONITOR_INTERVAL_SECONDS);
+  private final CounterMonitor callMonitor = newMonitor("CallIndexing", MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor variantSetMonitor = newMonitor("VariantSetIndexing", MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor callSetMonitor = newMonitor("CallSetIndexing", MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", MONITOR_INTERVAL_COUNT);
 
   @SneakyThrows
   public void prepareIndex() {
@@ -129,9 +126,11 @@ public class Indexer {
       variantSetIdCache.add(variantSetName);
       val variantSetId = variantSetIdCache.getIdAsString(variantSetName);
       writeVariantSet(variantSetId, variantSet);
+      variantSetMonitor.incr();
     }
     variantSetMonitor.stop();
-    log.info("[StopWatch][indexVariantSet]: {} ms", variantSetMonitor.getElapsedTimeSeconds());
+    log.info("[SUMMARY]: {}", variantSetMonitor);
+    variantSetMonitor.reset();
     variantSetIdCache.purge();
   }
 
@@ -144,13 +143,15 @@ public class Indexer {
       callSetIdCache.add(callSetName);
       val callSetId = callSetIdCache.getIdAsString(callSetName);
       writeCallSet(callSetId, callSet);
+      callSetMonitor.incr();
     }
     callSetMonitor.stop();
-    log.info("[StopWatch][indexCallSet]: {} ms", callSetMonitor.getElapsedTimeSeconds());
+    log.info("[SUMMARY]: {}", callSetMonitor);
+    callSetMonitor.reset();
     callSetIdCache.purge();
   }
 
-  private void processEsVariantCallPair(final EsVariantCallPair pair, final Counter counter) {
+  private void processEsVariantCallPair(final EsVariantCallPair pair, final Countable<Integer> counter) {
     val parentVariantName = pair.getParentVariantName();
     val call = pair.getCall();
     val callName = call.getName();
@@ -166,17 +167,16 @@ public class Indexer {
   @SneakyThrows
   public void indexCalls(final Stream<EsVariantCallPair> stream) {
     callMonitor.start();
-    val counter = callMonitor.getCounter();
-    stream.forEach(p -> processEsVariantCallPair(p, counter));
+    stream.forEach(p -> processEsVariantCallPair(p, callMonitor));
     callMonitor.stop();
-    log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), callMonitor.getElapsedTimeSeconds());
+    log.info("[SUMMARY]: {}", callMonitor);
+    callMonitor.reset();
     callIdCache.purge();
   }
 
   @SneakyThrows
   public void indexCallsOLD(final Map<String, EsCall> variantName2CallMap) {
     callMonitor.start();
-    val counter = callMonitor.getCounter();
     for (val entry : variantName2CallMap.entrySet()) {
       val parentVariantName = entry.getKey().toString();
       val call = entry.getValue();
@@ -187,17 +187,17 @@ public class Indexer {
           parentVariantName, callName);
       val parentVariantId = variantIdCache.getIdAsString(parentVariantName);
       writeCall(parentVariantId, call);
-      counter.incr();
+      callMonitor.incr();
     }
     callMonitor.stop();
-    log.info("[StopWatch][indexCalls][{}]: {} ms", counter.getCount(), callMonitor.getElapsedTimeSeconds());
+    log.info("[SUMMARY]: {}", callMonitor);
+    callMonitor.reset();
     callIdCache.purge();
   }
 
   @SneakyThrows
   public void indexVariants(@NonNull final Iterable<EsVariant> variants) {
     variantMonitor.start();
-    val counter = variantMonitor.getCounter();
     for (val variant : variants) {
       val variantName = variant.getName();
       val isNewVariantId = !variantIdCache.contains(variantName);
@@ -205,11 +205,12 @@ public class Indexer {
         variantIdCache.add(variantName);
         val variantId = variantIdCache.getIdAsString(variantName);
         writeVariant(variantId, variant);
-        counter.incr();
+        variantMonitor.incr();
       }
     }
     variantMonitor.stop();
-    log.info("[StopWatch][indexVariants][{}]: {} ms", counter.getCount(), variantMonitor.getElapsedTimeSeconds());
+    log.info("[SUMMARY]: {}", variantMonitor);
+    variantMonitor.reset();
     // NOTE: variant is not purged since the scope of variant ids is ALL files, where as
     // scope of call ids, callSet ids and variantSet ids are limited to currently processing file
   }

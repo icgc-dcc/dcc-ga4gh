@@ -1,33 +1,38 @@
 package org.collaboratory.ga4gh.loader.utils;
 
-import lombok.Getter;
-
-public class Counter {
+public class IntegerCounter implements Countable<Integer> {
 
   private final int initVal;
 
-  @Getter
   private int count;
 
-  public Counter(final int initVal) {
+  public IntegerCounter(final int initVal) {
     this.initVal = initVal;
     this.count = initVal;
   }
 
-  public Counter() {
+  public IntegerCounter() {
     this(0);
   }
 
+  @Override
   public void incr() {
     count++;
   }
 
-  public void incr(final int amount) {
+  @Override
+  public void incr(final Integer amount) {
     count += amount;
   }
 
+  @Override
   public void reset() {
     count = initVal;
+  }
+
+  @Override
+  public Integer getCount() {
+    return count;
   }
 
 }

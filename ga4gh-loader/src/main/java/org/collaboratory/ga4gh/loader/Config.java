@@ -32,7 +32,7 @@ public class Config {
         + "\nOUTPUT_VCF_STORAGE_DIR: %s"
         + "\nFILE_META_DATA_STORE_FILENAME: %s"
         + "\nUSE_MAP_DB: %s"
-        + "\nMONITOR_INTERVAL_SECONDS: %s",
+        + "\nMONITOR_INTERVAL_COUNT: %s",
         INDEX_NAME,
         NODE_ADDRESS,
         NODE_PORT,
@@ -52,7 +52,7 @@ public class Config {
         OUTPUT_VCF_STORAGE_DIR,
         DEFAULT_FILE_META_DATA_STORE_FILENAME,
         USE_MAP_DB,
-        MONITOR_INTERVAL_SECONDS);
+        MONITOR_INTERVAL_COUNT);
 
   }
 
@@ -69,6 +69,6 @@ public class Config {
   public static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
   public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
   public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", "true"));
-  public static final int MONITOR_INTERVAL_SECONDS = 30;
+  public static final int MONITOR_INTERVAL_COUNT = 500000;
 
 }

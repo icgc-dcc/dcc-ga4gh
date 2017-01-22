@@ -1,23 +1,24 @@
 package org.collaboratory.ga4gh.loader.utils;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 
-import htsjdk.samtools.util.StopWatch;
+import com.google.common.base.Stopwatch;
+
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
 @Slf4j
-public class CounterMonitor {
+public class CounterMonitor implements Countable<Integer> {
 
   private static final int DEFAULT_INTERVAL_SECONDS = 30;
   private static final int DEFAULT_INITAL_COUNT = 0;
 
   public static CounterMonitor newMonitor(String name, Logger logger, int intervalSeconds) {
-    return new CounterMonitor(name, new Counter(DEFAULT_INITAL_COUNT), new StopWatch(), logger, intervalSeconds);
+    return new CounterMonitor(name, new IntegerCounter(DEFAULT_INITAL_COUNT), Stopwatch.createUnstarted(), logger,
+        intervalSeconds);
   }
 
   public static CounterMonitor newMonitor(String name, Logger logger) {
@@ -30,80 +31,140 @@ public class CounterMonitor {
 
   public static CounterMonitor newMonitor(String name) {
     return newMonitor(name, log, DEFAULT_INTERVAL_SECONDS);
+  }
+
+  public CounterMonitor(String name, Countable<Integer> counter, Stopwatch watch, Logger logger, int countInterval) {
+    this.name = name;
+    this.counter = counter;
+    this.watch = watch;
+    this.logger = logger;
+    this.countInterval = countInterval;
+    // Init
+    this.previousCount = counter.getCount();
+    this.previousTime = watch.elapsed(TimeUnit.SECONDS);
+  }
+
+  public static void main(String[] args) throws InterruptedException {
+    val c = newMonitor("yo", 2);
+    c.start();
+    for (int i = 0; i < 10; i++) {
+      c.incr();
+      Thread.sleep(1000);
+    }
+    c.stop();
 
   }
 
-  @NonNull
   private final String name;
-  @Getter
-  @NonNull
-  private final Counter counter;
 
-  @NonNull
-  private final StopWatch watch;
+  private final Countable<Integer> counter;
 
-  @NonNull
+  private final Stopwatch watch;
+
   private final Logger logger;
 
-  private final int intervalSeconds;
+  private final int countInterval;
 
+  @Getter
   private boolean isRunning = false;
-  private long start = 0;
 
+  private int previousCount;
+  private long previousTime;
+
+  @Override
   public void reset() {
     watch.reset();
     counter.reset();
+    setRunningState(false);
   }
 
   public void start() {
-    reset(); // TODO: [rtisma] Take this out once implement Delta feature to track progress between intervals, and not
-             // just averages
-    start = 0;
-    if (!isRunning) {
-      setRunningState(true);
-      val runnable = new Runnable() {
-
-        @Override
-        public void run() {
-          while (isRunning) {
-
-            val c = counter.getCount();
-            val t = watch.getElapsedTimeSecs();
-            logger.info("CounterMonitor[{}] ==> Interval: {}   Count: {}   ElapsedTime: {}   AvgRate(count/sec): {} ",
-                name,
-                intervalSeconds,
-                counter.getCount(),
-                watch.getElapsedTimeSecs(), t == 0 ? 0 : c / t);
-
-            try {
-              Thread.sleep(intervalSeconds * 1000);
-            } catch (Exception e) {
-
-            }
-            if (!isRunning) {
-              log.info("CounterMonitor[{}] stopped running", name);
-            }
-
-          }
-        }
-      };
-      Thread t = new Thread(runnable);
-      watch.start();
-      t.start();
-    }
+    setRunningState(true);
+    watch.start();
+    logger.info("Started CounterMonitor-{}", name);
   }
 
   public void stop() {
-    setRunningState(false);
     watch.stop();
+    setRunningState(false);
+    logger.info("Stopped CounterMonitor-{}", name);
   }
 
   public long getElapsedTimeSeconds() {
-    return watch.getElapsedTimeSecs();
+    return watch.elapsed(TimeUnit.SECONDS);
   }
 
-  private synchronized void setRunningState(boolean isRunning) {
+  private void setRunningState(boolean isRunning) {
     this.isRunning = isRunning;
   }
 
+  private void monitor() {
+    if (isRunning()) {
+      val currentCount = counter.getCount();
+      val currentIntervalCount = currentCount - previousCount;
+      if (currentIntervalCount == countInterval) {
+        val totalTime = getElapsedTimeSeconds();
+        val intervalElapsedTime = totalTime - previousTime;
+        val instRate = getInstRate();
+        val avgRate = getAvgRate();
+        logger.info(
+            "[CounterMonitor-{}] -- CountInterval: {}   Count: {}   TotalElapsedTime: {}   IntervalElapsedTime: {}   InstantaeousRate: {}  AvgRate: {}",
+            name,
+            countInterval,
+            currentCount,
+            totalTime,
+            intervalElapsedTime,
+            instRate,
+            avgRate);
+        previousCount = currentCount;
+        previousTime = totalTime;
+      }
+    }
+  }
+
+  public long getAvgRate() {
+    val t = getElapsedTimeSeconds();
+    return t == 0 ? 0 : counter.getCount() / t;
+  }
+
+  public long getInstRate() {
+    val currentIntervalCount = counter.getCount() - previousCount;
+    val intervalElapsedTime = getElapsedTimeSeconds() - previousTime;
+    return intervalElapsedTime == 0 ? 0 : currentIntervalCount / intervalElapsedTime;
+  }
+
+  @Override
+  public void incr() {
+    counter.incr();
+    monitor();
+  }
+
+  @Override
+  public void incr(Integer amount) {
+    counter.incr(amount);
+    monitor();
+  }
+
+  @Override
+  public Integer getCount() {
+    return counter.getCount();
+  }
+
+  @Override
+  public String toString() {
+    val currentCount = counter.getCount();
+    val totalTime = getElapsedTimeSeconds();
+    val intervalElapsedTime = totalTime - previousTime;
+    val instRate = getInstRate();
+    val avgRate = getAvgRate();
+    return String.format(
+        "[CounterMonitor-%s] -- CountInterval: %s   Count: %s   TotalElapsedTime(s): %s   IntervalElapsedTime(s): %s   InstantaeousRate(count/sec): %s  AvgRate(count/sec): %s",
+        name,
+        countInterval,
+        currentCount,
+        totalTime,
+        intervalElapsedTime,
+        instRate,
+        avgRate);
+  }
 }
