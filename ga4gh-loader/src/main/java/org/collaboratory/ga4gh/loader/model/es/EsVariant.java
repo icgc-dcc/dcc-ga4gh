@@ -19,11 +19,12 @@ package org.collaboratory.ga4gh.loader.model.es;
 
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+
+import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -36,7 +37,6 @@ import lombok.Value;
 @Value
 public final class EsVariant implements EsModel {
 
-  private String name;
   private int start;
   private int end;
   private String referenceName;
@@ -48,13 +48,17 @@ public final class EsVariant implements EsModel {
   @Override
   public ObjectNode toObjectNode() {
     return object()
-        .with(NAME, name)
         .with(START, start)
         .with(END, end)
         .with(REFERENCE_NAME, referenceName)
         .with(REFERENCE_BASES, referenceBases)
         .with(ALTERNATIVE_BASES, EsModel.createStringArrayNode(alternativeBases))
         .end();
+  }
+
+  @Override
+  public String getName() {
+    return Joiners.UNDERSCORE.join(start, end, referenceName, referenceBases, Joiners.COMMA.join(alternativeBases));
   }
 
 }

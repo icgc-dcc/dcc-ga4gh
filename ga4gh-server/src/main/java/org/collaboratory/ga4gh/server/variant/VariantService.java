@@ -101,36 +101,42 @@ public class VariantService {
 
   public static void main(String[] args) {
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
-        .setEnd(50000000)
         .setStart(0)
+        .setEnd(10000000)
         .setPageSize(10)
-        .setReferenceName("7")
-        .setVariantSetId("consensus")
-        .addCallSetIds("SA557454")
+        .setReferenceName("1")
+        .setVariantSetId("broad-snowman")
+        // .setStart(208764566)
+        // .setEnd(208785085)
+        // .setPageSize(10)
+        // .setReferenceName("1")
+        // .setVariantSetId("svcp_1-0-6")
         .build();
 
     val searchVariantSetRequest = SearchVariantSetsRequest.newBuilder()
+        .setPageSize(10)
         .setDatasetId("SSM")
         .build();
 
+    val sampleId = "SA413562";
     val searchCallSetRequest = SearchCallSetsRequest.newBuilder()
-        .setVariantSetId("consensus")
-        .setBioSampleId("SA557454")
-        .setName("SA557454")
+        .setVariantSetId("broad-snowman")
+        .setBioSampleId(sampleId)
+        .setName(sampleId)
         .setPageSize(100)
         .build();
 
     val getVariantRequest = GetVariantRequest.newBuilder()
         // .setVariantId("27043136_27043136_7_C_T")
-        .setVariantId("1")
+        .setVariantId("46421")
         .build();
 
     val getVariantSetRequest = GetVariantSetRequest.newBuilder()
-        .setVariantSetId("consensus")
+        .setVariantSetId("1")
         .build();
 
     val getCallSetRequest = GetCallSetRequest.newBuilder()
-        .setCallSetId("SA557454")
+        .setCallSetId("1")
         .build();
 
     val client = newClient();
@@ -325,7 +331,7 @@ public class VariantService {
     // TODO: [rtisma] need to extract data from genotype and put into call
     return Call.newBuilder()
         .setCallSetId(hit.getSource().get(CALL_SET_ID).toString())
-        .setCallSetName(hit.getSource().get(BIO_SAMPLE_ID).toString()) // TODO: [rtisma] need to add call_set_name to
+        .setCallSetName(hit.getSource().get(CALL_SET_ID).toString()) // TODO: [rtisma] need to add call_set_name to
         .addAllGenotype(nonRefAlleles)
         .addGenotypeLikelihood(genotype.getLog10PError())
         .putAllInfo(createInfo(commonInfoFromVariant))

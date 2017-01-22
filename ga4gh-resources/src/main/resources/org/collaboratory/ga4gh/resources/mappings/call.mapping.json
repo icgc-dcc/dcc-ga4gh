@@ -1,19 +1,11 @@
 {
 	"call": {
 		"properties": {
-			"name": {
-				"type": "keyword",
-				"index": "true"
-			},
 			"variant_set_id": {
 				"type": "keyword",
 				"index": "true"
 			},
 			"call_set_id": {
-				"type": "keyword",
-				"index": "true"
-			},
-			"bio_sample_id": {
 				"type": "keyword",
 				"index": "true"
 			},
