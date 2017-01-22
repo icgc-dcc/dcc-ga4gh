@@ -56,8 +56,8 @@ public class Config {
 
   }
 
-  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "10"));
-  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "250"));
+  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "5"));
+  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "5"));
   public static final boolean PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", "false"));
   public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", "true"));
   public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", "false"));
