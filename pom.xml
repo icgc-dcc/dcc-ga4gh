@@ -30,11 +30,11 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 	<packaging>pom</packaging>
 
 	<modules>
+		<module>ga4gh-core</module>
 		<module>ga4gh-resources</module>
 		<module>ga4gh-schema</module>
 		<module>ga4gh-server</module>
 		<module>ga4gh-loader</module>
-		<module>ga4gh-core</module>
 	</modules>
 
 	<repositories>
@@ -132,7 +132,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		<!-- Versions - DCC -->
 <!-- 		<dcc-common.version>4.3.5-20161124.151808-4</dcc-common.version>
  -->
-		<!-- Contains Vilalii's ES5.0.0 and parent/child update -->		
+		<!-- Contains Vilalii's ES5.0.0 and parent/child update -->
 		<dcc-common.version>4.3.11-20170116.182908-5</dcc-common.version>
 
 

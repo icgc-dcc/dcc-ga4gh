@@ -17,8 +17,8 @@
  */
 package org.collaboratory.ga4gh.server.util;
 
-import static org.collaboratory.ga4gh.server.util.TypeChecker.isObjectCollection;
-import static org.collaboratory.ga4gh.server.util.TypeChecker.isObjectMap;
+import static org.collaboratory.ga4gh.core.TypeChecker.isObjectCollection;
+import static org.collaboratory.ga4gh.core.TypeChecker.isObjectMap;
 
 import java.util.Collection;
 import java.util.Map;

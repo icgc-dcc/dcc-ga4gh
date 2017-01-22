@@ -113,11 +113,6 @@ public class VCF implements Closeable {
     return fileMetaData.getSampleId();
   }
 
-  private static String createCallName(@NonNull final VariantContext record, final String caller_id,
-      final String bio_sample_id, @NonNull final Genotype genotype) {
-    return String.format("%s:%s:%s:%s", caller_id, bio_sample_id, createVariantId(record), genotype.getSampleName());
-  }
-
   private static EsCallSet convertCallSet(final FileMetaData fileMetaData) {
     val name = createCallSetName(fileMetaData);
     return EsCallSet.builder()

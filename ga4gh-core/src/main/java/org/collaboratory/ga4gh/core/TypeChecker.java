@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,44 +15,76 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.common;
+package org.collaboratory.ga4gh.core;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Base64;
+import java.util.Collection;
+import java.util.Map;
 
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class Base64Codec {
-  private static final Base64.Encoder ENCODER = Base64.getEncoder();
-  private static final Base64.Decoder DECODER = Base64.getDecoder();
+public final class TypeChecker {
 
-  @SneakyThrows
-  public static String serialize(@NonNull final Object o) {
-    val baos = new ByteArrayOutputStream();
-    val oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
-    val serialized = baos.toByteArray();
-    baos.close();
-    return ENCODER.encodeToString(serialized);
+  public static boolean isStringInteger(String input) {
+    try {
+      Integer.parseInt(input);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
 
-  @SneakyThrows
-  public static Object deserialize(@NonNull final String input) {
-    val bais = new ByteArrayInputStream(DECODER.decode(input));
-    val ois = new ObjectInputStream(bais);
-    val object = ois.readObject();
-    ois.close();
-    bais.close();
-    return object;
+  public static boolean isStringDouble(String input) {
+    try {
+      Double.parseDouble(input);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
+
+  public static boolean isStringFloat(String input) {
+    try {
+      Float.parseFloat(input);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  public static boolean isStringBoolean(String input) {
+    try {
+      Boolean.parseBoolean(input);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  public static boolean isObjectBoolean(Object obj) {
+    return obj instanceof Boolean;
+  }
+
+  public static boolean isObjectInteger(Object obj) {
+    return obj instanceof Integer;
+  }
+
+  public static boolean isObjectDouble(Object obj) {
+    return obj instanceof Double;
+  }
+
+  public static boolean isObjectFloat(Object obj) {
+    return obj instanceof Float;
+  }
+
+  public static boolean isObjectMap(Object obj) {
+    return obj instanceof Map<?, ?>;
+  }
+
+  public static boolean isObjectCollection(Object obj) {
+    return obj instanceof Collection<?>;
+  }
+
 }

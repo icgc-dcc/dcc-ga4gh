@@ -17,7 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.common.Base64Codec.deserialize;
+import static org.collaboratory.ga4gh.core.Base64Codec.deserialize;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
