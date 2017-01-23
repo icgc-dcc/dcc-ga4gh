@@ -1,6 +1,6 @@
 package org.collaboratory.ga4gh.loader.factory;
 
-import static org.assertj.core.util.Maps.newHashMap;
+import static com.google.common.collect.Maps.newHashMap;
 
 import java.io.IOException;
 
