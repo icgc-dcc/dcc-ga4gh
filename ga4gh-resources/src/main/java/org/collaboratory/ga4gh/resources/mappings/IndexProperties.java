@@ -45,5 +45,8 @@ public final class IndexProperties {
   public static final String INFO = "info";
   public static final String REFERENCE_BASES = "reference_bases";
   public static final String ALTERNATIVE_BASES = "alternate_bases";
+  public static final String GENOTYPE_LIKELIHOOD = "genotype_likelihood";
+  public static final String GENOTYPE_PHASESET = "genotype_phaseset";
+  public static final String NON_REFERENCE_ALLELES = "non_reference_alleles";
 }
 
