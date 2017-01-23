@@ -17,15 +17,18 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.Base64Codec.deserialize;
+import static java.lang.Double.parseDouble;
+import static java.lang.Integer.parseInt;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DATA_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE_LIKELIHOOD;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE_PHASESET;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NAME;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NON_REFERENCE_ALLELES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_SET_ID;
@@ -317,25 +320,28 @@ public class VariantService {
 
   @SneakyThrows
   private static Call.Builder convertToCall(@NonNull SearchHit hit) {
-    val genotypeSer = hit.getSource().get(GENOTYPE).toString();
-    val commonInfoSer = hit.getSource().get(INFO).toString();
-    val genotype = (Genotype) deserialize(genotypeSer);
-    val commonInfoFromVariant = (CommonInfo) deserialize(commonInfoSer);
-    // TODO: [rtisma] what about non-extended (or regular) attributes? how do you get those?
-    val callExtendedAttributes = genotype.getExtendedAttributes();
-    mergeAttributes(commonInfoFromVariant, callExtendedAttributes);
+    val source = hit.getSource();
+    val callSetId = source.get(CALL_SET_ID).toString();
+    val callSetName = source.get(CALL_SET_ID).toString();
 
-    val nonRefAlleles = convertNonRefAlleles(genotype);
-    val likelihood = genotype.getLikelihoods();
+    // TODO: [BUG] this isnt working properly. Just taking last element
+    val nonRefAlleles = getHitArray(hit, NON_REFERENCE_ALLELES).stream()
+        .map(o -> parseInt(o.toString()))
+        .collect(toImmutableList());
+    val genotypeLikelihood = parseDouble(source.get(GENOTYPE_LIKELIHOOD).toString());
+    val genotypePhaseset = source.get(GENOTYPE_PHASESET).toString();
+
+    // Working properly
+    val callInfo = getHitMap(hit, INFO);
 
     // TODO: [rtisma] need to extract data from genotype and put into call
     return Call.newBuilder()
-        .setCallSetId(hit.getSource().get(CALL_SET_ID).toString())
-        .setCallSetName(hit.getSource().get(CALL_SET_ID).toString()) // TODO: [rtisma] need to add call_set_name to
+        .setCallSetId(callSetId)
+        .setCallSetName(callSetName)
         .addAllGenotype(nonRefAlleles)
-        .addGenotypeLikelihood(genotype.getLog10PError())
-        .putAllInfo(createInfo(commonInfoFromVariant))
-        .setPhaseset(Boolean.toString(genotype.isPhased()));
+        .addGenotypeLikelihood(genotypeLikelihood)
+        .putAllInfo(createInfo(callInfo))
+        .setPhaseset(genotypePhaseset);
   }
 
   private static String getHitAsString(final SearchHit hit, String attr) {
@@ -350,6 +356,11 @@ public class VariantService {
   @SuppressWarnings("unchecked")
   private static List<Object> getHitArray(final SearchHit hit, String field) {
     return (List<Object>) hit.getSource().get(field);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> getHitMap(final SearchHit hit, String field) {
+    return (Map<String, Object>) hit.getSource().get(field);
   }
 
   @SneakyThrows

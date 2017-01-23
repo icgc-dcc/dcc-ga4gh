@@ -10,11 +10,18 @@
 				"index": "true"
 			},
 			"info": {
-				"type": "binary",
+				"type" : "object"
+			},
+			"genotype_likelihood": {
+				"type": "keyword",
 				"index": "false"
 			},
-			"genotype": {
-				"type": "binary",
+			"genotype_phaseset": {
+				"type": "boolean",
+				"index": "false"
+			},
+			"non_reference_alleles": {
+				"type": "integer",
 				"index": "false"
 			}
 		},

@@ -22,6 +22,7 @@ import static org.collaboratory.ga4gh.core.TypeChecker.isObjectMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.icgc.dcc.common.core.json.JsonNodeBuilders;
@@ -31,25 +32,30 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import htsjdk.variant.variantcontext.Genotype;
+import lombok.NonNull;
 import lombok.val;
 
 //TODO: [rtisma]  move this to ga4gh-core, along with everything under model.es. 
 public interface EsModel {
 
-  ObjectNode toObjectNode();
+  ObjectNode toDocument();
 
   String getName(); // Every model must have a uniquely identifying name is a certain scope
 
-  public static ArrayNode createStringArrayNode(Iterable<String> values) {
-    return JsonNodeBuilders.array(values).end();
-  }
-
-  public static ArrayNode createObjectArrayNode(Iterable<Object> values) {
+  public static <T> ArrayNode createStringArrayNode(Iterable<T> values) {
     val array = JsonNodeBuilders.array();
     values.forEach(o -> array.with(o.toString()));
+    return array.end();
+  }
+
+  public static ArrayNode createIntegerArrayNode(Iterable<Integer> values) {
+    val array = JsonNodeBuilders.array();
+    values.forEach(i -> array.with(i));
     return array.end();
   }
 
@@ -85,13 +91,13 @@ public interface EsModel {
 
     objectMap.put("mirrorObjectMap", objectMap.clone());
 
-    val objectMapNode = convertMap(objectMap);
+    val objectMapNode = convertMapToObjectNode(objectMap);
     val mapper = new ObjectMapper();
     System.out.println("Tooo: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectMapNode));
 
   }
 
-  public static <K, V> ObjectNode convertMap(Map<K, V> map) {
+  public static <K, V> ObjectNode convertMapToObjectNode(Map<K, V> map) {
     val objectNode = object();
     for (val entry : map.entrySet()) {
       val key = entry.getKey().toString();
@@ -100,19 +106,32 @@ public interface EsModel {
 
         @SuppressWarnings("unchecked")
         val collection = (Collection<Object>) value;
-        val arrayNode = createObjectArrayNode(collection);
+        val arrayNode = createStringArrayNode(collection);
         objectNode.with(key, arrayNode);
       } else if (isObjectMap(value)) { // TODO: still incomplete
 
         @SuppressWarnings("unchecked")
         val innerMap = (Map<Object, Object>) value;
-        objectNode.with(key, convertMap(innerMap));
+        objectNode.with(key, convertMapToObjectNode(innerMap));
 
       } else { // Treat everything else as just a string
         objectNode.with(key, value.toString());
       }
     }
     return objectNode.end();
+  }
+
+  public static List<Integer> convertNonRefAlleles(@NonNull final Genotype genotype) {
+    // TODO: [rtisma] -- verify this logic is correct. Allele has some other states that might need to be considered
+    val allelesBuilder = ImmutableList.<Integer> builder();
+    for (int i = 0; i < genotype.getAlleles().size(); i++) {
+      val allele = genotype.getAllele(i);
+      if (allele.isNonReference()) {
+        allelesBuilder.add(i);
+      }
+    }
+    allelesBuilder.add(99);// TODO: HACK just testing
+    return allelesBuilder.build();
   }
 
 }

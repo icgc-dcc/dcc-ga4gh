@@ -40,7 +40,7 @@ public final class EsCallSet implements EsModel {
   private Iterable<String> variantSetIds;
 
   @Override
-  public ObjectNode toObjectNode() {
+  public ObjectNode toDocument() {
     return object()
         .with(NAME, name)
         .with(VARIANT_SET_IDS, EsModel.createStringArrayNode(variantSetIds))

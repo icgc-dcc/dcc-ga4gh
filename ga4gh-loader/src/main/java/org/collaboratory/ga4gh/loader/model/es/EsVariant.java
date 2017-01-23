@@ -46,7 +46,7 @@ public final class EsVariant implements EsModel {
   private Iterable<String> alternativeBases;
 
   @Override
-  public ObjectNode toObjectNode() {
+  public ObjectNode toDocument() {
     return object()
         .with(START, start)
         .with(END, end)

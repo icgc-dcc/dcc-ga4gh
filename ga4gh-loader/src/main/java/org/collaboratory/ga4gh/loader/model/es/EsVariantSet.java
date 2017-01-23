@@ -37,7 +37,7 @@ public final class EsVariantSet implements EsModel {
   private String referenceSetId;
 
   @Override
-  public ObjectNode toObjectNode() {
+  public ObjectNode toDocument() {
     return object()
         .with(NAME, name)
         .with(DATA_SET_ID, dataSetId)

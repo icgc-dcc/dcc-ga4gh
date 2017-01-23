@@ -17,11 +17,13 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Objects.requireNonNull;
-import static org.collaboratory.ga4gh.core.Base64Codec.serialize;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE_LIKELIHOOD;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE_PHASESET;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NON_REFERENCE_ALLELES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
@@ -33,6 +35,7 @@ import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.Genotype;
 import lombok.Builder;
 import lombok.Value;
+import lombok.val;
 
 /*
  * ObjectNode is a bit heavy, this is just to minimize memory usage
@@ -56,14 +59,31 @@ public class EsCall implements EsModel {
   }
 
   @Override
-  public ObjectNode toObjectNode() {
+  public ObjectNode toDocument() {
+    val infoMap = newHashMap(info.getAttributes());
+    infoMap.putAll(genotype.getExtendedAttributes());
+    val nonRefAlleles = EsModel.createIntegerArrayNode(EsModel.convertNonRefAlleles(genotype));
+    val likelihood = genotype.getLog10PError();
+    val isPhaseset = genotype.isPhased();
+
     return object()
         .with(VARIANT_SET_ID, variantSetId)
         .with(CALL_SET_ID, callSetId)
-        .with(INFO, serialize(info))
-        .with(GENOTYPE, serialize(genotype))
+        .with(INFO, EsModel.convertMapToObjectNode(infoMap))
+        .with(GENOTYPE_LIKELIHOOD, Double.toString(likelihood))
+        .with(GENOTYPE_PHASESET, isPhaseset)
+        .with(NON_REFERENCE_ALLELES, nonRefAlleles)
         .end();
   }
+
+  // TODO: [rtisma] when have time, add a fromDocument converter. Then move models to core and use this class as a
+  // conversion from Es to Model, and back
+  /*
+   * public static EsCall fromDocument(ObjectNode callNode){
+   * 
+   * 
+   * }
+   */
 
   @Override
   public String getName() {
