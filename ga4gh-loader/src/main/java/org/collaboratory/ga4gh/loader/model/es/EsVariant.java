@@ -43,6 +43,9 @@ public final class EsVariant implements EsModel {
   private String referenceBases;
 
   @Singular
+  private Iterable<EsCall> calls;
+
+  @Singular
   private Iterable<String> alternativeBases;
 
   @Override

@@ -99,6 +99,11 @@ public class VCF implements Closeable {
         .map(v -> convertCallNodeObj(v));
   }
 
+  public Stream<EsVariant> readVariantAndCalls() {
+    return Streams.stream(vcf.iterator())
+        .map(this::convertVariantCallNodeObj);
+  }
+
   public Iterable<EsVariant> readVariants() {
     return transform(vcf,
         VCF::convertVariantNodeObj);
@@ -160,6 +165,7 @@ public class VCF implements Closeable {
     val mutationSubTypeString = parser.getSubMutationType();
     val genotypeContext = record.getGenotypes();
     val commonInfo = record.getCommonInfo();
+    val parentVariant = convertVariantNodeObj(record);
 
     val errorMessage = "CallerType: {} not implemented";
     String tumorKey;
@@ -226,10 +232,10 @@ public class VCF implements Closeable {
       try {
         for (val genotype : genotypeContext) {
           // if (genotype.getSampleName().equals(tumorKey)) {
-          return createCallObjectNode(fileMetaData, record, commonInfo, genotype);
+          return createCallObjectNode(fileMetaData, parentVariant, commonInfo, genotype);
           // }
         }
-        return createCallObjectNode(fileMetaData, record, commonInfo, createDefaultGenotype(refAllele));
+        return createCallObjectNode(fileMetaData, parentVariant, commonInfo, createDefaultGenotype(refAllele));
       } catch (TribbleException e) {
         if (!fileMetaData.isCorrupted()) {
           log.error("CORRUPTED VCF FILE [{}] -- Message [{}]: {}",
@@ -238,10 +244,10 @@ public class VCF implements Closeable {
               e.getMessage());
           fileMetaData.setCorrupted(true); // Set to corrupted state so that dont have to log again
         }
-        return createCallObjectNode(fileMetaData, record, commonInfo, createDefaultGenotype(refAllele));
+        return createCallObjectNode(fileMetaData, parentVariant, commonInfo, createDefaultGenotype(refAllele));
       }
     } else {
-      return createCallObjectNode(fileMetaData, record, commonInfo, createDefaultGenotype(refAllele));
+      return createCallObjectNode(fileMetaData, parentVariant, commonInfo, createDefaultGenotype(refAllele));
     }
     // checkState(!hasCalls, "The variant [%s] should not have any calls.\nfileMetaData: [%s]",
     // record, fileMetaData);
@@ -258,7 +264,7 @@ public class VCF implements Closeable {
   }
 
   private static EsCall createCallObjectNode(@NonNull final FileMetaData fileMetaData,
-      @NonNull VariantContext record,
+      @NonNull EsVariant parentVariant,
       @NonNull CommonInfo info,
       @NonNull Genotype genotype) {
     val parser = fileMetaData.getVcfFilenameParser();
@@ -266,8 +272,8 @@ public class VCF implements Closeable {
     val bioSampleId = fileMetaData.getSampleId();
 
     return EsCall.builder()
-        .parentVariant(convertVariantNodeObj(record)) // TODO: [OPTIMIZE] once merge call and variant indexing, this
-                                                      // will be non-redundant
+        .parentVariant(parentVariant) // TODO: [OPTIMIZE] once merge call and variant indexing, this
+                                      // will be non-redundant
         .variantSetId(callerTypeString)
         .callSetId(bioSampleId)
         .info(info)
@@ -319,6 +325,22 @@ public class VCF implements Closeable {
         .with(BIO_SAMPLE_ID, fileMetaData.getSampleId())
         .with(VARIANT_SET_ID, createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
         .end();
+  }
+
+  private EsVariant convertVariantCallNodeObj(@NonNull final VariantContext record) {
+    val call = convertCallNodeObj(record);
+    return EsVariant.builder()
+        .start(record.getStart())
+        .end(record.getEnd())
+        .referenceName(record.getContig())
+        .referenceBases(record.getReference().getBaseString())
+        .call(call)
+        .alternativeBases(
+            record.getAlternateAlleles()
+                .stream()
+                .map(a -> a.getBaseString())
+                .collect(toImmutableList()))
+        .build();
   }
 
   private static EsVariant convertVariantNodeObj(@NonNull final VariantContext record) {
