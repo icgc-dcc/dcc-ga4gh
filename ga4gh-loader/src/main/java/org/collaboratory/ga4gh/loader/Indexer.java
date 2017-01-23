@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import htsjdk.tribble.TribbleException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -113,7 +114,7 @@ public class Indexer {
   }
 
   private void writeVariantSet(final String variantSetId, @NonNull final EsVariantSet variantSet) throws IOException {
-    writer.write(new IndexDocument(variantSetId, variantSet.toObjectNode(), new VariantSetDocumentType()));
+    writer.write(new IndexDocument(variantSetId, variantSet.toDocument(), new VariantSetDocumentType()));
   }
 
   @SneakyThrows
@@ -130,7 +131,6 @@ public class Indexer {
     variantSetMonitor.stop();
     log.info("[SUMMARY]: {}", variantSetMonitor);
     variantSetMonitor.reset();
-    variantSetIdCache.purge();
   }
 
   @SneakyThrows
@@ -147,7 +147,6 @@ public class Indexer {
     callSetMonitor.stop();
     log.info("[SUMMARY]: {}", callSetMonitor);
     callSetMonitor.reset();
-    callSetIdCache.purge();
   }
 
   private void processEsCall(final EsCall call, final Countable<Integer> counter) {
@@ -165,11 +164,17 @@ public class Indexer {
   @SneakyThrows
   public void indexCalls(final Stream<EsCall> stream) {
     callMonitor.start();
-    stream.forEach(c -> processEsCall(c, callMonitor));
-    callMonitor.stop();
-    log.info("[SUMMARY]: {}", callMonitor);
-    callMonitor.reset();
-    callIdCache.purge();
+    try {
+      stream.forEach(c -> processEsCall(c, callMonitor));
+    } catch (TribbleException te) {
+      log.error("CORRUPTED VCF due to Call -- Message [{}]: {}",
+          te.getClass().getName(),
+          te.getMessage());
+    } finally {
+      callMonitor.stop();
+      log.info("[SUMMARY]: {}", callMonitor);
+      callMonitor.reset();
+    }
   }
 
   @SneakyThrows
@@ -190,27 +195,33 @@ public class Indexer {
     callMonitor.stop();
     log.info("[SUMMARY]: {}", callMonitor);
     callMonitor.reset();
-    callIdCache.purge();
   }
 
   @SneakyThrows
   public void indexVariants(@NonNull final Iterable<EsVariant> variants) {
     variantMonitor.start();
-    for (val variant : variants) {
-      val variantName = variant.getName();
-      val isNewVariantId = !variantIdCache.contains(variantName);
-      if (isNewVariantId) {
-        variantIdCache.add(variantName);
-        val variantId = variantIdCache.getIdAsString(variantName);
-        writeVariant(variantId, variant);
-        variantMonitor.incr();
+    try {
+      for (val variant : variants) {
+        val variantName = variant.getName();
+        val isNewVariantId = !variantIdCache.contains(variantName);
+        if (isNewVariantId) {
+          variantIdCache.add(variantName);
+          val variantId = variantIdCache.getIdAsString(variantName);
+          writeVariant(variantId, variant);
+          variantMonitor.incr();
+        }
       }
+    } catch (TribbleException te) {
+      log.error("CORRUPTED VCF due to Variant -- Message [{}]: {}",
+          te.getClass().getName(),
+          te.getMessage());
+    } finally {
+      variantMonitor.stop();
+      log.info("[SUMMARY]: {}", variantMonitor);
+      variantMonitor.reset();
+      // NOTE: variant is not purged since the scope of variant ids is ALL files, where as
+      // scope of call ids, callSet ids and variantSet ids are limited to currently processing file
     }
-    variantMonitor.stop();
-    log.info("[SUMMARY]: {}", variantMonitor);
-    variantMonitor.reset();
-    // NOTE: variant is not purged since the scope of variant ids is ALL files, where as
-    // scope of call ids, callSet ids and variantSet ids are limited to currently processing file
   }
 
   private static byte[] createSource(@NonNull final Object document) {
@@ -229,7 +240,7 @@ public class Indexer {
     if (isNewCallId) {
       callIdCache.add(callName);
       val callId = callIdCache.getIdAsString(callName);
-      writer.write(new IndexDocument(callId, call.toObjectNode(), new CallDocumentType(),
+      writer.write(new IndexDocument(callId, call.toDocument(), new CallDocumentType(),
           parentVariantId));
     }
   }
@@ -247,12 +258,15 @@ public class Indexer {
             .get().status().equals(RestStatus.CREATED));
   }
 
-  private void writeCallSet(final String callSetId, @NonNull final EsCallSet callSet) throws IOException {
-    writer.write(new IndexDocument(callSetId, callSet.toObjectNode(), new CallSetDocumentType()));
+  // Need builder so can finalize POJO with variantSetIds, which are only known after VariantSetIndexing is complete. So
+  // doing it now
+  private void writeCallSet(final String callSetId, @NonNull final EsCallSet callSet)
+      throws IOException {
+    writer.write(new IndexDocument(callSetId, callSet.toDocument(), new CallSetDocumentType()));
   }
 
   private void writeVariant(final String variantId, @NonNull final EsVariant variant) throws IOException {
-    writer.write(new IndexDocument(variantId, variant.toObjectNode(), new VariantDocumentType()));
+    writer.write(new IndexDocument(variantId, variant.toDocument(), new VariantDocumentType()));
   }
 
   private static class VariantDocumentType implements IndexDocumentType {
