@@ -166,11 +166,11 @@ public class Loader {
     log.info("\t\tIndexing calls ...");
     indexer.indexCalls(callMap);
 
-    log.info("\t\tIndexing callsets ...");
-    indexer.indexCallSet(callSets);
-
     log.info("\t\tIndexing variantSets ...");
     indexer.indexVariantSet(variantSet);
+
+    log.info("\t\tIndexing callsets ...");
+    indexer.indexCallSet(callSets);
 
     log.info("\t\tIndexing vcfHeaders ...");
     indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);

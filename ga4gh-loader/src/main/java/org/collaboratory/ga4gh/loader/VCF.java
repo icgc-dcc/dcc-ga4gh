@@ -232,7 +232,7 @@ public class VCF implements Closeable {
         return createCallObjectNode(fileMetaData, record, commonInfo, createDefaultGenotype(refAllele));
       } catch (TribbleException e) {
         if (!fileMetaData.isCorrupted()) {
-          log.error("CORRUPTED VCF [{}] -- Message [{}]: {}",
+          log.error("CORRUPTED VCF FILE [{}] -- Message [{}]: {}",
               fileMetaData.getVcfFilenameParser().getFilename(),
               e.getClass().getName(),
               e.getMessage());
