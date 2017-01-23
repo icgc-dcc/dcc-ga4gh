@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
@@ -25,7 +26,9 @@ import java.util.Properties;
 import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdDiskCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
+import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.utils.IdRamCache;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -89,7 +92,7 @@ public class Factory {
   public static Indexer newIndexer(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory)
       throws Exception {
     return new Indexer(client, writer, INDEX_NAME,
-        idCacheFactory.getVariantIdCache(),
+        IdRamCache.<EsVariant> newIdCache(newHashMap(), 1L), // TODO: [rtisma] HACKKKKKK
         idCacheFactory.getVariantSetIdCache(),
         idCacheFactory.getCallSetIdCache());
   }

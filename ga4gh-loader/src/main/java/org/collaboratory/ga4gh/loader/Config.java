@@ -60,7 +60,7 @@ public class Config {
   public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "5"));
   public static final boolean PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", "false"));
   public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", "true"));
-  public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", "true"));
+  public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", "false"));
   public static final boolean DATA_FETCHER_SHUFFLE = !SORT_MODE;
   public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
   public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = 0; // 10000000;
@@ -68,7 +68,7 @@ public class Config {
   public static final int DATA_FETCHER_LIMIT = 100;
   public static final String OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
   public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
-  public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", "true"));
+  public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", "false"));
   public static final int MONITOR_INTERVAL_COUNT = 500000;
 
 }

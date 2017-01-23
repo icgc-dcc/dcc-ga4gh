@@ -25,6 +25,7 @@ import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.common.core.util.Joiners;
@@ -99,7 +100,7 @@ public class VCF implements Closeable {
         .map(v -> convertCallNodeObj(v));
   }
 
-  public Stream<EsVariant> readVariantAndCalls() {
+  public Stream<EsVariantCallPair> readVariantAndCalls() {
     return Streams.stream(vcf.iterator())
         .map(this::convertVariantCallNodeObj);
   }
@@ -329,19 +330,22 @@ public class VCF implements Closeable {
         .end();
   }
 
-  private EsVariant convertVariantCallNodeObj(@NonNull final VariantContext record) {
+  private EsVariantCallPair convertVariantCallNodeObj(@NonNull final VariantContext record) {
     val call = convertCallNodeObj(record);
-    return EsVariant.builder()
+    val variant = EsVariant.builder()
         .start(record.getStart())
         .end(record.getEnd())
         .referenceName(record.getContig())
         .referenceBases(record.getReference().getBaseString())
-        .call(call)
         .alternativeBases(
             record.getAlternateAlleles()
                 .stream()
                 .map(a -> a.getBaseString())
                 .collect(toImmutableList()))
+        .build();
+    return EsVariantCallPair.builder()
+        .call(call)
+        .variant(variant)
         .build();
   }
 

@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
@@ -73,7 +74,7 @@ public class Indexer {
    */
   // Keys are strings NAMES, since those should never collide
   @NonNull
-  private final IdCache<String> variantIdCache;
+  private final IdCache<EsVariant> variantIdCache;
   @NonNull
   private final IdCache<String> variantSetIdCache;
   @NonNull
@@ -147,13 +148,13 @@ public class Indexer {
   }
 
   @SneakyThrows
-  private void processEsCall(final String parentVariantName, final EsCall call) {
+  private void processEsCall(final EsVariant parentVariant, final EsCall call) {
     val callName = call.getName();
-    val doesVariantNameAlreadyExist = variantIdCache.contains(parentVariantName);
+    val doesVariantNameAlreadyExist = variantIdCache.contains(parentVariant);
     checkState(doesVariantNameAlreadyExist,
-        "The variant Name: %s doesnt not exist for this call: %s. Make sure variantName indexed BEFORE call index",
-        parentVariantName, callName);
-    val parentVariantId = variantIdCache.getIdAsString(parentVariantName);
+        "The variant Name: %s doesnt not exist for this call: %s. Make sure variant indexed BEFORE call index",
+        parentVariant, callName);
+    val parentVariantId = variantIdCache.getIdAsString(parentVariant);
     writeCall(parentVariantId, nextCallId(), call);
   }
 
@@ -162,10 +163,10 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexVariantsAndCalls(@NonNull final Stream<EsVariant> variants) {
+  public void indexVariantsAndCalls(@NonNull final Stream<EsVariantCallPair> pair) {
     variantMonitor.start();
     try {
-      variants.forEach(v -> indexSingleVariantAndCall(v));
+      pair.forEach(v -> indexSingleVariantAndCall(v));
     } catch (TribbleException te) {
       log.error("CORRUPTED VCF due to Variant -- Message [{}]: {}",
           te.getClass().getName(),
@@ -179,18 +180,18 @@ public class Indexer {
   }
 
   @SneakyThrows
-  private void indexSingleVariantAndCall(@NonNull final EsVariant variant) {
-    val variantName = variant.getName();
-    val calls = variant.getCalls();
-    val isNewVariantId = !variantIdCache.contains(variantName);
+  private void indexSingleVariantAndCall(@NonNull final EsVariantCallPair pair) {
+    val calls = pair.getCalls();
+    val variant = pair.getVariant();
+    val isNewVariantId = !variantIdCache.contains(variant);
     if (isNewVariantId) {
-      variantIdCache.add(variantName);
-      val variantId = variantIdCache.getIdAsString(variantName);
+      variantIdCache.add(variant);
+      val variantId = variantIdCache.getIdAsString(variant);
       writeVariant(variantId, variant);
       variantMonitor.incr();
     }
     for (val call : calls) {
-      processEsCall(variantName, call);
+      processEsCall(variant, call);
     }
   }
 
