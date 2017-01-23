@@ -91,8 +91,7 @@ public class Factory {
     return new Indexer(client, writer, INDEX_NAME,
         idCacheFactory.getVariantIdCache(),
         idCacheFactory.getVariantSetIdCache(),
-        idCacheFactory.getCallSetIdCache(),
-        idCacheFactory.getCallIdCache());
+        idCacheFactory.getCallSetIdCache());
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory) throws Exception {

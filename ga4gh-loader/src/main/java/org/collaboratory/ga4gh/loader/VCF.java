@@ -173,6 +173,8 @@ public class VCF implements Closeable {
     boolean foundCallerTypes = true;
     boolean foundMutationTypes = isMutationTypesCorrect();
 
+    // TODO: [rtisma] inneficient and redundant. Find the caller type for the file at the beginning, and then just use
+    // that in the if statement
     if (CallerTypes.broad.isIn(callerTypeString)) {
       tumorKey = fileMetaData.getVcfFilenameParser().getObjectId() + "T";
     } else if (CallerTypes.MUSE.isIn(callerTypeString)) {

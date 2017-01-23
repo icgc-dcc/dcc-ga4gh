@@ -10,14 +10,12 @@ import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
-import org.collaboratory.ga4gh.loader.utils.Countable;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -80,13 +78,10 @@ public class Indexer {
   private final IdCache<String> variantSetIdCache;
   @NonNull
   private final IdCache<String> callSetIdCache;
-  @NonNull
-  private final IdCache<String> callIdCache;
 
   private int callId = 0;
 
-  private final CounterMonitor callMonitor = newMonitor("CallIndexing", MONITOR_INTERVAL_COUNT);
-  private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor variantMonitor = newMonitor("VariantAndCallIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor variantSetMonitor = newMonitor("VariantSetIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor callSetMonitor = newMonitor("CallSetIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", MONITOR_INTERVAL_COUNT);
@@ -152,7 +147,7 @@ public class Indexer {
   }
 
   @SneakyThrows
-  private void processEsCall(final String parentVariantName, final EsCall call, final Countable<Integer> counter) {
+  private void processEsCall(final String parentVariantName, final EsCall call) {
     val callName = call.getName();
     val doesVariantNameAlreadyExist = variantIdCache.contains(parentVariantName);
     checkState(doesVariantNameAlreadyExist,
@@ -160,48 +155,6 @@ public class Indexer {
         parentVariantName, callName);
     val parentVariantId = variantIdCache.getIdAsString(parentVariantName);
     writeCall(parentVariantId, nextCallId(), call);
-    counter.incr();
-  }
-
-  private void processEsCall(final EsCall call, final Countable<Integer> counter) {
-    val parentVariantName = call.getParentVariant().getName();
-    processEsCall(parentVariantName, call, counter);
-  }
-
-  @SneakyThrows
-  public void indexCalls(final Stream<EsCall> stream) {
-    callMonitor.start();
-    try {
-      stream.forEach(c -> processEsCall(c, callMonitor));
-    } catch (TribbleException te) {
-      log.error("CORRUPTED VCF due to Call -- Message [{}]: {}",
-          te.getClass().getName(),
-          te.getMessage());
-    } finally {
-      callMonitor.stop();
-      log.info("[SUMMARY]: {}", callMonitor);
-      callMonitor.reset();
-    }
-  }
-
-  @SneakyThrows
-  public void indexCallsOLD(final Map<String, EsCall> variantName2CallMap) {
-    callMonitor.start();
-    for (val entry : variantName2CallMap.entrySet()) {
-      val parentVariantName = entry.getKey().toString();
-      val call = entry.getValue();
-      String callName = call.getName();
-      val doesVariantNameAlreadyExist = variantIdCache.contains(parentVariantName);
-      checkState(doesVariantNameAlreadyExist,
-          "The variant Name: %s doesnt not exist for this call: %s. Make sure variantName indexed BEFORE call index",
-          parentVariantName, callName);
-      val parentVariantId = variantIdCache.getIdAsString(parentVariantName);
-      writeCall(parentVariantId, call);
-      callMonitor.incr();
-    }
-    callMonitor.stop();
-    log.info("[SUMMARY]: {}", callMonitor);
-    callMonitor.reset();
   }
 
   private String nextCallId() {
@@ -212,7 +165,6 @@ public class Indexer {
   public void indexVariantsAndCalls(@NonNull final Stream<EsVariant> variants) {
     variantMonitor.start();
     try {
-
       variants.forEach(v -> indexSingleVariantAndCall(v));
     } catch (TribbleException te) {
       log.error("CORRUPTED VCF due to Variant -- Message [{}]: {}",
@@ -238,68 +190,7 @@ public class Indexer {
       variantMonitor.incr();
     }
     for (val call : calls) {
-      processEsCall(variantName, call, callMonitor);
-    }
-  }
-
-  @SneakyThrows
-  private void indexSingleVariantAndCallOLD(@NonNull final Iterable<EsVariant> variants) {
-    try {
-      for (val variant : variants) {
-        variantMonitor.start();
-        val variantName = variant.getName();
-        val calls = variant.getCalls();
-        val isNewVariantId = !variantIdCache.contains(variantName);
-        if (isNewVariantId) {
-          variantIdCache.add(variantName);
-          val variantId = variantIdCache.getIdAsString(variantName);
-          writeVariant(variantId, variant);
-          variantMonitor.incr();
-        }
-        variantMonitor.stop();
-        callMonitor.start();
-        for (val call : calls) {
-          processEsCall(variantName, call, callMonitor);
-        }
-        callMonitor.stop();
-      }
-    } catch (TribbleException te) {
-      log.error("CORRUPTED VCF due to Variant -- Message [{}]: {}",
-          te.getClass().getName(),
-          te.getMessage());
-    } finally {
-      variantMonitor.stop();
-      callMonitor.stop();
-      log.info("[SUMMARY]: {}", variantMonitor);
-      log.info("[SUMMARY]: {}", callMonitor);
-      variantMonitor.reset();
-    }
-  }
-
-  @SneakyThrows
-  public void indexVariants(@NonNull final Iterable<EsVariant> variants) {
-    variantMonitor.start();
-    try {
-      for (val variant : variants) {
-        val variantName = variant.getName();
-        val isNewVariantId = !variantIdCache.contains(variantName);
-        if (isNewVariantId) {
-          variantIdCache.add(variantName);
-          val variantId = variantIdCache.getIdAsString(variantName);
-          writeVariant(variantId, variant);
-          variantMonitor.incr();
-        }
-      }
-    } catch (TribbleException te) {
-      log.error("CORRUPTED VCF due to Variant -- Message [{}]: {}",
-          te.getClass().getName(),
-          te.getMessage());
-    } finally {
-      variantMonitor.stop();
-      log.info("[SUMMARY]: {}", variantMonitor);
-      variantMonitor.reset();
-      // NOTE: variant is not purged since the scope of variant ids is ALL files, where as
-      // scope of call ids, callSet ids and variantSet ids are limited to currently processing file
+      processEsCall(variantName, call);
     }
   }
 
@@ -308,18 +199,6 @@ public class Indexer {
       return BINARY_WRITER.writeValueAsBytes(document);
     } catch (JsonProcessingException e) {
       throw propagate(e);
-    }
-  }
-
-  // TODO: [rtisma] make the caller do bulk calls
-  @SneakyThrows
-  private void writeCall(final String parentVariantId, @NonNull final EsCall call) {
-    val callName = call.getName();
-    val isNewCallId = !callIdCache.contains(callName);
-    if (isNewCallId) {
-      callIdCache.add(callName);
-      val callId = callIdCache.getIdAsString(callName);
-      writeCall(parentVariantId, callId, call);
     }
   }
 
