@@ -63,11 +63,15 @@ public class Protobufs {
     return listValueBuilder.build();
   }
 
-  public static Map<String, ListValue> createInfo(CommonInfo commonInfo) {
+  public static Map<String, ListValue> createInfo(Map<String, Object> commonInfoMap) {
     val map = ImmutableMap.<String, ListValue> builder();
-    for (Map.Entry<String, Object> entry : commonInfo.getAttributes().entrySet()) {
+    for (Map.Entry<String, Object> entry : commonInfoMap.entrySet()) {
       map.put(entry.getKey(), createListValueFromObject(entry.getValue()));
     }
     return map.build();
+  }
+
+  public static Map<String, ListValue> createInfo(CommonInfo commonInfo) {
+    return createInfo(commonInfo.getAttributes());
   }
 }
