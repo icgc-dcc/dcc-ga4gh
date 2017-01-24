@@ -1,6 +1,5 @@
 package org.collaboratory.ga4gh.loader;
 
-import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
@@ -28,7 +27,6 @@ import org.collaboratory.ga4gh.loader.factory.IdDiskCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
-import org.collaboratory.ga4gh.loader.utils.IdRamCache;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -79,25 +77,26 @@ public class Factory {
         .threadsNum(BULK_NUM_THREADS));
   }
 
-  public static IdCacheFactory newIdCacheFactory() {
+  public static IdCacheFactory<EsVariant> newIdCacheFactory() {
     val defaultInitId = 1L;
     val defaultStorageDirname = "target";
     if (USE_MAP_DB) {
       return new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
     } else {
-      return new IdRamCacheFactory(defaultInitId);
+      return new IdRamCacheFactory<EsVariant>(defaultInitId);
     }
   }
 
-  public static Indexer newIndexer(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory)
+  public static Indexer newIndexer(Client client, DocumentWriter writer, IdCacheFactory<EsVariant> idCacheFactory)
       throws Exception {
     return new Indexer(client, writer, INDEX_NAME,
-        IdRamCache.<EsVariant> newIdCache(newHashMap(), 1L), // TODO: [rtisma] HACKKKKKK
+        idCacheFactory.getVariantIdCache(),
         idCacheFactory.getVariantSetIdCache(),
         idCacheFactory.getCallSetIdCache());
   }
 
-  public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory) throws Exception {
+  public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory<EsVariant> idCacheFactory)
+      throws Exception {
     return new Loader(newIndexer(client, writer, idCacheFactory), newStorage());
   }
 
