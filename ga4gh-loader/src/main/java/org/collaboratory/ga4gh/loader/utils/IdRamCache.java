@@ -55,7 +55,9 @@ public class IdRamCache<T> implements IdCache<T> {
   @Override
   public void add(final T t) {
     checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
-    cache.put(t, id++);
+    if (!cache.containsKey(t)) {
+      cache.put(t, id++);
+    }
   }
 
   @Override

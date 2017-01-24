@@ -43,10 +43,8 @@ public class Loader {
         val writer = newDocumentWriter(client)) {
       val loader = newLoader(client, writer, idCacheFactory);
       val startMs = System.currentTimeMillis();
-      // val dataFetcher = Factory.newFileMetaDataFetcherCustom();
       val dataFetcher = newFileMetaDataFetcher();
       log.info("dataFetcher: {}", dataFetcher);
-      // loader.loadUsingDonorDatas(dataFetcher);
       loader.loadUsingFileMetaDatas(dataFetcher);
       val endMs = System.currentTimeMillis();
       val durationSec = (endMs - startMs) / 1000;
