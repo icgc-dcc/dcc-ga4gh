@@ -40,8 +40,7 @@ public class CounterMonitor implements Countable<Integer> {
     this.logger = logger;
     this.countInterval = countInterval;
     // Init
-    this.previousCount = counter.getCount();
-    this.previousTime = watch.elapsed(TimeUnit.SECONDS);
+    reset();
   }
 
   public static void main(String[] args) throws InterruptedException {
@@ -76,6 +75,8 @@ public class CounterMonitor implements Countable<Integer> {
     watch.reset();
     counter.reset();
     setRunningState(false);
+    previousCount = counter.getCount();
+    previousTime = watch.elapsed(TimeUnit.SECONDS);
   }
 
   public void start() {
