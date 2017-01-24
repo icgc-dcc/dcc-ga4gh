@@ -17,104 +17,13 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.collaboratory.ga4gh.core.TypeChecker.isObjectCollection;
-import static org.collaboratory.ga4gh.core.TypeChecker.isObjectMap;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-
-import java.util.Collection;
-import java.util.Map;
-
-import org.icgc.dcc.common.core.json.JsonNodeBuilders;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
-import lombok.val;
 
 //TODO: [rtisma]  move this to ga4gh-core, along with everything under model.es. 
 public interface EsModel {
 
   ObjectNode toDocument();
 
-  String getName(); // Every model must have a uniquely identifying name is a certain scope
-
-  public static <T> ArrayNode createStringArrayNode(Iterable<T> values) {
-    val array = JsonNodeBuilders.array();
-    values.forEach(o -> array.with(o.toString()));
-    return array.end();
-  }
-
-  public static ArrayNode createIntegerArrayNode(Iterable<Integer> values) {
-    val array = JsonNodeBuilders.array();
-    values.forEach(i -> array.with(i));
-    return array.end();
-  }
-
-  public static ArrayNode createJsonNodeArrayNode(Iterable<JsonNode> values) {
-    val builder = JsonNodeBuilders.array();
-    values.forEach(v -> builder.with(v));
-    return builder.end();
-  }
-
-  public static void main(String[] args) throws JsonProcessingException {
-    val stringMap = Maps.<String, String> newHashMap();
-    stringMap.put("mykey1", "myvalue1");
-    stringMap.put("mykey2", "myvalue2");
-    stringMap.put("mykey3", "myvalue3");
-    val integerMap = Maps.<String, Integer> newHashMap();
-    integerMap.put("mykey4", 4);
-    integerMap.put("mykey5", 5);
-    integerMap.put("mykey6", 6);
-
-    val stringList = Lists.<String> newArrayList("myString1", "myString2", "myString3");
-    val objectList = Lists.<Object> newArrayList("myObject1", 2, 3.333);
-    val integerList = Lists.<Integer> newArrayList(11, 22, 33);
-
-    val objectMap = Maps.<String, Object> newHashMap();
-    objectMap.put("mykey7", "myobject7");
-    objectMap.put("mykey8", 8);
-    objectMap.put("mykey9", 9.99);
-    objectMap.put("mykey10_integerMap", integerMap);
-    objectMap.put("mykey11_stringMap", stringMap);
-    objectMap.put("mykey12_stringList", stringList);
-    objectMap.put("mykey13_objectList", objectList);
-    objectMap.put("mykey14_integerList", integerList);
-
-    objectMap.put("mirrorObjectMap", objectMap.clone());
-
-    val objectMapNode = convertMapToObjectNode(objectMap);
-    val mapper = new ObjectMapper();
-    System.out.println("Tooo: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectMapNode));
-
-  }
-
-  public static <K, V> ObjectNode convertMapToObjectNode(Map<K, V> map) {
-    val objectNode = object();
-    for (val entry : map.entrySet()) {
-      val key = entry.getKey().toString();
-      val value = entry.getValue();
-      if (isObjectCollection(value)) {
-
-        @SuppressWarnings("unchecked")
-        val collection = (Collection<Object>) value;
-        val arrayNode = createStringArrayNode(collection);
-        objectNode.with(key, arrayNode);
-      } else if (isObjectMap(value)) { // TODO: still incomplete
-
-        @SuppressWarnings("unchecked")
-        val innerMap = (Map<Object, Object>) value;
-        objectNode.with(key, convertMapToObjectNode(innerMap));
-
-      } else { // Treat everything else as just a string
-        objectNode.with(key, value.toString());
-      }
-    }
-    return objectNode.end();
-  }
+  String getName(); // Every model must have a uniquely identifying name in a certain scope
 
 }

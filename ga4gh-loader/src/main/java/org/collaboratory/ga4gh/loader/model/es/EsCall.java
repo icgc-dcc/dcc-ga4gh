@@ -19,6 +19,8 @@ package org.collaboratory.ga4gh.loader.model.es;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Objects.requireNonNull;
+import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertIntegers;
+import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertMap;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE_LIKELIHOOD;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE_PHASESET;
@@ -66,14 +68,14 @@ public class EsCall implements EsModel {
   public ObjectNode toDocument() {
     val infoMap = newHashMap(info.getAttributes());
     infoMap.putAll(genotype.getExtendedAttributes());
-    val nonRefAlleles = EsModel.createIntegerArrayNode(convertNonRefAlleles(genotype));
+    val nonRefAlleles = convertIntegers(convertNonRefAlleles(genotype));
     val likelihood = genotype.getLog10PError();
     val isPhaseset = genotype.isPhased();
 
     return object()
         .with(VARIANT_SET_ID, variantSetId)
         .with(CALL_SET_ID, callSetId)
-        .with(INFO, EsModel.convertMapToObjectNode(infoMap))
+        .with(INFO, convertMap(infoMap))
         .with(GENOTYPE_LIKELIHOOD, Double.toString(likelihood))
         .with(GENOTYPE_PHASESET, isPhaseset)
         .with(NON_REFERENCE_ALLELES, nonRefAlleles)

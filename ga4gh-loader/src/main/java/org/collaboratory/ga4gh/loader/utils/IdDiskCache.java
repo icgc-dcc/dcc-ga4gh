@@ -1,5 +1,7 @@
 package org.collaboratory.ga4gh.loader.utils;
 
+import static org.collaboratory.ga4gh.loader.utils.IdRamCache.newIdCache;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +74,7 @@ public class IdDiskCache<T> implements IdCache<T>, Closeable {
     }
     this.db = createEntityDB(filename);
     val map = newEntityMap(db, name);
-    this.idCache = IdRamCache.newIdCache(map, initId);
+    this.idCache = newIdCache(map, initId);
   }
 
   private static DB createEntityDB(String filename) {

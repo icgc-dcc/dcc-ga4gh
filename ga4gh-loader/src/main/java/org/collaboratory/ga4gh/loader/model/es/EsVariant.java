@@ -67,7 +67,7 @@ public final class EsVariant implements EsModel, Serializable {
         .with(END, getEnd())
         .with(REFERENCE_NAME, getReferenceName())
         .with(REFERENCE_BASES, getReferenceBases())
-        .with(ALTERNATIVE_BASES, EsModel.createStringArrayNode(getAlternativeBases()))
+        .with(ALTERNATIVE_BASES, JsonNodeConverters.convertStrings(getAlternativeBases()))
         .end();
   }
 

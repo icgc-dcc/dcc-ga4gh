@@ -43,7 +43,7 @@ public final class EsCallSet implements EsModel {
   public ObjectNode toDocument() {
     return object()
         .with(NAME, name)
-        .with(VARIANT_SET_IDS, EsModel.createStringArrayNode(variantSetIds))
+        .with(VARIANT_SET_IDS, JsonNodeConverters.convertStrings(variantSetIds))
         .with(BIO_SAMPLE_ID, bioSampleId)
         .end();
   }
