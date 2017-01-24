@@ -23,16 +23,14 @@ import java.io.IOException;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.collaboratory.ga4gh.loader.utils.Purgeable;
 
-public interface IdCacheFactory extends Closeable, Purgeable {
+public interface IdCacheFactory<T> extends Closeable, Purgeable {
 
-  IdCacheFactory init() throws IOException;
+  IdCacheFactory<T> init() throws IOException;
 
-  IdCache<String> getVariantIdCache();
+  IdCache<T> getVariantIdCache();
 
   IdCache<String> getVariantSetIdCache();
 
   IdCache<String> getCallSetIdCache();
-
-  IdCache<String> getCallIdCache();
 
 }

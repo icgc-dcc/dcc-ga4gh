@@ -1,8 +1,12 @@
 package org.collaboratory.ga4gh.loader.factory;
 
+import static org.collaboratory.ga4gh.loader.utils.IdDiskCache.newIdDiskCache;
+
 import java.io.IOException;
 
+import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.IdDiskCache;
+import org.mapdb.Serializer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -10,27 +14,25 @@ import lombok.experimental.NonFinal;
 
 @RequiredArgsConstructor
 @Value
-public class IdDiskCacheFactory implements IdCacheFactory {
+public class IdDiskCacheFactory implements IdCacheFactory<EsVariant> {
 
   private final String storageDirname;
   private final long initId;
 
   // State
   @NonFinal
-  private IdDiskCache variantIdCache;
+  private IdDiskCache<EsVariant> variantIdCache;
   @NonFinal
-  private IdDiskCache variantSetIdCache;
+  private IdDiskCache<String> variantSetIdCache;
   @NonFinal
-  private IdDiskCache callSetIdCache;
-  @NonFinal
-  private IdDiskCache callIdCache;
+  private IdDiskCache<String> callSetIdCache;
 
   @Override
-  public IdCacheFactory init() throws IOException {
-    variantIdCache = new IdDiskCache("variantIdCache", storageDirname, initId);
-    variantSetIdCache = new IdDiskCache("variantSetIdCache", storageDirname, initId);
-    callSetIdCache = new IdDiskCache("callSetIdCache", storageDirname, initId);
-    callIdCache = new IdDiskCache("callIdCache", storageDirname, initId);
+  public IdCacheFactory<EsVariant> init() throws IOException {
+    variantIdCache =
+        newIdDiskCache("variantIdCache", new EsVariant.EsVariantSerializer(), storageDirname, initId);
+    variantSetIdCache = newIdDiskCache("variantSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);
+    callSetIdCache = newIdDiskCache("callSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);
     return this;
   }
 
@@ -38,7 +40,6 @@ public class IdDiskCacheFactory implements IdCacheFactory {
   public void close() throws IOException {
     variantSetIdCache.close();
     variantIdCache.close();
-    callIdCache.close();
     callSetIdCache.close();
   }
 
@@ -46,7 +47,6 @@ public class IdDiskCacheFactory implements IdCacheFactory {
   public void purge() {
     variantSetIdCache.purge();
     variantIdCache.purge();
-    callIdCache.purge();
     callSetIdCache.purge();
   }
 }

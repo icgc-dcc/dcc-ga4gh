@@ -13,31 +13,28 @@ import lombok.experimental.NonFinal;
 
 @RequiredArgsConstructor
 @Value
-public class IdRamCacheFactory implements IdCacheFactory {
+public class IdRamCacheFactory<T> implements IdCacheFactory<T> {
 
   private final long initId;
 
   // State
   @NonFinal
-  private IdCache<String> variantIdCache;
+  private IdCache<T> variantIdCache;
   @NonFinal
   private IdCache<String> variantSetIdCache;
   @NonFinal
   private IdCache<String> callSetIdCache;
-  @NonFinal
-  private IdCache<String> callIdCache;
 
   @Override
-  public IdCacheFactory init() throws IOException {
-    variantIdCache = newIdRamCache();
-    variantSetIdCache = newIdRamCache();
-    callSetIdCache = newIdRamCache();
-    callIdCache = newIdRamCache();
+  public IdCacheFactory<T> init() throws IOException {
+    variantIdCache = newIdRamCache(initId);
+    variantSetIdCache = newIdRamCache(initId);
+    callSetIdCache = newIdRamCache(initId);
     return this;
   }
 
-  private IdCache<String> newIdRamCache() {
-    return IdRamCache.newIdCache(newHashMap(), initId);
+  private static <E> IdCache<E> newIdRamCache(final long initialId) {
+    return IdRamCache.newIdCache(newHashMap(), initialId);
   }
 
   @Override
@@ -50,6 +47,5 @@ public class IdRamCacheFactory implements IdCacheFactory {
     variantIdCache.purge();
     variantSetIdCache.purge();
     callSetIdCache.purge();
-    callIdCache.purge();
   }
 }

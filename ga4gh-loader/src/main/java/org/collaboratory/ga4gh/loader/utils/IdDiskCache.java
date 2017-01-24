@@ -16,7 +16,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class IdDiskCache implements IdCache<String>, Closeable {
+public class IdDiskCache<T> implements IdCache<T>, Closeable {
 
   // Input dep
   private final String name;
@@ -24,31 +24,44 @@ public class IdDiskCache implements IdCache<String>, Closeable {
 
   // Internal Deps
   private DB db;
-  private IdCache<String> idCache;
+  private IdCache<T> idCache;
   private final long initId;
   private final boolean persistFile;
-
-  public IdDiskCache(String name, String outputDirname, boolean persistFile) throws IOException {
-    this(name, outputDirname, 0L, persistFile);
-  }
-
-  public IdDiskCache(String name, String outputDirname) throws IOException {
-    this(name, outputDirname, 0L, false);
-  }
+  private final Serializer<T> serializer;
 
   private static String generateFilename(String name, String outputDirname) {
     return Joiners.PATH.join(outputDirname, name + ".db");
   }
 
-  public IdDiskCache(String name, String outputDirname, Long initId) throws IOException {
-    this(name, outputDirname, initId, false);
+  public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer, String outputDirname,
+      boolean persistFile)
+      throws IOException {
+    return newIdDiskCache(name, serializer, outputDirname, 0L, persistFile);
   }
 
-  public IdDiskCache(String name, String outputDirname, Long initId, boolean persistFile) throws IOException {
+  public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer, String outputDirname)
+      throws IOException {
+    return newIdDiskCache(name, serializer, outputDirname, 0L, false);
+  }
+
+  public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer, String outputDirname,
+      Long initId) throws IOException {
+    return newIdDiskCache(name, serializer, outputDirname, initId, false);
+
+  }
+
+  public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer, String outputDirname,
+      Long initId, boolean persistFile) throws IOException {
+    return new IdDiskCache<T>(name, serializer, outputDirname, initId, persistFile);
+  }
+
+  public IdDiskCache(String name, Serializer<T> serializer, String outputDirname, Long initId, boolean persistFile)
+      throws IOException {
     this.name = name;
     this.outputDirname = outputDirname;
     this.initId = initId;
     this.persistFile = persistFile;
+    this.serializer = serializer;
     val filename = generateFilename(name, outputDirname);
     init(filename);
   }
@@ -72,29 +85,29 @@ public class IdDiskCache implements IdCache<String>, Closeable {
         .make();
   }
 
-  private static Map<String, Long> newEntityMap(DB db, String name) {
+  private Map<T, Long> newEntityMap(DB db, String name) {
     return db
-        .hashMap(name, Serializer.STRING_ASCII, Serializer.LONG)
+        .hashMap(name, serializer, Serializer.LONG)
         .createOrOpen();
   }
 
   @Override
-  public void add(String t) {
+  public void add(T t) {
     idCache.add(t);
   }
 
   @Override
-  public boolean contains(String t) {
+  public boolean contains(T t) {
     return idCache.contains(t);
   }
 
   @Override
-  public String getIdAsString(String t) {
+  public String getIdAsString(T t) {
     return idCache.getIdAsString(t);
   }
 
   @Override
-  public Long getId(String t) {
+  public Long getId(T t) {
     return idCache.getId(t);
   }
 
@@ -104,7 +117,7 @@ public class IdDiskCache implements IdCache<String>, Closeable {
   }
 
   @Override
-  public Map<Long, String> getReverseCache() {
+  public Map<Long, T> getReverseCache() {
     return idCache.getReverseCache();
   }
 

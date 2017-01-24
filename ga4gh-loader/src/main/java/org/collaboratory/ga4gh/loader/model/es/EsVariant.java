@@ -26,22 +26,30 @@ import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.nio.charset.CharsetEncoder;
 
 import org.icgc.dcc.common.core.util.Joiners;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.val;
 
 // ObjectNode is a bit heavy, this is just to minimize memory usage
 @ToString
 @EqualsAndHashCode
-public final class EsVariant implements EsModel {
+public final class EsVariant implements EsModel, Serializable {
+
+  private static final long serialVersionUID = 1485228376L;
 
   private static final CharsetEncoder asciiEncoder =
       Charsets.US_ASCII.newEncoder(); // or "ISO-8859-1" for ISO Latin 1
@@ -73,6 +81,14 @@ public final class EsVariant implements EsModel {
     this.alternativeBases = alternativeBases;
     this.referenceName = referenceName;
     this.referenceBases = referenceBases;
+  }
+
+  public byte[] getReferenceBasesAsByteArray() {
+    return referenceBases;
+  }
+
+  public ImmutableList<Byte[]> getAlternativeBasesAsByteArrays() {
+    return alternativeBases;
   }
 
   @Override
@@ -183,12 +199,32 @@ public final class EsVariant implements EsModel {
       return this;
     }
 
+    public EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
+      this.referenceBases = referenceBases;
+      return this;
+    }
+
     public EsVariantBuilder alternativeBase(final String alternativeBase) {
       EsVariant.checkPureAscii(alternativeBase);
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<Byte[]> builder();
       }
       this.alternativeBases.add(EsVariant.convertToAsciiObject(alternativeBase));
+      return this;
+    }
+
+    public EsVariantBuilder alternativeBaseAsBytes(final Byte[] alternativeBase) {
+      if (this.alternativeBases == null) {
+        this.alternativeBases = ImmutableList.<Byte[]> builder();
+      }
+      this.alternativeBases.add(alternativeBase);
+      return this;
+    }
+
+    public <T> EsVariantBuilder allAlternativeBasesAsBytes(final Iterable<Byte[]> alternativeBases) {
+      for (val base : alternativeBases) {
+        this.alternativeBaseAsBytes(base);
+      }
       return this;
     }
 
@@ -210,6 +246,61 @@ public final class EsVariant implements EsModel {
               .build();
       return new EsVariant(start, end, referenceName, referenceBases, alternativeBases);
     }
+  }
+
+  public static class EsVariantSerializer implements Serializer<EsVariant>, Serializable {
+
+    @Override
+    public void serialize(DataOutput2 out, EsVariant value) throws IOException {
+      out.writeInt(value.getStart());
+      out.writeInt(value.getEnd());
+      out.writeUTF(value.getReferenceName());
+      out.writeInt(value.getReferenceBasesAsByteArray().length); // Length
+      out.write(value.getReferenceBasesAsByteArray());
+      out.writeInt(value.getAlternativeBasesAsByteArrays().size());
+      for (Byte[] arrayByte : value.getAlternativeBasesAsByteArrays()) {
+        val bArray = EsVariant.convertToPrimative(arrayByte);
+        out.writeInt(bArray.length);
+        out.write(bArray);
+      }
+    }
+
+    @Override
+    @SneakyThrows
+    public EsVariant deserialize(DataInput2 input, int available) throws IOException {
+      val start = input.readInt();
+      val end = input.readInt();
+      val referenceName = input.readUTF();
+
+      // Deserialize ReferenceBases
+      val referenceBasesLength = input.readInt();
+      byte[] refBasesArray = new byte[referenceBasesLength];
+      for (int i = 0; i < referenceBasesLength; i++) {
+        refBasesArray[i] = input.readByte();
+      }
+
+      // Deserialize AlternateBases
+      val altBasesListLength = input.readInt();
+      val altBasesByteListBuilder = ImmutableList.<Byte[]> builder();
+      for (int i = 0; i < altBasesListLength; i++) {
+        val arrayLength = input.readInt();
+        Byte[] array = new Byte[arrayLength];
+        for (int j = 0; j < arrayLength; j++) {
+          array[j] = input.readByte();
+        }
+        altBasesByteListBuilder.add(array);
+      }
+      val altBasesList = altBasesByteListBuilder.build();
+
+      return EsVariant.builder()
+          .start(start)
+          .end(end)
+          .referenceName(referenceName)
+          .referenceBasesAsBytes(refBasesArray)
+          .allAlternativeBasesAsBytes(altBasesList)
+          .build();
+    }
+
   }
 
 }
