@@ -27,13 +27,17 @@ import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NON_REF
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
+import java.util.List;
+
 import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.Genotype;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.val;
 
@@ -62,7 +66,7 @@ public class EsCall implements EsModel {
   public ObjectNode toDocument() {
     val infoMap = newHashMap(info.getAttributes());
     infoMap.putAll(genotype.getExtendedAttributes());
-    val nonRefAlleles = EsModel.createIntegerArrayNode(EsModel.convertNonRefAlleles(genotype));
+    val nonRefAlleles = EsModel.createIntegerArrayNode(convertNonRefAlleles(genotype));
     val likelihood = genotype.getLog10PError();
     val isPhaseset = genotype.isPhased();
 
@@ -89,6 +93,19 @@ public class EsCall implements EsModel {
   public String getName() {
     return Joiners.COLON.join(
         variantSetId, callSetId, parentVariant.getName(), genotype.getSampleName());
+  }
+
+  public static List<Integer> convertNonRefAlleles(@NonNull final Genotype genotype) {
+    // TODO: [rtisma] -- verify this logic is correct. Allele has some other states that might need to be considered
+    val allelesBuilder = ImmutableList.<Integer> builder();
+    for (int i = 0; i < genotype.getAlleles().size(); i++) {
+      val allele = genotype.getAllele(i);
+      if (allele.isNonReference()) {
+        allelesBuilder.add(i);
+      }
+    }
+    allelesBuilder.add(99);// TODO: HACK just testing
+    return allelesBuilder.build();
   }
 
 }

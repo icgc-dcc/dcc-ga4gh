@@ -22,7 +22,6 @@ import static org.collaboratory.ga4gh.core.TypeChecker.isObjectMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.icgc.dcc.common.core.json.JsonNodeBuilders;
@@ -32,12 +31,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import htsjdk.variant.variantcontext.Genotype;
-import lombok.NonNull;
 import lombok.val;
 
 //TODO: [rtisma]  move this to ga4gh-core, along with everything under model.es. 
@@ -119,19 +115,6 @@ public interface EsModel {
       }
     }
     return objectNode.end();
-  }
-
-  public static List<Integer> convertNonRefAlleles(@NonNull final Genotype genotype) {
-    // TODO: [rtisma] -- verify this logic is correct. Allele has some other states that might need to be considered
-    val allelesBuilder = ImmutableList.<Integer> builder();
-    for (int i = 0; i < genotype.getAlleles().size(); i++) {
-      val allele = genotype.getAllele(i);
-      if (allele.isNonReference()) {
-        allelesBuilder.add(i);
-      }
-    }
-    allelesBuilder.add(99);// TODO: HACK just testing
-    return allelesBuilder.build();
   }
 
 }

@@ -51,7 +51,7 @@ public final class EsVariant implements EsModel, Serializable {
 
   private static final long serialVersionUID = 1485228376L;
 
-  private static final CharsetEncoder asciiEncoder =
+  private static final CharsetEncoder ASCII_ENCODER =
       Charsets.US_ASCII.newEncoder(); // or "ISO-8859-1" for ISO Latin 1
 
   private int start;
@@ -121,21 +121,21 @@ public final class EsVariant implements EsModel, Serializable {
   }
 
   public String getReferenceBases() {
-    return convertBytesToString(this.referenceBases);
+    return convertBytesToString(referenceBases);
   }
 
   public ImmutableList<String> getAlternativeBases() {
-    return this.alternativeBases.stream()
+    return alternativeBases.stream()
         .map(x -> convertBytesToString(x))
         .collect(toImmutableList());
   }
 
   public static boolean isPureAscii(String v) {
-    return EsVariant.asciiEncoder.canEncode(v);
+    return ASCII_ENCODER.canEncode(v);
   }
 
   public static void checkPureAscii(String v) {
-    checkArgument(EsVariant.isPureAscii(v),
+    checkArgument(isPureAscii(v),
         "The string [%s] is not of character set [US-ASCII], it needs to be converted", v);
   }
 
@@ -144,7 +144,7 @@ public final class EsVariant implements EsModel, Serializable {
   }
 
   public static Byte[] convertToAsciiObject(String v) {
-    return convertToObject(EsVariant.convertToAsciiPrimitive(v));
+    return convertToObject(convertToAsciiPrimitive(v));
   }
 
   public static Byte[] convertToObject(byte[] bytes) {
@@ -165,6 +165,9 @@ public final class EsVariant implements EsModel, Serializable {
     return out;
   }
 
+  /*
+   * EsVariantBuilder that can process strings into appropriate byte format.
+   */
   @ToString
   @EqualsAndHashCode
   public static class EsVariantBuilder {
@@ -195,7 +198,7 @@ public final class EsVariant implements EsModel, Serializable {
 
     public EsVariantBuilder referenceBases(final String referenceBases) {
       EsVariant.checkPureAscii(referenceBases);
-      this.referenceBases = EsVariant.convertToAsciiPrimitive(referenceBases);
+      this.referenceBases = convertToAsciiPrimitive(referenceBases);
       return this;
     }
 
@@ -209,7 +212,7 @@ public final class EsVariant implements EsModel, Serializable {
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<Byte[]> builder();
       }
-      this.alternativeBases.add(EsVariant.convertToAsciiObject(alternativeBase));
+      this.alternativeBases.add(convertToAsciiObject(alternativeBase));
       return this;
     }
 
@@ -248,6 +251,10 @@ public final class EsVariant implements EsModel, Serializable {
     }
   }
 
+  /*
+   * Serializer needed for MapDB. Note: if EsVariant member variables are added, removed or modified, this needs to be
+   * updated
+   */
   public static class EsVariantSerializer implements Serializer<EsVariant>, Serializable {
 
     @Override
@@ -259,7 +266,7 @@ public final class EsVariant implements EsModel, Serializable {
       out.write(value.getReferenceBasesAsByteArray());
       out.writeInt(value.getAlternativeBasesAsByteArrays().size());
       for (Byte[] arrayByte : value.getAlternativeBasesAsByteArrays()) {
-        val bArray = EsVariant.convertToPrimative(arrayByte);
+        val bArray = convertToPrimative(arrayByte);
         out.writeInt(bArray.length);
         out.write(bArray);
       }
