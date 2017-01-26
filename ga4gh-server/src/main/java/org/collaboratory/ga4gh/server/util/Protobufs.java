@@ -42,7 +42,7 @@ public class Protobufs {
       for (Object elementObj : (Collection<Object>) obj) {
         listValueBuilder.addValues(Value.newBuilder().setStringValue(elementObj.toString()));
       }
-    } else if (isObjectMap(obj)) { // TODO: still incomplete
+    } else if (isObjectMap(obj)) {
       val map = ImmutableMap.<String, Value> builder();
       for (val entry : ((Map<?, ?>) obj).entrySet()) {
         map.put(entry.getKey().toString(), Value.newBuilder().setStringValue(entry.getValue().toString()).build());

@@ -27,7 +27,7 @@ public class JsonNodeConverters {
         val collection = (Collection<Object>) value;
         val arrayNode = convertStrings(collection);
         objectNode.with(key, arrayNode);
-      } else if (isObjectMap(value)) { // TODO: still incomplete
+      } else if (isObjectMap(value)) {
 
         @SuppressWarnings("unchecked")
         val innerMap = (Map<Object, Object>) value;

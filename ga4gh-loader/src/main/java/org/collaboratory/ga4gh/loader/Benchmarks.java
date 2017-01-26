@@ -23,6 +23,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -32,7 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Benchmarks {
 
+  @NonNull
   private final Client client;
+
+  @NonNull
   private final String indexName;
 
   @SneakyThrows

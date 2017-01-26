@@ -23,13 +23,13 @@ import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_SET_TYPE_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
@@ -63,7 +63,7 @@ public class VariantSetRepository {
     val constantBoolQuery = constantScoreQuery(
         boolQuery()
             .must(
-                QueryBuilders.matchAllQuery()));
+                matchAllQuery()));
 
     val agg = AggregationBuilders.terms(BY_DATA_SET_ID).field(DATA_SET_ID);
     return searchRequestBuilder.setQuery(constantBoolQuery).addAggregation(agg).get();
