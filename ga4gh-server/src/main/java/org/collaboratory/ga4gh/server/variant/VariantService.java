@@ -17,8 +17,6 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static java.lang.Double.parseDouble;
-import static java.lang.Integer.parseInt;
 import static org.collaboratory.ga4gh.core.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.core.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.core.IndexProperties.CALL_SET_ID;
@@ -36,13 +34,19 @@ import static org.collaboratory.ga4gh.core.IndexProperties.START;
 import static org.collaboratory.ga4gh.core.IndexProperties.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
 import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
+import static org.collaboratory.ga4gh.server.util.SearchHitConverters.convertHitToDouble;
+import static org.collaboratory.ga4gh.server.util.SearchHitConverters.convertHitToIntegerList;
+import static org.collaboratory.ga4gh.server.util.SearchHitConverters.convertHitToLong;
+import static org.collaboratory.ga4gh.server.util.SearchHitConverters.convertHitToObjectMap;
+import static org.collaboratory.ga4gh.server.util.SearchHitConverters.convertHitToString;
+import static org.collaboratory.ga4gh.server.util.SearchHitConverters.convertHitToStringList;
+import static org.collaboratory.ga4gh.server.util.SearchHitConverters.convertSourceToString;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.collaboratory.ga4gh.server.util.SearchHitConverters;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
@@ -78,9 +82,6 @@ public class VariantService {
 
   private final static long DEFAULT_CALLSET_CREATED_VALUE = 0;
   private final static long DEFAULT_CALLSET_UPDATED_VALUE = 0;
-  private final static int DEFAULT_CALL_GENOTYPE_VALUE = 1;
-  private final static String DUMMY_PHASESET = "false";
-  private final static double DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE = 0.0;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @NonNull
@@ -134,17 +135,15 @@ public class VariantService {
   }
 
   private static Variant.Builder convertToVariant(@NonNull SearchHit hit) {
-    List<String> alternateBases = SearchHitConverters.convertHitToArray(hit, ALTERNATIVE_BASES).stream()
-        .map(o -> o.toString())
-        .collect(toImmutableList());
+    List<String> alternateBases = convertHitToStringList(hit, ALTERNATIVE_BASES);
 
     return Variant.newBuilder()
         .setId(hit.getId())
-        .setReferenceName(SearchHitConverters.convertHitToString(hit, REFERENCE_NAME))
-        .setReferenceBases(SearchHitConverters.convertHitToString(hit, REFERENCE_BASES))
+        .setReferenceName(convertHitToString(hit, REFERENCE_NAME))
+        .setReferenceBases(convertHitToString(hit, REFERENCE_BASES))
         .addAllAlternateBases(alternateBases)
-        .setStart(SearchHitConverters.convertHitToLong(hit, START))
-        .setEnd(SearchHitConverters.convertHitToLong(hit, END))
+        .setStart(convertHitToLong(hit, START))
+        .setEnd(convertHitToLong(hit, END))
         .setCreated(0)
         .setUpdated(0);
   }
@@ -183,9 +182,9 @@ public class VariantService {
   private static VariantSet convertToVariantSet(final String id, @NonNull Map<String, Object> source) {
     return VariantSet.newBuilder()
         .setId(id)
-        .setName(source.get(NAME).toString())
-        .setDatasetId(source.get(DATA_SET_ID).toString())
-        .setReferenceSetId(source.get(REFERENCE_SET_ID).toString())
+        .setName(convertSourceToString(source, NAME))
+        .setDatasetId(convertSourceToString(source, DATA_SET_ID))
+        .setReferenceSetId(convertSourceToString(source, REFERENCE_SET_ID))
         .build();
   }
 
@@ -231,10 +230,10 @@ public class VariantService {
   private static CallSet convertToCallSet(final String id, @NonNull Map<String, Object> source) {
     return CallSet.newBuilder()
         .setId(id)
-        .setName(source.get(NAME).toString())
-        .setBioSampleId(source.get(BIO_SAMPLE_ID).toString())
+        .setName(convertSourceToString(source, NAME))
+        .setBioSampleId(convertSourceToString(source, BIO_SAMPLE_ID))
         // TODO: [rtisma] [BUG] need to properly add variant_set_ids if there is more than one
-        .addVariantSetIds(source.get(VARIANT_SET_IDS).toString())
+        .addVariantSetIds(convertSourceToString(source, VARIANT_SET_IDS))
         // .addAlVariantSetIds(
         // Streams.stream(source.).map(vs -> vs.toString())
         // .collect(Collectors.toList()))
@@ -267,19 +266,16 @@ public class VariantService {
    */
   @SneakyThrows
   private static Call.Builder convertToCall(@NonNull SearchHit hit) {
-    val source = hit.getSource();
-    val callSetId = source.get(CALL_SET_ID).toString();
-    val callSetName = source.get(CALL_SET_ID).toString();
+    val callSetId = convertHitToString(hit, CALL_SET_ID);
+    val callSetName = convertHitToString(hit, CALL_SET_ID);
 
     // TODO: [BUG] this isnt working properly. Just taking last element
-    val nonRefAlleles = SearchHitConverters.convertHitToArray(hit, NON_REFERENCE_ALLELES).stream()
-        .map(o -> parseInt(o.toString()))
-        .collect(toImmutableList());
-    val genotypeLikelihood = parseDouble(source.get(GENOTYPE_LIKELIHOOD).toString());
-    val genotypePhaseset = source.get(GENOTYPE_PHASESET).toString();
+    val nonRefAlleles = convertHitToIntegerList(hit, NON_REFERENCE_ALLELES);
+    val genotypeLikelihood = convertHitToDouble(hit, GENOTYPE_LIKELIHOOD);
+    val genotypePhaseset = convertHitToString(hit, GENOTYPE_PHASESET);
 
     // Working properly
-    val callInfo = SearchHitConverters.convertHitToMap(hit, INFO);
+    val callInfo = convertHitToObjectMap(hit, INFO);
 
     return Call.newBuilder()
         .setCallSetId(callSetId)
