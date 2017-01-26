@@ -17,23 +17,23 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
+import static org.collaboratory.ga4gh.core.IndexProperties.ALTERNATIVE_BASES;
+import static org.collaboratory.ga4gh.core.IndexProperties.END;
+import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_BASES;
+import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.IndexProperties.START;
 import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertStrings;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAscii;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToBytePrimitiveArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToString;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.unboxByteArray;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.collaboratory.ga4gh.loader.utils.AsciiConverters;
 import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.common.core.util.stream.Streams;
 import org.mapdb.DataInput2;
@@ -186,9 +186,8 @@ public class EsVariant implements Serializable, EsModel {
 
       byte[][] b = new byte[alternativeBases.size()][];
       for (int i = 0; i < alternativeBases.size(); i++) {
-        b[i] = AsciiConverters.unboxByteArray(alternativeBases.get(i));
+        b[i] = unboxByteArray(alternativeBases.get(i));
       }
-
       return new EsVariant(start, end, referenceName, referenceBases, b);
     }
 

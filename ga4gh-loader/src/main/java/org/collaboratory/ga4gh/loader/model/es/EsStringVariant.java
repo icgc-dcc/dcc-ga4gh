@@ -17,12 +17,12 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
+import static org.collaboratory.ga4gh.core.IndexProperties.ALTERNATIVE_BASES;
+import static org.collaboratory.ga4gh.core.IndexProperties.END;
+import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_BASES;
+import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.IndexProperties.START;
 import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertStrings;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import org.icgc.dcc.common.core.util.Joiners;

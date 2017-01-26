@@ -19,14 +19,14 @@ package org.collaboratory.ga4gh.loader.model.es;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Objects.requireNonNull;
+import static org.collaboratory.ga4gh.core.IndexProperties.CALL_SET_ID;
+import static org.collaboratory.ga4gh.core.IndexProperties.GENOTYPE_LIKELIHOOD;
+import static org.collaboratory.ga4gh.core.IndexProperties.GENOTYPE_PHASESET;
+import static org.collaboratory.ga4gh.core.IndexProperties.INFO;
+import static org.collaboratory.ga4gh.core.IndexProperties.NON_REFERENCE_ALLELES;
+import static org.collaboratory.ga4gh.core.IndexProperties.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertIntegers;
 import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertMap;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.CALL_SET_ID;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE_LIKELIHOOD;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.GENOTYPE_PHASESET;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.INFO;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.NON_REFERENCE_ALLELES;
-import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.util.List;
