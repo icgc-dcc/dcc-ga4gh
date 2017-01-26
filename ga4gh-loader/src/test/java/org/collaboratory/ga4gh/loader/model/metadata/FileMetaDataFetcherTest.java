@@ -19,6 +19,7 @@ package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
 import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
 
@@ -40,8 +41,8 @@ public class FileMetaDataFetcherTest {
         .build();
     val fileMetaDatasOrig = dataFetcherShuffle1.fetch();
     val filename = "target/fileMetaDatas.testSerializer.bin";
-    FileMetaData.store(fileMetaDatasOrig, filename);
-    val fileMetaDatasNew = FileMetaData.restore(filename);
+    ObjectPersistance.store(fileMetaDatasOrig, filename);
+    val fileMetaDatasNew = ObjectPersistance.restore(filename);
     val setOrig = Sets.newHashSet(fileMetaDatasOrig);
     val setNew = Sets.newHashSet(fileMetaDatasNew);
     assertThat(setOrig.containsAll(setNew));
@@ -60,7 +61,7 @@ public class FileMetaDataFetcherTest {
         .shuffle(true)
         .build();
     val fileMetaDatasOrig = dataFetcherShuffle1.fetch();
-    FileMetaData.store(fileMetaDatasOrig, filename);
+    ObjectPersistance.store(fileMetaDatasOrig, filename);
 
     val dataFetcherRestore = FileMetaDataFetcher.builder()
         .fromFilename(filename)

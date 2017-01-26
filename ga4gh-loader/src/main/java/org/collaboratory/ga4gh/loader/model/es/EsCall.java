@@ -106,7 +106,7 @@ public class EsCall implements EsModel {
         allelesBuilder.add(i);
       }
     }
-    allelesBuilder.add(99);// TODO: HACK just testing
+    allelesBuilder.add(99);// TODO: HACK just testing mutliple alleles translation to arraynode
     return allelesBuilder.build();
   }
 

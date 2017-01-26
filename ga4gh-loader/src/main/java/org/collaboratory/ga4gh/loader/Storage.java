@@ -69,12 +69,13 @@ public final class Storage {
   }
 
   private void checkForParentDir(@NonNull Path file) {
+    Path absoluteFile = file;
     if (!file.isAbsolute()) {
-      file = file.toAbsolutePath();
+      absoluteFile = file.toAbsolutePath();
     }
-    checkState(file.startsWith(outputDir),
+    checkState(absoluteFile.startsWith(outputDir),
         "The file [%s] must have the parent directory [%s] in its path",
-        file, outputDir);
+        absoluteFile, outputDir);
   }
 
   // Used for subdirectories inside outputDir

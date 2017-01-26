@@ -127,7 +127,7 @@ public class Indexer {
       variantSetMonitor.incr();
     }
     variantSetMonitor.stop();
-    log.info("[SUMMARY]: {}", variantSetMonitor);
+    variantSetMonitor.displaySummary();
     variantSetMonitor.reset();
   }
 
@@ -143,7 +143,7 @@ public class Indexer {
       callSetMonitor.incr();
     }
     callSetMonitor.stop();
-    log.info("[SUMMARY]: {}", callSetMonitor);
+    callSetMonitor.displaySummary();
     callSetMonitor.reset();
   }
 
@@ -173,7 +173,7 @@ public class Indexer {
           te.getMessage());
     } finally {
       variantMonitor.stop();
-      log.info("[SUMMARY]: {}", variantMonitor);
+      variantMonitor.displaySummary();
       variantMonitor.reset();
     }
 

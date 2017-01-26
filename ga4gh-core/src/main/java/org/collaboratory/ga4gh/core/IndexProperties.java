@@ -42,6 +42,7 @@ public final class IndexProperties {
   public static final String RECORD = "record";
   public static final String BY_DATA_SET_ID = "by_data_set_id";
   public static final String FALSE = "false";
+  public static final String TRUE = "true";
   public static final String INFO = "info";
   public static final String REFERENCE_BASES = "reference_bases";
   public static final String ALTERNATIVE_BASES = "alternate_bases";

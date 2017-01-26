@@ -19,7 +19,6 @@ package org.collaboratory.ga4gh.loader.model.es;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-//TODO: [rtisma]  move this to ga4gh-core, along with everything under model.es. 
 public interface EsModel {
 
   ObjectNode toDocument();

@@ -1,6 +1,8 @@
 package org.collaboratory.ga4gh.loader;
 
 import static java.lang.System.getProperty;
+import static org.collaboratory.ga4gh.core.IndexProperties.FALSE;
+import static org.collaboratory.ga4gh.core.IndexProperties.TRUE;
 
 public class Config {
 
@@ -11,6 +13,22 @@ public class Config {
   public static final String TOKEN = getProperty("token");
   public static final String STORAGE_API = "https://storage.cancercollaboratory.org";
   public static final String PORTAL_API = "https://dcc.icgc.org";
+
+  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "5"));
+  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "5"));
+  public static final boolean STORAGE_PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", FALSE));
+  public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", TRUE));
+  public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", FALSE));
+  public static final boolean DATA_FETCHER_SHUFFLE = !SORT_MODE;
+  public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
+  public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = 0; // 10000000;
+  public static final int DATA_FETCHER_NUM_DONORS = 30;
+  public static final int DATA_FETCHER_LIMIT = 100;
+  public static final String STORAGE_OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
+  public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
+  public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", TRUE));
+  public static final int MONITOR_INTERVAL_COUNT = 500000;
+  public static final boolean STORAGE_BYPASS_MD5_CHECK = Boolean.valueOf(getProperty("bypass_md5_check", FALSE));
 
   public static String toConfigString() {
     return String.format("INDEX_NAME: %s"
@@ -33,8 +51,7 @@ public class Config {
         + "\nFILE_META_DATA_STORE_FILENAME: %s"
         + "\nUSE_MAP_DB: %s"
         + "\nMONITOR_INTERVAL_COUNT: %s"
-        + "\nSTORAGE_BYPASS_MD5_CHECK: %s"
-        + "\nUSE_STRING_ES_VARIANT_MODEL: %s",
+        + "\nSTORAGE_BYPASS_MD5_CHECK: %s",
         INDEX_NAME,
         NODE_ADDRESS,
         NODE_PORT,
@@ -55,27 +72,8 @@ public class Config {
         DEFAULT_FILE_META_DATA_STORE_FILENAME,
         USE_MAP_DB,
         MONITOR_INTERVAL_COUNT,
-        STORAGE_BYPASS_MD5_CHECK,
-        USE_STRING_ES_VARIANT_MODEL);
+        STORAGE_BYPASS_MD5_CHECK);
 
   }
-
-  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "5"));
-  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "5"));
-  public static final boolean STORAGE_PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", "false"));
-  public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", "true"));
-  public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", "false"));
-  public static final boolean DATA_FETCHER_SHUFFLE = !SORT_MODE;
-  public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
-  public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = 0; // 10000000;
-  public static final int DATA_FETCHER_NUM_DONORS = 30;
-  public static final int DATA_FETCHER_LIMIT = 100;
-  public static final String STORAGE_OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
-  public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
-  public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", "true"));
-  public static final int MONITOR_INTERVAL_COUNT = 500000;
-  public static final boolean STORAGE_BYPASS_MD5_CHECK = Boolean.valueOf(getProperty("bypass_md5_check", "false"));
-  public static final boolean USE_STRING_ES_VARIANT_MODEL =
-      Boolean.valueOf(getProperty("use_string_es_variant_mode", "false"));
 
 }

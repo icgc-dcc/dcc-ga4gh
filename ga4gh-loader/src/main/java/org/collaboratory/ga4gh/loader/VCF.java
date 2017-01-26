@@ -90,8 +90,6 @@ public class VCF implements Closeable {
     return duplicateVariantId;
   }
 
-  // TODO: [rtisma] -- handle case where variantId already exists. If variantId exists,
-  // then its corrupted as thats not allowed
   public Stream<EsCall> streamCalls() {
     return Streams.stream(vcf.iterator())
         .filter(v -> !isDuplicateVariantId(v))
@@ -255,15 +253,6 @@ public class VCF implements Closeable {
 
   }
 
-  private static ObjectNode convertInfo(@NonNull final CommonInfo info) {
-    val obj = object();
-    info.getAttributes().entrySet().stream()
-        .forEach(e -> obj.with(e.getKey(), e.getValue().toString())); // TODO: [rtisma] -- ensure value is not
-                                                                      // collection or array. If is, then need further
-                                                                      // implmentation
-    return obj.end();
-  }
-
   private static EsCall createCallObjectNode(@NonNull final FileMetaData fileMetaData,
       @NonNull EsVariant parentVariant,
       @NonNull CommonInfo info,
@@ -280,16 +269,6 @@ public class VCF implements Closeable {
         .info(info)
         .genotype(genotype)
         .build();
-
-    // return object()
-    // .with(ID, createCallName(record, callerTypeString, bioSampleId, genotype))
-    // .with(NAME, createCallName(record, callerTypeString, bioSampleId, genotype))
-    // .with(VARIANT_SET_ID, callerTypeString)
-    // .with(CALL_SET_ID, bioSampleId)
-    // .with(BIO_SAMPLE_ID, bioSampleId)
-    // .with(INFO, info)
-    // .with(GENOTYPE, genotypeSer)
-    // .end();
   }
 
   private static Genotype createDefaultGenotype(@NonNull final Allele refAllele) {
@@ -359,14 +338,6 @@ public class VCF implements Closeable {
                 .map(a -> a.getBaseString())
                 .collect(toImmutableList()))
         .build();
-  }
-
-  private ObjectNode convertCalls(final VariantContext record) {
-    val genotypeContext = record.getGenotypes();
-    val callInfo = record.getCommonInfo();
-
-    return null;
-
   }
 
   @Override

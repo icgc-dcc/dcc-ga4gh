@@ -43,17 +43,6 @@ public class CounterMonitor implements Countable<Integer> {
     reset();
   }
 
-  public static void main(String[] args) throws InterruptedException {
-    val c = newMonitor("yo", 2);
-    c.start();
-    for (int i = 0; i < 10; i++) {
-      c.incr();
-      Thread.sleep(1000);
-    }
-    c.stop();
-
-  }
-
   private final String name;
 
   private final Countable<Integer> counter;
@@ -69,6 +58,10 @@ public class CounterMonitor implements Countable<Integer> {
 
   private int previousCount;
   private long previousTime;
+
+  public void displaySummary() {
+    log.info("[{}] SUMMARY: {}", name, toString());
+  }
 
   @Override
   public void reset() {
