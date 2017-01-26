@@ -22,7 +22,6 @@ import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAsci
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToBytePrimitiveArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToString;
-import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.unboxByteArray;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
@@ -34,7 +33,9 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.collaboratory.ga4gh.loader.utils.AsciiConverters;
 import org.icgc.dcc.common.core.util.Joiners;
+import org.icgc.dcc.common.core.util.stream.Streams;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
@@ -59,7 +60,7 @@ public class EsVariant implements Serializable, EsModel {
   private int end;
   private String referenceName;
   private byte[] referenceBases;
-  private ImmutableList<Byte[]> alternativeBases;
+  private byte[][] alternativeBases;
 
   @Override
   public ObjectNode toDocument() {
@@ -76,7 +77,7 @@ public class EsVariant implements Serializable, EsModel {
       final int end,
       final String referenceName,
       final byte[] referenceBases,
-      final ImmutableList<Byte[]> alternativeBases) {
+      final byte[][] alternativeBases) {
     this.start = start;
     this.end = end;
     this.alternativeBases = alternativeBases;
@@ -88,7 +89,7 @@ public class EsVariant implements Serializable, EsModel {
     return referenceBases;
   }
 
-  private ImmutableList<Byte[]> getAlternativeBasesAsByteArrays() {
+  private byte[][] getAlternativeBasesAsByteArrays() {
     return alternativeBases;
   }
 
@@ -118,7 +119,7 @@ public class EsVariant implements Serializable, EsModel {
   }
 
   public ImmutableList<String> getAlternativeBases() {
-    return alternativeBases.stream()
+    return Streams.stream(alternativeBases)
         .map(x -> convertToString(x))
         .collect(toImmutableList());
   }
@@ -182,7 +183,13 @@ public class EsVariant implements Serializable, EsModel {
       ImmutableList<Byte[]> alternativeBases =
           this.alternativeBases == null ? ImmutableList.<Byte[]> of() : this.alternativeBases
               .build();
-      return new EsVariant(start, end, referenceName, referenceBases, alternativeBases);
+
+      byte[][] b = new byte[alternativeBases.size()][];
+      for (int i = 0; i < alternativeBases.size(); i++) {
+        b[i] = AsciiConverters.unboxByteArray(alternativeBases.get(i));
+      }
+
+      return new EsVariant(start, end, referenceName, referenceBases, b);
     }
 
     private EsVariantBuilder alternativeBaseAsBytes(final Byte[] alternativeBase) {
@@ -193,7 +200,7 @@ public class EsVariant implements Serializable, EsModel {
       return this;
     }
 
-    private EsVariantBuilder allAlternativeBasesAsBytes(final Iterable<Byte[]> alternativeBases) {
+    private EsVariantBuilder allAlternativeBasesAsBytes(final Byte[][] alternativeBases) {
       for (val base : alternativeBases) {
         this.alternativeBaseAsBytes(base);
       }
@@ -210,20 +217,24 @@ public class EsVariant implements Serializable, EsModel {
    * Serializer needed for MapDB. Note: if EsVariant member variables are added, removed or modified, this needs to be
    * updated
    */
-  public static class EsByteVariantSerializer implements Serializer<EsVariant>, Serializable {
+  public static class EsVariantSerializer implements Serializer<EsVariant>, Serializable {
 
     @Override
     public void serialize(DataOutput2 out, EsVariant value) throws IOException {
       out.writeInt(value.getStart());
       out.writeInt(value.getEnd());
       out.writeUTF(value.getReferenceName());
+
       out.writeInt(value.getReferenceBasesAsByteArray().length); // Length
       out.write(value.getReferenceBasesAsByteArray());
-      out.writeInt(value.getAlternativeBasesAsByteArrays().size());
-      for (Byte[] arrayByte : value.getAlternativeBasesAsByteArrays()) {
-        val bArray = unboxByteArray(arrayByte);
-        out.writeInt(bArray.length);
-        out.write(bArray);
+
+      val doubleArray = value.getAlternativeBasesAsByteArrays();
+      val numAltBases = doubleArray.length;
+      out.writeInt(numAltBases);
+      for (int i = 0; i < numAltBases; i++) {
+        byte[] b = doubleArray[i];
+        out.writeInt(b.length);
+        out.write(b);
       }
     }
 
@@ -243,23 +254,22 @@ public class EsVariant implements Serializable, EsModel {
 
       // Deserialize AlternateBases
       val altBasesListLength = input.readInt();
-      val altBasesByteListBuilder = ImmutableList.<Byte[]> builder();
+      Byte[][] doubleArray = new Byte[altBasesListLength][];
       for (int i = 0; i < altBasesListLength; i++) {
         val arrayLength = input.readInt();
         Byte[] array = new Byte[arrayLength];
         for (int j = 0; j < arrayLength; j++) {
           array[j] = input.readByte();
         }
-        altBasesByteListBuilder.add(array);
+        doubleArray[i] = array;
       }
-      val altBasesList = altBasesByteListBuilder.build();
 
       return builder()
           .start(start)
           .end(end)
           .referenceName(referenceName)
           .referenceBasesAsBytes(refBasesArray)
-          .allAlternativeBasesAsBytes(altBasesList)
+          .allAlternativeBasesAsBytes(doubleArray)
           .build();
     }
 

@@ -32,7 +32,7 @@ public class IdDiskCacheFactory implements IdCacheFactory {
   @Override
   public void build() throws IOException {
     variantIdCache =
-        newIdDiskCache("variantIdCache", new EsVariant.EsByteVariantSerializer(), storageDirname,
+        newIdDiskCache("variantIdCache", new EsVariant.EsVariantSerializer(), storageDirname,
             initId);
     variantSetIdCache = newIdDiskCache("variantSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);
     callSetIdCache = newIdDiskCache("callSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);
