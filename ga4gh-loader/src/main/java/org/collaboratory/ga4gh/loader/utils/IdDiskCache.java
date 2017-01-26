@@ -46,13 +46,15 @@ public class IdDiskCache<T> implements IdCache<T>, Closeable {
     return newIdDiskCache(name, serializer, outputDirname, 0L, false);
   }
 
-  public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer, String outputDirname,
+  public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer,
+      String outputDirname,
       Long initId) throws IOException {
     return newIdDiskCache(name, serializer, outputDirname, initId, false);
 
   }
 
-  public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer, String outputDirname,
+  public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer,
+      String outputDirname,
       Long initId, boolean persistFile) throws IOException {
     return new IdDiskCache<T>(name, serializer, outputDirname, initId, persistFile);
   }

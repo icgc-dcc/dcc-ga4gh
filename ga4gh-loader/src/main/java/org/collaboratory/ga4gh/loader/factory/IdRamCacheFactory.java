@@ -4,6 +4,7 @@ import static com.google.common.collect.Maps.newHashMap;
 
 import java.io.IOException;
 
+import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.collaboratory.ga4gh.loader.utils.IdRamCache;
 
@@ -13,7 +14,7 @@ import lombok.experimental.NonFinal;
 
 @RequiredArgsConstructor
 @Value
-public class IdRamCacheFactory<T> implements IdCacheFactory<T> {
+public class IdRamCacheFactory<T extends EsVariant> implements IdCacheFactory<T> {
 
   private final long initId;
 
@@ -26,11 +27,10 @@ public class IdRamCacheFactory<T> implements IdCacheFactory<T> {
   private IdCache<String> callSetIdCache;
 
   @Override
-  public IdCacheFactory<T> init() throws IOException {
+  public void build() throws IOException {
     variantIdCache = newIdRamCache(initId);
     variantSetIdCache = newIdRamCache(initId);
     callSetIdCache = newIdRamCache(initId);
-    return this;
   }
 
   private static <E> IdCache<E> newIdRamCache(final long initialId) {

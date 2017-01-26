@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableList;
 import lombok.Value;
 import lombok.val;
 
-// ObjectNode is a bit heavy, this is just to minimize memory usage
+// String implementation of EsVariant. This is the original, more memory heavy impl
 @Value
 public final class EsStringVariant implements EsVariant {
 
@@ -59,7 +59,11 @@ public final class EsStringVariant implements EsVariant {
     return Joiners.UNDERSCORE.join(start, end, referenceName, referenceBases, Joiners.COMMA.join(alternativeBases));
   }
 
-  public static class EsStringVariantBuilder implements EsVariant.EsVariantBuilder<EsStringVariant> {
+  public static EsStringVariantBuilder builder() {
+    return new EsStringVariantBuilder();
+  }
+
+  public static class EsStringVariantBuilder implements EsVariant.EsVariantBuilder {
 
     private int start;
     private int end;
@@ -67,32 +71,35 @@ public final class EsStringVariant implements EsVariant {
     private String referenceBases;
     private ImmutableList.Builder<String> alternativeBases;
 
+    public EsStringVariantBuilder() {
+    }
+
     @Override
-    public EsStringVariantBuilder start(int start) {
+    public EsVariantBuilder start(int start) {
       this.start = start;
       return this;
     }
 
     @Override
-    public EsStringVariantBuilder end(int end) {
+    public EsVariantBuilder end(int end) {
       this.end = end;
       return this;
     }
 
     @Override
-    public EsStringVariantBuilder referenceName(String referenceName) {
+    public EsVariantBuilder referenceName(String referenceName) {
       this.referenceName = referenceName;
       return this;
     }
 
     @Override
-    public EsStringVariantBuilder referenceBases(String referenceBases) {
+    public EsVariantBuilder referenceBases(String referenceBases) {
       this.referenceBases = referenceBases;
       return this;
     }
 
     @Override
-    public EsStringVariantBuilder alternativeBase(String alternativeBase) {
+    public EsVariantBuilder alternativeBase(String alternativeBase) {
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<String> builder();
       }
@@ -101,7 +108,7 @@ public final class EsStringVariant implements EsVariant {
     }
 
     @Override
-    public EsStringVariantBuilder alternativeBases(Iterable<? extends String> alternativeBases) {
+    public EsVariantBuilder alternativeBases(Iterable<? extends String> alternativeBases) {
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<String> builder();
       }
@@ -110,13 +117,13 @@ public final class EsStringVariant implements EsVariant {
     }
 
     @Override
-    public EsStringVariantBuilder clearAlternativeBases() {
+    public EsVariantBuilder clearAlternativeBases() {
       this.alternativeBases = null;
       return this;
     }
 
     @Override
-    public EsStringVariant build() {
+    public EsVariant build() {
       val alternativeBases =
           this.alternativeBases == null ? ImmutableList.<String> of() : this.alternativeBases
               .build();

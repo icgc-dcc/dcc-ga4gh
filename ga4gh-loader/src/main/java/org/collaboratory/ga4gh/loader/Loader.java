@@ -32,15 +32,18 @@ public class Loader {
   @NonNull
   private final Storage storage;
 
+  private final boolean useStringImplementation;
+
   private long globalFileMetaDataCount = -1;
   private long globalFileMetaDataTotal = -1;
 
   public static void main(String[] args) {
 
     log.info("Static Config:\n{}", Config.toConfigString());
+    val idCacheFactory = newIdCacheFactory();
     try (val client = newClient();
-        val idCacheFactory = newIdCacheFactory().init();
         val writer = newDocumentWriter(client)) {
+      idCacheFactory.build();
       val loader = newLoader(client, writer, idCacheFactory);
       val startMs = System.currentTimeMillis();
       val dataFetcher = newFileMetaDataFetcher();
@@ -141,7 +144,7 @@ public class Loader {
 
   private void loadFile(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
     @Cleanup
-    val vcf = new VCF(file, fileMetaData);
+    val vcf = new VCF(file, fileMetaData, useStringImplementation);
 
     log.info("\tReading variants ...");
     val variants = vcf.readVariantAndCalls();

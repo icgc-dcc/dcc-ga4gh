@@ -17,7 +17,12 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertStrings;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAscii;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToBytePrimitiveArray;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToString;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.unboxByteArray;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
@@ -28,7 +33,6 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.CharsetEncoder;
 
 import org.icgc.dcc.common.core.util.Joiners;
 import org.mapdb.DataInput2;
@@ -36,7 +40,6 @@ import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 import lombok.EqualsAndHashCode;
@@ -44,15 +47,13 @@ import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.val;
 
-// ObjectNode is a bit heavy, this is just to minimize memory usage
+// Byte packed implementation of EsVariant. Assumes that referenceBases and alternative bases
+// are ASCII only. Instead of storing 2 Bytes per character for bases, store one. 
 @ToString
 @EqualsAndHashCode
-public final class EsVariant implements EsModel, Serializable {
+public class EsByteVariant implements Serializable, EsVariant {
 
   private static final long serialVersionUID = 1485228376L;
-
-  private static final CharsetEncoder ASCII_ENCODER =
-      Charsets.US_ASCII.newEncoder(); // or "ISO-8859-1" for ISO Latin 1
 
   private int start;
   private int end;
@@ -67,11 +68,11 @@ public final class EsVariant implements EsModel, Serializable {
         .with(END, getEnd())
         .with(REFERENCE_NAME, getReferenceName())
         .with(REFERENCE_BASES, getReferenceBases())
-        .with(ALTERNATIVE_BASES, JsonNodeConverters.convertStrings(getAlternativeBases()))
+        .with(ALTERNATIVE_BASES, convertStrings(getAlternativeBases()))
         .end();
   }
 
-  private EsVariant(final int start,
+  private EsByteVariant(final int start,
       final int end,
       final String referenceName,
       final byte[] referenceBases,
@@ -83,11 +84,11 @@ public final class EsVariant implements EsModel, Serializable {
     this.referenceBases = referenceBases;
   }
 
-  public byte[] getReferenceBasesAsByteArray() {
+  private byte[] getReferenceBasesAsByteArray() {
     return referenceBases;
   }
 
-  public ImmutableList<Byte[]> getAlternativeBasesAsByteArrays() {
+  private ImmutableList<Byte[]> getAlternativeBasesAsByteArrays() {
     return alternativeBases;
   }
 
@@ -96,73 +97,35 @@ public final class EsVariant implements EsModel, Serializable {
     return Joiners.UNDERSCORE.join(start, end, referenceName, referenceBases, Joiners.COMMA.join(alternativeBases));
   }
 
-  private static String convertBytesToString(byte[] bytes) {
-    return new String(bytes, Charsets.US_ASCII);
+  public static EsByteVariantBuilder builder() {
+    return new EsByteVariantBuilder();
   }
 
-  private static String convertBytesToString(Byte[] bytes) {
-    return new String(convertToPrimative(bytes), Charsets.US_ASCII);
-  }
-
-  public static EsVariantBuilder builder() {
-    return new EsVariantBuilder();
-  }
-
+  @Override
   public int getStart() {
     return this.start;
   }
 
+  @Override
   public int getEnd() {
     return this.end;
   }
 
+  @Override
   public String getReferenceName() {
     return this.referenceName;
   }
 
+  @Override
   public String getReferenceBases() {
-    return convertBytesToString(referenceBases);
+    return convertToString(referenceBases);
   }
 
+  @Override
   public ImmutableList<String> getAlternativeBases() {
     return alternativeBases.stream()
-        .map(x -> convertBytesToString(x))
+        .map(x -> convertToString(x))
         .collect(toImmutableList());
-  }
-
-  public static boolean isPureAscii(String v) {
-    return ASCII_ENCODER.canEncode(v);
-  }
-
-  public static void checkPureAscii(String v) {
-    checkArgument(isPureAscii(v),
-        "The string [%s] is not of character set [US-ASCII], it needs to be converted", v);
-  }
-
-  public static byte[] convertToAsciiPrimitive(String v) {
-    return v.getBytes(Charsets.US_ASCII);
-  }
-
-  public static Byte[] convertToAsciiObject(String v) {
-    return convertToObject(convertToAsciiPrimitive(v));
-  }
-
-  public static Byte[] convertToObject(byte[] bytes) {
-    val out = new Byte[bytes.length];
-    int i = 0;
-    for (byte b : bytes) {
-      out[i++] = b;
-    }
-    return out;
-  }
-
-  public static byte[] convertToPrimative(Byte[] bytes) {
-    val out = new byte[bytes.length];
-    int i = 0;
-    for (byte b : bytes) {
-      out[i++] = b;
-    }
-    return out;
   }
 
   /*
@@ -170,53 +133,75 @@ public final class EsVariant implements EsModel, Serializable {
    */
   @ToString
   @EqualsAndHashCode
-  public static class EsVariantBuilder {
+  public static class EsByteVariantBuilder implements EsVariant.EsVariantBuilder {
 
-    private int start;
-    private int end;
-    private String referenceName;
-    private byte[] referenceBases;
-    private ImmutableList.Builder<Byte[]> alternativeBases;
+    protected int start;
+    protected int end;
+    protected String referenceName;
+    protected byte[] referenceBases;
+    protected ImmutableList.Builder<Byte[]> alternativeBases;
 
-    public EsVariantBuilder() {
+    public EsByteVariantBuilder() {
     }
 
-    public EsVariantBuilder start(final int start) {
+    @Override
+    public EsByteVariantBuilder start(final int start) {
       this.start = start;
       return this;
     }
 
-    public EsVariantBuilder end(final int end) {
+    @Override
+    public EsByteVariantBuilder end(final int end) {
       this.end = end;
       return this;
     }
 
-    public EsVariantBuilder referenceName(final String referenceName) {
+    @Override
+    public EsByteVariantBuilder referenceName(final String referenceName) {
       this.referenceName = referenceName;
       return this;
     }
 
-    public EsVariantBuilder referenceBases(final String referenceBases) {
-      EsVariant.checkPureAscii(referenceBases);
-      this.referenceBases = convertToAsciiPrimitive(referenceBases);
+    @Override
+    public EsByteVariantBuilder referenceBases(final String referenceBases) {
+      checkPureAscii(referenceBases);
+      this.referenceBases = convertToBytePrimitiveArray(referenceBases);
       return this;
     }
 
-    public EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
-      this.referenceBases = referenceBases;
-      return this;
-    }
-
-    public EsVariantBuilder alternativeBase(final String alternativeBase) {
-      EsVariant.checkPureAscii(alternativeBase);
+    @Override
+    public EsByteVariantBuilder alternativeBase(final String alternativeBase) {
+      checkPureAscii(alternativeBase);
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<Byte[]> builder();
       }
-      this.alternativeBases.add(convertToAsciiObject(alternativeBase));
+      this.alternativeBases.add(convertToByteObjectArray(alternativeBase));
       return this;
     }
 
-    public EsVariantBuilder alternativeBaseAsBytes(final Byte[] alternativeBase) {
+    @Override
+    public EsByteVariantBuilder alternativeBases(final Iterable<? extends String> alternativeBases) {
+      for (val base : alternativeBases) {
+        this.alternativeBase(base);
+      }
+      return this;
+    }
+
+    @Override
+    public EsByteVariantBuilder clearAlternativeBases() {
+      this.alternativeBases = null;
+      return this;
+    }
+
+    @Override
+    public EsByteVariant build() {
+      ImmutableList<Byte[]> alternativeBases =
+          this.alternativeBases == null ? ImmutableList.<Byte[]> of() : this.alternativeBases
+              .build();
+      return new EsByteVariant(start, end, referenceName, referenceBases, alternativeBases);
+    }
+
+    private EsByteVariantBuilder alternativeBaseAsBytes(final Byte[] alternativeBase) {
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<Byte[]> builder();
       }
@@ -224,30 +209,16 @@ public final class EsVariant implements EsModel, Serializable {
       return this;
     }
 
-    public <T> EsVariantBuilder allAlternativeBasesAsBytes(final Iterable<Byte[]> alternativeBases) {
+    private <T> EsByteVariantBuilder allAlternativeBasesAsBytes(final Iterable<Byte[]> alternativeBases) {
       for (val base : alternativeBases) {
         this.alternativeBaseAsBytes(base);
       }
       return this;
     }
 
-    public EsVariantBuilder alternativeBases(final Iterable<? extends String> alternativeBases) {
-      for (val base : alternativeBases) {
-        this.alternativeBase(base);
-      }
+    private EsByteVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
+      this.referenceBases = referenceBases;
       return this;
-    }
-
-    public EsVariantBuilder clearAlternativeBases() {
-      this.alternativeBases = null;
-      return this;
-    }
-
-    public EsVariant build() {
-      ImmutableList<Byte[]> alternativeBases =
-          this.alternativeBases == null ? ImmutableList.<Byte[]> of() : this.alternativeBases
-              .build();
-      return new EsVariant(start, end, referenceName, referenceBases, alternativeBases);
     }
   }
 
@@ -255,10 +226,10 @@ public final class EsVariant implements EsModel, Serializable {
    * Serializer needed for MapDB. Note: if EsVariant member variables are added, removed or modified, this needs to be
    * updated
    */
-  public static class EsVariantSerializer implements Serializer<EsVariant>, Serializable {
+  public static class EsByteVariantSerializer implements Serializer<EsByteVariant>, Serializable {
 
     @Override
-    public void serialize(DataOutput2 out, EsVariant value) throws IOException {
+    public void serialize(DataOutput2 out, EsByteVariant value) throws IOException {
       out.writeInt(value.getStart());
       out.writeInt(value.getEnd());
       out.writeUTF(value.getReferenceName());
@@ -266,7 +237,7 @@ public final class EsVariant implements EsModel, Serializable {
       out.write(value.getReferenceBasesAsByteArray());
       out.writeInt(value.getAlternativeBasesAsByteArrays().size());
       for (Byte[] arrayByte : value.getAlternativeBasesAsByteArrays()) {
-        val bArray = convertToPrimative(arrayByte);
+        val bArray = unboxByteArray(arrayByte);
         out.writeInt(bArray.length);
         out.write(bArray);
       }
@@ -274,7 +245,7 @@ public final class EsVariant implements EsModel, Serializable {
 
     @Override
     @SneakyThrows
-    public EsVariant deserialize(DataInput2 input, int available) throws IOException {
+    public EsByteVariant deserialize(DataInput2 input, int available) throws IOException {
       val start = input.readInt();
       val end = input.readInt();
       val referenceName = input.readUTF();
@@ -299,7 +270,7 @@ public final class EsVariant implements EsModel, Serializable {
       }
       val altBasesList = altBasesByteListBuilder.build();
 
-      return EsVariant.builder()
+      return builder()
           .start(start)
           .end(end)
           .referenceName(referenceName)

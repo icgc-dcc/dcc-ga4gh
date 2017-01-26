@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
@@ -11,10 +12,12 @@ import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE
 import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
-import static org.collaboratory.ga4gh.loader.Config.OUTPUT_VCF_STORAGE_DIR;
-import static org.collaboratory.ga4gh.loader.Config.PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.SORT_MODE;
+import static org.collaboratory.ga4gh.loader.Config.STORAGE_BYPASS_MD5_CHECK;
+import static org.collaboratory.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
+import static org.collaboratory.ga4gh.loader.Config.STORAGE_PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
+import static org.collaboratory.ga4gh.loader.Config.USE_STRING_ES_VARIANT_MODEL;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
@@ -77,17 +80,53 @@ public class Factory {
         .threadsNum(BULK_NUM_THREADS));
   }
 
-  public static IdCacheFactory<EsVariant> newIdCacheFactory() {
+  public static <T extends EsVariant> IdCacheFactory<T> newIdCacheFactory(boolean useMapDB,
+      boolean useVariantStringImpl) {
     val defaultInitId = 1L;
     val defaultStorageDirname = "target";
-    if (USE_MAP_DB) {
-      return new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
+    checkState(!useMapDB || !useVariantStringImpl,
+        "Cannot cast EsStringVariant to EsByteVariant. IdDiskCacheFactory is not configured for EsStringVariant since there is no serializer");
+    if (useMapDB) {
+      return (IdCacheFactory<T>) new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
     } else {
-      return new IdRamCacheFactory<EsVariant>(defaultInitId);
+      return new IdRamCacheFactory<T>(defaultInitId);
     }
   }
 
-  public static Indexer newIndexer(Client client, DocumentWriter writer, IdCacheFactory<EsVariant> idCacheFactory)
+  public static <T extends EsVariant> IdCacheFactory<T> newIdCacheFactory() {
+    return newIdCacheFactory(USE_MAP_DB, USE_STRING_ES_VARIANT_MODEL);
+  }
+
+  public static void main(String[] args) throws IOException {
+    boolean useMapDB = false;
+    boolean useString = false;
+
+    IdCacheFactory<EsVariant> idMapDB = newIdCacheFactory(useMapDB, useString);
+    idMapDB.build();
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < 4000000; i++) {
+      EsVariant byteVar = EsVariant.newEsVariantBuilder(useString)
+          .start(1)
+          .end(2 + i)
+          .alternativeBase("A")
+          .alternativeBase("B")
+          .referenceBases("AC")
+          .referenceName("chrom1")
+          .build();
+      idMapDB.getVariantIdCache().add(byteVar);
+      log.info("" + i);
+    }
+    long dur = System.currentTimeMillis() - start;
+
+    for (val vars : idMapDB.getVariantIdCache().getReverseCache().values()) {
+      // log.info("Id: {} {}", idMapDB.getVariantIdCache().getIdAsString(vars), vars.toString());
+    }
+    log.info("duration = {}", dur);
+
+  }
+
+  public static Indexer newIndexer(Client client, DocumentWriter writer,
+      IdCacheFactory<EsVariant> idCacheFactory)
       throws Exception {
     return new Indexer(client, writer, INDEX_NAME,
         idCacheFactory.getVariantIdCache(),
@@ -97,11 +136,11 @@ public class Factory {
 
   public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory<EsVariant> idCacheFactory)
       throws Exception {
-    return new Loader(newIndexer(client, writer, idCacheFactory), newStorage());
+    return new Loader(newIndexer(client, writer, idCacheFactory), newStorage(), USE_STRING_ES_VARIANT_MODEL);
   }
 
   public static Storage newStorage() {
-    return new Storage(PERSIST_MODE, OUTPUT_VCF_STORAGE_DIR);
+    return new Storage(STORAGE_PERSIST_MODE, STORAGE_OUTPUT_VCF_STORAGE_DIR, STORAGE_BYPASS_MD5_CHECK);
   }
 
   public static FileMetaDataFetcher newFileMetaDataFetcher() {

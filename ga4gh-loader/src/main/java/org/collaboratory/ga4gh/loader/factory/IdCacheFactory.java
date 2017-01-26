@@ -20,12 +20,13 @@ package org.collaboratory.ga4gh.loader.factory;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.collaboratory.ga4gh.loader.utils.Purgeable;
 
-public interface IdCacheFactory<T> extends Closeable, Purgeable {
+public interface IdCacheFactory<T extends EsVariant> extends Closeable, Purgeable {
 
-  IdCacheFactory<T> init() throws IOException;
+  void build() throws IOException;
 
   IdCache<T> getVariantIdCache();
 

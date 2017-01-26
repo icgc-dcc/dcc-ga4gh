@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static org.collaboratory.ga4gh.loader.model.es.EsVariant.newEsVariantBuilder;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.DONOR_ID;
 import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.VARIANT_SET_ID;
@@ -49,7 +50,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class VCF implements Closeable {
+public class VCF<VARIANT extends EsVariant> implements Closeable {
 
   private static final boolean REQUIRE_INDEX_CFG = false;
   private static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
@@ -64,8 +65,11 @@ public class VCF implements Closeable {
 
   private final Set<String> variantIdSet;
 
+  private final boolean useStringImplementation;
+
   public VCF(@NonNull final File file,
-      @NonNull final FileMetaData fileMetaData) {
+      @NonNull final FileMetaData fileMetaData, final boolean useStringImplementation) {
+    this.useStringImplementation = useStringImplementation;
     this.vcf = new VCFFileReader(file,
         REQUIRE_INDEX_CFG);
     this.fileMetaData = fileMetaData;
@@ -107,7 +111,7 @@ public class VCF implements Closeable {
 
   public Iterable<EsVariant> readVariants() {
     return transform(vcf,
-        VCF::convertVariantNodeObj);
+        this::convertVariantNodeObj);
   }
 
   public VCFHeader getHeader() {
@@ -332,7 +336,7 @@ public class VCF implements Closeable {
 
   private EsVariantCallPair convertVariantCallNodeObj(@NonNull final VariantContext record) {
     val call = convertCallNodeObj(record);
-    val variant = EsVariant.builder()
+    val variant = newEsVariantBuilder(useStringImplementation)
         .start(record.getStart())
         .end(record.getEnd())
         .referenceName(record.getContig())
@@ -349,8 +353,8 @@ public class VCF implements Closeable {
         .build();
   }
 
-  private static EsVariant convertVariantNodeObj(@NonNull final VariantContext record) {
-    return EsVariant.builder()
+  private EsVariant convertVariantNodeObj(@NonNull final VariantContext record) {
+    return newEsVariantBuilder(useStringImplementation)
         .start(record.getStart())
         .end(record.getEnd())
         .referenceName(record.getContig())

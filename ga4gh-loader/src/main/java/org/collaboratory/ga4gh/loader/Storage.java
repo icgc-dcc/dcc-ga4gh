@@ -45,11 +45,14 @@ public final class Storage {
 
   private final Path tempFile;
 
+  private final boolean bypassMD5Check;
+
   private static String createTempFilename() {
     return "tmp." + System.currentTimeMillis() + ".vcf.gz";
   }
 
-  public Storage(final boolean persist, @NonNull final String outputDirName) {
+  public Storage(final boolean persist, @NonNull final String outputDirName, final boolean bypassMD5Check) {
+    this.bypassMD5Check = bypassMD5Check;
     this.persist = persist;
     this.outputDir = Paths.get(outputDirName).toAbsolutePath();
     initDir(outputDir);
@@ -104,7 +107,7 @@ public final class Storage {
     checkForParentDir(absFile);
     initParentDir(absFile);
     val fileExists = Files.exists(absFile);
-    val md5Match = fileExists && calcMd5Sum(absFile).equals(expectedMD5Sum); // Short circuit
+    val md5Match = bypassMD5Check || (fileExists && calcMd5Sum(absFile).equals(expectedMD5Sum)); // Short circuit
     if (persist) {
       if (md5Match) {
         log.info("File [{}] already exists and matches checksum. Skipping download.", absFile);
