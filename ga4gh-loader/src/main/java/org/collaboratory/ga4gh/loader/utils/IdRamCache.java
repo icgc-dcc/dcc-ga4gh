@@ -17,6 +17,7 @@
  */
 package org.collaboratory.ga4gh.loader.utils;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.newHashMap;
 
@@ -29,13 +30,12 @@ import lombok.val;
 
 public class IdRamCache<T> implements IdCache<T> {
 
+  private Map<T, Long> cache;
+  private Long id;
+
   public static <T> IdCache<T> newIdCache(Map<T, Long> cache, final Long id) {
     return new IdRamCache<T>(cache, id);
   }
-
-  private Map<T, Long> cache;
-
-  private Long id;
 
   public IdRamCache(@NonNull final Map<T, Long> cache, final Long id) {
     this.id = id;
@@ -72,11 +72,8 @@ public class IdRamCache<T> implements IdCache<T> {
 
   @Override
   public Long getId(@NonNull T t) {
-    if (cache.containsKey(t)) {
-      return cache.get(t);
-    } else {
-      throw new NullPointerException("The following key doesnt not exist in the cache: \n" + t);
-    }
+    checkArgument(cache.containsKey(t), "The following key doesnt not exist in the cache: \n%s", t);
+    return cache.get(t);
   }
 
   @Override

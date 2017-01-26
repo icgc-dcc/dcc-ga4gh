@@ -41,9 +41,4 @@ public class LoaderTest extends BaseElasticsearchTest {
     Assertions.assertThat(response.isExists());
   }
 
-  @Test
-  public void testFileMetaDataFiltering() {
-
-  }
-
 }

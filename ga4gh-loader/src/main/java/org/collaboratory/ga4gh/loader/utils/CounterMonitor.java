@@ -16,6 +16,22 @@ public class CounterMonitor implements Countable<Integer> {
   private static final int DEFAULT_INTERVAL_SECONDS = 30;
   private static final int DEFAULT_INITAL_COUNT = 0;
 
+  private final String name;
+
+  private final Countable<Integer> counter;
+
+  private final Stopwatch watch;
+
+  private final Logger logger;
+
+  private final int countInterval;
+
+  @Getter
+  private boolean isRunning = false;
+
+  private int previousCount;
+  private long previousTime;
+
   public static CounterMonitor newMonitor(String name, Logger logger, int intervalSeconds) {
     return new CounterMonitor(name, new IntegerCounter(DEFAULT_INITAL_COUNT), Stopwatch.createUnstarted(), logger,
         intervalSeconds);
@@ -42,22 +58,6 @@ public class CounterMonitor implements Countable<Integer> {
     // Init
     reset();
   }
-
-  private final String name;
-
-  private final Countable<Integer> counter;
-
-  private final Stopwatch watch;
-
-  private final Logger logger;
-
-  private final int countInterval;
-
-  @Getter
-  private boolean isRunning = false;
-
-  private int previousCount;
-  private long previousTime;
 
   public void displaySummary() {
     log.info("[{}] SUMMARY: {}", name, toString());

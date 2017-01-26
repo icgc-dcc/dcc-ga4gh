@@ -19,15 +19,18 @@ package org.collaboratory.ga4gh.loader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterBySize;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterSomaticSSMs;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.isSomaticSSM;
 
 import java.util.List;
 import java.util.Set;
 
+import org.assertj.core.api.Assertions;
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters;
 import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
 
@@ -53,22 +56,26 @@ public class PortalTest {
   }
 
   @Test
-  public void testFileMetaDataFilter() {
+  public void testBasicFileMetaDataFilter() {
     int numDonors = 20;
     val fileMetaDatas = getFileMetaDatasForNumDonors(numDonors);
+    Assertions.assertThat(fileMetaDatas.size() > 0);
     int maxFileSizeBytes = 700000;
 
     // If size > 0, use only files less than or equal to maxFileSizeBytes
-    // val filteredFileMetaDatasBySize =
-    // (maxFileSizeBytes < 0) ? fileMetaDatas : filterBySize(fileMetaDatas, maxFileSizeBytes);
-    // val filteredFileMetaDatas = filterSomaticSSMs(filteredFileMetaDatasBySize);
+    val filteredFileMetaDatasBySize =
+        (maxFileSizeBytes < 0) ? fileMetaDatas : filterBySize(fileMetaDatas, maxFileSizeBytes);
 
+    val actualFilteredFileMetaDatas = filterSomaticSSMs(filteredFileMetaDatasBySize);
+    val expected = expectedFilterSomaticSSMs(actualFilteredFileMetaDatas);
+    Assertions.assertThat(expected.size() == actualFilteredFileMetaDatas.size()).as(
+        "The expected size after filtering does not match the actual");
   }
 
   private static Set<FileMetaData> expectedFilterSomaticSSMs(final Iterable<FileMetaData> fileMetaDatas) {
     val builder = ImmutableSet.<FileMetaData> builder();
     for (val fileMetaData : fileMetaDatas) {
-      if (FileMetaDataFilters.isSomaticSSM(fileMetaData)) {
+      if (isSomaticSSM(fileMetaData)) {
         builder.add(fileMetaData);
       }
     }
@@ -95,7 +102,7 @@ public class PortalTest {
           for (val filename : filenameGenerator(caller, mutation, subMutation)) {
             val parser = new PortalVCFFilenameParser(filename);
             val fileMetaData = createDummyFileMetaDataForParserAndSize(parser, 700000);
-            val isActualSomaticSSM = FileMetaDataFilters.isSomaticSSM(fileMetaData);
+            val isActualSomaticSSM = isSomaticSSM(fileMetaData);
             log.info("Tesing Filename : {}", filename);
             assertThat(isExpectedSomaticSSM == isActualSomaticSSM);
           }
