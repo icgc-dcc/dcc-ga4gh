@@ -46,38 +46,47 @@ import lombok.extern.slf4j.Slf4j;
 @RunWith(com.carrotsearch.randomizedtesting.RandomizedRunner.class)
 public class VariantServiceTest {
 
-  public static void something(String[] args) {
+  private static VariantService variantService;
+  private static Client client;
+
+  public static void main(String[] args) {
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
-        .setEnd(50000000)
         .setStart(0)
+        .setEnd(10000000)
         .setPageSize(10)
-        .setReferenceName("7")
-        .setVariantSetId("consensus")
-        .addCallSetIds("SA557454")
+        .setReferenceName("1")
+        .setVariantSetId("broad-snowman")
+        // .setStart(208764566)
+        // .setEnd(208785085)
+        // .setPageSize(10)
+        // .setReferenceName("1")
+        // .setVariantSetId("svcp_1-0-6")
         .build();
 
     val searchVariantSetRequest = SearchVariantSetsRequest.newBuilder()
+        .setPageSize(10)
         .setDatasetId("SSM")
         .build();
 
+    val sampleId = "SA413562";
     val searchCallSetRequest = SearchCallSetsRequest.newBuilder()
-        .setVariantSetId("consensus")
-        .setBioSampleId("SA557454")
-        .setName("SA557454")
+        .setVariantSetId("broad-snowman")
+        .setBioSampleId(sampleId)
+        .setName(sampleId)
         .setPageSize(100)
         .build();
 
     val getVariantRequest = GetVariantRequest.newBuilder()
         // .setVariantId("27043136_27043136_7_C_T")
-        .setVariantId("933202_7933203_1_TA_T")
+        .setVariantId("46421")
         .build();
 
     val getVariantSetRequest = GetVariantSetRequest.newBuilder()
-        .setVariantSetId("consensus")
+        .setVariantSetId("1")
         .build();
 
     val getCallSetRequest = GetCallSetRequest.newBuilder()
-        .setCallSetId("SA557454")
+        .setCallSetId("1")
         .build();
 
     val client = newClient();
@@ -86,12 +95,14 @@ public class VariantServiceTest {
     val callSetRepo = new CallSetRepository(client);
     val variantSetRepo = new VariantSetRepository(client);
 
+    val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo);
+
+    val variant = variantService.getVariant(getVariantRequest);
     val searchVariantResponse = variantService.searchVariants(searchVariantRequest);
     val searchVariantSetResponse = variantService.searchVariantSets(searchVariantSetRequest);
     val searchCallSetResponse = variantService.searchCallSets(searchCallSetRequest);
     val callSet = variantService.getCallSet(getCallSetRequest);
     val variantSet = variantService.getVariantSet(getVariantSetRequest);
-    val variant = variantService.getVariant(getVariantRequest);
     log.info("SearchVariantResponse: {} ", searchVariantResponse);
     log.info("SearchVariantSetResponse: {} ", searchVariantSetResponse);
     log.info("SearchCallSetResponse: {} ", searchCallSetResponse);
@@ -99,9 +110,6 @@ public class VariantServiceTest {
     log.info("GetVariantResponse: {} ", variant);
     log.info("GetCallSetResponse: {} ", callSet);
   }
-
-  private static VariantService variantService;
-  private static Client client;
 
   @BeforeClass
   public static void init() {

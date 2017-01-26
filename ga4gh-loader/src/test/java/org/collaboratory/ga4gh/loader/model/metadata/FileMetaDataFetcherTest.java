@@ -49,8 +49,8 @@ public class FileMetaDataFetcherTest {
     val setNew = Sets.newHashSet(fileMetaDatasNew);
     assertThat(setOrig.containsAll(setNew));
     assertThat(setNew.containsAll(setOrig));
-    log.info("OLD: \n{}", Joiners.NEWLINE.join(fileMetaDatasOrig));
-    log.info("NEW: \n{}", Joiners.NEWLINE.join(fileMetaDatasNew));
+    log.info("SERIALIZER_TEST_OLD: \n{}", Joiners.NEWLINE.join(fileMetaDatasOrig));
+    log.info("SERIALIZER_TEST_NEW: \n{}", Joiners.NEWLINE.join(fileMetaDatasNew));
   }
 
   @Test
@@ -74,8 +74,8 @@ public class FileMetaDataFetcherTest {
     val setNew = Sets.newHashSet(fileMetaDatasNew);
     assertThat(setOrig.containsAll(setNew));
     assertThat(setNew.containsAll(setOrig));
-    log.info("OLD: \n{}", Joiners.NEWLINE.join(fileMetaDatasOrig));
-    log.info("NEW: \n{}", Joiners.NEWLINE.join(fileMetaDatasNew));
+    log.info("RESTORE_TEST_OLD: \n{}", Joiners.NEWLINE.join(fileMetaDatasOrig));
+    log.info("RESTORE_TEST_NEW: \n{}", Joiners.NEWLINE.join(fileMetaDatasNew));
 
   }
 
