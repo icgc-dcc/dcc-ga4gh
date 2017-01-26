@@ -14,13 +14,13 @@ import lombok.experimental.NonFinal;
 
 @RequiredArgsConstructor
 @Value
-public class IdRamCacheFactory<T extends EsVariant> implements IdCacheFactory<T> {
+public class IdRamCacheFactory implements IdCacheFactory {
 
   private final long initId;
 
   // State
   @NonFinal
-  private IdCache<T> variantIdCache;
+  private IdCache<EsVariant> variantIdCache;
   @NonFinal
   private IdCache<String> variantSetIdCache;
   @NonFinal

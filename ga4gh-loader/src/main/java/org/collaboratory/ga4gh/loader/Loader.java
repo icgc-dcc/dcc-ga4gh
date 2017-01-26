@@ -32,8 +32,6 @@ public class Loader {
   @NonNull
   private final Storage storage;
 
-  private final boolean useStringImplementation;
-
   private long globalFileMetaDataCount = -1;
   private long globalFileMetaDataTotal = -1;
 
@@ -144,7 +142,7 @@ public class Loader {
 
   private void loadFile(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
     @Cleanup
-    val vcf = new VCF(file, fileMetaData, useStringImplementation);
+    val vcf = new VCF(file, fileMetaData);
 
     log.info("\tReading variants ...");
     val variants = vcf.readVariantAndCalls();

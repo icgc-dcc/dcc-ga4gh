@@ -24,11 +24,11 @@ import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
 import org.collaboratory.ga4gh.loader.utils.Purgeable;
 
-public interface IdCacheFactory<T extends EsVariant> extends Closeable, Purgeable {
+public interface IdCacheFactory extends Closeable, Purgeable {
 
   void build() throws IOException;
 
-  IdCache<T> getVariantIdCache();
+  IdCache<EsVariant> getVariantIdCache();
 
   IdCache<String> getVariantSetIdCache();
 

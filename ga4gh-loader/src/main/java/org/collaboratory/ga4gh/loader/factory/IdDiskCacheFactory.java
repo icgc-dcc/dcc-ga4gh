@@ -4,7 +4,7 @@ import static org.collaboratory.ga4gh.loader.utils.IdDiskCache.newIdDiskCache;
 
 import java.io.IOException;
 
-import org.collaboratory.ga4gh.loader.model.es.EsByteVariant;
+import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.IdDiskCache;
 import org.mapdb.Serializer;
 
@@ -14,14 +14,14 @@ import lombok.experimental.NonFinal;
 
 @RequiredArgsConstructor
 @Value
-public class IdDiskCacheFactory implements IdCacheFactory<EsByteVariant> {
+public class IdDiskCacheFactory implements IdCacheFactory {
 
   private final String storageDirname;
   private final long initId;
 
   // State
   @NonFinal
-  private IdDiskCache<EsByteVariant> variantIdCache;
+  private IdDiskCache<EsVariant> variantIdCache;
 
   @NonFinal
   private IdDiskCache<String> variantSetIdCache;
@@ -32,7 +32,7 @@ public class IdDiskCacheFactory implements IdCacheFactory<EsByteVariant> {
   @Override
   public void build() throws IOException {
     variantIdCache =
-        newIdDiskCache("variantIdCache", new EsByteVariant.EsByteVariantSerializer(), storageDirname,
+        newIdDiskCache("variantIdCache", new EsVariant.EsByteVariantSerializer(), storageDirname,
             initId);
     variantSetIdCache = newIdDiskCache("variantSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);
     callSetIdCache = newIdDiskCache("callSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);

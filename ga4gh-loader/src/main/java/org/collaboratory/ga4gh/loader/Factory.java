@@ -1,6 +1,5 @@
 package org.collaboratory.ga4gh.loader;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
@@ -17,7 +16,6 @@ import static org.collaboratory.ga4gh.loader.Config.STORAGE_BYPASS_MD5_CHECK;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
-import static org.collaboratory.ga4gh.loader.Config.USE_STRING_ES_VARIANT_MODEL;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
@@ -28,7 +26,6 @@ import java.util.Properties;
 import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdDiskCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
@@ -80,53 +77,22 @@ public class Factory {
         .threadsNum(BULK_NUM_THREADS));
   }
 
-  public static <T extends EsVariant> IdCacheFactory<T> newIdCacheFactory(boolean useMapDB,
-      boolean useVariantStringImpl) {
+  public static IdCacheFactory newIdCacheFactory(boolean useMapDB) {
     val defaultInitId = 1L;
     val defaultStorageDirname = "target";
-    checkState(!useMapDB || !useVariantStringImpl,
-        "Cannot cast EsStringVariant to EsByteVariant. IdDiskCacheFactory is not configured for EsStringVariant since there is no serializer");
     if (useMapDB) {
-      return (IdCacheFactory<T>) new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
+      return new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
     } else {
-      return new IdRamCacheFactory<T>(defaultInitId);
+      return new IdRamCacheFactory(defaultInitId);
     }
   }
 
-  public static <T extends EsVariant> IdCacheFactory<T> newIdCacheFactory() {
-    return newIdCacheFactory(USE_MAP_DB, USE_STRING_ES_VARIANT_MODEL);
-  }
-
-  public static void main(String[] args) throws IOException {
-    boolean useMapDB = false;
-    boolean useString = false;
-
-    IdCacheFactory<EsVariant> idMapDB = newIdCacheFactory(useMapDB, useString);
-    idMapDB.build();
-    long start = System.currentTimeMillis();
-    for (int i = 0; i < 4000000; i++) {
-      EsVariant byteVar = EsVariant.newEsVariantBuilder(useString)
-          .start(1)
-          .end(2 + i)
-          .alternativeBase("A")
-          .alternativeBase("B")
-          .referenceBases("AC")
-          .referenceName("chrom1")
-          .build();
-      idMapDB.getVariantIdCache().add(byteVar);
-      log.info("" + i);
-    }
-    long dur = System.currentTimeMillis() - start;
-
-    for (val vars : idMapDB.getVariantIdCache().getReverseCache().values()) {
-      // log.info("Id: {} {}", idMapDB.getVariantIdCache().getIdAsString(vars), vars.toString());
-    }
-    log.info("duration = {}", dur);
-
+  public static IdCacheFactory newIdCacheFactory() {
+    return newIdCacheFactory(USE_MAP_DB);
   }
 
   public static Indexer newIndexer(Client client, DocumentWriter writer,
-      IdCacheFactory<EsVariant> idCacheFactory)
+      IdCacheFactory idCacheFactory)
       throws Exception {
     return new Indexer(client, writer, INDEX_NAME,
         idCacheFactory.getVariantIdCache(),
@@ -134,9 +100,9 @@ public class Factory {
         idCacheFactory.getCallSetIdCache());
   }
 
-  public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory<EsVariant> idCacheFactory)
+  public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory)
       throws Exception {
-    return new Loader(newIndexer(client, writer, idCacheFactory), newStorage(), USE_STRING_ES_VARIANT_MODEL);
+    return new Loader(newIndexer(client, writer, idCacheFactory), newStorage());
   }
 
   public static Storage newStorage() {

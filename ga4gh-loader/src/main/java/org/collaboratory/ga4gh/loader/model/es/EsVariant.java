@@ -17,47 +17,252 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
+import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertStrings;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAscii;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToBytePrimitiveArray;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToString;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.unboxByteArray;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.ALTERNATIVE_BASES;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.END;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_BASES;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.resources.mappings.IndexProperties.START;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+
+import java.io.IOException;
+import java.io.Serializable;
+
+import org.icgc.dcc.common.core.util.Joiners;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
-public interface EsVariant extends EsModel {
+import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
+import lombok.ToString;
+import lombok.val;
 
-  int getStart();
+// Byte packed implementation of EsVariant. Assumes that referenceBases and alternative bases
+// are ASCII only. Instead of storing 2 Bytes per character for bases, store one. 
+@ToString
+@EqualsAndHashCode
+public class EsVariant implements Serializable, EsModel {
 
-  int getEnd();
+  private static final long serialVersionUID = 1485228376L;
 
-  String getReferenceName();
+  private int start;
+  private int end;
+  private String referenceName;
+  private byte[] referenceBases;
+  private ImmutableList<Byte[]> alternativeBases;
 
-  String getReferenceBases();
-
-  ImmutableList<String> getAlternativeBases();
-
-  public static interface EsVariantBuilder {
-
-    EsVariantBuilder start(int start);
-
-    EsVariantBuilder end(int end);
-
-    EsVariantBuilder referenceName(String referenceName);
-
-    EsVariantBuilder referenceBases(String referenceBases);
-
-    EsVariantBuilder alternativeBase(String alternativeBase);
-
-    EsVariantBuilder alternativeBases(Iterable<? extends String> alternativeBases);
-
-    EsVariantBuilder clearAlternativeBases();
-
-    EsVariant build();
-
+  @Override
+  public ObjectNode toDocument() {
+    return object()
+        .with(START, getStart())
+        .with(END, getEnd())
+        .with(REFERENCE_NAME, getReferenceName())
+        .with(REFERENCE_BASES, getReferenceBases())
+        .with(ALTERNATIVE_BASES, convertStrings(getAlternativeBases()))
+        .end();
   }
 
-  public static EsVariantBuilder newEsVariantBuilder(
-      boolean useStringImplementation) {
-    if (useStringImplementation) {
-      return EsStringVariant.builder();
-    } else {
-      return EsByteVariant.builder();
+  private EsVariant(final int start,
+      final int end,
+      final String referenceName,
+      final byte[] referenceBases,
+      final ImmutableList<Byte[]> alternativeBases) {
+    this.start = start;
+    this.end = end;
+    this.alternativeBases = alternativeBases;
+    this.referenceName = referenceName;
+    this.referenceBases = referenceBases;
+  }
+
+  private byte[] getReferenceBasesAsByteArray() {
+    return referenceBases;
+  }
+
+  private ImmutableList<Byte[]> getAlternativeBasesAsByteArrays() {
+    return alternativeBases;
+  }
+
+  @Override
+  public String getName() {
+    return Joiners.UNDERSCORE.join(start, end, referenceName, referenceBases, Joiners.COMMA.join(alternativeBases));
+  }
+
+  public static EsVariantBuilder builder() {
+    return new EsVariantBuilder();
+  }
+
+  public int getStart() {
+    return this.start;
+  }
+
+  public int getEnd() {
+    return this.end;
+  }
+
+  public String getReferenceName() {
+    return this.referenceName;
+  }
+
+  public String getReferenceBases() {
+    return convertToString(referenceBases);
+  }
+
+  public ImmutableList<String> getAlternativeBases() {
+    return alternativeBases.stream()
+        .map(x -> convertToString(x))
+        .collect(toImmutableList());
+  }
+
+  /*
+   * EsVariantBuilder that can process strings into appropriate byte format.
+   */
+  @ToString
+  @EqualsAndHashCode
+  public static class EsVariantBuilder {
+
+    protected int start;
+    protected int end;
+    protected String referenceName;
+    protected byte[] referenceBases;
+    protected ImmutableList.Builder<Byte[]> alternativeBases;
+
+    public EsVariantBuilder start(final int start) {
+      this.start = start;
+      return this;
     }
+
+    public EsVariantBuilder end(final int end) {
+      this.end = end;
+      return this;
+    }
+
+    public EsVariantBuilder referenceName(final String referenceName) {
+      this.referenceName = referenceName;
+      return this;
+    }
+
+    public EsVariantBuilder referenceBases(final String referenceBases) {
+      checkPureAscii(referenceBases);
+      this.referenceBases = convertToBytePrimitiveArray(referenceBases);
+      return this;
+    }
+
+    public EsVariantBuilder alternativeBase(final String alternativeBase) {
+      checkPureAscii(alternativeBase);
+      if (this.alternativeBases == null) {
+        this.alternativeBases = ImmutableList.<Byte[]> builder();
+      }
+      this.alternativeBases.add(convertToByteObjectArray(alternativeBase));
+      return this;
+    }
+
+    public EsVariantBuilder alternativeBases(final Iterable<? extends String> alternativeBases) {
+      for (val base : alternativeBases) {
+        this.alternativeBase(base);
+      }
+      return this;
+    }
+
+    public EsVariantBuilder clearAlternativeBases() {
+      this.alternativeBases = null;
+      return this;
+    }
+
+    public EsVariant build() {
+      ImmutableList<Byte[]> alternativeBases =
+          this.alternativeBases == null ? ImmutableList.<Byte[]> of() : this.alternativeBases
+              .build();
+      return new EsVariant(start, end, referenceName, referenceBases, alternativeBases);
+    }
+
+    private EsVariantBuilder alternativeBaseAsBytes(final Byte[] alternativeBase) {
+      if (this.alternativeBases == null) {
+        this.alternativeBases = ImmutableList.<Byte[]> builder();
+      }
+      this.alternativeBases.add(alternativeBase);
+      return this;
+    }
+
+    private EsVariantBuilder allAlternativeBasesAsBytes(final Iterable<Byte[]> alternativeBases) {
+      for (val base : alternativeBases) {
+        this.alternativeBaseAsBytes(base);
+      }
+      return this;
+    }
+
+    private EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
+      this.referenceBases = referenceBases;
+      return this;
+    }
+  }
+
+  /*
+   * Serializer needed for MapDB. Note: if EsVariant member variables are added, removed or modified, this needs to be
+   * updated
+   */
+  public static class EsByteVariantSerializer implements Serializer<EsVariant>, Serializable {
+
+    @Override
+    public void serialize(DataOutput2 out, EsVariant value) throws IOException {
+      out.writeInt(value.getStart());
+      out.writeInt(value.getEnd());
+      out.writeUTF(value.getReferenceName());
+      out.writeInt(value.getReferenceBasesAsByteArray().length); // Length
+      out.write(value.getReferenceBasesAsByteArray());
+      out.writeInt(value.getAlternativeBasesAsByteArrays().size());
+      for (Byte[] arrayByte : value.getAlternativeBasesAsByteArrays()) {
+        val bArray = unboxByteArray(arrayByte);
+        out.writeInt(bArray.length);
+        out.write(bArray);
+      }
+    }
+
+    @Override
+    @SneakyThrows
+    public EsVariant deserialize(DataInput2 input, int available) throws IOException {
+      val start = input.readInt();
+      val end = input.readInt();
+      val referenceName = input.readUTF();
+
+      // Deserialize ReferenceBases
+      val referenceBasesLength = input.readInt();
+      byte[] refBasesArray = new byte[referenceBasesLength];
+      for (int i = 0; i < referenceBasesLength; i++) {
+        refBasesArray[i] = input.readByte();
+      }
+
+      // Deserialize AlternateBases
+      val altBasesListLength = input.readInt();
+      val altBasesByteListBuilder = ImmutableList.<Byte[]> builder();
+      for (int i = 0; i < altBasesListLength; i++) {
+        val arrayLength = input.readInt();
+        Byte[] array = new Byte[arrayLength];
+        for (int j = 0; j < arrayLength; j++) {
+          array[j] = input.readByte();
+        }
+        altBasesByteListBuilder.add(array);
+      }
+      val altBasesList = altBasesByteListBuilder.build();
+
+      return builder()
+          .start(start)
+          .end(end)
+          .referenceName(referenceName)
+          .referenceBasesAsBytes(refBasesArray)
+          .allAlternativeBasesAsBytes(altBasesList)
+          .build();
+    }
+
   }
 
 }

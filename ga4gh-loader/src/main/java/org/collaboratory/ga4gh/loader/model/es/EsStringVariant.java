@@ -30,12 +30,13 @@ import org.icgc.dcc.common.core.util.Joiners;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
+import lombok.Builder;
 import lombok.Value;
-import lombok.val;
 
 // String implementation of EsVariant. This is the original, more memory heavy impl
 @Value
-public final class EsStringVariant implements EsVariant {
+@Builder
+public final class EsStringVariant implements EsModel {
 
   private int start;
   private int end;
@@ -58,78 +59,4 @@ public final class EsStringVariant implements EsVariant {
   public String getName() {
     return Joiners.UNDERSCORE.join(start, end, referenceName, referenceBases, Joiners.COMMA.join(alternativeBases));
   }
-
-  public static EsStringVariantBuilder builder() {
-    return new EsStringVariantBuilder();
-  }
-
-  public static class EsStringVariantBuilder implements EsVariant.EsVariantBuilder {
-
-    private int start;
-    private int end;
-    private String referenceName;
-    private String referenceBases;
-    private ImmutableList.Builder<String> alternativeBases;
-
-    public EsStringVariantBuilder() {
-    }
-
-    @Override
-    public EsVariantBuilder start(int start) {
-      this.start = start;
-      return this;
-    }
-
-    @Override
-    public EsVariantBuilder end(int end) {
-      this.end = end;
-      return this;
-    }
-
-    @Override
-    public EsVariantBuilder referenceName(String referenceName) {
-      this.referenceName = referenceName;
-      return this;
-    }
-
-    @Override
-    public EsVariantBuilder referenceBases(String referenceBases) {
-      this.referenceBases = referenceBases;
-      return this;
-    }
-
-    @Override
-    public EsVariantBuilder alternativeBase(String alternativeBase) {
-      if (this.alternativeBases == null) {
-        this.alternativeBases = ImmutableList.<String> builder();
-      }
-      this.alternativeBases.add(alternativeBase);
-      return this;
-    }
-
-    @Override
-    public EsVariantBuilder alternativeBases(Iterable<? extends String> alternativeBases) {
-      if (this.alternativeBases == null) {
-        this.alternativeBases = ImmutableList.<String> builder();
-      }
-      this.alternativeBases.addAll(alternativeBases);
-      return this;
-    }
-
-    @Override
-    public EsVariantBuilder clearAlternativeBases() {
-      this.alternativeBases = null;
-      return this;
-    }
-
-    @Override
-    public EsVariant build() {
-      val alternativeBases =
-          this.alternativeBases == null ? ImmutableList.<String> of() : this.alternativeBases
-              .build();
-      return new EsStringVariant(start, end, referenceName, referenceBases, alternativeBases);
-    }
-
-  }
-
 }
