@@ -17,11 +17,11 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.collaboratory.ga4gh.core.IndexProperties.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.core.IndexProperties.END;
-import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.IndexProperties.START;
+import static org.collaboratory.ga4gh.core.Names.ALTERNATIVE_BASES;
+import static org.collaboratory.ga4gh.core.Names.END;
+import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
+import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.Names.START;
 import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertStrings;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAscii;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;

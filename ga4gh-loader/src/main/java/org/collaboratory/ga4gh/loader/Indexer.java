@@ -3,7 +3,7 @@ package org.collaboratory.ga4gh.loader;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.io.Resources.getResource;
-import static org.collaboratory.ga4gh.core.IndexProperties.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;

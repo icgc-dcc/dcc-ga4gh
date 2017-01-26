@@ -1,8 +1,8 @@
 package org.collaboratory.ga4gh.loader;
 
 import static java.lang.System.getProperty;
-import static org.collaboratory.ga4gh.core.IndexProperties.FALSE;
-import static org.collaboratory.ga4gh.core.IndexProperties.TRUE;
+import static org.collaboratory.ga4gh.core.Names.FALSE;
+import static org.collaboratory.ga4gh.core.Names.TRUE;
 
 public class Config {
 

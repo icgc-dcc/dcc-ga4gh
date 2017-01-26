@@ -17,11 +17,11 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.IndexProperties.CALL_SET_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.END;
-import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.IndexProperties.START;
-import static org.collaboratory.ga4gh.core.IndexProperties.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.Names.CALL_SET_ID;
+import static org.collaboratory.ga4gh.core.Names.END;
+import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.Names.START;
+import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_TYPE_NAME;

@@ -17,21 +17,21 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.IndexProperties.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.core.IndexProperties.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.CALL_SET_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.DATA_SET_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.END;
-import static org.collaboratory.ga4gh.core.IndexProperties.GENOTYPE_LIKELIHOOD;
-import static org.collaboratory.ga4gh.core.IndexProperties.GENOTYPE_PHASESET;
-import static org.collaboratory.ga4gh.core.IndexProperties.INFO;
-import static org.collaboratory.ga4gh.core.IndexProperties.NAME;
-import static org.collaboratory.ga4gh.core.IndexProperties.NON_REFERENCE_ALLELES;
-import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.IndexProperties.REFERENCE_SET_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.START;
-import static org.collaboratory.ga4gh.core.IndexProperties.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.core.Names.ALTERNATIVE_BASES;
+import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.Names.CALL_SET_ID;
+import static org.collaboratory.ga4gh.core.Names.DATA_SET_ID;
+import static org.collaboratory.ga4gh.core.Names.END;
+import static org.collaboratory.ga4gh.core.Names.GENOTYPE_LIKELIHOOD;
+import static org.collaboratory.ga4gh.core.Names.GENOTYPE_PHASESET;
+import static org.collaboratory.ga4gh.core.Names.INFO;
+import static org.collaboratory.ga4gh.core.Names.NAME;
+import static org.collaboratory.ga4gh.core.Names.NON_REFERENCE_ALLELES;
+import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
+import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.Names.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.core.Names.START;
+import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
 import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
 import static org.collaboratory.ga4gh.server.util.SearchHitConverters.convertHitToDouble;

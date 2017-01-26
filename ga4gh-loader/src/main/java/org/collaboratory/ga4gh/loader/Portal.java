@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
-import static org.collaboratory.ga4gh.core.IndexProperties.ID;
+import static org.collaboratory.ga4gh.core.Names.ID;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.buildFileMetaDataList;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;

@@ -17,9 +17,9 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.collaboratory.ga4gh.core.IndexProperties.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.NAME;
-import static org.collaboratory.ga4gh.core.IndexProperties.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.Names.NAME;
+import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;

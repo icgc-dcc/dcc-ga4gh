@@ -4,10 +4,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
-import static org.collaboratory.ga4gh.core.IndexProperties.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.DONOR_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.VCF_HEADER;
+import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
+import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.Names.VCF_HEADER;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 

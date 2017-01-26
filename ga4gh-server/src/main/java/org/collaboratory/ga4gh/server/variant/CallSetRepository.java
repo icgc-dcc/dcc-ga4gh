@@ -17,9 +17,9 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.IndexProperties.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.IndexProperties.NAME;
-import static org.collaboratory.ga4gh.core.IndexProperties.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.Names.NAME;
+import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.CALLSET_TYPE_NAME;
 import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;

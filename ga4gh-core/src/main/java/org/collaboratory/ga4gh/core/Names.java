@@ -22,7 +22,7 @@ import static lombok.AccessLevel.PRIVATE;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class IndexProperties {
+public final class Names {
 
   public static final String ID = "id";
   public static final String NAME = "name";
