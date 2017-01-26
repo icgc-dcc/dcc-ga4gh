@@ -22,6 +22,8 @@ import static org.collaboratory.ga4gh.core.Names.NAME;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
+import org.collaboratory.ga4gh.loader.utils.JsonNodeConverters;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Builder;

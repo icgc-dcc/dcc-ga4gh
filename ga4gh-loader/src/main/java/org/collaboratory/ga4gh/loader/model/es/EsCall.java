@@ -25,8 +25,8 @@ import static org.collaboratory.ga4gh.core.Names.GENOTYPE_PHASESET;
 import static org.collaboratory.ga4gh.core.Names.INFO;
 import static org.collaboratory.ga4gh.core.Names.NON_REFERENCE_ALLELES;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertIntegers;
-import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertMap;
+import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
+import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.Joiners.COLON;
 

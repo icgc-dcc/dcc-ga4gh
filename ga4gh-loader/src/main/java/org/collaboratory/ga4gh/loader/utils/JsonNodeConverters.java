@@ -1,5 +1,6 @@
-package org.collaboratory.ga4gh.loader.model.es;
+package org.collaboratory.ga4gh.loader.utils;
 
+import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.core.TypeChecker.isObjectCollection;
 import static org.collaboratory.ga4gh.core.TypeChecker.isObjectMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
@@ -12,8 +13,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import lombok.NoArgsConstructor;
 import lombok.val;
 
+@NoArgsConstructor(access = PRIVATE)
 public class JsonNodeConverters {
 
   public static <K, V> ObjectNode convertMap(Map<K, V> map) {

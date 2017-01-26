@@ -22,7 +22,7 @@ import static org.collaboratory.ga4gh.core.Names.END;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.core.Names.START;
-import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertStrings;
+import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertStrings;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;

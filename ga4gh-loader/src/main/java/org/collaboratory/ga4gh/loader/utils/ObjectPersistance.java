@@ -1,11 +1,16 @@
 package org.collaboratory.ga4gh.loader.utils;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = PRIVATE)
 public class ObjectPersistance {
 
   public static void store(final Object object, final String filename) throws IOException {
