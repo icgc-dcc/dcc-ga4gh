@@ -10,6 +10,7 @@ import static org.collaboratory.ga4gh.loader.Factory.newLoader;
 import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.collaboratory.ga4gh.loader.model.metadata.DonorData;
@@ -103,11 +104,12 @@ public class Loader {
     }
   }
 
-  public void loadUsingFileMetaDatas(@NonNull final FileMetaDataFetcher dataFetcher) {
+  public void loadUsingFileMetaDatas(@NonNull final FileMetaDataFetcher dataFetcher)
+      throws ClassNotFoundException, IOException {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
     val fileMetaDatas = dataFetcher.fetch();
-    Debug.dumpToJson(fileMetaDatas, "target/sorted_filemetaDatas.json");
+    dumpToJson(fileMetaDatas, "target/sorted_filemetaDatas.json");
     int count = 1;
     int total = fileMetaDatas.size();
     for (val fileMetaData : fileMetaDatas) {
@@ -118,7 +120,8 @@ public class Loader {
     }
   }
 
-  public void loadUsingDonorDatas(@NonNull final FileMetaDataFetcher dataFetcher) {
+  public void loadUsingDonorDatas(@NonNull final FileMetaDataFetcher dataFetcher)
+      throws ClassNotFoundException, IOException {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
     val donorDataList = buildDonorDataList(dataFetcher.fetch());

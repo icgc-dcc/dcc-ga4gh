@@ -19,6 +19,8 @@ package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+
 import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
 import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
@@ -32,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FileMetaDataFetcherTest {
 
   @Test
-  public void testSerializer() {
+  public void testSerializer() throws ClassNotFoundException, IOException {
     int numDonors = 30;
     val dataFetcherShuffle1 = FileMetaDataFetcher.builder()
         .numDonors(numDonors)
@@ -41,8 +43,8 @@ public class FileMetaDataFetcherTest {
         .build();
     val fileMetaDatasOrig = dataFetcherShuffle1.fetch();
     val filename = "target/fileMetaDatas.testSerializer.bin";
-    ObjectPersistance.store(fileMetaDatasOrig, filename);
-    val fileMetaDatasNew = ObjectPersistance.restore(filename);
+    FileMetaDataFetcher.store(fileMetaDatasOrig, filename);
+    val fileMetaDatasNew = FileMetaDataFetcher.restore(filename);
     val setOrig = Sets.newHashSet(fileMetaDatasOrig);
     val setNew = Sets.newHashSet(fileMetaDatasNew);
     assertThat(setOrig.containsAll(setNew));
@@ -52,7 +54,7 @@ public class FileMetaDataFetcherTest {
   }
 
   @Test
-  public void testRestore() {
+  public void testRestore() throws IOException, ClassNotFoundException {
     final int numDonors = 8;
     val filename = "target/fileMetaDatas.testRestore.bin";
     val dataFetcherShuffle1 = FileMetaDataFetcher.builder()
@@ -78,7 +80,7 @@ public class FileMetaDataFetcherTest {
   }
 
   @Test
-  public void testShuffler() {
+  public void testShuffler() throws ClassNotFoundException, IOException {
     int numDonors = 30;
     val dataFetcherShuffle1 = FileMetaDataFetcher.builder()
         .numDonors(numDonors)

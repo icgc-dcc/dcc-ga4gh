@@ -21,10 +21,13 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
 import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+
+import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -153,17 +156,17 @@ public class FileMetaDataFetcher {
    * Fetch list of FileMetaData object, based on filter configuration
    */
   // TODO: [rtisma] need to update and use Decorator pattern...too much going on
-  public List<FileMetaData> fetch() {
+  public List<FileMetaData> fetch() throws IOException, ClassNotFoundException {
 
     List<FileMetaData> fileMetaDatas = null;
 
     val fromFile = Paths.get(fromFilename).toFile();
     val fileExists = fromFile.exists() && fromFile.isFile();
     if (fileExists) {
-      fileMetaDatas = FileMetaData.restore(fromFilename);
+      fileMetaDatas = restore(fromFilename);
     } else {
       fileMetaDatas = getAllFileMetaDatas();
-      FileMetaData.store(fileMetaDatas, fromFilename);
+      store(fileMetaDatas, fromFilename);
     }
 
     if (numDonorsUpdated()) {
@@ -189,5 +192,14 @@ public class FileMetaDataFetcher {
       outputList = FileMetaData.sortByFileSize(filteredFileMetaDatas, ascending);
     }
     return limitNumFilesUpdated() ? outputList.subList(0, Math.min(limit, outputList.size())) : outputList;
+  }
+
+  public static void store(List<FileMetaData> fileMetaDatas, String filename) throws IOException {
+    ObjectPersistance.store(fileMetaDatas, filename);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<FileMetaData> restore(String filename) throws IOException, ClassNotFoundException {
+    return (List<FileMetaData>) ObjectPersistance.restore(filename);
   }
 }
