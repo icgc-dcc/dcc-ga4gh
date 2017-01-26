@@ -18,10 +18,10 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.icgc.dcc.common.core.util.Joiners.DOT;
 
 import java.io.Serializable;
 
-import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.common.core.util.Splitters;
 
 import com.google.common.collect.Iterables;
@@ -81,7 +81,7 @@ public class PortalVCFFilenameParser implements Serializable {
   }
 
   public String getFilename() {
-    return Joiners.DOT.join(elements);
+    return DOT.join(elements);
   }
 
   @Override

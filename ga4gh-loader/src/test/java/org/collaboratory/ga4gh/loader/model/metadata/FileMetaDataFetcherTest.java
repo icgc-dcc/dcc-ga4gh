@@ -18,11 +18,11 @@
 package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 
 import java.io.IOException;
 
 import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
-import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -49,8 +49,8 @@ public class FileMetaDataFetcherTest {
     val setNew = Sets.newHashSet(fileMetaDatasNew);
     assertThat(setOrig.containsAll(setNew));
     assertThat(setNew.containsAll(setOrig));
-    log.info("SERIALIZER_TEST_OLD: \n{}", Joiners.NEWLINE.join(fileMetaDatasOrig));
-    log.info("SERIALIZER_TEST_NEW: \n{}", Joiners.NEWLINE.join(fileMetaDatasNew));
+    log.info("SERIALIZER_TEST_OLD: \n{}", NEWLINE.join(fileMetaDatasOrig));
+    log.info("SERIALIZER_TEST_NEW: \n{}", NEWLINE.join(fileMetaDatasNew));
   }
 
   @Test
@@ -74,8 +74,8 @@ public class FileMetaDataFetcherTest {
     val setNew = Sets.newHashSet(fileMetaDatasNew);
     assertThat(setOrig.containsAll(setNew));
     assertThat(setNew.containsAll(setOrig));
-    log.info("RESTORE_TEST_OLD: \n{}", Joiners.NEWLINE.join(fileMetaDatasOrig));
-    log.info("RESTORE_TEST_NEW: \n{}", Joiners.NEWLINE.join(fileMetaDatasNew));
+    log.info("RESTORE_TEST_OLD: \n{}", NEWLINE.join(fileMetaDatasOrig));
+    log.info("RESTORE_TEST_NEW: \n{}", NEWLINE.join(fileMetaDatasNew));
 
   }
 

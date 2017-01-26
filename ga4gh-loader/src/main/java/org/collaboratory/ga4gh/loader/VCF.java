@@ -9,6 +9,8 @@ import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.core.Names.VCF_HEADER;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
+import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.ByteArrayOutputStream;
@@ -28,7 +30,6 @@ import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
-import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.common.core.util.stream.Streams;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -130,12 +131,12 @@ public class VCF implements Closeable {
 
   // ASSUMPTION: the VariantName is a unique string
   private static String createVariantName(VariantContext record) {
-    return Joiners.UNDERSCORE.join(
+    return UNDERSCORE.join(
         record.getStart(),
         record.getEnd(),
         record.getContig(),
         record.getReference().getBaseString(),
-        Joiners.COMMA.join(record.getAlternateAlleles()));
+        COMMA.join(record.getAlternateAlleles()));
   }
 
   // TODO: [rtisma] -- temporarily using until implement uuid

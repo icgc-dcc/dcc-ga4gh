@@ -24,8 +24,8 @@ import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.core.Names.START;
 import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertStrings;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-
-import org.icgc.dcc.common.core.util.Joiners;
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
+import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +57,6 @@ public final class EsStringVariant implements EsModel {
 
   @Override
   public String getName() {
-    return Joiners.UNDERSCORE.join(start, end, referenceName, referenceBases, Joiners.COMMA.join(alternativeBases));
+    return UNDERSCORE.join(start, end, referenceName, referenceBases, COMMA.join(alternativeBases));
   }
 }

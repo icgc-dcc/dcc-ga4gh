@@ -28,10 +28,9 @@ import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertIntegers;
 import static org.collaboratory.ga4gh.loader.model.es.JsonNodeConverters.convertMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.Joiners.COLON;
 
 import java.util.List;
-
-import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
@@ -93,7 +92,7 @@ public class EsCall implements EsModel {
 
   @Override
   public String getName() {
-    return Joiners.COLON.join(
+    return COLON.join(
         variantSetId, callSetId, parentVariant.getName(), genotype.getSampleName());
   }
 

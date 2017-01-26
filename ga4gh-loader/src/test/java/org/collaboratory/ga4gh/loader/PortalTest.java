@@ -22,6 +22,7 @@ import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterBySize;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterSomaticSSMs;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.isSomaticSSM;
+import static org.icgc.dcc.common.core.util.Joiners.DOT;
 
 import java.util.List;
 import java.util.Set;
@@ -31,7 +32,6 @@ import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
-import org.icgc.dcc.common.core.util.Joiners;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -49,9 +49,9 @@ public class PortalTest {
     val objectId = "myObjectId";
     val dateId = "myDataId";
     val ext = "vcf.gz";
-    builder.add(Joiners.DOT.join(objectId, caller, dateId, mutation, subMutation, ext));
-    builder.add(Joiners.DOT.join(objectId, caller + "_some_extra", dateId, mutation, subMutation, ext));
-    builder.add(Joiners.DOT.join(objectId, "some_extra_" + caller, dateId, mutation, subMutation, ext));
+    builder.add(DOT.join(objectId, caller, dateId, mutation, subMutation, ext));
+    builder.add(DOT.join(objectId, caller + "_some_extra", dateId, mutation, subMutation, ext));
+    builder.add(DOT.join(objectId, "some_extra_" + caller, dateId, mutation, subMutation, ext));
     return builder.build();
   }
 

@@ -29,12 +29,13 @@ import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByte
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToString;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.unboxByteArray;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
+import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.common.core.util.stream.Streams;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
@@ -95,7 +96,7 @@ public class EsVariant implements Serializable, EsModel {
 
   @Override
   public String getName() {
-    return Joiners.UNDERSCORE.join(start, end, referenceName, referenceBases, Joiners.COMMA.join(alternativeBases));
+    return UNDERSCORE.join(start, end, referenceName, referenceBases, COMMA.join(alternativeBases));
   }
 
   public static EsVariantBuilder builder() {

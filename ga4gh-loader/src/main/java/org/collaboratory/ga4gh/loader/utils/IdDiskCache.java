@@ -1,6 +1,7 @@
 package org.collaboratory.ga4gh.loader.utils;
 
 import static org.collaboratory.ga4gh.loader.utils.IdRamCache.newIdCache;
+import static org.icgc.dcc.common.core.util.Joiners.PATH;
 
 import java.io.Closeable;
 import java.io.File;
@@ -9,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import org.icgc.dcc.common.core.util.Joiners;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
@@ -32,7 +32,7 @@ public class IdDiskCache<T> implements IdCache<T>, Closeable {
   private final Serializer<T> serializer;
 
   private static String generateFilename(String name, String outputDirname) {
-    return Joiners.PATH.join(outputDirname, name + ".db");
+    return PATH.join(outputDirname, name + ".db");
   }
 
   public static <T> IdDiskCache<T> newIdDiskCache(String name, Serializer<T> serializer, String outputDirname,

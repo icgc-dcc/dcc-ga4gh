@@ -18,6 +18,7 @@
 package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static java.util.stream.Collectors.groupingBy;
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
@@ -36,7 +37,6 @@ import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
-import org.icgc.dcc.common.core.util.Joiners;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
@@ -166,7 +166,7 @@ public final class FileMetaData implements Serializable {
         .entrySet()
         .stream().filter(x -> x.getValue().size() > 1)
         .forEach(e -> sb.append(
-            Joiners.COMMA.join(e.getKey())
+            COMMA.join(e.getKey())
                 + "," + e.getValue().size() + "\t--[\n\t\t"
                 + Joiner.on(",\n\t\t").join(e.getValue().stream()
                     .map(y -> y.getVcfFilenameParser().getFilename()).toArray())
