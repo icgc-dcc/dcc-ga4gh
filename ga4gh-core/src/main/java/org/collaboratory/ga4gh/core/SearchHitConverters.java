@@ -1,4 +1,4 @@
-package org.collaboratory.ga4gh.server.util;
+package org.collaboratory.ga4gh.core;
 
 import java.util.List;
 import java.util.Map;
