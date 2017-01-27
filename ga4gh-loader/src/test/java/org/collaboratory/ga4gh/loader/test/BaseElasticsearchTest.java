@@ -18,6 +18,7 @@
 package org.collaboratory.ga4gh.loader.test;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
@@ -69,7 +70,7 @@ public abstract class BaseElasticsearchTest extends ESIntegTestCase {
 
   protected void createIndex() {
     log.info("Creating index...");
-    checkState(prepareCreate(Config.INDEX_NAME)
+    checkState(prepareCreate(INDEX_NAME)
         .setSettings(object(read("index.settings.json"))
             .with("index.number_of_shards", 1)
             .with("index.number_of_replicas", 0).end().toString())
