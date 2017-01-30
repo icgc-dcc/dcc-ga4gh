@@ -1,23 +1,25 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.core.Names.VCF_HEADER;
+import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -30,16 +32,12 @@ import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
-import org.icgc.dcc.common.core.util.stream.Streams;
+import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
-import htsjdk.tribble.TribbleException;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.CommonInfo;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypeBuilder;
+import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -65,6 +63,16 @@ public class VCF implements Closeable {
 
   private final Set<String> variantIdSet;
 
+  private final CallerTypes callerType;
+  private final String actualCallerId;
+  private final String sampleId;
+  private final String mutationTypeString;
+  private final String mutationSubTypeString;
+  private final boolean isMutationTypesCorrect;
+  private final String filename;
+
+  private final CounterMonitor variantCallPairMonitor = newMonitor("VariantCallPairParsing", 250000);
+
   public VCF(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
     this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
     this.fileMetaData = fileMetaData;
@@ -74,6 +82,24 @@ public class VCF implements Closeable {
 
         OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
     this.variantIdSet = newHashSet();
+
+    this.sampleId = fileMetaData.getSampleId();
+    val parser = fileMetaData.getVcfFilenameParser();
+    this.callerType = parser.getCallerType();
+    this.actualCallerId = parser.getCallerId();
+    this.mutationTypeString = parser.getMutationType();
+    this.mutationSubTypeString = parser.getSubMutationType();
+    this.isMutationTypesCorrect = isMutationTypesCorrect(mutationTypeString, mutationSubTypeString);
+    this.filename = parser.getFilename();
+
+    checkState(isMutationTypesCorrect,
+        "Error: the mutationType(%s) must be of type [%s], and the subMutationType(%s) can be eitheror of [%s ,%s]",
+        mutationTypeString,
+        MutationTypes.somatic,
+        mutationSubTypeString,
+        SubMutationTypes.indel,
+        SubMutationTypes.snv_mnv);
+
   }
 
   public EsCallSet readCallSets() {
@@ -91,20 +117,9 @@ public class VCF implements Closeable {
     return duplicateVariantId;
   }
 
-  public Stream<EsCall> streamCalls() {
-    return Streams.stream(vcf.iterator())
-        .filter(v -> !isDuplicateVariantId(v))
-        .map(v -> convertCallNodeObj(v));
-  }
-
   public Stream<EsVariantCallPair> readVariantAndCalls() {
-    return Streams.stream(vcf.iterator())
-        .map(this::convertVariantCallNodeObj);
-  }
-
-  public Iterable<EsVariant> readVariants() {
-    return transform(vcf,
-        this::convertVariantNodeObj);
+    return stream(vcf.iterator())
+        .map(this::convertVariantCallPair);
   }
 
   public VCFHeader getHeader() {
@@ -148,140 +163,73 @@ public class VCF implements Closeable {
     return caller_id;
   }
 
-  private boolean isMutationTypesCorrect() {
-    val mutationTypeString = fileMetaData.getVcfFilenameParser().getMutationType();
-    val mutationSubTypeString = fileMetaData.getVcfFilenameParser().getSubMutationType();
+  private static boolean isMutationTypesCorrect(String mutationTypeString, String mutationSubTypeString) {
     return MutationTypes.somatic.equals(mutationTypeString) && (SubMutationTypes.indel.equals(mutationSubTypeString)
         || SubMutationTypes.snv_mnv.equals(mutationSubTypeString));
   }
 
   // TODO: [rtisma] - this method is wayyyyyyyyyyyy to big and doing to many things. refactoring needed
-  private EsCall convertCallNodeObj(@NonNull VariantContext record) {
-    val parser = fileMetaData.getVcfFilenameParser();
-    val callerTypeString = parser.getCallerId();
-    val mutationTypeString = parser.getMutationType();
-    val mutationSubTypeString = parser.getSubMutationType();
-    val genotypeContext = record.getGenotypes();
-    val commonInfo = record.getCommonInfo();
-    val parentVariant = convertVariantNodeObj(record);
+  private List<EsCall> convertCalls(final GenotypesContext genotypesContext,
+      final Map<String, Object> commonInfoMap) {
 
     val errorMessage = "CallerType: {} not implemented";
     String tumorKey;
     boolean hasCalls = true;
     boolean foundCallerTypes = true;
-    boolean foundMutationTypes = isMutationTypesCorrect();
 
     // TODO: [rtisma] inneficient and redundant. Find the caller type for the file at the beginning, and then just use
     // that in the if statement
-    if (CallerTypes.broad.isIn(callerTypeString)) {
-      tumorKey = fileMetaData.getVcfFilenameParser().getObjectId() + "T";
-    } else if (CallerTypes.MUSE.isIn(callerTypeString)) {
-      val objectId = fileMetaData.getVcfFilenameParser().getObjectId();
-      val sampleNameSet = genotypeContext.getSampleNames();
-      val numSamples = sampleNameSet.size();
-      if (numSamples > 2 || numSamples == 0) {
-        log.error("Incorrectly formatted VCF file for {}", fileMetaData.getVcfFilenameParser().getFilename());
-      } else if (numSamples == 2) {
-        for (val name : sampleNameSet) {
-          if (!name.equals(objectId)) {
-            tumorKey = name;
-            break;
-          }
-        }
-      } else {
-        tumorKey = sampleNameSet.iterator().next();
-      }
+    // rtisma if (callerType == CallerTypes.MUSE_1_0rc_b391201_vcf || callerType == CallerTypes.MUSE_1_0rc_vcf) {
+    // rtisma val objectId = fileMetaData.getVcfFilenameParser().getObjectId();
+    // rtisma val sampleNameSet = genotypeContext.getSampleNames();
+    // rtisma val numSamples = sampleNameSet.size();
+    // rtisma if (numSamples > 2 || numSamples == 0) {
+    // rtisma log.error("Incorrectly formatted VCF file for {}", fileMetaData.getVcfFilenameParser().getFilename());
+    // rtisma } else if (numSamples == 2) {
+    // rtisma for (val name : sampleNameSet) {
+    // rtisma if (!name.equals(objectId)) {
+    // rtisma tumorKey = name;
+    // rtisma break;
+    // rtisma }
+    // rtisma }
+    // rtisma } else {
+    // rtisma tumorKey = sampleNameSet.iterator().next();
+    // rtisma }
+    // rtisma } else {
+    // rtisma foundCallerTypes = false;
+    // rtisma }
 
-    } else if (CallerTypes.consensus.isIn(callerTypeString)) {
-      hasCalls = false;
-    } else if (CallerTypes.embl.isIn(callerTypeString)) {
-      // log.error(errorMessage, CallerTypes.embl);
-      hasCalls = false;
-    } else if (CallerTypes.dkfz.isIn(callerTypeString)) {
-      hasCalls = false;
-    } else if (CallerTypes.svcp.isIn(callerTypeString)) {
-      hasCalls = false;
-    } else if (CallerTypes.svfix.isIn(callerTypeString)) {
-      hasCalls = false;
-    } else {
-      foundCallerTypes = false;
-    }
+    // checkState(foundCallerTypes, "Error: the callerType [%s] is not recognzed for filename [%s]",
+    // callerType,
+    // filename);
 
-    checkState(foundCallerTypes, "Error: the caller_id [%s] is not recognzed for filename [%s]",
-        callerTypeString,
-        parser.getFilename());
-    checkState(foundMutationTypes,
-        "Error: the mutationType(%s) must be of type [%s], and the subMutationType(%s) can be eitheror of [%s ,%s]",
-        mutationTypeString,
-        MutationTypes.somatic,
-        mutationSubTypeString,
-        SubMutationTypes.indel,
-        SubMutationTypes.snv_mnv);
-
-    val refAllele = record.getReference();
-    val altAlleles = record.getAlleles();
-    val alleles = newArrayList(altAlleles);
-    alleles.add(refAllele);
-
-    val numGenotypes = genotypeContext.size();
+    val numGenotypes = genotypesContext.size();
 
     // TODO: [rtisma] temporary untill fix above. Take first call, but not correct. Should descriminate by Sample Name
     // which should be tumorKey. Assumption is the there is ATMOST 2 calls per variant
-    if (hasCalls) {
-      checkState(numGenotypes > 0, "The variant [%s] should have calls for fileMetaData [%s]", record, fileMetaData);
-      try {
-        for (val genotype : genotypeContext) {
-          // if (genotype.getSampleName().equals(tumorKey)) {
-          return createCallObjectNode(fileMetaData, parentVariant, commonInfo, genotype);
-          // }
-        }
-        return createCallObjectNode(fileMetaData, parentVariant, commonInfo, createDefaultGenotype(refAllele));
-      } catch (TribbleException e) {
-        if (!fileMetaData.isCorrupted()) {
-          log.error("CORRUPTED VCF FILE [{}] -- Message [{}]: {}",
-              fileMetaData.getVcfFilenameParser().getFilename(),
-              e.getClass().getName(),
-              e.getMessage());
-          fileMetaData.setCorrupted(true); // Set to corrupted state so that dont have to log again
-        }
-        return createCallObjectNode(fileMetaData, parentVariant, commonInfo, createDefaultGenotype(refAllele));
-      }
-    } else {
-      return createCallObjectNode(fileMetaData, parentVariant, commonInfo, createDefaultGenotype(refAllele));
-    }
-    // checkState(!hasCalls, "The variant [%s] should not have any calls.\nfileMetaData: [%s]",
-    // record, fileMetaData);
-
-  }
-
-  private static EsCall createCallObjectNode(@NonNull final FileMetaData fileMetaData,
-      @NonNull EsVariant parentVariant,
-      @NonNull CommonInfo info,
-      @NonNull Genotype genotype) {
-    val parser = fileMetaData.getVcfFilenameParser();
-    val callerTypeString = parser.getCallerId();
-    val bioSampleId = fileMetaData.getSampleId();
-
-    return EsCall.builder()
-        .parentVariant(parentVariant) // TODO: [OPTIMIZE] once merge call and variant indexing, this
-                                      // will be non-redundant
-        .variantSetId(callerTypeString)
-        .callSetId(bioSampleId)
-        .info(info)
-        .genotype(genotype)
-        .build();
-  }
-
-  private static Genotype createDefaultGenotype(@NonNull final Allele refAllele) {
-    return new GenotypeBuilder("DEFAULT")
-        .noAD()
-        .noAttributes()
-        .noDP()
-        .noGQ()
-        .noPL()
-        .alleles(ImmutableList.of(refAllele))
-        .log10PError(DEFAULT_GENOTYPE_LIKELYHOOD)
-        .make();
+    checkState(numGenotypes > 0, "The Genotypes [%s] should have calls for fileMetaData [%s]", genotypesContext,
+        fileMetaData);
+    boolean foundCall = false;
+    // TODO: HACKKK need to properly select which call can be indexed. Calls associated with "normal" are not to be
+    // indexed
+    return createEsCall(actualCallerId, sampleId, genotypesContext, commonInfoMap);
+    // rtisma try {
+    // rtisma return createEsCall(actualCallerId, sampleId, genotypesContext, commonInfoMap);
+    // rtisma // for (val call : callList) {
+    // rtisma // // if (genotype.getSampleName().equals(tumorKey)) {
+    // rtisma // return call;
+    // rtisma // // }
+    // rtisma // }
+    // rtisma } catch (TribbleException e) {
+    // rtisma if (!fileMetaData.isCorrupted()) {
+    // rtisma log.error("CORRUPTED VCF FILE [{}] -- Message [{}]: {}",
+    // rtisma fileMetaData.getVcfFilenameParser().getFilename(),
+    // rtisma e.getClass().getName(),
+    // rtisma e.getMessage());
+    // rtisma fileMetaData.setCorrupted(true); // Set to corrupted state so that dont have to log again
+    // rtisma }
+    // rtisma throw propagate(e);
+    // rtisma }
   }
 
   public EsVariantSet readVariantSet() {
@@ -308,8 +256,8 @@ public class VCF implements Closeable {
         .end();
   }
 
-  private EsVariantCallPair convertVariantCallNodeObj(@NonNull final VariantContext record) {
-    val call = convertCallNodeObj(record);
+  private EsVariantCallPair convertVariantCallPair(@NonNull final VariantContext record) {
+    variantCallPairMonitor.start();
     val variant = EsVariant.builder()
         .start(record.getStart())
         .end(record.getEnd())
@@ -321,28 +269,51 @@ public class VCF implements Closeable {
                 .map(a -> a.getBaseString())
                 .collect(toImmutableList()))
         .build();
-    return EsVariantCallPair.builder()
-        .call(call)
+
+    val commonInfo = record.getCommonInfo().getAttributes();
+    val calls = convertCalls(record.getGenotypes(), commonInfo);
+
+    val pair = EsVariantCallPair.builder()
+        .calls(calls)
         .variant(variant)
         .build();
-  }
 
-  private EsVariant convertVariantNodeObj(@NonNull final VariantContext record) {
-    return EsVariant.builder()
-        .start(record.getStart())
-        .end(record.getEnd())
-        .referenceName(record.getContig())
-        .referenceBases(record.getReference().getBaseString())
-        .alternativeBases(
-            record.getAlternateAlleles()
-                .stream()
-                .map(a -> a.getBaseString())
-                .collect(toImmutableList()))
-        .build();
+    variantCallPairMonitor.incr();
+    variantCallPairMonitor.stop();
+
+    return pair;
   }
 
   @Override
   public void close() {
     vcf.close();
+  }
+
+  // Might want to create a class that decorates EsCallBuilder, where you have EsMuseCallBuilder, EsSangerCallBuilder,
+  // etc..
+  // and each one has its own implementation of "convertVariantContext". Solves perf problem and avoids giant state
+  // machine
+  private static List<EsCall> createEsCall(final String callerTypeString,
+      final String bioSampleId,
+      final GenotypesContext genotypesContext,
+      final Map<String, Object> commonInfoMap) {
+
+    val callsBuilder = ImmutableList.<EsCall> builder();
+    for (val genotype : genotypesContext) {
+      val info = genotype.getExtendedAttributes();
+      info.putAll(commonInfoMap);
+      callsBuilder.add(
+          EsCall.builder()
+              .variantSetId(callerTypeString)
+              .callSetId(bioSampleId)
+              .info(info)
+              .sampleName(genotype.getSampleName())
+              .genotypeLikelihood(genotype.getLog10PError())
+              .isGenotypePhased(genotype.isPhased())
+              .nonReferenceAlleles(EsCall.convertNonRefAlleles(genotype))
+              .build());
+
+    }
+    return callsBuilder.build();
   }
 }
