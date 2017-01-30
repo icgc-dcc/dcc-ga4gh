@@ -22,6 +22,9 @@ import static org.collaboratory.ga4gh.core.Names.END;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.core.Names.START;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToInteger;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToStringList;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAscii;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToBytePrimitiveArray;
@@ -36,6 +39,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.common.core.util.stream.Streams;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
@@ -44,6 +48,7 @@ import org.mapdb.Serializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
+import htsjdk.variant.variantcontext.VariantContext;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.ToString;
@@ -65,6 +70,7 @@ public class EsVariant implements Serializable, EsModel {
 
   @Override
   public ObjectNode toDocument() {
+
     return object()
         .with(START, getStart())
         .with(END, getEnd())
@@ -99,8 +105,8 @@ public class EsVariant implements Serializable, EsModel {
     return UNDERSCORE.join(start, end, referenceName, referenceBases, COMMA.join(alternativeBases));
   }
 
-  public static EsVariantBuilder builder() {
-    return new EsVariantBuilder();
+  public static SpecialEsVariantBuilder builder() {
+    return new SpecialEsVariantBuilder();
   }
 
   public int getStart() {
@@ -210,6 +216,35 @@ public class EsVariant implements Serializable, EsModel {
     private EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
       this.referenceBases = referenceBases;
       return this;
+    }
+
+  }
+
+  public static class SpecialEsVariantBuilder extends EsVariantBuilder {
+
+    public SpecialEsVariantBuilder fromSearchHit(final SearchHit hit) {
+      val start = convertHitToInteger(hit, "start");
+      val end = convertHitToInteger(hit, "end");
+      val referenceName = convertHitToString(hit, "reference_name");
+      val referenceBases = convertHitToString(hit, "reference_bases");
+      val alternateBases = convertHitToStringList(hit, "alternate_bases");
+      return (SpecialEsVariantBuilder) start(start)
+          .end(end)
+          .referenceName(referenceName)
+          .referenceBases(referenceBases)
+          .alternativeBases(alternateBases);
+    }
+
+    public SpecialEsVariantBuilder fromVariantContext(final VariantContext variantContext) {
+      return (SpecialEsVariantBuilder) start(variantContext.getStart())
+          .end(variantContext.getEnd())
+          .referenceName(variantContext.getContig())
+          .referenceBases(variantContext.getReference().getBaseString())
+          .alternativeBases(
+              variantContext.getAlternateAlleles()
+                  .stream()
+                  .map(a -> a.getBaseString())
+                  .collect(toImmutableList()));
     }
   }
 
