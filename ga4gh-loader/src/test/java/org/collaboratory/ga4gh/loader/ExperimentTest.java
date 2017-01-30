@@ -2,7 +2,6 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Stopwatch.createStarted;
 import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToInteger;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
 import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToStringList;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
@@ -47,17 +46,6 @@ public class ExperimentTest extends BaseElasticsearchTest {
         .build();
   }
 
-  private static EsCall createCallFromHit(SearchHit hit) {
-    val non_reference_alleles = convertHitToIntegerList(hit, "non_reference_alleles");
-    val end = convertHitToInteger(hit, "end");
-    val referenceName = convertHitToString(hit, "reference_name");
-    val referenceBases = convertHitToString(hit, "reference_bases");
-    val alternateBases = convertHitToStringList(hit, "alternate_bases");
-    return EsCall.builder()
-
-        .build();
-  }
-
   @Test
   public void testNested() {
     log.info("Static Config:\n{}", Config.toConfigString());
@@ -72,7 +60,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
 
       client.prepareClearScroll();
       val size = 2;
-      SearchResponse resp = client.prepareSearch("dcc-variants")
+      SearchResponse resp = client.prepareSearch("dcc-variants_test")
           .setTypes("variant")
           .setSize(size)
           .setScroll(TimeValue.timeValueMinutes(3))
@@ -85,11 +73,17 @@ public class ExperimentTest extends BaseElasticsearchTest {
       do {
         for (val hit : resp.getHits()) {
           log.info("Hit: {}", hit.getSource());
-          variantList.add(createVariantFromHit(hit));
+          variantList.add(
+              EsVariant.builder()
+                  .fromSearchHit(hit)
+                  .build());
           val callList = Lists.<EsCall> newArrayList();
-          // for (val innerHit : hit.getInnerHits().get("call")) {
-          //
-          // }
+          for (val innerHit : hit.getInnerHits().get("call")) {
+            val call = EsCall.builder().fromSearchHit(innerHit).build();
+            log.info("call: {}", call);
+
+          }
+
         }
         resp = client.prepareSearchScroll(resp.getScrollId())
             .setScroll(TimeValue.timeValueMinutes(3))
