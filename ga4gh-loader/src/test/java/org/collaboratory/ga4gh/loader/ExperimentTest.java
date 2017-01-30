@@ -15,6 +15,7 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
+import org.collaboratory.ga4gh.loader.test.BaseElasticsearchTest;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
@@ -28,7 +29,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ExperimentTest {// extends BaseElasticsearchTest {
+public class ExperimentTest extends BaseElasticsearchTest {
 
   private static EsVariant createVariantFromHit(SearchHit hit) {
     val start = convertHitToInteger(hit, "start");
