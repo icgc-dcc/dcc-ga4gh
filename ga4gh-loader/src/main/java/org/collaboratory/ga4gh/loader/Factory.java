@@ -118,7 +118,7 @@ public class Factory {
         .sort(SORT_MODE)
         .ascending(ASCENDING_MODE)
         .seed(seed)
-        .fromFilename(DEFAULT_FILE_META_DATA_STORE_FILENAME)
+        .storageFilename(DEFAULT_FILE_META_DATA_STORE_FILENAME)
         .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
         .maxFileSizeBytes(DATA_FETCHER_MAX_FILESIZE_BYTES)
         .build();

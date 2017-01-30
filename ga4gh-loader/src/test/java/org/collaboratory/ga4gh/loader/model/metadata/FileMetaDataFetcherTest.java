@@ -66,7 +66,7 @@ public class FileMetaDataFetcherTest {
     ObjectPersistance.store(fileMetaDatasOrig, filename);
 
     val dataFetcherRestore = FileMetaDataFetcher.builder()
-        .fromFilename(filename)
+        .storageFilename(filename)
         .build();
     val fileMetaDatasNew = dataFetcherRestore.fetch();
 
