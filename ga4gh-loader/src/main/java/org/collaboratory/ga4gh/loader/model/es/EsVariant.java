@@ -223,11 +223,11 @@ public class EsVariant implements Serializable, EsModel {
   public static class SpecialEsVariantBuilder extends EsVariantBuilder {
 
     public SpecialEsVariantBuilder fromSearchHit(final SearchHit hit) {
-      val start = convertHitToInteger(hit, "start");
-      val end = convertHitToInteger(hit, "end");
-      val referenceName = convertHitToString(hit, "reference_name");
-      val referenceBases = convertHitToString(hit, "reference_bases");
-      val alternateBases = convertHitToStringList(hit, "alternate_bases");
+      val start = convertHitToInteger(hit, START);
+      val end = convertHitToInteger(hit, END);
+      val referenceName = convertHitToString(hit, REFERENCE_NAME);
+      val referenceBases = convertHitToString(hit, REFERENCE_BASES);
+      val alternateBases = convertHitToStringList(hit, ALTERNATIVE_BASES);
       return (SpecialEsVariantBuilder) start(start)
           .end(end)
           .referenceName(referenceName)
