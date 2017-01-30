@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CounterMonitor implements Countable<Integer> {
 
-  private static final int DEFAULT_INTERVAL_SECONDS = 30;
+  private static final int DEFAULT_INTERVAL_COUNT = 30;
   private static final int DEFAULT_INITAL_COUNT = 0;
 
   private final String name;
@@ -33,21 +33,21 @@ public class CounterMonitor implements Countable<Integer> {
   private int previousCount;
   private float previousTime;
 
-  public static CounterMonitor newMonitor(String name, Logger logger, int intervalSeconds) {
+  public static CounterMonitor newMonitor(String name, Logger logger, int intervalCount) {
     return new CounterMonitor(name, new IntegerCounter(DEFAULT_INITAL_COUNT), Stopwatch.createUnstarted(), logger,
-        intervalSeconds);
+        intervalCount);
   }
 
   public static CounterMonitor newMonitor(String name, Logger logger) {
-    return newMonitor(name, logger, DEFAULT_INTERVAL_SECONDS);
+    return newMonitor(name, logger, DEFAULT_INTERVAL_COUNT);
   }
 
-  public static CounterMonitor newMonitor(String name, int intervalSeconds) {
-    return newMonitor(name, log, intervalSeconds);
+  public static CounterMonitor newMonitor(String name, int intervalCount) {
+    return newMonitor(name, log, intervalCount);
   }
 
   public static CounterMonitor newMonitor(String name) {
-    return newMonitor(name, log, DEFAULT_INTERVAL_SECONDS);
+    return newMonitor(name, log, DEFAULT_INTERVAL_COUNT);
   }
 
   public CounterMonitor(String name, Countable<Integer> counter, Stopwatch watch, Logger logger, int countInterval) {
@@ -105,7 +105,7 @@ public class CounterMonitor implements Countable<Integer> {
     if (isRunning()) {
       val currentCount = counter.getCount();
       val currentIntervalCount = currentCount - previousCount;
-      if (currentIntervalCount == countInterval) {
+      if (currentIntervalCount >= countInterval) {
         val totalTime = getElapsedTimeSeconds();
         val intervalElapsedTime = totalTime - previousTime;
         val instRate = getInstRate();
