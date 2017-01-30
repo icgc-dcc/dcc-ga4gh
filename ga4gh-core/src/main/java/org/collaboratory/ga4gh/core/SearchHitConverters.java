@@ -15,14 +15,18 @@ public class SearchHitConverters {
     return hit.getSource();
   }
   
+  
   private static Object getAttributeFromSource(final Map<String, Object> source, String attr){
     checkArgument(source.containsKey(attr), "Source does not have the attribute: {}", attr);
     return source.get(attr);
   }
 
   public static String convertSourceToString(final Map<String, Object> source, String attr) {
-    checkArgument(source.containsKey(attr), "Source does not have the attribute: {}", attr);
     return getAttributeFromSource(source, attr).toString();
+  }
+
+  public static Boolean convertSourceToBoolean(final Map<String, Object> source, String attr) {
+    return Boolean.parseBoolean(convertSourceToString(source, attr));
   }
 
   public static Integer convertSourceToInteger(final Map<String, Object> source, String attr) {
@@ -50,6 +54,10 @@ public class SearchHitConverters {
 
   public static String convertHitToString(final SearchHit hit, String attr) {
     return convertSourceToString(getSource(hit), attr);
+  }
+
+  public static Boolean convertHitToBoolean(final SearchHit hit, String attr) {
+    return convertSourceToBoolean(getSource(hit), attr);
   }
 
   public static Integer convertHitToInteger(final SearchHit hit, String attr) {
