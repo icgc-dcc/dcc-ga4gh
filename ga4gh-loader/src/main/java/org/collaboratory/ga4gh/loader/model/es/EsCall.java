@@ -17,8 +17,6 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static java.util.Objects.requireNonNull;
 import static org.collaboratory.ga4gh.core.Names.CALL_SET_ID;
 import static org.collaboratory.ga4gh.core.Names.GENOTYPE_LIKELIHOOD;
 import static org.collaboratory.ga4gh.core.Names.GENOTYPE_PHASESET;
@@ -31,11 +29,13 @@ import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.Joiners.COLON;
 
 import java.util.List;
+import java.util.Map;
+
+import org.elasticsearch.search.SearchHit;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
-import htsjdk.variant.variantcontext.CommonInfo;
 import htsjdk.variant.variantcontext.Genotype;
 import lombok.Builder;
 import lombok.NonNull;
@@ -49,51 +49,60 @@ import lombok.val;
 @Value
 public class EsCall implements EsModel {
 
-  private EsVariant parentVariant;
   private String variantSetId;
   private String callSetId;
-  private CommonInfo info;
-  private Genotype genotype;
-
-  public EsCall(EsVariant parentVariant, String variantSetId, String callSetId, CommonInfo info, Genotype genotype) {
-    this.parentVariant = requireNonNull(parentVariant);
-    this.variantSetId = variantSetId;
-    this.callSetId = callSetId;
-    this.info = requireNonNull(info);
-    this.genotype = requireNonNull(genotype);
-  }
+  private Map<String, Object> info;
+  private String sampleName;
+  private double genotypeLikelihood;
+  private boolean isGenotypePhased;
+  private List<Integer> nonReferenceAlleles;
 
   @Override
   public ObjectNode toDocument() {
-    val infoMap = newHashMap(info.getAttributes());
-    infoMap.putAll(genotype.getExtendedAttributes());
-    val nonRefAlleles = convertIntegers(convertNonRefAlleles(genotype));
-    val likelihood = genotype.getLog10PError();
-    val isPhaseset = genotype.isPhased();
-
+    val nonRefAlleles = convertIntegers(nonReferenceAlleles);
     return object()
         .with(VARIANT_SET_ID, variantSetId)
         .with(CALL_SET_ID, callSetId)
-        .with(INFO, convertMap(infoMap))
-        .with(GENOTYPE_LIKELIHOOD, Double.toString(likelihood))
-        .with(GENOTYPE_PHASESET, isPhaseset)
+        .with(INFO, convertMap(info))
+        .with(GENOTYPE_LIKELIHOOD, Double.toString(genotypeLikelihood))
+        .with(GENOTYPE_PHASESET, isGenotypePhased)
         .with(NON_REFERENCE_ALLELES, nonRefAlleles)
         .end();
   }
 
-  // TODO: [rtisma] when have time, add a fromDocument converter. Then move models to core and use this class as a
-  // conversion from Es to Model, and back
-  /*
-   * public static EsCall fromDocument(ObjectNode callNode){
-   * 
-   * 
-   * }
-   */
+  public static SpecialEsCallBuilder builder() {
+    return new SpecialEsCallBuilder();
+  }
 
+  public static class SpecialEsCallBuilder extends EsCallBuilder {
+
+    // TODO: Implement ME
+    public SpecialEsCallBuilder fromSearchHit(final SearchHit hit) {
+      return null;
+
+    }
+
+    /*
+     * Copies the input EsCall
+     */
+    public SpecialEsCallBuilder fromEsCall(final EsCall call) {
+      return (SpecialEsCallBuilder) builder()
+          .callSetId(call.getCallSetId())
+          .genotypeLikelihood(call.getGenotypeLikelihood())
+          .info(call.getInfo())
+          .isGenotypePhased(call.isGenotypePhased())
+          .nonReferenceAlleles(call.getNonReferenceAlleles())
+          .sampleName(call.getSampleName())
+          .variantSetId(call.getVariantSetId());
+    }
+
+  }
+
+  // TODO: not unique. Need to make unique or change the rule
   @Override
   public String getName() {
     return COLON.join(
-        variantSetId, callSetId, parentVariant.getName(), genotype.getSampleName());
+        variantSetId, callSetId, sampleName);
   }
 
   public static List<Integer> convertNonRefAlleles(@NonNull final Genotype genotype) {
