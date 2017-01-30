@@ -8,27 +8,27 @@ public class Config {
 
   public static final String INDEX_NAME = getProperty("index_name", "dcc-variants3");
   public static final String NODE_ADDRESS = getProperty("node_address", "localhost");
-  public static final int NODE_PORT = Integer.valueOf(getProperty("node_port", "9300"));
+  public static final int NODE_PORT = Integer.parseInt(getProperty("node_port", "9300"));
   public static final String ES_URL = "es://" + NODE_ADDRESS + ":" + NODE_PORT;
   public static final String TOKEN = getProperty("token");
   public static final String STORAGE_API = "https://storage.cancercollaboratory.org";
   public static final String PORTAL_API = "https://dcc.icgc.org";
 
-  public static final int BULK_NUM_THREADS = Integer.valueOf(getProperty("num_threads", "5"));
-  public static final int BULK_SIZE_MB = Integer.valueOf(getProperty("bulk_size_mb", "5"));
-  public static final boolean STORAGE_PERSIST_MODE = Boolean.valueOf(getProperty("persist_mode", FALSE));
-  public static final boolean SORT_MODE = Boolean.valueOf(getProperty("sort_mode", TRUE));
-  public static final boolean ASCENDING_MODE = Boolean.valueOf(getProperty("ascending_mode", FALSE));
+  public static final int BULK_NUM_THREADS = Integer.parseInt(getProperty("num_threads", "5"));
+  public static final int BULK_SIZE_MB = Integer.parseInt(getProperty("bulk_size_mb", "5"));
+  public static final boolean STORAGE_PERSIST_MODE = Boolean.parseBoolean(getProperty("persist_mode", FALSE));
+  public static final boolean SORT_MODE = Boolean.parseBoolean(getProperty("sort_mode", TRUE));
+  public static final boolean ASCENDING_MODE = Boolean.parseBoolean(getProperty("ascending_mode", FALSE));
   public static final boolean DATA_FETCHER_SHUFFLE = !SORT_MODE;
   public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
-  public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = 0; // 10000000;
+  public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = Long.parseLong(getProperty("max_filesize_bytes", "0"));
   public static final int DATA_FETCHER_NUM_DONORS = 30;
   public static final int DATA_FETCHER_LIMIT = 100;
   public static final String STORAGE_OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
   public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
-  public static final boolean USE_MAP_DB = Boolean.valueOf(getProperty("use_map_db", TRUE));
+  public static final boolean USE_MAP_DB = Boolean.parseBoolean(getProperty("use_map_db", TRUE));
   public static final int MONITOR_INTERVAL_COUNT = 500000;
-  public static final boolean STORAGE_BYPASS_MD5_CHECK = Boolean.valueOf(getProperty("bypass_md5_check", FALSE));
+  public static final boolean STORAGE_BYPASS_MD5_CHECK = Boolean.parseBoolean(getProperty("bypass_md5_check", FALSE));
 
   public static String toConfigString() {
     return String.format("INDEX_NAME: %s"
