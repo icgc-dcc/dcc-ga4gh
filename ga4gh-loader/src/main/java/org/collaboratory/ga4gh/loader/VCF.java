@@ -1,15 +1,12 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Sets.newHashSet;
 import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.core.Names.VCF_HEADER;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-import static org.icgc.dcc.common.core.util.Joiners.COMMA;
-import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
@@ -20,7 +17,6 @@ import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
@@ -53,15 +49,12 @@ public class VCF implements Closeable {
   private static final boolean REQUIRE_INDEX_CFG = false;
   private static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
   private static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
-  private static final double DEFAULT_GENOTYPE_LIKELYHOOD = 0.1;
 
   private final VCFFileReader vcf;
 
   private final FileMetaData fileMetaData;
 
   private final VCFEncoder encoder;
-
-  private final Set<String> variantIdSet;
 
   private final CallerTypes callerType;
   private final String actualCallerId;
@@ -81,7 +74,6 @@ public class VCF implements Closeable {
         ALLOW_MISSING_FIELDS_IN_HEADER_CFG,
 
         OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
-    this.variantIdSet = newHashSet();
 
     this.sampleId = fileMetaData.getSampleId();
     val parser = fileMetaData.getVcfFilenameParser();
@@ -106,17 +98,6 @@ public class VCF implements Closeable {
     return convertCallSet(fileMetaData);
   }
 
-  private boolean isDuplicateVariantId(final VariantContext vc) {
-    val variantId = createVariantId(vc);
-    val duplicateVariantId = variantIdSet.contains(variantId);
-    if (duplicateVariantId) {
-      log.error("Detected duplicate variantId entry  [{}]. Ignoring it and moving on", variantId);
-    } else {
-      variantIdSet.add(variantId);
-    }
-    return duplicateVariantId;
-  }
-
   public Stream<EsVariantCallPair> readVariantAndCalls() {
     return stream(vcf.iterator())
         .map(this::convertVariantCallPair);
@@ -138,20 +119,6 @@ public class VCF implements Closeable {
         .variantSetId(createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
         .bioSampleId(name) // bio_sample_id == call_set_name
         .build();
-  }
-
-  private static String createVariantId(VariantContext record) {
-    return createVariantName(record); // TODO: [rtisma] temporary untill get UUID5 working
-  }
-
-  // ASSUMPTION: the VariantName is a unique string
-  private static String createVariantName(VariantContext record) {
-    return UNDERSCORE.join(
-        record.getStart(),
-        record.getEnd(),
-        record.getContig(),
-        record.getReference().getBaseString(),
-        COMMA.join(record.getAlternateAlleles()));
   }
 
   // TODO: [rtisma] -- temporarily using until implement uuid
@@ -256,7 +223,7 @@ public class VCF implements Closeable {
         .end();
   }
 
-  private EsVariantCallPair convertVariantCallPair(@NonNull final VariantContext record) {
+  private EsVariantCallPair convertVariantCallPair(final VariantContext record) {
     variantCallPairMonitor.start();
     val variant = EsVariant.builder()
         .start(record.getStart())
@@ -307,7 +274,7 @@ public class VCF implements Closeable {
               .variantSetId(callerTypeString)
               .callSetId(bioSampleId)
               .info(info)
-              .sampleName(genotype.getSampleName())
+              // .sampleName(genotype.getSampleName())
               .genotypeLikelihood(genotype.getLog10PError())
               .isGenotypePhased(genotype.isPhased())
               .nonReferenceAlleles(EsCall.convertNonRefAlleles(genotype))
