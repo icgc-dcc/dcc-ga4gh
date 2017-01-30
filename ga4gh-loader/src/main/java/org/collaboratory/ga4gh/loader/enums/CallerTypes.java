@@ -20,7 +20,7 @@ package org.collaboratory.ga4gh.loader.enums;
 import lombok.NonNull;
 
 public enum CallerTypes {
-  consensus, MUSE, dkfz, embl, svfix, svcp, broad;
+  dkfz_indelCalling_1_0_132_1, dkfz_indelCalling_1_0_132_1_hpc, dkfz_snvCalling_1_0_132_1, dkfz_snvCalling_1_0_132_1_hpc, dkfz_copyNumberEstimation_1_0_189_hpc, dkfz_copyNumberEstimation_1_0_189_hpc_fix, dkfz_copyNumberEstimation_1_0_189, dkfz_copyNumberEstimation_1_0_189_1_hpc, broad_dRanger, broad_dRanger_10, broad_dRanger_11, broad_dRanger_13, broad_dRanger_14, broad_snowman, broad_snowman_10, broad_snowman_11, broad_snowman_13, broad_snowman_14, broad_dRanger_snowman, broad_dRanger_snowman_10, broad_dRanger_snowman_11, broad_dRanger_snowman_13, broad_dRanger_snowman_14, svcp_1_0_2, svcp_1_0_3, svcp_1_0_4, svcp_1_0_5, svcp_1_0_6, svcp_1_0_7, svcp_1_0_8, embl_delly_1_0_0_preFilter_hpc, embl_delly_1_0_0_preFilter, embl_delly_1_3_0_preFilter, MUSE_1_0rc_b391201_vcf, MUSE_1_0rc_vcf, svfix2_4_0_12, broad_mutect_v3, consensus;
 
   public boolean equals(@NonNull final String name) {
     return name().equals(name);
