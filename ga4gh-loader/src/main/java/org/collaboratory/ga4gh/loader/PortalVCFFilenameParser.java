@@ -18,10 +18,12 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.util.Joiners.DOT;
 
 import java.io.Serializable;
 
+import org.collaboratory.ga4gh.loader.enums.CallerTypes;
 import org.icgc.dcc.common.core.util.Splitters;
 
 import com.google.common.collect.Iterables;
@@ -46,6 +48,7 @@ public class PortalVCFFilenameParser implements Serializable {
 
   @Getter
   private final String[] elements;
+  private CallerTypes callerType;
 
   public PortalVCFFilenameParser(@NonNull final String filename) {
     checkArgument(!filename.isEmpty(), "The filename [%s] is empty", filename);
@@ -54,6 +57,7 @@ public class PortalVCFFilenameParser implements Serializable {
         .split(filename), String.class);
     checkArgument(elements.length >= MIN_NUM_FIELDS,
         "The filename [%s] has %d fields, but a minimum of %d is expected", filename, elements.length, MIN_NUM_FIELDS);
+    this.callerType = parseCallerType(this.getCallerId());
   }
 
   public String getObjectId() {
@@ -87,5 +91,24 @@ public class PortalVCFFilenameParser implements Serializable {
   @Override
   public String toString() {
     return getFilename();
+  }
+
+  private static CallerTypes parseCallerType(final String callerId) {
+    boolean found = false;
+    CallerTypes foundCallerType = null;
+    for (CallerTypes callerType : CallerTypes.values()) {
+      if (callerType.isIn(callerId)) {
+        foundCallerType = callerType;
+        found = true;
+        break;
+      }
+    }
+    checkState(found, "The callerId [%s] does not contain any of the available caller types: [%s]",
+        callerId, CallerTypes.values());
+    return foundCallerType;
+  }
+
+  public CallerTypes getCallerType() {
+    return callerType;
   }
 }
