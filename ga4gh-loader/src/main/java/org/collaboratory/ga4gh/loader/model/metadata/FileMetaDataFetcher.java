@@ -47,7 +47,7 @@ public class FileMetaDataFetcher {
   public static final int DEFAULT_NUM_DONORS = 0;
   public static final int DEFAULT_MAX_FILESIZE_BYTES = 0;
   public static final int DEFAULT_LIMIT_NUM_FILES = 0;
-  public static final String DEFAULT_FROM_FILE = DEFAULT_FILE_META_DATA_STORE_FILENAME;
+  public static final String DEFAULT_STORAGE_FILENAME = DEFAULT_FILE_META_DATA_STORE_FILENAME;
 
   private final int numDonors;
   private final long maxFileSizeBytes;
@@ -57,7 +57,8 @@ public class FileMetaDataFetcher {
   private final int limit;
   private final boolean sort;
   private final boolean ascending;
-  private final String fromFilename;
+  private final String storageFilename;
+  private final boolean createNewFile;
 
   public static final long generateSeed() {
     return System.currentTimeMillis();
@@ -72,7 +73,8 @@ public class FileMetaDataFetcher {
       int limit,
       boolean sort,
       boolean ascending,
-      String fromFile) {
+      String storageFilename,
+      boolean createNewFile) {
     this.numDonors = numDonors;
     this.maxFileSizeBytes = maxFileSizeBytes;
     this.somaticSSMsOnly = somaticSSMsOnly;
@@ -81,7 +83,8 @@ public class FileMetaDataFetcher {
     this.limit = limit;
     this.sort = sort;
     this.ascending = ascending;
-    this.fromFilename = fromFile;
+    this.storageFilename = storageFilename;
+    this.createNewFile = createNewFile;
     checkConfig();
   }
 
@@ -95,15 +98,15 @@ public class FileMetaDataFetcher {
         .limit(DEFAULT_LIMIT_NUM_FILES)
         .sort(false)
         .ascending(false)
-        .fromFilename(DEFAULT_FROM_FILE)
+        .storageFilename(DEFAULT_STORAGE_FILENAME)
         .shuffle(false);
   }
 
   /*
    * Return true if set to Non-default fromFile value
    */
-  private boolean fromFilenameUpdated() {
-    return !fromFilename.equals(DEFAULT_FROM_FILE);
+  private boolean storageFilenameUpdated() {
+    return !storageFilename.equals(DEFAULT_STORAGE_FILENAME);
   }
 
   /*
@@ -132,7 +135,7 @@ public class FileMetaDataFetcher {
     checkState(!sortAndShuffle,
         "Cannot sort and shuffle the list. These are mutually exclusive configurations");
 
-    val numDonorsAndFromFile = fromFilenameUpdated() && numDonorsUpdated();
+    val numDonorsAndFromFile = storageFilenameUpdated() && numDonorsUpdated();
     checkState(!numDonorsAndFromFile,
         "Cannot set numDonors and fromFile at the same time as they are mutually exclusive");
   }
@@ -160,13 +163,13 @@ public class FileMetaDataFetcher {
 
     List<FileMetaData> fileMetaDatas = null;
 
-    val fromFile = Paths.get(fromFilename).toFile();
+    val fromFile = Paths.get(storageFilename).toFile();
     val fileExists = fromFile.exists() && fromFile.isFile();
-    if (fileExists) {
-      fileMetaDatas = restore(fromFilename);
+    if (fileExists && !isCreateNewFile()) {
+      fileMetaDatas = restore(storageFilename);
     } else {
       fileMetaDatas = getAllFileMetaDatas();
-      store(fileMetaDatas, fromFilename);
+      store(fileMetaDatas, storageFilename);
     }
 
     if (numDonorsUpdated()) {
@@ -202,4 +205,5 @@ public class FileMetaDataFetcher {
   public static List<FileMetaData> restore(String filename) throws IOException, ClassNotFoundException {
     return (List<FileMetaData>) ObjectPersistance.restore(filename);
   }
+
 }
