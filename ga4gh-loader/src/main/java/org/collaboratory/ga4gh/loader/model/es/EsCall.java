@@ -23,6 +23,11 @@ import static org.collaboratory.ga4gh.core.Names.GENOTYPE_PHASESET;
 import static org.collaboratory.ga4gh.core.Names.INFO;
 import static org.collaboratory.ga4gh.core.Names.NON_REFERENCE_ALLELES;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToBoolean;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToDouble;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToIntegerList;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToObjectMap;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
 import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
 import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
@@ -52,7 +57,7 @@ public class EsCall implements EsModel {
   private String variantSetId;
   private String callSetId;
   private Map<String, Object> info;
-  private String sampleName;
+  // private String sampleName;
   private double genotypeLikelihood;
   private boolean isGenotypePhased;
   private List<Integer> nonReferenceAlleles;
@@ -78,8 +83,12 @@ public class EsCall implements EsModel {
 
     // TODO: Implement ME
     public SpecialEsCallBuilder fromSearchHit(final SearchHit hit) {
-      return null;
-
+      return (SpecialEsCallBuilder) callSetId(convertHitToString(hit, CALL_SET_ID))
+          .genotypeLikelihood(convertHitToDouble(hit, GENOTYPE_LIKELIHOOD))
+          .info(convertHitToObjectMap(hit, INFO))
+          .isGenotypePhased(convertHitToBoolean(hit, GENOTYPE_PHASESET))
+          .nonReferenceAlleles(convertHitToIntegerList(hit, NON_REFERENCE_ALLELES))
+          .variantSetId(convertHitToString(hit, VARIANT_SET_ID));
     }
 
     /*
@@ -92,7 +101,7 @@ public class EsCall implements EsModel {
           .info(call.getInfo())
           .isGenotypePhased(call.isGenotypePhased())
           .nonReferenceAlleles(call.getNonReferenceAlleles())
-          .sampleName(call.getSampleName())
+          // .sampleName(call.getSampleName())
           .variantSetId(call.getVariantSetId());
     }
 
@@ -102,7 +111,7 @@ public class EsCall implements EsModel {
   @Override
   public String getName() {
     return COLON.join(
-        variantSetId, callSetId, sampleName);
+        variantSetId, callSetId);
   }
 
   public static List<Integer> convertNonRefAlleles(@NonNull final Genotype genotype) {
@@ -114,7 +123,6 @@ public class EsCall implements EsModel {
         allelesBuilder.add(i);
       }
     }
-    allelesBuilder.add(99);// TODO: HACK just testing mutliple alleles translation to arraynode
     return allelesBuilder.build();
   }
 
