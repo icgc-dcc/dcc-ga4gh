@@ -2,6 +2,7 @@ package org.collaboratory.ga4gh.loader.utils;
 
 import java.util.concurrent.TimeUnit;
 
+import org.icgc.dcc.common.core.util.Formats;
 import org.slf4j.Logger;
 
 import com.google.common.base.Stopwatch;
@@ -30,7 +31,7 @@ public class CounterMonitor implements Countable<Integer> {
   private boolean isRunning = false;
 
   private int previousCount;
-  private long previousTime;
+  private float previousTime;
 
   public static CounterMonitor newMonitor(String name, Logger logger, int intervalSeconds) {
     return new CounterMonitor(name, new IntegerCounter(DEFAULT_INITAL_COUNT), Stopwatch.createUnstarted(), logger,
@@ -69,23 +70,31 @@ public class CounterMonitor implements Countable<Integer> {
     counter.reset();
     setRunningState(false);
     previousCount = counter.getCount();
-    previousTime = watch.elapsed(TimeUnit.SECONDS);
+    previousTime = getElapsedTimeSeconds();
   }
 
   public void start() {
     setRunningState(true);
     watch.start();
-    logger.info("Started CounterMonitor-{}", name);
+    // logger.info("Started CounterMonitor-{}", name);
   }
 
   public void stop() {
     watch.stop();
     setRunningState(false);
-    logger.info("Stopped CounterMonitor-{}", name);
+    // logger.info("Stopped CounterMonitor-{}", name);
   }
 
-  public long getElapsedTimeSeconds() {
-    return watch.elapsed(TimeUnit.SECONDS);
+  public float getElapsedTimeSeconds() {
+    return getElapsedTimeMicro() / 1000000;
+  }
+
+  public float getElapsedTimeMili() {
+    return getElapsedTimeMicro() / 1000;
+  }
+
+  public float getElapsedTimeMicro() {
+    return watch.elapsed(TimeUnit.MICROSECONDS);
   }
 
   private void setRunningState(boolean isRunning) {
@@ -102,7 +111,7 @@ public class CounterMonitor implements Countable<Integer> {
         val instRate = getInstRate();
         val avgRate = getAvgRate();
         logger.info(
-            "[CounterMonitor-{}] -- CountInterval: {}   Count: {}   TotalElapsedTime(s): {}   IntervalElapsedTime(s): {}   InstantaeousRate(count/sec): {}  AvgRate(count/sec): {}",
+            "[CounterMonitor-{}] -- CountInterval: {}   Count: {}   TotalElapsedTime(s): {}   IntervalElapsedTime(s): {}   InstantaeousRate(count/s): {}  AvgRate(count/s): {}",
             name,
             countInterval,
             currentCount,
@@ -116,15 +125,15 @@ public class CounterMonitor implements Countable<Integer> {
     }
   }
 
-  public long getAvgRate() {
-    val t = getElapsedTimeSeconds();
-    return t == 0 ? 0 : counter.getCount() / t;
+  public String getAvgRate() {
+    return Formats.formatRate(counter.getCount(), watch);
   }
 
-  public long getInstRate() {
+  public String getInstRate() {
     val currentIntervalCount = counter.getCount() - previousCount;
     val intervalElapsedTime = getElapsedTimeSeconds() - previousTime;
-    return intervalElapsedTime == 0 ? 0 : currentIntervalCount / intervalElapsedTime;
+    val rate = intervalElapsedTime == 0 ? 0 : currentIntervalCount / intervalElapsedTime;
+    return Formats.formatRate(rate);
   }
 
   @Override
