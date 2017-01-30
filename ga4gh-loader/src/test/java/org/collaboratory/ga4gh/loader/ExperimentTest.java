@@ -11,12 +11,11 @@ import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.lucene.search.join.ScoreMode;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.test.BaseElasticsearchTest;
+import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
+import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.InnerHitBuilder;
@@ -29,7 +28,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ExperimentTest extends BaseElasticsearchTest {
+public class ExperimentTest {// extends BaseElasticsearchTest {
 
   private static EsVariant createVariantFromHit(SearchHit hit) {
     val start = convertHitToInteger(hit, "start");
@@ -47,7 +46,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
   }
 
   @Test
-  public void testNested() {
+  public void testLoad() {
     log.info("Static Config:\n{}", Config.toConfigString());
     try (val client = newClient();
         val writer = newDocumentWriter(client)) {
@@ -58,44 +57,63 @@ public class ExperimentTest extends BaseElasticsearchTest {
               .must(matchAllQuery())
               .must(hasChildQuery("call", matchAllQuery(), ScoreMode.None).innerHit(new InnerHitBuilder())));
 
-      client.prepareClearScroll();
-      val size = 2;
-      SearchResponse resp = client.prepareSearch("dcc-variants_test")
-          .setTypes("variant")
-          .setSize(size)
-          .setScroll(TimeValue.timeValueMinutes(3))
-          .setQuery(query)
-          .get();
-
-      boolean hasHits = resp.getHits().getTotalHits() > 0;
-      val variantList = Lists.<EsVariant> newArrayList();
+      val maxIterations = 25;
+      val sizes = new int[] { 5000, 3000, 1500, 1000, 500, 100, 10 };
       int count = 0;
-      do {
-        for (val hit : resp.getHits()) {
-          log.info("Hit: {}", hit.getSource());
-          variantList.add(
-              EsVariant.builder()
-                  .fromSearchHit(hit)
-                  .build());
-          val callList = Lists.<EsCall> newArrayList();
-          for (val innerHit : hit.getInnerHits().get("call")) {
-            val call = EsCall.builder().fromSearchHit(innerHit).build();
-            log.info("call: {}", call);
-
-          }
-
-        }
-        resp = client.prepareSearchScroll(resp.getScrollId())
+      for (val size : sizes) {
+        client.prepareClearScroll();
+        log.info("Config[{}]: SIZE: {}   MaxIterations: {}", count++, size, maxIterations);
+        SearchResponse resp = client.prepareSearch("dcc-variants_test")
+            .setTypes("variant")
+            .setSize(size)
             .setScroll(TimeValue.timeValueMinutes(3))
+            .setQuery(query)
             .get();
-        hasHits = resp.getHits().getTotalHits() > 0;
-        count++;
-      } while (hasHits && count < 3);
-      log.info("Results: \n{}", variantList);
-      stopWatch.stop();
-      log.info("LoadTime(min): {}", stopWatch.elapsed(TimeUnit.MINUTES));
-      log.info("LoadTime(sec): {}", stopWatch.elapsed(TimeUnit.SECONDS));
 
+        boolean hasHits = resp.getHits().getTotalHits() > 0;
+        val pairList = Lists.<EsVariantCallPair> newArrayList();
+        val hitProcessorMonitor = CounterMonitor.newMonitor("SearchHitMonitor", 100);
+        val scrollMonitor = CounterMonitor.newMonitor("ScrollMonitor", 1);
+        val hitAndScrollMonitor = CounterMonitor.newMonitor("HitAndScrollMonitor", 1);
+
+        do {
+          hitAndScrollMonitor.start();
+          hitProcessorMonitor.start();
+          for (val hit : resp.getHits()) {
+            val pair = EsVariantCallPair.builder()
+                .variant(
+                    EsVariant.builder()
+                        .fromSearchHit(hit)
+                        .build());
+
+            for (val innerHit : hit.getInnerHits().get("call")) {
+              pair.call(EsCall.builder().fromSearchHit(innerHit).build());
+            }
+            pairList.add(pair.build());
+            hitProcessorMonitor.incr();
+          }
+          hitProcessorMonitor.stop();
+          scrollMonitor.start();
+          resp = client.prepareSearchScroll(resp.getScrollId())
+              .setScroll(TimeValue.timeValueMinutes(3))
+              .get();
+          hasHits = resp.getHits().getTotalHits() > 0;
+          scrollMonitor.incr();
+          scrollMonitor.stop();
+          hitAndScrollMonitor.incr();
+          hitAndScrollMonitor.stop();
+          pairList.clear();
+        } while (hasHits && scrollMonitor.getCount() < maxIterations);
+        hitProcessorMonitor.displaySummary();
+        scrollMonitor.displaySummary();
+        hitAndScrollMonitor.displaySummary();
+        log.info(
+            "Summary: SIZE: {}  MaxIterations: {}   AvgHitProcessorRate: {}  AvgScrollRate: {}   AvgHitAndScrollRate: {}",
+            size,
+            maxIterations,
+            hitProcessorMonitor.getAvgRate(),
+            scrollMonitor.getAvgRate());
+      }
     } catch (Exception e) {
       log.error("Exception running: ", e);
     }
