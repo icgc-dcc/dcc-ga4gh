@@ -46,11 +46,13 @@ public class ExperimentTest extends BaseElasticsearchTest {
         .build();
   }
 
+  // public static void main(String[] args) {
   @Test
   public void testLoad() {
     log.info("Static Config:\n{}", Config.toConfigString());
     try (val client = newClient();
         val writer = newDocumentWriter(client)) {
+      log.info("yooo");
       val stopWatch = createStarted();
 
       val query = constantScoreQuery(
@@ -59,7 +61,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
               .must(hasChildQuery("call", matchAllQuery(), ScoreMode.None).innerHit(new InnerHitBuilder())));
 
       val maxIterations = 25;
-      val sizes = new int[] { 5000, 3000, 1500, 1000, 500, 100, 10 };
+      val sizes = new int[] { 50, 3000, 1500, 1000, 500, 100, 10 };
       int count = 0;
       for (val size : sizes) {
         client.prepareClearScroll();
