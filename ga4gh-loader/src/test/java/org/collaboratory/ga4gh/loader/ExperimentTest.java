@@ -76,8 +76,6 @@ public class ExperimentTest extends BaseElasticsearchTest {
         boolean hasHits = resp.getHits().getTotalHits() > 0;
         val pairList = Lists.<EsVariantCallPair> newArrayList();
         val hitProcessorMonitor = CounterMonitor.newMonitor("SearchHitMonitor", 100);
-        val scrollMonitor = CounterMonitor.newMonitor("ScrollMonitor", 1);
-        val hitAndScrollMonitor = CounterMonitor.newMonitor("HitAndScrollMonitor", 1);
 
         do {
           hitProcessorMonitor.start();
@@ -90,7 +88,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
 
             for (val innerHit : hit.getInnerHits().get("call")) {
               pair.call(EsCall.builder().fromSearchHit(innerHit).build());
-		hitProcessorMonitor.incr();
+              hitProcessorMonitor.incr();
             }
             pairList.add(pair.build());
           }
@@ -99,8 +97,9 @@ public class ExperimentTest extends BaseElasticsearchTest {
               .get();
           hasHits = resp.getHits().getTotalHits() > 0;
           pairList.clear();
-        } while (hasHits && scrollMonitor.getCount() < maxIterations);
-          hitProcessorMonitor.stop();
+          count++;
+        } while (hasHits && count < maxIterations);
+        hitProcessorMonitor.stop();
         hitProcessorMonitor.displaySummary();
         log.info(
             "Summary: SIZE: {}  MaxIterations: {}   AvgHitProcessorRate: {}  AvgScrollRate: {}  ",
