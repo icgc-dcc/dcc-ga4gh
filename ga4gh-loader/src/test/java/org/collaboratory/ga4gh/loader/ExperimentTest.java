@@ -61,7 +61,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
               .must(hasChildQuery("call", matchAllQuery(), ScoreMode.None).innerHit(new InnerHitBuilder())));
 
       val maxIterations = 25;
-      val sizes = new int[] { 50, 3000, 1500, 1000, 500, 100, 10 };
+      val sizes = new int[] { 5000, 3000, 1500, 1000, 500, 100, 10 };
       int count = 0;
       for (val size : sizes) {
         client.prepareClearScroll();
@@ -80,7 +80,6 @@ public class ExperimentTest extends BaseElasticsearchTest {
         val hitAndScrollMonitor = CounterMonitor.newMonitor("HitAndScrollMonitor", 1);
 
         do {
-          hitAndScrollMonitor.start();
           hitProcessorMonitor.start();
           for (val hit : resp.getHits()) {
             val pair = EsVariantCallPair.builder()
@@ -91,31 +90,23 @@ public class ExperimentTest extends BaseElasticsearchTest {
 
             for (val innerHit : hit.getInnerHits().get("call")) {
               pair.call(EsCall.builder().fromSearchHit(innerHit).build());
+		hitProcessorMonitor.incr();
             }
             pairList.add(pair.build());
-            hitProcessorMonitor.incr();
           }
-          hitProcessorMonitor.stop();
-          scrollMonitor.start();
           resp = client.prepareSearchScroll(resp.getScrollId())
               .setScroll(TimeValue.timeValueMinutes(3))
               .get();
           hasHits = resp.getHits().getTotalHits() > 0;
-          scrollMonitor.incr();
-          scrollMonitor.stop();
-          hitAndScrollMonitor.incr();
-          hitAndScrollMonitor.stop();
           pairList.clear();
         } while (hasHits && scrollMonitor.getCount() < maxIterations);
+          hitProcessorMonitor.stop();
         hitProcessorMonitor.displaySummary();
-        scrollMonitor.displaySummary();
-        hitAndScrollMonitor.displaySummary();
         log.info(
-            "Summary: SIZE: {}  MaxIterations: {}   AvgHitProcessorRate: {}  AvgScrollRate: {}   AvgHitAndScrollRate: {}",
+            "Summary: SIZE: {}  MaxIterations: {}   AvgHitProcessorRate: {}  AvgScrollRate: {}  ",
             size,
             maxIterations,
-            hitProcessorMonitor.getAvgRate(),
-            scrollMonitor.getAvgRate());
+            hitProcessorMonitor.getAvgRate());
       }
     } catch (Exception e) {
       log.error("Exception running: ", e);
