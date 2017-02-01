@@ -4,6 +4,7 @@ import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
+import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_LIMIT;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SHUFFLE;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SOMATIC_SSMS_ONLY;
@@ -121,6 +122,7 @@ public class Factory {
         .storageFilename(DEFAULT_FILE_META_DATA_STORE_FILENAME)
         .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
         .maxFileSizeBytes(DATA_FETCHER_MAX_FILESIZE_BYTES)
+        .limit(DATA_FETCHER_LIMIT)
         .build();
   }
 

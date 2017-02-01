@@ -23,7 +23,7 @@ public class Config {
   public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
   public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = Long.parseLong(getProperty("max_filesize_bytes", "0"));
   public static final int DATA_FETCHER_NUM_DONORS = 30;
-  public static final int DATA_FETCHER_LIMIT = 100;
+  public static final int DATA_FETCHER_LIMIT = Integer.parseInt(getProperty("fetch_limit", "0"));
   public static final String STORAGE_OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
   public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
   public static final boolean USE_MAP_DB = Boolean.parseBoolean(getProperty("use_map_db", TRUE));
