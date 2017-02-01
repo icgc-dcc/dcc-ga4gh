@@ -22,6 +22,7 @@ import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE
 import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
@@ -62,6 +63,23 @@ public class FileMetaDataFetcher {
 
   public static final long generateSeed() {
     return System.currentTimeMillis();
+  }
+
+  public static void main(String[] args) throws ClassNotFoundException, IOException {
+    val fetcher = FileMetaDataFetcher.builder()
+        .storageFilename("target/allFiles.bin")
+        .createNewFile(true)
+        .build();
+
+    val fmdList = fetcher.fetch();
+    val map = FileMetaData.groupFileMetaData(fmdList, x -> x.getVcfFilenameParser().getCallerId());
+    val printer = new PrintWriter("target/allFiles.txt");
+
+    map.keySet().stream()
+        .forEach(k -> printer.write(k + "\n"));
+
+    printer.close();
+
   }
 
   public FileMetaDataFetcher(

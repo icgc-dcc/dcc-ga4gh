@@ -48,7 +48,7 @@ public class PortalVCFFilenameParser implements Serializable {
 
   @Getter
   private final String[] elements;
-  private CallerTypes callerType;
+  private CallerTypes callerType = null;
 
   public PortalVCFFilenameParser(@NonNull final String filename) {
     checkArgument(!filename.isEmpty(), "The filename [%s] is empty", filename);
@@ -57,7 +57,6 @@ public class PortalVCFFilenameParser implements Serializable {
         .split(filename), String.class);
     checkArgument(elements.length >= MIN_NUM_FIELDS,
         "The filename [%s] has %d fields, but a minimum of %d is expected", filename, elements.length, MIN_NUM_FIELDS);
-    this.callerType = parseCallerType(this.getCallerId());
   }
 
   public String getObjectId() {
@@ -108,7 +107,13 @@ public class PortalVCFFilenameParser implements Serializable {
     return foundCallerType;
   }
 
+  /*
+   * Lazy initialization. Needed for when regenerating Enums
+   */
   public CallerTypes getCallerType() {
+    if (callerType == null) {
+      callerType = parseCallerType(this.getCallerId());
+    }
     return callerType;
   }
 }
