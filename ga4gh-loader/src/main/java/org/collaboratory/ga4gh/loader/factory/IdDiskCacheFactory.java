@@ -5,6 +5,7 @@ import static org.collaboratory.ga4gh.loader.utils.IdDiskCache.newIdDiskCache;
 import java.io.IOException;
 
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.loader.model.es.EsVariantSerializer;
 import org.collaboratory.ga4gh.loader.utils.IdDiskCache;
 import org.mapdb.Serializer;
 
@@ -32,7 +33,7 @@ public class IdDiskCacheFactory implements IdCacheFactory {
   @Override
   public void build() throws IOException {
     variantIdCache =
-        newIdDiskCache("variantIdCache", new EsVariant.EsVariantSerializer(), storageDirname,
+        newIdDiskCache("variantIdCache", new EsVariantSerializer(), storageDirname,
             initId);
     variantSetIdCache = newIdDiskCache("variantSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);
     callSetIdCache = newIdDiskCache("callSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);

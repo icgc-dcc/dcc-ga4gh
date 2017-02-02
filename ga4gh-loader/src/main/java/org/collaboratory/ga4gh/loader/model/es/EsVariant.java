@@ -22,9 +22,7 @@ import static org.collaboratory.ga4gh.core.Names.END;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.core.Names.START;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToInteger;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToStringList;
+import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.boxByteArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAscii;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToBytePrimitiveArray;
@@ -36,21 +34,14 @@ import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
-import java.io.IOException;
 import java.io.Serializable;
 
-import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.common.core.util.stream.Streams;
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
-import org.mapdb.Serializer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
-import htsjdk.variant.variantcontext.VariantContext;
 import lombok.EqualsAndHashCode;
-import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.val;
 
@@ -92,11 +83,11 @@ public class EsVariant implements Serializable, EsModel {
     this.referenceBases = referenceBases;
   }
 
-  private byte[] getReferenceBasesAsByteArray() {
+  byte[] getReferenceBasesAsByteArray() {
     return referenceBases;
   }
 
-  private byte[][] getAlternativeBasesAsByteArrays() {
+  byte[][] getAlternativeBasesAsByteArrays() {
     return alternativeBases;
   }
 
@@ -198,114 +189,24 @@ public class EsVariant implements Serializable, EsModel {
       return new EsVariant(start, end, referenceName, referenceBases, b);
     }
 
-    private EsVariantBuilder alternativeBaseAsBytes(final Byte[] alternativeBase) {
+    protected EsVariantBuilder alternativeBaseAsBytes(final byte[] alternativeBase) {
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<Byte[]> builder();
       }
-      this.alternativeBases.add(alternativeBase);
+      this.alternativeBases.add(boxByteArray(alternativeBase));
       return this;
     }
 
-    private EsVariantBuilder allAlternativeBasesAsBytes(final Byte[][] alternativeBases) {
+    protected EsVariantBuilder allAlternativeBasesAsBytes(final byte[][] alternativeBases) {
       for (val base : alternativeBases) {
         this.alternativeBaseAsBytes(base);
       }
       return this;
     }
 
-    private EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
+    protected EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
       this.referenceBases = referenceBases;
       return this;
-    }
-
-  }
-
-  public static class SpecialEsVariantBuilder extends EsVariantBuilder {
-
-    public SpecialEsVariantBuilder fromSearchHit(final SearchHit hit) {
-      val start = convertHitToInteger(hit, START);
-      val end = convertHitToInteger(hit, END);
-      val referenceName = convertHitToString(hit, REFERENCE_NAME);
-      val referenceBases = convertHitToString(hit, REFERENCE_BASES);
-      val alternateBases = convertHitToStringList(hit, ALTERNATIVE_BASES);
-      return (SpecialEsVariantBuilder) start(start)
-          .end(end)
-          .referenceName(referenceName)
-          .referenceBases(referenceBases)
-          .alternativeBases(alternateBases);
-    }
-
-    public SpecialEsVariantBuilder fromVariantContext(final VariantContext variantContext) {
-      return (SpecialEsVariantBuilder) start(variantContext.getStart())
-          .end(variantContext.getEnd())
-          .referenceName(variantContext.getContig())
-          .referenceBases(variantContext.getReference().getBaseString())
-          .alternativeBases(
-              variantContext.getAlternateAlleles()
-                  .stream()
-                  .map(a -> a.getBaseString())
-                  .collect(toImmutableList()));
-    }
-  }
-
-  /*
-   * Serializer needed for MapDB. Note: if EsVariant member variables are added, removed or modified, this needs to be
-   * updated
-   */
-  public static class EsVariantSerializer implements Serializer<EsVariant>, Serializable {
-
-    @Override
-    public void serialize(DataOutput2 out, EsVariant value) throws IOException {
-      out.writeInt(value.getStart());
-      out.writeInt(value.getEnd());
-      out.writeUTF(value.getReferenceName());
-
-      out.writeInt(value.getReferenceBasesAsByteArray().length); // Length
-      out.write(value.getReferenceBasesAsByteArray());
-
-      val doubleArray = value.getAlternativeBasesAsByteArrays();
-      val numAltBases = doubleArray.length;
-      out.writeInt(numAltBases);
-      for (int i = 0; i < numAltBases; i++) {
-        byte[] b = doubleArray[i];
-        out.writeInt(b.length);
-        out.write(b);
-      }
-    }
-
-    @Override
-    @SneakyThrows
-    public EsVariant deserialize(DataInput2 input, int available) throws IOException {
-      val start = input.readInt();
-      val end = input.readInt();
-      val referenceName = input.readUTF();
-
-      // Deserialize ReferenceBases
-      val referenceBasesLength = input.readInt();
-      byte[] refBasesArray = new byte[referenceBasesLength];
-      for (int i = 0; i < referenceBasesLength; i++) {
-        refBasesArray[i] = input.readByte();
-      }
-
-      // Deserialize AlternateBases
-      val altBasesListLength = input.readInt();
-      Byte[][] doubleArray = new Byte[altBasesListLength][];
-      for (int i = 0; i < altBasesListLength; i++) {
-        val arrayLength = input.readInt();
-        Byte[] array = new Byte[arrayLength];
-        for (int j = 0; j < arrayLength; j++) {
-          array[j] = input.readByte();
-        }
-        doubleArray[i] = array;
-      }
-
-      return builder()
-          .start(start)
-          .end(end)
-          .referenceName(referenceName)
-          .referenceBasesAsBytes(refBasesArray)
-          .allAlternativeBasesAsBytes(doubleArray)
-          .build();
     }
 
   }
