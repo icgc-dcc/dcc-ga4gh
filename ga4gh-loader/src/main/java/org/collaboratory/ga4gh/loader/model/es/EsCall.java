@@ -39,11 +39,8 @@ import java.util.Map;
 import org.elasticsearch.search.SearchHit;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
-import htsjdk.variant.variantcontext.Genotype;
 import lombok.Builder;
-import lombok.NonNull;
 import lombok.Value;
 import lombok.val;
 
@@ -112,18 +109,6 @@ public class EsCall implements EsModel {
   public String getName() {
     return COLON.join(
         variantSetId, callSetId);
-  }
-
-  public static List<Integer> convertNonRefAlleles(@NonNull final Genotype genotype) {
-    // TODO: [rtisma] -- verify this logic is correct. Allele has some other states that might need to be considered
-    val allelesBuilder = ImmutableList.<Integer> builder();
-    for (int i = 0; i < genotype.getAlleles().size(); i++) {
-      val allele = genotype.getAllele(i);
-      if (allele.isNonReference()) {
-        allelesBuilder.add(i);
-      }
-    }
-    return allelesBuilder.build();
   }
 
 }

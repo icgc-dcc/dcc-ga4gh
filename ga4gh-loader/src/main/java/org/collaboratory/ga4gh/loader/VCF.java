@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
@@ -33,7 +33,8 @@ import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
-import htsjdk.variant.variantcontext.GenotypesContext;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -49,6 +50,8 @@ public class VCF implements Closeable {
   private static final boolean REQUIRE_INDEX_CFG = false;
   private static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
   private static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
+  private static final int DEFAULT_REFERENCE_ALLELE_POSITION = 0;
+  private static final int ALTERNATIVE_ALLELE_INDEX_OFFSET = 1;
 
   private final VCFFileReader vcf;
 
@@ -136,8 +139,7 @@ public class VCF implements Closeable {
   }
 
   // TODO: [rtisma] - this method is wayyyyyyyyyyyy to big and doing to many things. refactoring needed
-  private List<EsCall> convertCalls(final GenotypesContext genotypesContext,
-      final Map<String, Object> commonInfoMap) {
+  private List<EsCall> convertCalls(final VariantContext variantContext) {
 
     val errorMessage = "CallerType: {} not implemented";
     String tumorKey;
@@ -170,16 +172,17 @@ public class VCF implements Closeable {
     // callerType,
     // filename);
 
-    val numGenotypes = genotypesContext.size();
+    val numGenotypes = variantContext.getGenotypes().size();
 
     // TODO: [rtisma] temporary untill fix above. Take first call, but not correct. Should descriminate by Sample Name
     // which should be tumorKey. Assumption is the there is ATMOST 2 calls per variant
-    checkState(numGenotypes > 0, "The Genotypes [%s] should have calls for fileMetaData [%s]", genotypesContext,
+    checkState(numGenotypes > 0, "The Genotypes [%s] should have calls for fileMetaData [%s]",
+        variantContext.getGenotypes(),
         fileMetaData);
     boolean foundCall = false;
     // TODO: HACKKK need to properly select which call can be indexed. Calls associated with "normal" are not to be
     // indexed
-    return createEsCall(actualCallerId, sampleId, genotypesContext, commonInfoMap);
+    return createEsCall(actualCallerId, sampleId, variantContext);
     // rtisma try {
     // rtisma return createEsCall(actualCallerId, sampleId, genotypesContext, commonInfoMap);
     // rtisma // for (val call : callList) {
@@ -237,8 +240,7 @@ public class VCF implements Closeable {
                 .collect(toImmutableList()))
         .build();
 
-    val commonInfo = record.getCommonInfo().getAttributes();
-    val calls = convertCalls(record.getGenotypes(), commonInfo);
+    val calls = convertCalls(record);
 
     val pair = EsVariantCallPair.builder()
         .calls(calls)
@@ -256,14 +258,53 @@ public class VCF implements Closeable {
     vcf.close();
   }
 
+  /*
+   * Returns a list contain Allele IDs associated with the maternal and paternal alleles of this genotype. Allele ID (or
+   * index) 0 represents the reference allele. If there are N alternative alleles, then the Alternative Allele ID range
+   * is 1 to 0+N. Example, if the a variant has reference allele "A" and the alternative alleles are "[T,GG,ATG]", and
+   * the genotype is 2/1, this means the first allele of this genotype has ID 2, which maps to "ATG" and the second
+   * allele of this genotype has ID 1, which maps to "GG". TODO: test and verify empty or null alleles
+   * 
+   * @throws IllegalStateException when an allele from the genotype does not exist in the alternative alleles, or when
+   * an allele was not parsed correctly
+   * 
+   */
+  public static List<Integer> convertGenotypeAlleles(final List<Allele> alternativeAlleles, final Genotype genotype) {
+    val allelesBuilder = ImmutableList.<Integer> builder();
+    for (val allele : genotype.getAlleles()) {
+      if (allele.isNonReference()) {
+        val indexAltAllele = alternativeAlleles.indexOf(allele);
+        val foundIndex = indexAltAllele > -1;
+        checkState(foundIndex, "Could not find the allele [%s] in the alternative alleles list [%s] ",
+            allele.getBaseString(),
+            alternativeAlleles.stream()
+                .map(x -> x.getBaseString())
+                .collect(Collectors.joining(",")));
+        allelesBuilder.add(ALTERNATIVE_ALLELE_INDEX_OFFSET + indexAltAllele);
+      } else {
+        allelesBuilder.add(DEFAULT_REFERENCE_ALLELE_POSITION);
+      }
+    }
+    val alleles = allelesBuilder.build();
+    val hasCorrectNumberOfAlleles = alleles.size() == genotype.getAlleles().size();
+    checkState(hasCorrectNumberOfAlleles,
+        "There was an error with creating the allele index list. AlternateAlleles: [%s], GenotypesAlleles: [%s]",
+        alternativeAlleles.stream().map(x -> x.getBaseString()).collect(Collectors.joining(",")),
+        genotype.getAlleles().stream().map(x -> x.getBaseString()).collect(Collectors.joining(",")));
+    return alleles;
+  }
+
   // Might want to create a class that decorates EsCallBuilder, where you have EsMuseCallBuilder, EsSangerCallBuilder,
   // etc..
   // and each one has its own implementation of "convertVariantContext". Solves perf problem and avoids giant state
   // machine
   private static List<EsCall> createEsCall(final String callerTypeString,
       final String bioSampleId,
-      final GenotypesContext genotypesContext,
-      final Map<String, Object> commonInfoMap) {
+      final VariantContext variantContext) {
+
+    val genotypesContext = variantContext.getGenotypes();
+    val commonInfoMap = variantContext.getCommonInfo().getAttributes();
+    val altAlleles = variantContext.getAlternateAlleles();
 
     val callsBuilder = ImmutableList.<EsCall> builder();
     for (val genotype : genotypesContext) {
@@ -277,7 +318,7 @@ public class VCF implements Closeable {
               // .sampleName(genotype.getSampleName())
               .genotypeLikelihood(genotype.getLog10PError())
               .isGenotypePhased(genotype.isPhased())
-              .nonReferenceAlleles(EsCall.convertNonRefAlleles(genotype))
+              .nonReferenceAlleles(convertGenotypeAlleles(altAlleles, genotype))
               .build());
 
     }
