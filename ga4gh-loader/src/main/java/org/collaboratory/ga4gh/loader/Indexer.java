@@ -82,7 +82,8 @@ public class Indexer {
 
   private int callId = 0;
 
-  private final CounterMonitor variantMonitor = newMonitor("VariantAndCallIndexing", MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor callMonitor = newMonitor("CallIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor variantSetMonitor = newMonitor("VariantSetIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor callSetMonitor = newMonitor("CallSetIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", MONITOR_INTERVAL_COUNT);
@@ -165,6 +166,7 @@ public class Indexer {
   @SneakyThrows
   public void indexVariantsAndCalls(@NonNull final Stream<EsVariantCallPair> pair) {
     variantMonitor.start();
+    callMonitor.start();
     try {
       pair.forEach(v -> indexSingleVariantAndCall(v));
     } catch (TribbleException te) {
@@ -173,8 +175,13 @@ public class Indexer {
           te.getMessage());
     } finally {
       variantMonitor.stop();
+      callMonitor.stop();
+
       variantMonitor.displaySummary();
+      callMonitor.displaySummary();
+
       variantMonitor.reset();
+      callMonitor.reset();
     }
 
   }
@@ -192,6 +199,7 @@ public class Indexer {
     }
     for (val call : calls) {
       processEsCall(variant, call);
+      callMonitor.incr();
     }
   }
 
