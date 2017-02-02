@@ -83,10 +83,18 @@ public class EsVariant implements Serializable, EsModel {
     this.referenceBases = referenceBases;
   }
 
+  /*
+   * Returns reference bases array. Only mutable point of entry, since for performance reasons (during serialization),
+   * dont want to copy new array
+   */
   byte[] getReferenceBasesAsByteArray() {
     return referenceBases;
   }
 
+  /*
+   * Returns alternative bases array. Only mutable point of entry, since for performance reasons (during serialization),
+   * dont want to copy new array
+   */
   byte[][] getAlternativeBasesAsByteArrays() {
     return alternativeBases;
   }
