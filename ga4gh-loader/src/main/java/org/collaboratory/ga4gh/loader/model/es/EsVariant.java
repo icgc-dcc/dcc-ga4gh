@@ -34,14 +34,19 @@ import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import org.icgc.dcc.common.core.util.stream.Streams;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
 import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.val;
 
@@ -83,19 +88,11 @@ public class EsVariant implements Serializable, EsModel {
     this.referenceBases = referenceBases;
   }
 
-  /*
-   * Returns reference bases array. Only mutable point of entry, since for performance reasons (during serialization),
-   * dont want to copy new array
-   */
-  byte[] getReferenceBasesAsByteArray() {
+  private byte[] getReferenceBasesAsByteArray() {
     return referenceBases;
   }
 
-  /*
-   * Returns alternative bases array. Only mutable point of entry, since for performance reasons (during serialization),
-   * dont want to copy new array
-   */
-  byte[][] getAlternativeBasesAsByteArrays() {
+  private byte[][] getAlternativeBasesAsByteArrays() {
     return alternativeBases;
   }
 
@@ -215,6 +212,68 @@ public class EsVariant implements Serializable, EsModel {
     protected EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
       this.referenceBases = referenceBases;
       return this;
+    }
+
+  }
+
+  /*
+   * Serializer needed for MapDB. Note: if EsVariant member variables are added, removed or modified, this needs to be
+   * updated
+   */
+  public static class EsVariantSerializer implements Serializer<EsVariant>, Serializable {
+
+    @Override
+    public void serialize(DataOutput2 out, EsVariant value) throws IOException {
+      out.writeInt(value.getStart());
+      out.writeInt(value.getEnd());
+      out.writeUTF(value.getReferenceName());
+
+      out.writeInt(value.getReferenceBasesAsByteArray().length); // Length
+      out.write(value.getReferenceBasesAsByteArray());
+
+      val doubleArray = value.getAlternativeBasesAsByteArrays();
+      val numAltBases = doubleArray.length;
+      out.writeInt(numAltBases);
+      for (int i = 0; i < numAltBases; i++) {
+        byte[] b = doubleArray[i];
+        out.writeInt(b.length);
+        out.write(b);
+      }
+    }
+
+    @Override
+    @SneakyThrows
+    public EsVariant deserialize(DataInput2 input, int available) throws IOException {
+      val start = input.readInt();
+      val end = input.readInt();
+      val referenceName = input.readUTF();
+
+      // Deserialize ReferenceBases
+      val referenceBasesLength = input.readInt();
+      byte[] refBasesArray = new byte[referenceBasesLength];
+      for (int i = 0; i < referenceBasesLength; i++) {
+        refBasesArray[i] = input.readByte();
+      }
+
+      // Deserialize AlternateBases
+      val altBasesListLength = input.readInt();
+      byte[][] doubleArray = new byte[altBasesListLength][];
+      for (int i = 0; i < altBasesListLength; i++) {
+        val arrayLength = input.readInt();
+        byte[] array = new byte[arrayLength];
+        for (int j = 0; j < arrayLength; j++) {
+          array[j] = input.readByte();
+        }
+        doubleArray[i] = array;
+      }
+
+      return EsVariant.builder()
+          .start(start)
+          .end(end)
+          .referenceName(referenceName)
+          .referenceBasesAsBytes(refBasesArray)
+          .allAlternativeBasesAsBytes(doubleArray)
+          .build();
     }
 
   }
