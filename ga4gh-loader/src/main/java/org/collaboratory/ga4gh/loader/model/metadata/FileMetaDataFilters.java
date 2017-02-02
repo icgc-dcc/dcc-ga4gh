@@ -19,14 +19,21 @@ package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.filter;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 
 /*
  * Functions for filtering lists of FileMetaDatas
@@ -56,6 +63,29 @@ public class FileMetaDataFilters {
     return f.compare(MutationTypes.somatic)
         && (f.compare(SubMutationTypes.indel)
             || f.compare(SubMutationTypes.snv_mnv));
+  }
+
+  public static List<FileMetaData> filterSelectedFilenamesInOrder(@NonNull Iterable<FileMetaData> fileMetaDatas,
+      @NonNull List<String> filenames) {
+    // sort filemetadatas based on filename
+    // create list of parsers from that sorted list
+    // biinary search, and if index found, retrieve from first list
+    val mutableFMDs = Lists.newArrayList(fileMetaDatas);
+    Collections.sort(mutableFMDs, new FileMetaData.FilenameComparator());
+    val fileMetaDataList = ImmutableList.copyOf(mutableFMDs);
+
+    val parsers = fileMetaDataList.stream()
+        .map(f -> f.getVcfFilenameParser())
+        .collect(toImmutableList());
+    val outputListBuilder = ImmutableList.<FileMetaData> builder();
+    for (val filename : filenames) {
+      val parserKey = new PortalVCFFilenameParser(filename);
+      val index = Collections.binarySearch(parsers, parserKey);
+      if (index >= 0) {
+        outputListBuilder.add(fileMetaDataList.get(index));
+      }
+    }
+    return outputListBuilder.build();
   }
 
 }

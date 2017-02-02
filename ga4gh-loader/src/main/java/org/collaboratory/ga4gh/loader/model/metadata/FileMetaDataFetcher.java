@@ -20,9 +20,9 @@ package org.collaboratory.ga4gh.loader.model.metadata;
 import static com.google.common.base.Preconditions.checkState;
 import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
 import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterSelectedFilenamesInOrder;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.val;
 
 /*
@@ -61,6 +62,9 @@ public class FileMetaDataFetcher {
   private final String storageFilename;
   private final boolean createNewFile;
 
+  @Singular
+  private final List<String> specificFilenames;
+
   public static final long generateSeed() {
     return System.currentTimeMillis();
   }
@@ -68,17 +72,19 @@ public class FileMetaDataFetcher {
   public static void main(String[] args) throws ClassNotFoundException, IOException {
     val fetcher = FileMetaDataFetcher.builder()
         .storageFilename("target/allFiles.bin")
-        .createNewFile(true)
+        .specificFilename(
+            "8a9359de-b0ad-4a2d-a543-e3b982697db9.dkfz-indelCalling_1-0-132-1.20150726.somatic.indel.vcf.gz")
         .build();
 
     val fmdList = fetcher.fetch();
-    val map = FileMetaData.groupFileMetaData(fmdList, x -> x.getVcfFilenameParser().getCallerId());
-    val printer = new PrintWriter("target/allFiles.txt");
-
-    map.keySet().stream()
-        .forEach(k -> printer.write(k + "\n"));
-
-    printer.close();
+    System.out.println("List: " + fmdList);
+    // val map = FileMetaData.groupFileMetaData(fmdList, x -> x.getVcfFilenameParser().getCallerId());
+    // val printer = new PrintWriter("target/allFiles.txt");
+    //
+    // map.keySet().stream()
+    // .forEach(k -> printer.write(k + "\n"));
+    //
+    // printer.close();
 
   }
 
@@ -92,7 +98,8 @@ public class FileMetaDataFetcher {
       boolean sort,
       boolean ascending,
       String storageFilename,
-      boolean createNewFile) {
+      boolean createNewFile,
+      List<String> specificFilenames) {
     this.numDonors = numDonors;
     this.maxFileSizeBytes = maxFileSizeBytes;
     this.somaticSSMsOnly = somaticSSMsOnly;
@@ -103,6 +110,7 @@ public class FileMetaDataFetcher {
     this.ascending = ascending;
     this.storageFilename = storageFilename;
     this.createNewFile = createNewFile;
+    this.specificFilenames = specificFilenames;
     checkConfig();
   }
 
@@ -194,25 +202,30 @@ public class FileMetaDataFetcher {
       fileMetaDatas = getForDonorNum(fileMetaDatas, numDonors);
     }
 
-    // If size > 0, use only files less than or equal to maxFileSizeBytes
-    val filteredFileMetaDatasBySize =
-        maxFileSizeUpdated() ? FileMetaDataFilters.filterBySize(fileMetaDatas, maxFileSizeBytes) : fileMetaDatas;
+    if (specificFilenames.isEmpty()) {
+      // If size > 0, use only files less than or equal to maxFileSizeBytes
+      val filteredFileMetaDatasBySize =
+          maxFileSizeUpdated() ? FileMetaDataFilters.filterBySize(fileMetaDatas, maxFileSizeBytes) : fileMetaDatas;
 
-    val filteredFileMetaDatas =
-        somaticSSMsOnly ? FileMetaDataFilters
-            .filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
+      val filteredFileMetaDatas =
+          somaticSSMsOnly ? FileMetaDataFilters
+              .filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
 
-    List<FileMetaData> outputList = ImmutableList.copyOf(filteredFileMetaDatas);
-    if (shuffle) {
-      val rand = new Random();
-      rand.setSeed(seed);
-      val list = Lists.newArrayList(filteredFileMetaDatas);
-      Collections.shuffle(list, rand);
-      outputList = ImmutableList.copyOf(list);
-    } else if (sort) {
-      outputList = FileMetaData.sortByFileSize(filteredFileMetaDatas, ascending);
+      List<FileMetaData> outputList = ImmutableList.copyOf(filteredFileMetaDatas);
+      if (shuffle) {
+        val rand = new Random();
+        rand.setSeed(seed);
+        val list = Lists.newArrayList(filteredFileMetaDatas);
+        Collections.shuffle(list, rand);
+        outputList = ImmutableList.copyOf(list);
+      } else if (sort) {
+        outputList = FileMetaData.sortByFileSize(filteredFileMetaDatas, ascending);
+      }
+      return limitNumFilesUpdated() ? outputList.subList(0, Math.min(limit, outputList.size())) : outputList;
+    } else {
+      return filterSelectedFilenamesInOrder(fileMetaDatas, specificFilenames);
     }
-    return limitNumFilesUpdated() ? outputList.subList(0, Math.min(limit, outputList.size())) : outputList;
+
   }
 
   public static void store(List<FileMetaData> fileMetaDatas, String filename) throws IOException {

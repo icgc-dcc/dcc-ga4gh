@@ -34,7 +34,8 @@ import lombok.NonNull;
 /**
  * Takes a filename, and extracts particular fields characteristic of ICGC VCF files
  */
-public class PortalVCFFilenameParser implements Serializable {
+public class PortalVCFFilenameParser
+    implements Serializable, Comparable<PortalVCFFilenameParser> {
 
   private static final long serialVersionUID = 1484172857L;
 
@@ -115,5 +116,10 @@ public class PortalVCFFilenameParser implements Serializable {
       callerType = parseCallerType(this.getCallerId());
     }
     return callerType;
+  }
+
+  @Override
+  public int compareTo(PortalVCFFilenameParser o) {
+    return this.getFilename().compareTo(o.getFilename());
   }
 }

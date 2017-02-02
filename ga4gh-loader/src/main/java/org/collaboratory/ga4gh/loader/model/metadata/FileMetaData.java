@@ -223,4 +223,13 @@ public final class FileMetaData implements Serializable {
     }
   }
 
+  @RequiredArgsConstructor
+  public static class FilenameComparator implements Comparator<FileMetaData> {
+
+    @Override
+    public int compare(FileMetaData f1, FileMetaData f2) {
+      return f1.getVcfFilenameParser().getFilename().compareTo(f2.getVcfFilenameParser().getFilename());
+    }
+  }
+
 }
