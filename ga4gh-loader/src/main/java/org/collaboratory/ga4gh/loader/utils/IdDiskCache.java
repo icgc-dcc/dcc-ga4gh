@@ -1,6 +1,6 @@
 package org.collaboratory.ga4gh.loader.utils;
 
-import static org.collaboratory.ga4gh.loader.utils.IdRamCache.newIdCache;
+import static org.collaboratory.ga4gh.loader.utils.IdCacheImpl.newIdCache;
 import static org.icgc.dcc.common.core.util.Joiners.PATH;
 
 import java.io.Closeable;

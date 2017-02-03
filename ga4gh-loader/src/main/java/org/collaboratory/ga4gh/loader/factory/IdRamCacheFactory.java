@@ -1,17 +1,19 @@
 package org.collaboratory.ga4gh.loader.factory;
 
-import static com.google.common.collect.Maps.newHashMap;
+import static org.collaboratory.ga4gh.loader.utils.IdRamCache.newIdRamCache;
 
 import java.io.IOException;
 
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.IdCache;
-import org.collaboratory.ga4gh.loader.utils.IdRamCache;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 
+/*
+ * All IdCaches are stored in memory
+ */
 @RequiredArgsConstructor
 @Value
 public class IdRamCacheFactory implements IdCacheFactory {
@@ -31,10 +33,6 @@ public class IdRamCacheFactory implements IdCacheFactory {
     variantIdCache = newIdRamCache(initId);
     variantSetIdCache = newIdRamCache(initId);
     callSetIdCache = newIdRamCache(initId);
-  }
-
-  private static <E> IdCache<E> newIdRamCache(final long initialId) {
-    return IdRamCache.newIdCache(newHashMap(), initialId);
   }
 
   @Override

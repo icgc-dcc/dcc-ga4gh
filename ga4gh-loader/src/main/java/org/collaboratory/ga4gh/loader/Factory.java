@@ -25,7 +25,7 @@ import java.net.InetAddress;
 import java.util.Properties;
 
 import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
-import org.collaboratory.ga4gh.loader.factory.IdDiskCacheFactory;
+import org.collaboratory.ga4gh.loader.factory.IdMixedCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.elasticsearch.client.Client;
@@ -82,7 +82,8 @@ public class Factory {
     val defaultInitId = 1L;
     val defaultStorageDirname = "target";
     if (useMapDB) {
-      return new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
+      // return new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
+      return new IdMixedCacheFactory(defaultStorageDirname, defaultInitId);
     } else {
       return new IdRamCacheFactory(defaultInitId);
     }

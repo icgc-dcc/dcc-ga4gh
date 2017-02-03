@@ -17,51 +17,78 @@
  */
 package org.collaboratory.ga4gh.loader.utils;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.newHashMap;
-import static org.collaboratory.ga4gh.loader.utils.IdCacheImpl.newIdCache;
 
 import java.util.Map;
 
-public class IdRamCache<T> implements IdCache<T> {
+import com.google.common.collect.ImmutableMap;
 
-  private final IdCache<T> idCache;
+import lombok.NonNull;
+import lombok.val;
 
-  public static <T> IdRamCache<T> newIdRamCache(final Long id) {
-    return new IdRamCache<T>(id);
+public final class IdCacheImpl<T> implements IdCache<T> {
+
+  private Map<T, Long> cache;
+  private Long id;
+
+  public static <T> IdCache<T> newIdCache(Map<T, Long> cache, final Long id) {
+    return new IdCacheImpl<T>(cache, id);
   }
 
-  public IdRamCache(final long initId) {
-    this.idCache = newIdCache(newHashMap(), initId);
+  public IdCacheImpl(@NonNull final Map<T, Long> cache, final Long id) {
+    this.id = id;
+    this.checkIdLowerBound();
+    this.checkIdUpperBound();
+    this.cache = cache;
   }
 
-  @Override
-  public void purge() {
-    idCache.purge();
+  private void checkIdLowerBound() {
+    checkState(id >= Long.MIN_VALUE, "The id %d must be >= %d", id, Long.MIN_VALUE);
   }
 
-  @Override
-  public void add(T t) {
-    idCache.add(t);
-  }
-
-  @Override
-  public boolean contains(T t) {
-    return idCache.contains(t);
-  }
-
-  @Override
-  public String getIdAsString(T t) {
-    return idCache.getIdAsString(t);
+  private void checkIdUpperBound() {
+    checkState(id < Long.MAX_VALUE, "The id %d must be < %d", id, Long.MAX_VALUE);
   }
 
   @Override
-  public Long getId(T t) {
-    return idCache.getId(t);
+  public void add(final T t) {
+    checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
+    if (!cache.containsKey(t)) {
+      cache.put(t, id++);
+    }
+  }
+
+  @Override
+  public boolean contains(final T t) {
+    return cache.containsKey(t);
+  }
+
+  @Override
+  public String getIdAsString(@NonNull T t) {
+    return getId(t).toString();
+  }
+
+  @Override
+  public Long getId(@NonNull T t) {
+    checkArgument(cache.containsKey(t), "The following key doesnt not exist in the cache: \n%s", t);
+    return cache.get(t);
   }
 
   @Override
   public Map<Long, T> getReverseCache() {
-    return idCache.getReverseCache();
+    val map = ImmutableMap.<Long, T> builder();
+    for (val entry : cache.entrySet()) {
+      val key = entry.getKey();
+      val idValue = entry.getValue();
+      map.put(idValue, key);
+    }
+    return map.build();
   }
 
+  @Override
+  public void purge() {
+    cache = newHashMap();
+  }
 }
