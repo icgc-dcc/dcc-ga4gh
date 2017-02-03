@@ -97,10 +97,6 @@ public class VCF implements Closeable {
 
   }
 
-  public EsCallSet readCallSets() {
-    return convertCallSet(fileMetaData);
-  }
-
   public Stream<EsVariantCallPair> readVariantAndCalls() {
     return stream(vcf.iterator())
         .map(this::convertVariantCallPair);
@@ -115,7 +111,7 @@ public class VCF implements Closeable {
     return fileMetaData.getSampleId();
   }
 
-  private static EsCallSet convertCallSet(final FileMetaData fileMetaData) {
+  public static EsCallSet readCallSet(final FileMetaData fileMetaData) {
     val name = createCallSetName(fileMetaData);
     return EsCallSet.builder()
         .name(name)
@@ -202,7 +198,7 @@ public class VCF implements Closeable {
     // rtisma }
   }
 
-  public EsVariantSet readVariantSet() {
+  public static EsVariantSet readVariantSet(final FileMetaData fileMetaData) {
     return EsVariantSet.builder()
         .name(createVariantSetName(fileMetaData.getVcfFilenameParser().getCallerId()))
         .dataSetId(fileMetaData.getDataType())

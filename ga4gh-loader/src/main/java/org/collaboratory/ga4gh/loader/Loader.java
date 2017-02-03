@@ -7,6 +7,7 @@ import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newFileMetaDataFetcher;
 import static org.collaboratory.ga4gh.loader.Factory.newIdCacheFactory;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
+import static org.collaboratory.ga4gh.loader.VCF.readVariantSet;
 import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
 
 import java.io.File;
@@ -110,6 +111,8 @@ public class Loader {
     log.info("Resolving object ids...");
     val fileMetaDatas = dataFetcher.fetch();
     dumpToJson(fileMetaDatas, "target/sorted_filemetaDatas.json");
+    loadVariantSets(fileMetaDatas);
+    loadCallSets(fileMetaDatas);
     int count = 1;
     int total = fileMetaDatas.size();
     for (val fileMetaData : fileMetaDatas) {
@@ -117,6 +120,22 @@ public class Loader {
           fileMetaData.getFileSizeMb());
       loadFileMetaData(fileMetaData);
       count++;
+    }
+  }
+
+  private void loadVariantSets(final List<FileMetaData> fileMetaDatas) {
+    log.info("\tLoading variant_sets ...");
+    for (val fileMetaData : fileMetaDatas) {
+      val variantSet = readVariantSet(fileMetaData);
+      indexer.indexVariantSet(variantSet);
+    }
+  }
+
+  private void loadCallSets(final List<FileMetaData> fileMetaDatas) {
+    log.info("\tLoading callsets ...");
+    for (val fileMetaData : fileMetaDatas) {
+      val callSet = VCF.readCallSet(fileMetaData);
+      indexer.indexCallSet(callSet);
     }
   }
 
@@ -150,23 +169,11 @@ public class Loader {
     log.info("\tReading variants ...");
     val variants = vcf.readVariantAndCalls();
 
-    log.info("\tReading call_sets ...");
-    val callSets = vcf.readCallSets();
-
-    log.info("\tReading variant_sets ...");
-    val variantSet = vcf.readVariantSet();
-
-    log.info("\tReading vcf_headers ...");
-    val vcfHeader = vcf.readVCFHeader();
-
     log.info("\t\tIndexing variants and calls ...");
     indexer.indexVariantsAndCalls(variants);
 
-    log.info("\t\tIndexing variantSets ...");
-    indexer.indexVariantSet(variantSet);
-
-    log.info("\t\tIndexing callsets ...");
-    indexer.indexCallSet(callSets);
+    log.info("\tReading vcf_headers ...");
+    val vcfHeader = vcf.readVCFHeader();
 
     log.info("\t\tIndexing vcfHeaders ...");
     indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);

@@ -85,7 +85,6 @@ public class Indexer {
   private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor callMonitor = newMonitor("CallIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor variantSetMonitor = newMonitor("VariantSetIndexing", MONITOR_INTERVAL_COUNT);
-  private final CounterMonitor callSetMonitor = newMonitor("CallSetIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", MONITOR_INTERVAL_COUNT);
 
   @SneakyThrows
@@ -118,34 +117,24 @@ public class Indexer {
 
   @SneakyThrows
   public void indexVariantSet(@NonNull final EsVariantSet variantSet) {
-    variantSetMonitor.start();
     val variantSetName = variantSet.getName();
     val isNewVariantSetId = !variantSetIdCache.contains(variantSetName);
     if (isNewVariantSetId) {
       variantSetIdCache.add(variantSetName);
       val variantSetId = variantSetIdCache.getIdAsString(variantSetName);
       writeVariantSet(variantSetId, variantSet);
-      variantSetMonitor.incr();
     }
-    variantSetMonitor.stop();
-    variantSetMonitor.displaySummary();
-    variantSetMonitor.reset();
   }
 
   @SneakyThrows
   public void indexCallSet(@NonNull final EsCallSet callSet) {
-    callSetMonitor.start();
     val callSetName = callSet.getName();
     val isNewCallSetId = !callSetIdCache.contains(callSetName);
     if (isNewCallSetId) {
       callSetIdCache.add(callSetName);
       val callSetId = callSetIdCache.getIdAsString(callSetName);
       writeCallSet(callSetId, callSet);
-      callSetMonitor.incr();
     }
-    callSetMonitor.stop();
-    callSetMonitor.displaySummary();
-    callSetMonitor.reset();
   }
 
   @SneakyThrows
