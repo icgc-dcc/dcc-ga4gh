@@ -1,6 +1,7 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.joining;
 import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
@@ -16,7 +17,8 @@ import java.io.File;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
@@ -29,6 +31,7 @@ import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
+import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
@@ -60,16 +63,20 @@ public class VCF implements Closeable {
   private final VCFEncoder encoder;
 
   private final CallerTypes callerType;
-  private final String actualCallerId;
-  private final String sampleId;
+  private final String variantSetName;
+  private final String callSetName;
   private final String mutationTypeString;
   private final String mutationSubTypeString;
   private final boolean isMutationTypesCorrect;
-  private final String filename;
+  private final int variantSetId;
+  private final int callSetId;
 
   private final CounterMonitor variantCallPairMonitor = newMonitor("VariantCallPairParsing", 250000);
 
-  public VCF(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
+  public VCF(@NonNull final File file,
+      @NonNull final FileMetaData fileMetaData,
+      @NonNull final IdCache<String, Integer> variantSetIdCache,
+      @NonNull final IdCache<String, Integer> callSetIdCache) {
     this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
     this.fileMetaData = fileMetaData;
     this.encoder = new VCFEncoder(vcf.getFileHeader(),
@@ -78,14 +85,15 @@ public class VCF implements Closeable {
 
         OUTPUT_TRAILING_FORMAT_FIELDS_CFG);
 
-    this.sampleId = fileMetaData.getSampleId();
     val parser = fileMetaData.getVcfFilenameParser();
+
+    this.variantSetName = parser.getCallerId();
+    this.callSetName = fileMetaData.getSampleId();
+
     this.callerType = parser.getCallerType();
-    this.actualCallerId = parser.getCallerId();
     this.mutationTypeString = parser.getMutationType();
     this.mutationSubTypeString = parser.getSubMutationType();
     this.isMutationTypesCorrect = isMutationTypesCorrect(mutationTypeString, mutationSubTypeString);
-    this.filename = parser.getFilename();
 
     checkState(isMutationTypesCorrect,
         "Error: the mutationType(%s) must be of type [%s], and the subMutationType(%s) can be eitheror of [%s ,%s]",
@@ -94,6 +102,16 @@ public class VCF implements Closeable {
         mutationSubTypeString,
         SubMutationTypes.indel,
         SubMutationTypes.snv_mnv);
+
+    val variantSetNameExistsInCache = variantSetIdCache.contains(variantSetName);
+    val callSetNameExistsInCache = callSetIdCache.contains(callSetName);
+    checkState(variantSetNameExistsInCache, "VariantSetName [{}] does not exist in the variantSetIdCache",
+        variantSetName);
+    checkState(callSetNameExistsInCache, "CallSetName [{}] does not exist in the callSetIdCache",
+        callSetName);
+
+    this.variantSetId = variantSetIdCache.getId(variantSetName);
+    this.callSetId = callSetIdCache.getId(callSetName);
 
   }
 
@@ -111,12 +129,18 @@ public class VCF implements Closeable {
     return fileMetaData.getSampleId();
   }
 
-  public static EsCallSet readCallSet(final FileMetaData fileMetaData) {
-    val name = createCallSetName(fileMetaData);
+  public static EsCallSet readCallSet(final Map<String, Set<String>> sampleName2CallerListMap,
+      final IdCache<String, Integer> variantSetIdCache,
+      final FileMetaData fileMetaData) {
+    val callSetName = createCallSetName(fileMetaData);
+    val variantSetIds = sampleName2CallerListMap.get(callSetName).stream()
+        .map(x -> variantSetIdCache.getId(x))
+        .collect(toImmutableList());
+
     return EsCallSet.builder()
-        .name(name)
-        .variantSetId(createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
-        .bioSampleId(name) // bio_sample_id == call_set_name
+        .name(callSetName)
+        .variantSetIds(variantSetIds)
+        .bioSampleId(callSetName) // bio_sample_id == call_set_name
         .build();
   }
 
@@ -178,7 +202,7 @@ public class VCF implements Closeable {
     boolean foundCall = false;
     // TODO: HACKKK need to properly select which call can be indexed. Calls associated with "normal" are not to be
     // indexed
-    return createEsCall(actualCallerId, sampleId, variantContext);
+    return createEsCall(variantSetName, callSetName, variantContext);
     // rtisma try {
     // rtisma return createEsCall(actualCallerId, sampleId, genotypesContext, commonInfoMap);
     // rtisma // for (val call : callList) {
@@ -275,7 +299,7 @@ public class VCF implements Closeable {
             allele.getBaseString(),
             alternativeAlleles.stream()
                 .map(x -> x.getBaseString())
-                .collect(Collectors.joining(",")));
+                .collect(joining(",")));
         allelesBuilder.add(ALTERNATIVE_ALLELE_INDEX_OFFSET + indexAltAllele);
       } else {
         allelesBuilder.add(DEFAULT_REFERENCE_ALLELE_POSITION);
@@ -285,8 +309,8 @@ public class VCF implements Closeable {
     val hasCorrectNumberOfAlleles = alleles.size() == genotype.getAlleles().size();
     checkState(hasCorrectNumberOfAlleles,
         "There was an error with creating the allele index list. AlternateAlleles: [%s], GenotypesAlleles: [%s]",
-        alternativeAlleles.stream().map(x -> x.getBaseString()).collect(Collectors.joining(",")),
-        genotype.getAlleles().stream().map(x -> x.getBaseString()).collect(Collectors.joining(",")));
+        alternativeAlleles.stream().map(x -> x.getBaseString()).collect(joining(",")),
+        genotype.getAlleles().stream().map(x -> x.getBaseString()).collect(joining(",")));
     return alleles;
   }
 
@@ -294,8 +318,8 @@ public class VCF implements Closeable {
   // etc..
   // and each one has its own implementation of "convertVariantContext". Solves perf problem and avoids giant state
   // machine
-  private static List<EsCall> createEsCall(final String callerTypeString,
-      final String bioSampleId,
+  private List<EsCall> createEsCall(final String variantSetName,
+      final String callSetName,
       final VariantContext variantContext) {
 
     val genotypesContext = variantContext.getGenotypes();
@@ -308,16 +332,16 @@ public class VCF implements Closeable {
       info.putAll(commonInfoMap);
       callsBuilder.add(
           EsCall.builder()
-              .variantSetId(callerTypeString)
-              .callSetId(bioSampleId)
+              .variantSetId(variantSetId)
+              .callSetId(callSetId)
               .info(info)
               // .sampleName(genotype.getSampleName())
               .genotypeLikelihood(genotype.getLog10PError())
               .isGenotypePhased(genotype.isPhased())
               .nonReferenceAlleles(convertGenotypeAlleles(altAlleles, genotype))
               .build());
-
     }
+
     return callsBuilder.build();
   }
 }

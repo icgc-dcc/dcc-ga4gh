@@ -110,9 +110,12 @@ public class Loader {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
     val fileMetaDatas = dataFetcher.fetch();
+    // val fileMetaDatas = FileMetaData.filter(dataFetcher.fetch(),
+    // x -> !x.getVcfFilenameParser().getCallerType().getRealName().contains("broad")
+    // && x.getVcfFilenameParser().getCallerType() != CallerTypes.consensus);
+
     dumpToJson(fileMetaDatas, "target/sorted_filemetaDatas.json");
-    loadVariantSets(fileMetaDatas);
-    loadCallSets(fileMetaDatas);
+    loadVariantSetAndCallSets(fileMetaDatas);
     int count = 1;
     int total = fileMetaDatas.size();
     for (val fileMetaData : fileMetaDatas) {
@@ -123,18 +126,20 @@ public class Loader {
     }
   }
 
-  private void loadVariantSets(final List<FileMetaData> fileMetaDatas) {
+  /*
+   * TODO: very dirty. need to refactor. way to coupled
+   */
+  private void loadVariantSetAndCallSets(final List<FileMetaData> fileMetaDatas) {
     log.info("\tLoading variant_sets ...");
     for (val fileMetaData : fileMetaDatas) {
       val variantSet = readVariantSet(fileMetaData);
       indexer.indexVariantSet(variantSet);
     }
-  }
-
-  private void loadCallSets(final List<FileMetaData> fileMetaDatas) {
     log.info("\tLoading callsets ...");
+    val sampleMap = FileMetaData.groupFileMetaDatasBySamplesThenCallers(fileMetaDatas);
+    val variantSetIdCache = indexer.getVariantSetIdCache();
     for (val fileMetaData : fileMetaDatas) {
-      val callSet = VCF.readCallSet(fileMetaData);
+      val callSet = VCF.readCallSet(sampleMap, variantSetIdCache, fileMetaData);
       indexer.indexCallSet(callSet);
     }
   }
@@ -164,7 +169,7 @@ public class Loader {
 
   private void loadFile(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
     @Cleanup
-    val vcf = new VCF(file, fileMetaData);
+    val vcf = new VCF(file, fileMetaData, indexer.getVariantSetIdCache(), indexer.getCallSetIdCache());
 
     log.info("\tReading variants ...");
     val variants = vcf.readVariantAndCalls();
@@ -172,10 +177,11 @@ public class Loader {
     log.info("\t\tIndexing variants and calls ...");
     indexer.indexVariantsAndCalls(variants);
 
-    log.info("\tReading vcf_headers ...");
-    val vcfHeader = vcf.readVCFHeader();
-
-    log.info("\t\tIndexing vcfHeaders ...");
-    indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);
+    /*
+     * TODO: need to fix this to index properly log.info("\tReading vcf_headers ..."); val vcfHeader =
+     * vcf.readVCFHeader();
+     * 
+     * log.info("\t\tIndexing vcfHeaders ..."); indexer.indexVCFHeader(fileMetaData.getObjectId(), vcfHeader);
+     */
   }
 }

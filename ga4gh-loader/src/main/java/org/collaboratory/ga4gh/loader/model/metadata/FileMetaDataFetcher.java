@@ -69,25 +69,6 @@ public class FileMetaDataFetcher {
     return System.currentTimeMillis();
   }
 
-  public static void main(String[] args) throws ClassNotFoundException, IOException {
-    val fetcher = FileMetaDataFetcher.builder()
-        .storageFilename("target/allFiles.bin")
-        .specificFilename(
-            "8a9359de-b0ad-4a2d-a543-e3b982697db9.dkfz-indelCalling_1-0-132-1.20150726.somatic.indel.vcf.gz")
-        .build();
-
-    val fmdList = fetcher.fetch();
-    System.out.println("List: " + fmdList);
-    // val map = FileMetaData.groupFileMetaData(fmdList, x -> x.getVcfFilenameParser().getCallerId());
-    // val printer = new PrintWriter("target/allFiles.txt");
-    //
-    // map.keySet().stream()
-    // .forEach(k -> printer.write(k + "\n"));
-    //
-    // printer.close();
-
-  }
-
   public FileMetaDataFetcher(
       int numDonors,
       long maxFileSizeBytes,
