@@ -1,58 +1,39 @@
 package org.collaboratory.ga4gh.loader.factory;
 
-import static org.collaboratory.ga4gh.loader.utils.IdDiskCache.newIdDiskCache;
-import static org.collaboratory.ga4gh.loader.utils.IdRamCache.newIdRamCache;
+import static org.collaboratory.ga4gh.loader.utils.cache.impl.DiskCacheStorage.newDiskCacheStorage;
+import static org.collaboratory.ga4gh.loader.utils.cache.impl.RamCacheStorage.newRamCacheStorage;
 
 import java.io.IOException;
 
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.utils.IdCache;
-import org.collaboratory.ga4gh.loader.utils.IdDiskCache;
-
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+import org.mapdb.Serializer;
 
 /*
  * Mix of disk cache and ram caches. 
  * EsVariant is diskCached, and the rest are ramCached  (since they dont need that much memory)
  */
-@RequiredArgsConstructor
-@Value
-public class IdMixedCacheFactory implements IdCacheFactory {
+public final class IdMixedCacheFactory extends AbstractIdCacheFactory {
 
   private final String storageDirname;
-  private final long initId;
 
-  // State
-  @NonFinal
-  private IdDiskCache<EsVariant> variantIdCache;
-
-  @NonFinal
-  private IdCache<String> variantSetIdCache;
-
-  @NonFinal
-  private IdCache<String> callSetIdCache;
+  public IdMixedCacheFactory(final int initId, final String storageDirname) {
+    super(initId);
+    this.storageDirname = storageDirname;
+  }
 
   @Override
-  public void build() throws IOException {
-    variantIdCache =
-        newIdDiskCache("variantIdCache", new EsVariant.EsVariantSerializer(), storageDirname,
-            initId);
-    variantSetIdCache = newIdRamCache(initId);
-    callSetIdCache = newIdRamCache(initId);
+  protected void buildCacheStorage() throws IOException {
+    variantCacheStorage = newDiskCacheStorage("variantIdCache", new EsVariant.EsVariantSerializer(), Serializer.LONG,
+        storageDirname, false);
+    variantSetCacheStorage = newRamCacheStorage();
+    callSetCacheStorage = newRamCacheStorage();
   }
 
   @Override
   public void close() throws IOException {
-    variantIdCache.close();
-  }
-
-  @Override
-  public void purge() {
-    variantSetIdCache.purge();
-    variantIdCache.purge();
-    callSetIdCache.purge();
+    variantCacheStorage.close();
+    variantSetCacheStorage.close();
+    callSetCacheStorage.close();
   }
 
 }

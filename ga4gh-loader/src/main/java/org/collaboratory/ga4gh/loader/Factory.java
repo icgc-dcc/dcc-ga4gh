@@ -79,11 +79,11 @@ public class Factory {
   }
 
   public static IdCacheFactory newIdCacheFactory(boolean useMapDB) {
-    val defaultInitId = 1L;
+    final int defaultInitId = 1;
     val defaultStorageDirname = "target";
     if (useMapDB) {
       // return new IdDiskCacheFactory(defaultStorageDirname, defaultInitId);
-      return new IdMixedCacheFactory(defaultStorageDirname, defaultInitId);
+      return new IdMixedCacheFactory(defaultInitId, defaultStorageDirname);
     } else {
       return new IdRamCacheFactory(defaultInitId);
     }

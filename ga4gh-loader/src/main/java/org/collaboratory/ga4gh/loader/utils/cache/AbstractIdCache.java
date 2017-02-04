@@ -15,70 +15,71 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.utils;
+package org.collaboratory.ga4gh.loader.utils.cache;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Maps.newHashMap;
 
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.val;
 
-public final class IdCacheImpl<T> implements IdCache<T> {
+public abstract class AbstractIdCache<K, ID extends Number> implements IdCache<K, ID> {
 
-  private Map<T, Long> cache;
-  private Long id;
+  private Map<K, ID> cache;
+  private CacheStorage<K, ID> cacheStorage;
 
-  public static <T> IdCache<T> newIdCache(Map<T, Long> cache, final Long id) {
-    return new IdCacheImpl<T>(cache, id);
-  }
+  @Getter(AccessLevel.PROTECTED)
+  @Setter(AccessLevel.PROTECTED)
+  private ID count;
 
-  public IdCacheImpl(@NonNull final Map<T, Long> cache, final Long id) {
-    this.id = id;
+  public AbstractIdCache(@NonNull final CacheStorage<K, ID> cacheStorage, final ID initCount) {
+    this.count = initCount;
+    this.cacheStorage = cacheStorage;
+    this.cache = cacheStorage.getMap();
+
     this.checkIdLowerBound();
     this.checkIdUpperBound();
-    this.cache = cache;
   }
 
-  private void checkIdLowerBound() {
-    checkState(id >= Long.MIN_VALUE, "The id %d must be >= %d", id, Long.MIN_VALUE);
-  }
+  protected abstract void checkIdLowerBound();
 
-  private void checkIdUpperBound() {
-    checkState(id < Long.MAX_VALUE, "The id %d must be < %d", id, Long.MAX_VALUE);
-  }
+  protected abstract void checkIdUpperBound();
+
+  protected abstract ID incr();
 
   @Override
-  public void add(final T t) {
+  public void add(final K k) {
     checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
-    if (!cache.containsKey(t)) {
-      cache.put(t, id++);
+    if (!cache.containsKey(k)) {
+      cache.put(k, incr());
     }
   }
 
   @Override
-  public boolean contains(final T t) {
-    return cache.containsKey(t);
+  public boolean contains(final K k) {
+    return cache.containsKey(k);
   }
 
   @Override
-  public String getIdAsString(@NonNull T t) {
-    return getId(t).toString();
+  public String getIdAsString(@NonNull K k) {
+    return getId(k).toString();
   }
 
   @Override
-  public Long getId(@NonNull T t) {
-    checkArgument(cache.containsKey(t), "The following key doesnt not exist in the cache: \n%s", t);
-    return cache.get(t);
+  public ID getId(@NonNull K k) {
+    checkArgument(cache.containsKey(k), "The following key doesnt not exist in the cache: \n%s", k);
+    return cache.get(k);
   }
 
   @Override
-  public Map<Long, T> getReverseCache() {
-    val map = ImmutableMap.<Long, T> builder();
+  public Map<ID, K> getReverseCache() {
+    val map = ImmutableMap.<ID, K> builder();
     for (val entry : cache.entrySet()) {
       val key = entry.getKey();
       val idValue = entry.getValue();
@@ -89,6 +90,7 @@ public final class IdCacheImpl<T> implements IdCache<T> {
 
   @Override
   public void purge() {
-    cache = newHashMap();
+    cacheStorage.purge();
   }
+
 }

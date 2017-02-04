@@ -1,58 +1,39 @@
 package org.collaboratory.ga4gh.loader.factory;
 
-import static org.collaboratory.ga4gh.loader.utils.IdDiskCache.newIdDiskCache;
+import static org.collaboratory.ga4gh.loader.utils.cache.impl.DiskCacheStorage.newDiskCacheStorage;
 
 import java.io.IOException;
 
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.utils.IdDiskCache;
 import org.mapdb.Serializer;
-
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import lombok.experimental.NonFinal;
 
 /*
  * All IdCaches are stored on disk via MapDB
  */
-@RequiredArgsConstructor
-@Value
-public class IdDiskCacheFactory implements IdCacheFactory {
+public final class IdDiskCacheFactory extends AbstractIdCacheFactory {
 
   private final String storageDirname;
-  private final long initId;
 
-  // State
-  @NonFinal
-  private IdDiskCache<EsVariant> variantIdCache;
-
-  @NonFinal
-  private IdDiskCache<String> variantSetIdCache;
-
-  @NonFinal
-  private IdDiskCache<String> callSetIdCache;
+  public IdDiskCacheFactory(final int initId, final String storageDirname) {
+    super(initId);
+    this.storageDirname = storageDirname;
+  }
 
   @Override
-  public void build() throws IOException {
-    variantIdCache =
-        newIdDiskCache("variantIdCache", new EsVariant.EsVariantSerializer(), storageDirname,
-            initId);
-    variantSetIdCache = newIdDiskCache("variantSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);
-    callSetIdCache = newIdDiskCache("callSetIdCache", Serializer.STRING_ASCII, storageDirname, initId);
+  protected void buildCacheStorage() throws IOException {
+    variantCacheStorage = newDiskCacheStorage("variantIdCache", new EsVariant.EsVariantSerializer(), Serializer.LONG,
+        storageDirname, false);
+    variantSetCacheStorage = newDiskCacheStorage("variantSetIdCache", Serializer.STRING, Serializer.INTEGER,
+        storageDirname, false);
+    callSetCacheStorage = newDiskCacheStorage("variantSetIdCache", Serializer.STRING, Serializer.INTEGER,
+        storageDirname, false);
   }
 
   @Override
   public void close() throws IOException {
-    variantSetIdCache.close();
-    variantIdCache.close();
-    callSetIdCache.close();
-  }
-
-  @Override
-  public void purge() {
-    variantSetIdCache.purge();
-    variantIdCache.purge();
-    callSetIdCache.purge();
+    variantCacheStorage.close();
+    variantSetCacheStorage.close();
+    callSetCacheStorage.close();
   }
 
 }

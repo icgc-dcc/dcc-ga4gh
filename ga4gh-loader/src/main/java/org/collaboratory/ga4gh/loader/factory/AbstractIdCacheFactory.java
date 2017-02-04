@@ -15,53 +15,53 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.utils;
+package org.collaboratory.ga4gh.loader.factory;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static org.collaboratory.ga4gh.loader.utils.IdCacheImpl.newIdCache;
+import static org.collaboratory.ga4gh.loader.utils.cache.impl.IntegerIdCache.newIntegerIdCache;
+import static org.collaboratory.ga4gh.loader.utils.cache.impl.LongIdCache.newLongIdCache;
 
-import java.util.Map;
+import java.io.IOException;
 
-public class IdRamCache<T> implements IdCache<T> {
+import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.loader.utils.cache.CacheStorage;
+import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
 
-  private final IdCache<T> idCache;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-  public static <T> IdRamCache<T> newIdRamCache(final Long id) {
-    return new IdRamCache<T>(id);
-  }
+@RequiredArgsConstructor
+public abstract class AbstractIdCacheFactory implements IdCacheFactory {
 
-  public IdRamCache(final long initId) {
-    this.idCache = newIdCache(newHashMap(), initId);
+  private final int initId;
+
+  @Getter
+  private IdCache<EsVariant, Long> variantIdCache;
+
+  @Getter
+  private IdCache<String, Integer> variantSetIdCache;
+
+  @Getter
+  private IdCache<String, Integer> callSetIdCache;
+
+  protected CacheStorage<EsVariant, Long> variantCacheStorage;
+  protected CacheStorage<String, Integer> variantSetCacheStorage;
+  protected CacheStorage<String, Integer> callSetCacheStorage;
+
+  @Override
+  public final void build() throws IOException {
+    buildCacheStorage();
+    variantIdCache = newLongIdCache(variantCacheStorage, (long) initId);
+    variantSetIdCache = newIntegerIdCache(variantSetCacheStorage, initId);
+    callSetIdCache = newIntegerIdCache(callSetCacheStorage, initId);
   }
 
   @Override
-  public void purge() {
-    idCache.purge();
+  public final void purge() {
+    variantSetIdCache.purge();
+    variantIdCache.purge();
+    callSetIdCache.purge();
   }
 
-  @Override
-  public void add(T t) {
-    idCache.add(t);
-  }
-
-  @Override
-  public boolean contains(T t) {
-    return idCache.contains(t);
-  }
-
-  @Override
-  public String getIdAsString(T t) {
-    return idCache.getIdAsString(t);
-  }
-
-  @Override
-  public Long getId(T t) {
-    return idCache.getId(t);
-  }
-
-  @Override
-  public Map<Long, T> getReverseCache() {
-    return idCache.getReverseCache();
-  }
+  protected abstract void buildCacheStorage() throws IOException;
 
 }
