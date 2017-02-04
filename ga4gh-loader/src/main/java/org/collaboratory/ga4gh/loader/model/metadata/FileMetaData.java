@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -121,6 +122,11 @@ public final class FileMetaData implements Serializable {
     return groupFileMetaData(fileMetaDatas, FileMetaData::getSampleId);
   }
 
+  public static Map<String, List<FileMetaData>> groupFileMetaDataByCaller(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getCallerId());
+  }
+
   public static Map<String, List<FileMetaData>> groupFileMetaDatasByDonor(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
     return groupFileMetaData(fileMetaDatas, FileMetaData::getDonorId);
@@ -139,6 +145,18 @@ public final class FileMetaData implements Serializable {
   public static Map<String, List<FileMetaData>> groupFileMetaDatasBySubMutationType(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
     return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getSubMutationType());
+  }
+
+  public static Map<String, Set<String>> groupFileMetaDatasBySamplesThenCallers(
+      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+    val mapBuilder = ImmutableMap.<String, Set<String>> builder();
+    val bySamples = groupFileMetaDataBySample(fileMetaDatas);
+    for (val entry : bySamples.entrySet()) {
+      val sampleName = entry.getKey();
+      val callerSet = groupFileMetaDataByCaller(entry.getValue()).keySet();
+      mapBuilder.put(sampleName, callerSet);
+    }
+    return mapBuilder.build();
   }
 
   public static List<FileMetaData> sortByFileSize(@NonNull final Iterable<FileMetaData> fileMetaDatas,
