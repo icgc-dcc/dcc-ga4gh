@@ -18,7 +18,7 @@ import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
-import org.collaboratory.ga4gh.loader.utils.IdCache;
+import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
@@ -74,17 +74,18 @@ public class Indexer {
    */
   // Keys are strings NAMES, since those should never collide
   @NonNull
-  private final IdCache<EsVariant> variantIdCache;
+  private final IdCache<EsVariant, Long> variantIdCache;
+
   @NonNull
-  private final IdCache<String> variantSetIdCache;
+  private final IdCache<String, Integer> variantSetIdCache;
+
   @NonNull
-  private final IdCache<String> callSetIdCache;
+  private final IdCache<String, Integer> callSetIdCache;
 
   private int callId = 0;
 
   private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor callMonitor = newMonitor("CallIndexing", MONITOR_INTERVAL_COUNT);
-  private final CounterMonitor variantSetMonitor = newMonitor("VariantSetIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", MONITOR_INTERVAL_COUNT);
 
   @SneakyThrows
@@ -113,6 +114,14 @@ public class Indexer {
 
   private void writeVariantSet(final String variantSetId, @NonNull final EsVariantSet variantSet) throws IOException {
     writer.write(new IndexDocument(variantSetId, variantSet.toDocument(), new VariantSetDocumentType()));
+  }
+
+  public IdCache<String, Integer> getVariantSetIdCache() {
+    return variantSetIdCache;
+  }
+
+  public IdCache<String, Integer> getCallSetIdCache() {
+    return callSetIdCache;
   }
 
   @SneakyThrows
