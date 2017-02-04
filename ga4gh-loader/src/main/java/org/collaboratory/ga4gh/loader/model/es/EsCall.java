@@ -25,9 +25,9 @@ import static org.collaboratory.ga4gh.core.Names.NON_REFERENCE_ALLELES;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToBoolean;
 import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToDouble;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToInteger;
 import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToObjectMap;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
 import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
 import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
@@ -51,8 +51,8 @@ import lombok.val;
 @Value
 public class EsCall implements EsModel {
 
-  private String variantSetId;
-  private String callSetId;
+  private int variantSetId;
+  private int callSetId;
   private Map<String, Object> info;
   // private String sampleName;
   private double genotypeLikelihood;
@@ -80,12 +80,12 @@ public class EsCall implements EsModel {
 
     // TODO: Implement ME
     public SpecialEsCallBuilder fromSearchHit(final SearchHit hit) {
-      return (SpecialEsCallBuilder) callSetId(convertHitToString(hit, CALL_SET_ID))
+      return (SpecialEsCallBuilder) callSetId(convertHitToInteger(hit, CALL_SET_ID))
           .genotypeLikelihood(convertHitToDouble(hit, GENOTYPE_LIKELIHOOD))
           .info(convertHitToObjectMap(hit, INFO))
           .isGenotypePhased(convertHitToBoolean(hit, GENOTYPE_PHASESET))
           .nonReferenceAlleles(convertHitToIntegerList(hit, NON_REFERENCE_ALLELES))
-          .variantSetId(convertHitToString(hit, VARIANT_SET_ID));
+          .variantSetId(convertHitToInteger(hit, VARIANT_SET_ID));
     }
 
     /*

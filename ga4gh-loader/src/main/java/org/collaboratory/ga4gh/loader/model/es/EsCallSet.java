@@ -20,9 +20,8 @@ package org.collaboratory.ga4gh.loader.model.es;
 import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.core.Names.NAME;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-
-import org.collaboratory.ga4gh.loader.utils.JsonNodeConverters;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -39,13 +38,13 @@ public final class EsCallSet implements EsModel {
   private String bioSampleId;
 
   @Singular
-  private Iterable<String> variantSetIds;
+  private Iterable<Integer> variantSetIds;
 
   @Override
   public ObjectNode toDocument() {
     return object()
         .with(NAME, name)
-        .with(VARIANT_SET_IDS, JsonNodeConverters.convertStrings(variantSetIds))
+        .with(VARIANT_SET_IDS, convertIntegers(variantSetIds))
         .with(BIO_SAMPLE_ID, bioSampleId)
         .end();
   }

@@ -2,11 +2,11 @@
 	"call": {
 		"properties": {
 			"variant_set_id": {
-				"type": "keyword",
+				"type": "integer",
 				"index": "true"
 			},
 			"call_set_id": {
-				"type": "keyword",
+				"type": "integer",
 				"index": "true"
 			},
 			"info": {
