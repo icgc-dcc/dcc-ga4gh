@@ -20,9 +20,9 @@ package org.collaboratory.ga4gh.loader.model.es;
 import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.core.Names.NAME;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToStringList;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertStrings;
+import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import org.elasticsearch.search.SearchHit;
@@ -43,13 +43,13 @@ public final class EsCallSet implements EsModel {
   private String bioSampleId;
 
   @Singular
-  private Iterable<String> variantSetIds;
+  private Iterable<Integer> variantSetIds;
 
   @Override
   public ObjectNode toDocument() {
     return object()
         .with(NAME, name)
-        .with(VARIANT_SET_IDS, convertStrings(variantSetIds))
+        .with(VARIANT_SET_IDS, convertIntegers(variantSetIds))
         .with(BIO_SAMPLE_ID, bioSampleId)
         .end();
   }
@@ -63,7 +63,7 @@ public final class EsCallSet implements EsModel {
     public SpecialEsCallSetBuilder fromSearchHit(final SearchHit hit) {
       val name = convertHitToString(hit, NAME);
       val bioSampleId = convertHitToString(hit, BIO_SAMPLE_ID);
-      val variantSetIds = convertHitToStringList(hit, VARIANT_SET_IDS);
+      val variantSetIds = convertHitToIntegerList(hit, VARIANT_SET_IDS);
       return (SpecialEsCallSetBuilder) name(name)
           .bioSampleId(bioSampleId)
           .variantSetIds(variantSetIds);
