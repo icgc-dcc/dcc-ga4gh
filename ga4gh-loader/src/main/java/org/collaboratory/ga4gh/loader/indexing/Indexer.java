@@ -3,6 +3,7 @@ package org.collaboratory.ga4gh.loader.indexing;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
@@ -10,7 +11,6 @@ import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import java.io.IOException;
 import java.util.stream.Stream;
 
-import org.collaboratory.ga4gh.loader.Config;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
@@ -214,7 +214,7 @@ public class Indexer {
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
     val parent_variant_set_id = vcfHeader.path(VARIANT_SET_ID).textValue();
     checkState(
-        client.prepareIndex(Config.INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
+        client.prepareIndex(INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
             .setContentType(SMILE)
             .setSource(createSource(vcfHeader))
             .setParent(parent_variant_set_id)
