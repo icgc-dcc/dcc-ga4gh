@@ -25,7 +25,7 @@ import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import java.io.File;
 
 import org.collaboratory.ga4gh.loader.Config;
-import org.collaboratory.ga4gh.loader.Indexer;
+import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.test.ESIntegTestCase;

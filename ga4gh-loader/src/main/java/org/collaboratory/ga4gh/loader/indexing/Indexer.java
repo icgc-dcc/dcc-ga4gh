@@ -1,17 +1,16 @@
-package org.collaboratory.ga4gh.loader;
+package org.collaboratory.ga4gh.loader.indexing;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
-import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
-import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.IOException;
 import java.util.stream.Stream;
 
+import org.collaboratory.ga4gh.loader.Config;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
@@ -19,7 +18,6 @@ import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
@@ -45,7 +43,6 @@ public class Indexer {
   /**
    * Constants.
    */
-  private static final String MAPPING_JSON_EXTENTION = ".mapping.json";
   private static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
   public static final String CALLSET_TYPE_NAME = "callset";
   public static final String VARIANT_SET_TYPE_NAME = "variant_set";
@@ -53,7 +50,8 @@ public class Indexer {
   public static final String VARIANT_TYPE_NAME = "variant";
   public static final String VCF_HEADER_TYPE_NAME = "vcf_header";
   private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
-  private static final String MAPPINGS_DIR = "org/collaboratory/ga4gh/resources/mappings";
+  private static final String DEFAULT_MAPPINGS_DIRNAME = "org/collaboratory/ga4gh/resources/mappings";
+  private static final String DEFAULT_MAPPING_JSON_EXTENSION = ".mapping.json";
 
   /**
    * Dependencies.
@@ -90,26 +88,21 @@ public class Indexer {
 
   @SneakyThrows
   public void prepareIndex() {
-    log.info("Preparing index {}...", indexName);
-    val indexes = client.admin().indices();
-    if (indexes.prepareExists(indexName).execute().get().isExists()) {
-      checkState(indexes.prepareDelete(indexName).execute().get().isAcknowledged());
-      log.info("Deleted existing [{}] index", indexName);
-    }
-
-    val createIndexRequestBuilder = indexes.prepareCreate(indexName)
-        .setSettings(read(INDEX_SETTINGS_JSON_FILENAME).toString());
-    addMapping(createIndexRequestBuilder, CALLSET_TYPE_NAME);
-    addMapping(createIndexRequestBuilder, VARIANT_SET_TYPE_NAME);
-    addMapping(createIndexRequestBuilder, VARIANT_TYPE_NAME);
-    addMapping(createIndexRequestBuilder, VCF_HEADER_TYPE_NAME);
-    addMapping(createIndexRequestBuilder, CALL_TYPE_NAME);
-    checkState(createIndexRequestBuilder.execute().actionGet().isAcknowledged());
-    log.info("Created new index [{}]", indexName);
-  }
-
-  private static void addMapping(@NonNull final CreateIndexRequestBuilder builder, @NonNull final String typeName) {
-    builder.addMapping(typeName, read(typeName + MAPPING_JSON_EXTENTION).toString());
+    val indexerConfiguration = IndexConfiguration.builder()
+        .client(client)
+        .indexingEnabled(true)
+        .indexName(indexName)
+        .indexSettingsFilename(INDEX_SETTINGS_JSON_FILENAME)
+        .mappingDirname(DEFAULT_MAPPINGS_DIRNAME)
+        .mappingFilenameExtension(DEFAULT_MAPPING_JSON_EXTENSION)
+        .typeName(CALLSET_TYPE_NAME)
+        .typeName(VARIANT_SET_TYPE_NAME)
+        .typeName(VARIANT_TYPE_NAME)
+        .typeName(VCF_HEADER_TYPE_NAME)
+        .typeName(CALL_TYPE_NAME)
+        .build();
+    val indexCreator = new IndexCreator(indexerConfiguration);
+    indexCreator.execute();
   }
 
   private void writeVariantSet(final String variantSetId, @NonNull final EsVariantSet variantSet) throws IOException {
@@ -271,12 +264,6 @@ public class Indexer {
     public String getIndexType() {
       return CALL_TYPE_NAME;
     }
-  }
-
-  @SneakyThrows
-  private static ObjectNode read(final String fileName) {
-    val url = getResource(MAPPINGS_DIR + "/" + fileName);
-    return (ObjectNode) DEFAULT.readTree(url);
   }
 
 }

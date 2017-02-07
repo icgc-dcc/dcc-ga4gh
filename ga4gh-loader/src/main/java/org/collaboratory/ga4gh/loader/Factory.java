@@ -27,6 +27,7 @@ import java.util.Properties;
 import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdMixedCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
+import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
