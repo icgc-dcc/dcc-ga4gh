@@ -22,9 +22,9 @@ import static org.collaboratory.ga4gh.core.Names.END;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.core.Names.START;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToInteger;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToStringList;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToStringList;
 
 import java.util.List;
 

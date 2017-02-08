@@ -20,7 +20,7 @@ package org.collaboratory.ga4gh.loader.model.es;
 import static org.collaboratory.ga4gh.core.Names.DATA_SET_ID;
 import static org.collaboratory.ga4gh.core.Names.NAME;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_SET_ID;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import org.elasticsearch.search.SearchHit;

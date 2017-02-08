@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.elasticsearch.search.SearchHit;
 
-public class SearchHitConverters {
+public class SearchHits {
 
   public static Map<String, Object> getSource(final SearchHit hit) {
     checkArgument(hit.hasSource(), "Hit doesn not have source");

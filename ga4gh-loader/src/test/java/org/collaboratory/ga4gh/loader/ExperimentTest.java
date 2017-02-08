@@ -1,9 +1,9 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Stopwatch.createStarted;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToInteger;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToString;
-import static org.collaboratory.ga4gh.core.SearchHitConverters.convertHitToStringList;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToStringList;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
