@@ -125,7 +125,7 @@ public class VCF implements Closeable {
   }
 
   // ASSUMPTION: the CallSetName is a unique string
-  private static String createCallSetName(final FileMetaData fileMetaData) {
+  public static String createCallSetName(final FileMetaData fileMetaData) {
     return fileMetaData.getSampleId();
   }
 
