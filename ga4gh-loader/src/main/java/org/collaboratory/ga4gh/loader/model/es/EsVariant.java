@@ -57,6 +57,7 @@ import lombok.val;
 public class EsVariant implements Serializable, EsModel {
 
   private static final long serialVersionUID = 1485228376L;
+  public static final String TYPE_NAME = "variant";
 
   private int start;
   private int end;

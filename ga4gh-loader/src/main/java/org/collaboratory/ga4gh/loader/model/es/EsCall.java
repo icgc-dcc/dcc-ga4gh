@@ -51,6 +51,8 @@ import lombok.val;
 @Value
 public class EsCall implements EsModel {
 
+  public static final String TYPE_NAME = "call";
+
   private int variantSetId;
   private int callSetId;
   private Map<String, Object> info;
