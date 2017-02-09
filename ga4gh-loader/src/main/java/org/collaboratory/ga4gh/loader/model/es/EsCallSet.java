@@ -22,12 +22,8 @@ import static org.collaboratory.ga4gh.core.Names.NAME;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import org.elasticsearch.search.SearchHit;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Builder;
 import lombok.Singular;
@@ -44,15 +40,6 @@ public final class EsCallSet implements EsModel {
 
   @Singular
   private Iterable<Integer> variantSetIds;
-
-  @Override
-  public ObjectNode toDocument() {
-    return object()
-        .with(NAME, name)
-        .with(VARIANT_SET_IDS, convertIntegers(variantSetIds))
-        .with(BIO_SAMPLE_ID, bioSampleId)
-        .end();
-  }
 
   public static SpecialEsCallSetBuilder builder() {
     return new SpecialEsCallSetBuilder();

@@ -17,19 +17,12 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.collaboratory.ga4gh.core.Names.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.core.Names.END;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.Names.START;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.boxByteArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAscii;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToBytePrimitiveArray;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToString;
 import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.unboxByteArray;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertStrings;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -42,7 +35,6 @@ import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
 import lombok.EqualsAndHashCode;
@@ -64,18 +56,6 @@ public final class EsVariant implements Serializable, EsModel {
   private String referenceName;
   private byte[] referenceBases;
   private byte[][] alternativeBases;
-
-  @Override
-  public ObjectNode toDocument() {
-
-    return object()
-        .with(START, getStart())
-        .with(END, getEnd())
-        .with(REFERENCE_NAME, getReferenceName())
-        .with(REFERENCE_BASES, getReferenceBases())
-        .with(ALTERNATIVE_BASES, convertStrings(getAlternativeBases()))
-        .end();
-  }
 
   private EsVariant(final int start,
       final int end,

@@ -28,9 +28,6 @@ import static org.collaboratory.ga4gh.core.SearchHits.convertHitToDouble;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToObjectMap;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertMap;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.Joiners.COLON;
 
 import java.util.List;
@@ -38,11 +35,8 @@ import java.util.Map;
 
 import org.elasticsearch.search.SearchHit;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import lombok.Builder;
 import lombok.Value;
-import lombok.val;
 
 /*
  * ObjectNode is a bit heavy, this is just to minimize memory usage
@@ -60,19 +54,6 @@ public class EsCall implements EsModel {
   private double genotypeLikelihood;
   private boolean isGenotypePhased;
   private List<Integer> nonReferenceAlleles;
-
-  @Override
-  public ObjectNode toDocument() {
-    val nonRefAlleles = convertIntegers(nonReferenceAlleles);
-    return object()
-        .with(VARIANT_SET_ID, variantSetId)
-        .with(CALL_SET_ID, callSetId)
-        .with(INFO, convertMap(info))
-        .with(GENOTYPE_LIKELIHOOD, Double.toString(genotypeLikelihood))
-        .with(GENOTYPE_PHASESET, isGenotypePhased)
-        .with(NON_REFERENCE_ALLELES, nonRefAlleles)
-        .end();
-  }
 
   public static SpecialEsCallBuilder builder() {
     return new SpecialEsCallBuilder();

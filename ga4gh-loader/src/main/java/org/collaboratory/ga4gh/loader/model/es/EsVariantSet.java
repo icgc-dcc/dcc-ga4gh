@@ -21,11 +21,8 @@ import static org.collaboratory.ga4gh.core.Names.DATA_SET_ID;
 import static org.collaboratory.ga4gh.core.Names.NAME;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_SET_ID;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import org.elasticsearch.search.SearchHit;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Builder;
 import lombok.Value;
@@ -39,15 +36,6 @@ public final class EsVariantSet implements EsModel {
   private String name;
   private String dataSetId;
   private String referenceSetId;
-
-  @Override
-  public ObjectNode toDocument() {
-    return object()
-        .with(NAME, name)
-        .with(DATA_SET_ID, dataSetId)
-        .with(REFERENCE_SET_ID, referenceSetId)
-        .end();
-  }
 
   public static SpecialEsVariantSetBuilder builder() {
     return new SpecialEsVariantSetBuilder();

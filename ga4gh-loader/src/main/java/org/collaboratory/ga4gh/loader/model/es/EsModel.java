@@ -17,11 +17,7 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 public interface EsModel {
-
-  ObjectNode toDocument();
 
   String getName(); // Every model must have a uniquely identifying name in a certain scope
 

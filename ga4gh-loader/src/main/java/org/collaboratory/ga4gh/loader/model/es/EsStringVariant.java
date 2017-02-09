@@ -17,17 +17,9 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.collaboratory.ga4gh.core.Names.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.core.Names.END;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.Names.START;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertStrings;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
 import lombok.Builder;
@@ -43,17 +35,6 @@ public final class EsStringVariant implements EsModel {
   private String referenceName;
   private String referenceBases;
   private ImmutableList<String> alternativeBases;
-
-  @Override
-  public ObjectNode toDocument() {
-    return object()
-        .with(START, start)
-        .with(END, end)
-        .with(REFERENCE_NAME, referenceName)
-        .with(REFERENCE_BASES, referenceBases)
-        .with(ALTERNATIVE_BASES, convertStrings(getAlternativeBases()))
-        .end();
-  }
 
   @Override
   public String getName() {
