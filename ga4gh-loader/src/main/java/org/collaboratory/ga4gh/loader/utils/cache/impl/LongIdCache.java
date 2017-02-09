@@ -2,12 +2,12 @@ package org.collaboratory.ga4gh.loader.utils.cache.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import org.collaboratory.ga4gh.loader.utils.cache.AbstractIdCache;
+import org.collaboratory.ga4gh.loader.utils.cache.AbstractIdCacheTemplate;
 import org.collaboratory.ga4gh.loader.utils.cache.CacheStorage;
 
 import lombok.val;
 
-public class LongIdCache<K> extends AbstractIdCache<K, Long> {
+public class LongIdCache<K> extends AbstractIdCacheTemplate<K, Long> {
 
   public static <K> LongIdCache<K> newLongIdCache(final CacheStorage<K, Long> cacheStorage, final Long id) {
     return new LongIdCache<K>(cacheStorage, id);

@@ -6,6 +6,7 @@ import static lombok.AccessLevel.PRIVATE;
 import java.nio.charset.CharsetEncoder;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Iterables;
 
 import lombok.NoArgsConstructor;
 import lombok.val;
@@ -57,6 +58,17 @@ public class AsciiConverters {
       out[i++] = b;
     }
     return out;
+  }
+
+  public static byte[][] convertByteArrayList(Iterable<Byte[]> bytes) {
+    val size = Iterables.size(bytes);
+    val byte2d = new byte[size][];
+    int count = 0;
+    for (val boxedByte : bytes) {
+      byte2d[count] = unboxByteArray(boxedByte);
+      count++;
+    }
+    return byte2d;
   }
 
 }

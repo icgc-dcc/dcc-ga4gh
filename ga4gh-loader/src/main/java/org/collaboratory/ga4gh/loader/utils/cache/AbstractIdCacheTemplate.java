@@ -29,7 +29,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
 
-public abstract class AbstractIdCache<K, ID extends Number> implements IdCache<K, ID> {
+public abstract class AbstractIdCacheTemplate<K, ID extends Number> implements IdCache<K, ID> {
 
   private Map<K, ID> cache;
   private CacheStorage<K, ID> cacheStorage;
@@ -38,7 +38,7 @@ public abstract class AbstractIdCache<K, ID extends Number> implements IdCache<K
   @Setter(AccessLevel.PROTECTED)
   private ID count;
 
-  public AbstractIdCache(@NonNull final CacheStorage<K, ID> cacheStorage, final ID initCount) {
+  public AbstractIdCacheTemplate(@NonNull final CacheStorage<K, ID> cacheStorage, final ID initCount) {
     this.count = initCount;
     this.cacheStorage = cacheStorage;
     this.cache = cacheStorage.getMap();

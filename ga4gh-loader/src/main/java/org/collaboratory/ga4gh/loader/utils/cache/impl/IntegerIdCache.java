@@ -1,33 +1,16 @@
 package org.collaboratory.ga4gh.loader.utils.cache.impl;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.collaboratory.ga4gh.loader.utils.cache.impl.DiskCacheStorage.newDiskCacheStorage;
 
-import java.io.IOException;
-
-import org.collaboratory.ga4gh.loader.utils.cache.AbstractIdCache;
+import org.collaboratory.ga4gh.loader.utils.cache.AbstractIdCacheTemplate;
 import org.collaboratory.ga4gh.loader.utils.cache.CacheStorage;
-import org.mapdb.Serializer;
 
 import lombok.val;
 
-public class IntegerIdCache<K> extends AbstractIdCache<K, Integer> {
+public class IntegerIdCache<K> extends AbstractIdCacheTemplate<K, Integer> {
 
   public static <K> IntegerIdCache<K> newIntegerIdCache(final CacheStorage<K, Integer> cache, Integer id) {
     return new IntegerIdCache<K>(cache, id);
-  }
-
-  public static void main(String[] args) throws IOException {
-    val idCache = IntegerIdCache.<String> newIntegerIdCache(
-        newDiskCacheStorage("tester", Serializer.STRING, Serializer.INTEGER, "target", false), 1);
-    idCache.add("robi");
-    idCache.add("aci");
-    idCache.add("baba");
-    checkState(idCache.getId("robi") == 1L);
-    checkState(idCache.getId("aci") == 2L);
-    checkState(idCache.getId("baba") == 3L);
-    System.out.println("done");
-
   }
 
   public IntegerIdCache(final CacheStorage<K, Integer> cache, Integer id) {

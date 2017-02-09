@@ -195,7 +195,7 @@ public class EsVariant implements Serializable, EsModel {
       return new EsVariant(start, end, referenceName, referenceBases, b);
     }
 
-    protected EsVariantBuilder alternativeBaseAsBytes(final byte[] alternativeBase) {
+    public EsVariantBuilder alternativeBaseAsBytes(final byte[] alternativeBase) {
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<Byte[]> builder();
       }
@@ -203,14 +203,14 @@ public class EsVariant implements Serializable, EsModel {
       return this;
     }
 
-    protected EsVariantBuilder allAlternativeBasesAsBytes(final byte[][] alternativeBases) {
+    public EsVariantBuilder allAlternativeBasesAsBytes(final byte[][] alternativeBases) {
       for (val base : alternativeBases) {
         this.alternativeBaseAsBytes(base);
       }
       return this;
     }
 
-    protected EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
+    public EsVariantBuilder referenceBasesAsBytes(final byte[] referenceBases) {
       this.referenceBases = referenceBases;
       return this;
     }

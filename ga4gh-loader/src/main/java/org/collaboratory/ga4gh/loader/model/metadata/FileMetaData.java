@@ -227,7 +227,7 @@ public final class FileMetaData implements Serializable {
   }
 
   @RequiredArgsConstructor
-  private static class FileSizeComparator implements Comparator<FileMetaData> {
+  public static class FileSizeComparator implements Comparator<FileMetaData> {
 
     private final boolean ascending;
 
