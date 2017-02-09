@@ -50,7 +50,7 @@ public class Loader {
       val startMs = System.currentTimeMillis();
       val dataFetcher = newFileMetaDataFetcher();
       log.info("dataFetcher: {}", dataFetcher);
-      loader.loadUsingFileMetaDatas(dataFetcher);
+      loader.loadUsingFileMetaDataContext(dataFetcher);
       val endMs = System.currentTimeMillis();
       val durationSec = (endMs - startMs) / 1000;
       val durationMin = (endMs - startMs) / (60000);
@@ -69,10 +69,10 @@ public class Loader {
         .collect(summingLong(Long::longValue));
   }
 
-  private void loadSample(@NonNull final List<FileMetaData> fileMetaDatas) {
+  private void loadSample(@NonNull final FileMetaDataContext fileMetaDataContext) {
     int fileMetaDataCount = 1;
-    int fileMetaDataTotal = fileMetaDatas.size();
-    for (val fileMetaData : fileMetaDatas) {
+    int fileMetaDataTotal = fileMetaDataContext.size();
+    for (val fileMetaData : fileMetaDataContext) {
       log.info("\t\tLoading File({}): {}/{} | (Total {}/{}) -- {}", fileMetaData.getFileId(), fileMetaDataCount,
           fileMetaDataTotal,
           globalFileMetaDataCount,
@@ -89,8 +89,8 @@ public class Loader {
     for (val sampleEntry : donorData.getSampleDataListMap().entrySet()) {
       val sampleId = sampleEntry.getKey();
       log.info("\tLoading Sample({}): {}/{}", sampleId, sampleCount, sampleTotal);
-      val sampleFileMetaDatas = sampleEntry.getValue();
-      loadSample(sampleFileMetaDatas);
+      val sampleFileMetaDataContext = sampleEntry.getValue();
+      loadSample(sampleFileMetaDataContext);
       sampleCount++;
     }
   }
@@ -107,7 +107,7 @@ public class Loader {
     }
   }
 
-  public void loadUsingFileMetaDatas(@NonNull final FileMetaDataFetcher dataFetcher)
+  public void loadUsingFileMetaDataContext(@NonNull final FileMetaDataFetcher dataFetcher)
       throws ClassNotFoundException, IOException {
     indexer.prepareIndex();
     log.info("Resolving object ids...");

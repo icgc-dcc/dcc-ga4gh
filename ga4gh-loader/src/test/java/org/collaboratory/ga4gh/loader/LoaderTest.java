@@ -28,17 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 public class LoaderTest extends BaseElasticsearchTest {
 
   @Test
-  public void testLoadUsingFileMetaDatas() {
-    log.info("Creating index...");
-    createIndex();
-
-    log.info("Loading data...");
-    indexData();
-
-    val response = getVariant("035fba3f-dfef-50be-9f43-0b3831fa983f");
-    log.info("Response: {}", response);
-
-    Assertions.assertThat(response.isExists());
-  }
+    public void testLoadUsingFileMetaDataContext() {
+      log.info("Creating index...");
+      createIndex();
+  
+      log.info("Loading data...");
+      indexData();
+  
+      val response = getVariant("035fba3f-dfef-50be-9f43-0b3831fa983f");
+      log.info("Response: {}", response);
+  
+      Assertions.assertThat(response.isExists());
+    }
 
 }
