@@ -51,6 +51,10 @@ public final class EsVariant implements Serializable, EsModel {
   private static final long serialVersionUID = 1485228376L;
   public static final String TYPE_NAME = "variant";
 
+  public static EsVariantBuilder builder() {
+    return new EsVariantBuilder();
+  }
+
   private int start;
   private int end;
   private String referenceName;
@@ -80,10 +84,6 @@ public final class EsVariant implements Serializable, EsModel {
   @Override
   public String getName() {
     return UNDERSCORE.join(start, end, referenceName, referenceBases, COMMA.join(alternativeBases));
-  }
-
-  public static SpecialEsVariantBuilder builder() {
-    return new SpecialEsVariantBuilder();
   }
 
   public int getStart() {

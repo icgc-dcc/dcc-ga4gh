@@ -17,16 +17,8 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.collaboratory.ga4gh.core.Names.DATA_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.NAME;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_SET_ID;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
-
-import org.elasticsearch.search.SearchHit;
-
 import lombok.Builder;
 import lombok.Value;
-import lombok.val;
 
 // ObjectNode is a bit heavy, this is just to minimize memory usage
 @Builder
@@ -36,22 +28,5 @@ public final class EsVariantSet implements EsModel {
   private String name;
   private String dataSetId;
   private String referenceSetId;
-
-  public static SpecialEsVariantSetBuilder builder() {
-    return new SpecialEsVariantSetBuilder();
-  }
-
-  public static class SpecialEsVariantSetBuilder extends EsVariantSetBuilder {
-
-    public SpecialEsVariantSetBuilder fromSearchHit(final SearchHit hit) {
-      val name = convertHitToString(hit, NAME);
-      val dataSetId = convertHitToString(hit, DATA_SET_ID);
-      val referenceSetId = convertHitToString(hit, REFERENCE_SET_ID);
-      return (SpecialEsVariantSetBuilder) name(name)
-          .dataSetId(dataSetId)
-          .referenceSetId(referenceSetId);
-    }
-
-  }
 
 }
