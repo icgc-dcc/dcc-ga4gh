@@ -22,6 +22,7 @@ import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 
 import java.io.IOException;
 
+import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
 import org.junit.Test;
 
@@ -41,16 +42,16 @@ public class FileMetaDataFetcherTest {
         .somaticSSMsOnly(true)
         .shuffle(true)
         .build();
-    val fileMetaDatasOrig = dataFetcherShuffle1.fetch();
+    val fileMetaDataContextOrig = dataFetcherShuffle1.fetch();
     val filename = "target/fileMetaDatas.testSerializer.bin";
-    FileMetaDataFetcher.store(fileMetaDatasOrig, filename);
-    val fileMetaDatasNew = FileMetaDataFetcher.restore(filename);
-    val setOrig = Sets.newHashSet(fileMetaDatasOrig);
-    val setNew = Sets.newHashSet(fileMetaDatasNew);
+    fileMetaDataContextOrig.store(filename);
+    val fileMetaDataContextNew = FileMetaDataContext.restore(filename);
+    val setOrig = Sets.newHashSet(fileMetaDataContextOrig);
+    val setNew = Sets.newHashSet(fileMetaDataContextNew);
     assertThat(setOrig.containsAll(setNew));
     assertThat(setNew.containsAll(setOrig));
-    log.info("SERIALIZER_TEST_OLD: \n{}", NEWLINE.join(fileMetaDatasOrig));
-    log.info("SERIALIZER_TEST_NEW: \n{}", NEWLINE.join(fileMetaDatasNew));
+    log.info("SERIALIZER_TEST_OLD: \n{}", NEWLINE.join(fileMetaDataContextOrig));
+    log.info("SERIALIZER_TEST_NEW: \n{}", NEWLINE.join(fileMetaDataContextNew));
   }
 
   @Test

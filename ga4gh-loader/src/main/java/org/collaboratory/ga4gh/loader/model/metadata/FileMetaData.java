@@ -18,21 +18,16 @@
 package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static java.util.stream.Collectors.groupingBy;
-import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
-import org.collaboratory.ga4gh.loader.Benchmarks;
 import org.collaboratory.ga4gh.loader.PortalFiles;
 import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
 import org.collaboratory.ga4gh.loader.enums.CallerTypes;
@@ -40,10 +35,7 @@ import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import lombok.Data;
 import lombok.NonNull;
@@ -108,15 +100,6 @@ public final class FileMetaData implements Serializable {
         vcfFilenameParser);
   }
 
-  public static List<FileMetaData> filter(@NonNull final Iterable<FileMetaData> fileMetaDatas,
-      @NonNull final Predicate<? super FileMetaData> predicate) {
-    return stream(fileMetaDatas).filter(predicate).collect(toImmutableList());
-  }
-
-  public static List<FileMetaData> buildFileMetaDataList(@NonNull final Iterable<ObjectNode> objectNodes) {
-    return stream(objectNodes).map(FileMetaData::buildFileMetaData).collect(toImmutableList());
-  }
-
   public static Map<String, List<FileMetaData>> groupFileMetaDataBySample(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
     return groupFileMetaData(fileMetaDatas, FileMetaData::getSampleId);
@@ -125,26 +108,6 @@ public final class FileMetaData implements Serializable {
   public static Map<String, List<FileMetaData>> groupFileMetaDataByCaller(
       @NonNull final Iterable<FileMetaData> fileMetaDatas) {
     return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getCallerId());
-  }
-
-  public static Map<String, List<FileMetaData>> groupFileMetaDatasByDonor(
-      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaData(fileMetaDatas, FileMetaData::getDonorId);
-  }
-
-  public static Map<String, List<FileMetaData>> groupFileMetaDatasByDataType(
-      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaData(fileMetaDatas, FileMetaData::getDataType);
-  }
-
-  public static Map<String, List<FileMetaData>> groupFileMetaDatasByMutationType(
-      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getMutationType());
-  }
-
-  public static Map<String, List<FileMetaData>> groupFileMetaDatasBySubMutationType(
-      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getSubMutationType());
   }
 
   public static Map<String, Set<String>> groupFileMetaDatasBySamplesThenCallers(
@@ -159,39 +122,10 @@ public final class FileMetaData implements Serializable {
     return mapBuilder.build();
   }
 
-  public static List<FileMetaData> sortByFileSize(@NonNull final Iterable<FileMetaData> fileMetaDatas,
-      final boolean ascending) {
-    val list = Lists.newArrayList(fileMetaDatas);
-    Collections.sort(list, new FileSizeComparator(ascending));
-    return ImmutableList.copyOf(list);
-  }
-
   public static Map<String, List<FileMetaData>> groupFileMetaData(
       @NonNull final Iterable<FileMetaData> fileMetaDatas,
       final Function<? super FileMetaData, ? extends String> functor) {
     return ImmutableMap.copyOf(stream(fileMetaDatas).collect(groupingBy(functor, toImmutableList())));
-  }
-
-  public static void writeStats(final String outputFn,
-      @NonNull final List<FileMetaData> fileMetaList) {
-    val sb = new StringBuilder();
-    fileMetaList.stream()
-        .collect(
-            groupingBy(
-                x -> Arrays.asList(x.getDonorId(),
-                    x.getSampleId(),
-                    x.getVcfFilenameParser().getCallerId())))
-        .entrySet()
-        .stream().filter(x -> x.getValue().size() > 1)
-        .forEach(e -> sb.append(
-            COMMA.join(e.getKey())
-                + "," + e.getValue().size() + "\t--[\n\t\t"
-                + Joiner.on(",\n\t\t").join(e.getValue().stream()
-                    .map(y -> y.getVcfFilenameParser().getFilename()).toArray())
-                + "]\n\n"));
-
-    Benchmarks.writeToNewFile(outputFn, sb.toString());
-    log.info("sdfsdf");
   }
 
   public boolean compare(final MutationTypes type) {

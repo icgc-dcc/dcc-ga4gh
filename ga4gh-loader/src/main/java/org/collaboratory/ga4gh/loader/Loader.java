@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
+import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.metadata.DonorData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
@@ -110,16 +111,16 @@ public class Loader {
       throws ClassNotFoundException, IOException {
     indexer.prepareIndex();
     log.info("Resolving object ids...");
-    val fileMetaDatas = dataFetcher.fetch();
+    val fileMetaDataContext = dataFetcher.fetch();
     // val fileMetaDatas = FileMetaData.filter(dataFetcher.fetch(),
     // x -> !x.getVcfFilenameParser().getCallerType().getRealName().contains("broad")
     // && x.getVcfFilenameParser().getCallerType() != CallerTypes.consensus);
 
-    dumpToJson(fileMetaDatas, "target/sorted_filemetaDatas.json");
-    loadVariantSetAndCallSets(fileMetaDatas);
+    dumpToJson(fileMetaDataContext, "target/sorted_filemetaDatas.json");
+    loadVariantSetAndCallSets(fileMetaDataContext);
     int count = 1;
-    int total = fileMetaDatas.size();
-    for (val fileMetaData : fileMetaDatas) {
+    int total = fileMetaDataContext.size();
+    for (val fileMetaData : fileMetaDataContext) {
       log.info("Loading FileMetaData {}/{}: {} -- {}", count, total, fileMetaData.getVcfFilenameParser().getFilename(),
           fileMetaData.getFileSizeMb());
       loadFileMetaData(fileMetaData);
@@ -130,16 +131,16 @@ public class Loader {
   /*
    * TODO: very dirty. need to refactor. way to coupled
    */
-  private void loadVariantSetAndCallSets(final List<FileMetaData> fileMetaDatas) {
+  private void loadVariantSetAndCallSets(final FileMetaDataContext fileMetaDataContext) {
     log.info("\tLoading variant_sets ...");
-    for (val fileMetaData : fileMetaDatas) {
+    for (val fileMetaData : fileMetaDataContext) {
       val variantSet = readVariantSet(fileMetaData);
       indexer.indexVariantSet(variantSet);
     }
     log.info("\tLoading callsets ...");
-    val sampleMap = FileMetaData.groupFileMetaDatasBySamplesThenCallers(fileMetaDatas);
+    val sampleMap = FileMetaData.groupFileMetaDatasBySamplesThenCallers(fileMetaDataContext);
     val variantSetIdCache = indexer.getVariantSetIdCache();
-    for (val fileMetaData : fileMetaDatas) {
+    for (val fileMetaData : fileMetaDataContext) {
       val callSet = VCF.readCallSet(sampleMap, variantSetIdCache, fileMetaData);
       indexer.indexCallSet(callSet);
     }

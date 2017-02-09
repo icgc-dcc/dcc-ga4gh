@@ -19,13 +19,13 @@ package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.summingInt;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.groupFileMetaDataBySample;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.groupFileMetaDatasByDonor;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 
 import lombok.NonNull;
 import lombok.Value;
@@ -35,11 +35,11 @@ public class DonorData {
 
   private final String id;
 
-  private final Map<String, List<FileMetaData>> sampleDataListMap;
+  private final Map<String, FileMetaDataContext> sampleDataListMap;
 
-  public DonorData(@NonNull final String id, @NonNull final Iterable<FileMetaData> fileMetaDatas) {
+  public DonorData(@NonNull final String id, @NonNull FileMetaDataContext fileMetaDataContext) {
     this.id = id;
-    this.sampleDataListMap = groupFileMetaDataBySample(fileMetaDatas);
+    this.sampleDataListMap = fileMetaDataContext.groupFileMetaDataBySample();
   }
 
   public final Set<String> getSampleIds() {
@@ -59,7 +59,7 @@ public class DonorData {
   /*
    * Get the list of FileMetaData for a particular sampleId
    */
-  public final List<FileMetaData> getSampleFileMetas(final String sampleId) {
+  public final FileMetaDataContext getSampleFileMetas(final String sampleId) {
     checkState(sampleDataListMap.containsKey(sampleId),
         "The sampleId \"%s\" DNE for donorId: %s", sampleId, id);
     return sampleDataListMap.get(sampleId);
@@ -69,12 +69,12 @@ public class DonorData {
     return getSampleFileMetas(sampleId).size();
   }
 
-  public static DonorData createDonorData(final String donorId, final Iterable<FileMetaData> fileMetaDatas) {
-    return new DonorData(donorId, fileMetaDatas);
+  public static DonorData createDonorData(final String donorId, final FileMetaDataContext fileMetaDataContext) {
+    return new DonorData(donorId, fileMetaDataContext);
   }
 
-  public static final List<DonorData> buildDonorDataList(Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaDatasByDonor(fileMetaDatas)
+  public static final List<DonorData> buildDonorDataList(FileMetaDataContext fileMetaDataContext) {
+    return fileMetaDataContext.groupFileMetaDatasByDonor()
         .entrySet().stream()
         .map(x -> createDonorData(x.getKey(), x.getValue())) // Key is donorId, Value is List<FileMetaData>
         .collect(toImmutableList());

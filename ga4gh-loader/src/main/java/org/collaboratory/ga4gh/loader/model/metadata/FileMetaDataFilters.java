@@ -18,8 +18,8 @@
 package org.collaboratory.ga4gh.loader.model.metadata;
 
 import static lombok.AccessLevel.PRIVATE;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.filter;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,9 +27,7 @@ import java.util.List;
 import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
 import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -44,16 +42,16 @@ public class FileMetaDataFilters {
   /*
    * Filters input list of FileMetaDatas to be less than specified size
    */
-  public static List<FileMetaData> filterBySize(@NonNull final Iterable<FileMetaData> fileMetaDatas,
+  public static FileMetaDataContext filterBySize(@NonNull FileMetaDataContext fileMetaDataContext,
       final long maxSizeBytes) {
-    return filter(fileMetaDatas, f -> f.getFileSize() < maxSizeBytes);
+    return fileMetaDataContext.filter(f -> f.getFileSize() < maxSizeBytes);
   }
 
   /*
    * Filters input list of FileMetaDatas by MutationType==somatic, SubMutationType==(snv_mnv or indel)
    */
-  public static List<FileMetaData> filterSomaticSSMs(@NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return filter(fileMetaDatas, f -> isSomaticSSM(f));
+  public static FileMetaDataContext filterSomaticSSMs(@NonNull FileMetaDataContext fileMetaDataContext) {
+    return fileMetaDataContext.filter(f -> isSomaticSSM(f));
   }
 
   /*
@@ -65,27 +63,24 @@ public class FileMetaDataFilters {
             || f.compare(SubMutationTypes.snv_mnv));
   }
 
-  public static List<FileMetaData> filterSelectedFilenamesInOrder(@NonNull Iterable<FileMetaData> fileMetaDatas,
+  public static FileMetaDataContext filterSelectedFilenamesInOrder(@NonNull FileMetaDataContext fileMetaDataContext,
       @NonNull List<String> filenames) {
     // sort filemetadatas based on filename
     // create list of parsers from that sorted list
     // biinary search, and if index found, retrieve from first list
-    val mutableFMDs = Lists.newArrayList(fileMetaDatas);
-    Collections.sort(mutableFMDs, new FileMetaData.FilenameComparator());
-    val fileMetaDataList = ImmutableList.copyOf(mutableFMDs);
-
-    val parsers = fileMetaDataList.stream()
+    val fileMetaDataContextSorted = fileMetaDataContext.sortByFilename(false);
+    val parsers = stream(fileMetaDataContextSorted)
         .map(f -> f.getVcfFilenameParser())
         .collect(toImmutableList());
-    val outputListBuilder = ImmutableList.<FileMetaData> builder();
+    val contextBuilder = FileMetaDataContext.builder();
+    val fileMetaDataList = fileMetaDataContextSorted.getFileMetaDatas();
     for (val filename : filenames) {
       val parserKey = new PortalVCFFilenameParser(filename);
       val index = Collections.binarySearch(parsers, parserKey);
       if (index >= 0) {
-        outputListBuilder.add(fileMetaDataList.get(index));
+        contextBuilder.fileMetaData(fileMetaDataList.get(index));
       }
     }
-    return outputListBuilder.build();
+    return contextBuilder.build();
   }
-
 }

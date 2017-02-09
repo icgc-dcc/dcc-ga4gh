@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
+import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -147,75 +147,73 @@ public class FileMetaDataFetcher {
         "Cannot set numDonors and fromFile at the same time as they are mutually exclusive");
   }
 
-  private static List<FileMetaData> getForDonorNum(List<FileMetaData> fileMetaDatas, final int numDonors) {
-    val donorGrouping = FileMetaData.groupFileMetaDatasByDonor(fileMetaDatas);
-    val list = ImmutableList.<FileMetaData> builder();
+  private static FileMetaDataContext getForDonorNum(FileMetaDataContext fileMetaDataContext, final int numDonors) {
+    val donorGrouping = fileMetaDataContext.groupFileMetaDatasByDonor();
+    val contextBuilder = FileMetaDataContext.builder();
     int count = 0;
     for (val donorId : donorGrouping.keySet()) {
       if (count >= numDonors) {
         break;
       }
-      val donorFileMetaDatas = donorGrouping.get(donorId);
-      list.addAll(donorFileMetaDatas);
+      val donorFileMetaContext = donorGrouping.get(donorId);
+      contextBuilder.fileMetaDatas(donorFileMetaContext.getFileMetaDatas());
       count++;
     }
-    return list.build();
+    return contextBuilder.build();
   }
 
   /*
    * Fetch list of FileMetaData object, based on filter configuration
    */
   // TODO: [rtisma] need to update and use Decorator pattern...too much going on
-  public List<FileMetaData> fetch() throws IOException, ClassNotFoundException {
+  public FileMetaDataContext fetch() throws IOException, ClassNotFoundException {
 
-    List<FileMetaData> fileMetaDatas = null;
+    FileMetaDataContext fileMetaDataContext = null;
 
     val fromFile = Paths.get(storageFilename).toFile();
     val fileExists = fromFile.exists() && fromFile.isFile();
     if (fileExists && !isCreateNewFile()) {
-      fileMetaDatas = restore(storageFilename);
+      fileMetaDataContext = FileMetaDataContext.restore(storageFilename);
     } else {
-      fileMetaDatas = getAllFileMetaDatas();
-      store(fileMetaDatas, storageFilename);
+      fileMetaDataContext = getAllFileMetaDatas();
+      fileMetaDataContext.store(storageFilename);
     }
 
     if (numDonorsUpdated()) {
-      fileMetaDatas = getForDonorNum(fileMetaDatas, numDonors);
+      fileMetaDataContext = getForDonorNum(fileMetaDataContext, numDonors);
     }
 
     if (specificFilenames.isEmpty()) {
       // If size > 0, use only files less than or equal to maxFileSizeBytes
-      val filteredFileMetaDatasBySize =
-          maxFileSizeUpdated() ? FileMetaDataFilters.filterBySize(fileMetaDatas, maxFileSizeBytes) : fileMetaDatas;
+      val filteredFileMetaDataContextBySize =
+          maxFileSizeUpdated() ? FileMetaDataFilters.filterBySize(fileMetaDataContext,
+              maxFileSizeBytes) : fileMetaDataContext;
 
-      val filteredFileMetaDatas =
+      val filteredFileMetaDataContext =
           somaticSSMsOnly ? FileMetaDataFilters
-              .filterSomaticSSMs(filteredFileMetaDatasBySize) : filteredFileMetaDatasBySize;
+              .filterSomaticSSMs(filteredFileMetaDataContextBySize) : filteredFileMetaDataContextBySize;
 
-      List<FileMetaData> outputList = ImmutableList.copyOf(filteredFileMetaDatas);
+      FileMetaDataContext outputFileMetaDataContext = null;
       if (shuffle) {
         val rand = new Random();
         rand.setSeed(seed);
-        val list = Lists.newArrayList(filteredFileMetaDatas);
+        val list = Lists.<FileMetaData> newArrayList(filteredFileMetaDataContext.iterator());
         Collections.shuffle(list, rand);
-        outputList = ImmutableList.copyOf(list);
+        outputFileMetaDataContext = FileMetaDataContext.builder().fileMetaDatas(ImmutableList.copyOf(list)).build();
       } else if (sort) {
-        outputList = FileMetaData.sortByFileSize(filteredFileMetaDatas, ascending);
+        outputFileMetaDataContext = filteredFileMetaDataContext.sortByFileSize(ascending);
       }
-      return limitNumFilesUpdated() ? outputList.subList(0, Math.min(limit, outputList.size())) : outputList;
+
+      if (limitNumFilesUpdated()) {
+        val size = outputFileMetaDataContext.size();
+        val subFileMetaDataList = outputFileMetaDataContext.getFileMetaDatas().subList(0, Math.min(limit, size));
+        return FileMetaDataContext.builder().fileMetaDatas(subFileMetaDataList).build();
+      } else {
+        return outputFileMetaDataContext;
+      }
     } else {
-      return filterSelectedFilenamesInOrder(fileMetaDatas, specificFilenames);
+      return filterSelectedFilenamesInOrder(fileMetaDataContext, specificFilenames);
     }
 
   }
-
-  public static void store(List<FileMetaData> fileMetaDatas, String filename) throws IOException {
-    ObjectPersistance.store(fileMetaDatas, filename);
-  }
-
-  @SuppressWarnings("unchecked")
-  public static List<FileMetaData> restore(String filename) throws IOException, ClassNotFoundException {
-    return (List<FileMetaData>) ObjectPersistance.restore(filename);
-  }
-
 }

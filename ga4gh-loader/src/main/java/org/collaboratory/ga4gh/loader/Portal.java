@@ -6,14 +6,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.core.Names.ID;
 import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.buildFileMetaDataList;
+import static org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext.buildFileMetaDataContext;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
 
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -67,12 +67,12 @@ public final class Portal {
     return fileMetas.build();
   }
 
-  public static List<FileMetaData> getFileMetaDatasForNumDonors(int numDonors) {
-    return buildFileMetaDataList(getFileMetasForNumDonors(numDonors));
+  public static FileMetaDataContext getFileMetaDatasForNumDonors(int numDonors) {
+    return buildFileMetaDataContext(getFileMetasForNumDonors(numDonors));
   }
 
-  public static List<FileMetaData> getAllFileMetaDatas() {
-    return buildFileMetaDataList(getAllFileMetas());
+  public static FileMetaDataContext getAllFileMetaDatas() {
+    return buildFileMetaDataContext(getAllFileMetas());
   }
 
   public static List<ObjectNode> getFileMetasForNumDonors(int numDonors) {

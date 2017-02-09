@@ -3,6 +3,8 @@ package org.collaboratory.ga4gh.loader.model.contexts;
 import static java.util.stream.Collectors.groupingBy;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.stream.Collector;
 
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.FileSizeComparator;
+import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
@@ -27,10 +30,20 @@ import lombok.val;
 
 @Builder
 @Value
-public class FileMetaDataContext implements Iterable<FileMetaData> {
+public class FileMetaDataContext implements Serializable, Iterable<FileMetaData> {
+
+  private static final long serialVersionUID = 1486673032L;
 
   @Singular
   private final List<FileMetaData> fileMetaDatas;
+
+  public void store(String filename) throws IOException {
+    ObjectPersistance.store(this, filename);
+  }
+
+  public static FileMetaDataContext restore(String filename) throws IOException, ClassNotFoundException {
+    return (FileMetaDataContext) ObjectPersistance.restore(filename);
+  }
 
   public FileMetaDataContext filter(@NonNull final Predicate<? super FileMetaData> predicate) {
     val builder = FileMetaDataContext.builder();
@@ -38,7 +51,7 @@ public class FileMetaDataContext implements Iterable<FileMetaData> {
     return builder.build();
   }
 
-  public static FileMetaDataContext buildFileMetaDataList(@NonNull final Iterable<ObjectNode> objectNodes) {
+  public static FileMetaDataContext buildFileMetaDataContext(@NonNull final Iterable<ObjectNode> objectNodes) {
     val builder = FileMetaDataContext.builder();
     stream(objectNodes).map(FileMetaData::buildFileMetaData).forEach(x -> builder.fileMetaData(x));
     return builder.build();
@@ -74,6 +87,15 @@ public class FileMetaDataContext implements Iterable<FileMetaData> {
     return new FileMetaDataContext(ImmutableList.copyOf(list));
   }
 
+  public FileMetaDataContext sortByFilename(final boolean ascending) {
+    val list = Lists.newArrayList(fileMetaDatas);
+    Collections.sort(list, new FileMetaData.FilenameComparator());
+    val fileMetaDataList = ImmutableList.copyOf(list);
+    return FileMetaDataContext.builder()
+        .fileMetaDatas(fileMetaDataList)
+        .build();
+  }
+
   public Map<String, FileMetaDataContext> groupFileMetaDataContext(
       final Function<? super FileMetaData, ? extends String> functor) {
     return ImmutableMap.copyOf(fileMetaDatas.stream().collect(groupingBy(functor, toFileMetaDataContext())));
@@ -90,6 +112,10 @@ public class FileMetaDataContext implements Iterable<FileMetaData> {
   @Override
   public Iterator<FileMetaData> iterator() {
     return fileMetaDatas.iterator();
+  }
+
+  public int size() {
+    return fileMetaDatas.size();
   }
 
 }
