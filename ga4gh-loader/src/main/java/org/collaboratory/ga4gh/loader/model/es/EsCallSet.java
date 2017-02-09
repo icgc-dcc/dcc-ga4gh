@@ -17,18 +17,9 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.Names.NAME;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
-
-import org.elasticsearch.search.SearchHit;
-
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
-import lombok.val;
 
 // ObjectNode is a bit heavy, this is just to minimize memory usage
 @Builder
@@ -40,21 +31,4 @@ public final class EsCallSet implements EsModel {
 
   @Singular
   private Iterable<Integer> variantSetIds;
-
-  public static SpecialEsCallSetBuilder builder() {
-    return new SpecialEsCallSetBuilder();
-  }
-
-  public static class SpecialEsCallSetBuilder extends EsCallSetBuilder {
-
-    public SpecialEsCallSetBuilder fromSearchHit(final SearchHit hit) {
-      val name = convertHitToString(hit, NAME);
-      val bioSampleId = convertHitToString(hit, BIO_SAMPLE_ID);
-      val variantSetIds = convertHitToIntegerList(hit, VARIANT_SET_IDS);
-      return (SpecialEsCallSetBuilder) name(name)
-          .bioSampleId(bioSampleId)
-          .variantSetIds(variantSetIds);
-    }
-
-  }
 }

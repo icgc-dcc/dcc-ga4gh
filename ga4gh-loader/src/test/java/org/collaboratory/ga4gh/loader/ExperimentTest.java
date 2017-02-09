@@ -9,7 +9,6 @@ import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 import org.apache.lucene.search.join.ScoreMode;
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsCallConverter;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsCallSetConverter;
@@ -71,9 +70,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
           for (val hit : resp.getHits()) {
             val pair = EsVariantCallPair.builder()
                 .variant(
-                    EsVariant.builder()
-                        .fromSearchHit(hit)
-                        .build());
+                    VARIANT_CONVERTER.convertFromSearchHit(hit));
 
             for (val innerHit : hit.getInnerHits().get("call")) {
               pair.call(CALL_CONVERTER.convertFromSearchHit(innerHit));
