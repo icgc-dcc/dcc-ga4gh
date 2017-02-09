@@ -17,23 +17,10 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.collaboratory.ga4gh.core.Names.CALL_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.GENOTYPE_LIKELIHOOD;
-import static org.collaboratory.ga4gh.core.Names.GENOTYPE_PHASESET;
-import static org.collaboratory.ga4gh.core.Names.INFO;
-import static org.collaboratory.ga4gh.core.Names.NON_REFERENCE_ALLELES;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToBoolean;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToDouble;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToObjectMap;
 import static org.icgc.dcc.common.core.util.Joiners.COLON;
 
 import java.util.List;
 import java.util.Map;
-
-import org.elasticsearch.search.SearchHit;
 
 import lombok.Builder;
 import lombok.Value;
@@ -50,42 +37,9 @@ public class EsCall implements EsModel {
   private int variantSetId;
   private int callSetId;
   private Map<String, Object> info;
-  // private String sampleName;
   private double genotypeLikelihood;
   private boolean isGenotypePhased;
   private List<Integer> nonReferenceAlleles;
-
-  public static SpecialEsCallBuilder builder() {
-    return new SpecialEsCallBuilder();
-  }
-
-  public static class SpecialEsCallBuilder extends EsCallBuilder {
-
-    // TODO: Implement ME
-    public SpecialEsCallBuilder fromSearchHit(final SearchHit hit) {
-      return (SpecialEsCallBuilder) callSetId(convertHitToInteger(hit, CALL_SET_ID))
-          .genotypeLikelihood(convertHitToDouble(hit, GENOTYPE_LIKELIHOOD))
-          .info(convertHitToObjectMap(hit, INFO))
-          .isGenotypePhased(convertHitToBoolean(hit, GENOTYPE_PHASESET))
-          .nonReferenceAlleles(convertHitToIntegerList(hit, NON_REFERENCE_ALLELES))
-          .variantSetId(convertHitToInteger(hit, VARIANT_SET_ID));
-    }
-
-    /*
-     * Copies the input EsCall
-     */
-    public SpecialEsCallBuilder fromEsCall(final EsCall call) {
-      return (SpecialEsCallBuilder) builder()
-          .callSetId(call.getCallSetId())
-          .genotypeLikelihood(call.getGenotypeLikelihood())
-          .info(call.getInfo())
-          .isGenotypePhased(call.isGenotypePhased())
-          .nonReferenceAlleles(call.getNonReferenceAlleles())
-          // .sampleName(call.getSampleName())
-          .variantSetId(call.getVariantSetId());
-    }
-
-  }
 
   // TODO: not unique. Need to make unique or change the rule
   @Override

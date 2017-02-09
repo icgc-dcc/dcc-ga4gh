@@ -1,9 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Stopwatch.createStarted;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToStringList;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -12,15 +9,17 @@ import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 import org.apache.lucene.search.join.ScoreMode;
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsCallConverter;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantSetConverter;
 import org.collaboratory.ga4gh.loader.test.BaseElasticsearchTest;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.search.SearchHit;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -31,20 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExperimentTest extends BaseElasticsearchTest {
 
-  private static EsVariant createVariantFromHit(SearchHit hit) {
-    val start = convertHitToInteger(hit, "start");
-    val end = convertHitToInteger(hit, "end");
-    val referenceName = convertHitToString(hit, "reference_name");
-    val referenceBases = convertHitToString(hit, "reference_bases");
-    val alternateBases = convertHitToStringList(hit, "alternate_bases");
-    return EsVariant.builder()
-        .start(start)
-        .end(end)
-        .referenceName(referenceName)
-        .referenceBases(referenceBases)
-        .alternativeBases(alternateBases)
-        .build();
-  }
+  private static final EsVariantConverter VARIANT_CONVERTER = new EsVariantConverter();
+  private static final EsVariantSetConverter VARIANT_SET_CONVERTER = new EsVariantSetConverter();
+  private static final EsCallSetConverter CALL_SET_CONVERTER = new EsCallSetConverter();
+  private static final EsCallConverter CALL_CONVERTER = new EsCallConverter();
 
   // public static void main(String[] args) {
   @Test
@@ -87,7 +76,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
                         .build());
 
             for (val innerHit : hit.getInnerHits().get("call")) {
-              pair.call(EsCall.builder().fromSearchHit(innerHit).build());
+              pair.call(CALL_CONVERTER.convertFromSearchHit(innerHit));
               hitProcessorMonitor.incr();
             }
             pairList.add(pair.build());
