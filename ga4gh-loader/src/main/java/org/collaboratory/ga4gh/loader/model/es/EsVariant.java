@@ -54,7 +54,7 @@ import lombok.val;
 // are ASCII only. Instead of storing 2 Bytes per character for bases, store one. 
 @ToString
 @EqualsAndHashCode
-public class EsVariant implements Serializable, EsModel {
+public final class EsVariant implements Serializable, EsModel {
 
   private static final long serialVersionUID = 1485228376L;
   public static final String TYPE_NAME = "variant";
