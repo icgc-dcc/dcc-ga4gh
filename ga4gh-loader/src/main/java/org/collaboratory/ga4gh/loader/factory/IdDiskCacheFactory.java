@@ -23,10 +23,12 @@ public final class IdDiskCacheFactory extends AbstractIdCacheFactory {
   protected void buildCacheStorage() throws IOException {
     variantCacheStorage = newDiskCacheStorage("variantIdCache", new EsVariant.EsVariantSerializer(), Serializer.LONG,
         storageDirname, false);
-    variantSetCacheStorage = newDiskCacheStorage("variantSetIdCache", Serializer.STRING, Serializer.INTEGER,
-        storageDirname, false);
-    callSetCacheStorage = newDiskCacheStorage("variantSetIdCache", Serializer.STRING, Serializer.INTEGER,
-        storageDirname, false);
+    variantSetCacheStorage =
+        newDiskCacheStorage("variantSetIdCache", Serializer.STRING, Serializer.INTEGER,
+            storageDirname, false);
+    callSetCacheStorage =
+        newDiskCacheStorage("variantSetIdCache", Serializer.STRING, Serializer.INTEGER,
+            storageDirname, false);
   }
 
   @Override

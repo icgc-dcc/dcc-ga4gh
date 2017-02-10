@@ -11,6 +11,7 @@ import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import java.io.IOException;
 import java.util.stream.Stream;
 
+import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
 import org.collaboratory.ga4gh.loader.model.es.EsVariant;
@@ -89,6 +90,12 @@ public class Indexer {
   @NonNull
   private final IdCache<String, Integer> callSetIdCache;
 
+  @NonNull
+  private final EsVariantSetConverter variantSetConverter;
+
+  @NonNull
+  private final EsCallSetConverter callSetConverter;
+
   private int callId = 0;
 
   private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_COUNT);
@@ -127,8 +134,22 @@ public class Indexer {
     return callSetIdCache;
   }
 
+  public void indexFileMetaDataContext(@NonNull final FileMetaDataContext fileMetaDataContext) {
+    log.info("Converting VariantSets from FileMetaDataContext...");
+    val variantSets = variantSetConverter.convertFromFileMetaDataContext(fileMetaDataContext);
+
+    log.info("Indexing VariantSets ...");
+    variantSets.stream().forEach(this::indexVariantSet);
+
+    log.info("Converting CallSets from FileMetaDataContext...");
+    val callSets = callSetConverter.convertFromFileMetaDataContext(fileMetaDataContext, variantSetIdCache);
+
+    log.info("Indexing CallSets ...");
+    callSets.stream().forEach(this::indexCallSet);
+  }
+
   @SneakyThrows
-  public void indexVariantSet(@NonNull final EsVariantSet variantSet) {
+  private void indexVariantSet(@NonNull final EsVariantSet variantSet) {
     val variantSetName = variantSet.getName();
     val isNewVariantSetId = !variantSetIdCache.contains(variantSetName);
     if (isNewVariantSetId) {
@@ -139,7 +160,7 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexCallSet(@NonNull final EsCallSet callSet) {
+  private void indexCallSet(@NonNull final EsCallSet callSet) {
     val callSetName = callSet.getName();
     val isNewCallSetId = !callSetIdCache.contains(callSetName);
     if (isNewCallSetId) {

@@ -22,15 +22,15 @@ import static org.collaboratory.ga4gh.core.Names.NAME;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_SET_ID;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
-import java.util.List;
+import java.util.Set;
 
 import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.elasticsearch.search.SearchHit;
+import org.icgc.dcc.common.core.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -40,7 +40,7 @@ public class EsVariantSetConverter
     implements ObjectNodeConverter<EsVariantSet>,
     SearchHitConverter<EsVariantSet>,
     FileMetaDataConverter<EsVariantSet>,
-    FileMetaDataContextConverter<List<EsVariantSet>> {
+    FileMetaDataContextConverter<Set<EsVariantSet>> {
 
   @Override
   public EsVariantSet convertFromSearchHit(SearchHit hit) {
@@ -73,10 +73,10 @@ public class EsVariantSetConverter
   }
 
   @Override
-  public List<EsVariantSet> convertFromFileMetaDataContext(FileMetaDataContext fileMetaDataContext) {
+  public Set<EsVariantSet> convertFromFileMetaDataContext(FileMetaDataContext fileMetaDataContext) {
     return stream(fileMetaDataContext)
         .map(this::convertFromFileMetaData)
-        .collect(toImmutableList());
+        .collect(Collectors.toImmutableSet());
   }
 
 }

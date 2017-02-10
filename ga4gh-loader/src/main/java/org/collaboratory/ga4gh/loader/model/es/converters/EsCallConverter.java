@@ -11,25 +11,24 @@ import static org.collaboratory.ga4gh.core.SearchHits.convertHitToDouble;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToObjectMap;
-import static org.collaboratory.ga4gh.loader.VCF.convertGenotypeAlleles;
 import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
 import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-
-import java.util.List;
 
 import org.collaboratory.ga4gh.loader.model.es.EsCall;
 import org.elasticsearch.search.SearchHit;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
-import htsjdk.variant.variantcontext.VariantContext;
 import lombok.val;
 
 public class EsCallConverter
     implements ObjectNodeConverter<EsCall>,
     SearchHitConverter<EsCall> {
+
+  private static final int DEFAULT_REFERENCE_ALLELE_POSITION = 0;
+  private static final int ALTERNATIVE_ALLELE_INDEX_OFFSET = 1;
+  private static final int NOT_FOUND_ALLELE_INDEX = -1;
 
   @Override
   public EsCall convertFromSearchHit(SearchHit hit) {
@@ -51,28 +50,29 @@ public class EsCallConverter
 
   }
 
-  public List<EsCall> convertFromVariantContext(final VariantContext variantContext, final int variantSetId,
-      final int callSetId) {
-    val genotypesContext = variantContext.getGenotypes();
-    val commonInfoMap = variantContext.getCommonInfo().getAttributes();
-    val altAlleles = variantContext.getAlternateAlleles();
-
-    val callsBuilder = ImmutableList.<EsCall> builder();
-    for (val genotype : genotypesContext) {
-      val info = genotype.getExtendedAttributes();
-      info.putAll(commonInfoMap);
-      callsBuilder.add(
-          EsCall.builder()
-              .variantSetId(variantSetId)
-              .callSetId(callSetId)
-              .info(info)
-              .genotypeLikelihood(genotype.getLog10PError())
-              .isGenotypePhased(genotype.isPhased())
-              .nonReferenceAlleles(convertGenotypeAlleles(altAlleles, genotype))
-              .build());
-    }
-    return callsBuilder.build();
-  }
+  // rtisma // TODO: Move this back to VCF, no business here
+  // rtisma public List<EsCall> convertFromVariantContext(final VariantContext variantContext, final int variantSetId,
+  // rtisma final int callSetId) {
+  // rtisma val genotypesContext = variantContext.getGenotypes();
+  // rtisma val commonInfoMap = variantContext.getCommonInfo().getAttributes();
+  // rtisma val altAlleles = variantContext.getAlternateAlleles();
+  // rtisma
+  // rtisma val callsBuilder = ImmutableList.<EsCall> builder();
+  // rtisma for (val genotype : genotypesContext) {
+  // rtisma val info = genotype.getExtendedAttributes();
+  // rtisma info.putAll(commonInfoMap);
+  // rtisma callsBuilder.add(
+  // rtisma EsCall.builder()
+  // rtisma .variantSetId(variantSetId)
+  // rtisma .callSetId(callSetId)
+  // rtisma .info(info)
+  // rtisma .genotypeLikelihood(genotype.getLog10PError())
+  // rtisma .isGenotypePhased(genotype.isPhased())
+  // rtisma .nonReferenceAlleles(VCF.convertGenotypeAlleles(altAlleles, genotype))
+  // rtisma .build());
+  // rtisma }
+  // rtisma return callsBuilder.build();
+  // rtisma }
 
   @Override
   public ObjectNode convertToObjectNode(EsCall call) {

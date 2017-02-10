@@ -28,6 +28,8 @@ import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdMixedCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantSetConverter;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
@@ -100,12 +102,15 @@ public class Factory {
     return new Indexer(client, writer, INDEX_NAME,
         idCacheFactory.getVariantIdCache(),
         idCacheFactory.getVariantSetIdCache(),
-        idCacheFactory.getCallSetIdCache());
+        idCacheFactory.getCallSetIdCache(),
+        new EsVariantSetConverter(),
+        new EsCallSetConverter());
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory)
       throws Exception {
-    return new Loader(newIndexer(client, writer, idCacheFactory), newStorage());
+    val indexer = newIndexer(client, writer, idCacheFactory);
+    return new Loader(indexer, newStorage());
   }
 
   public static Storage newStorage() {

@@ -7,7 +7,6 @@ import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
 import static org.collaboratory.ga4gh.loader.Factory.newFileMetaDataFetcher;
 import static org.collaboratory.ga4gh.loader.Factory.newIdCacheFactory;
 import static org.collaboratory.ga4gh.loader.Factory.newLoader;
-import static org.collaboratory.ga4gh.loader.VCF.readVariantSet;
 import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
 
 import java.io.File;
@@ -50,7 +49,12 @@ public class Loader {
       val startMs = System.currentTimeMillis();
       val dataFetcher = newFileMetaDataFetcher();
       log.info("dataFetcher: {}", dataFetcher);
-      loader.loadUsingFileMetaDataContext(dataFetcher);
+
+      log.info("Resolving object ids...");
+      val fileMetaDataContext = dataFetcher.fetch();
+
+      loader.loadUsingFileMetaDataContext(fileMetaDataContext);
+
       val endMs = System.currentTimeMillis();
       val durationSec = (endMs - startMs) / 1000;
       val durationMin = (endMs - startMs) / (60000);
@@ -107,17 +111,12 @@ public class Loader {
     }
   }
 
-  public void loadUsingFileMetaDataContext(@NonNull final FileMetaDataFetcher dataFetcher)
+  public void loadUsingFileMetaDataContext(@NonNull final FileMetaDataContext fileMetaDataContext)
       throws ClassNotFoundException, IOException {
     indexer.prepareIndex();
-    log.info("Resolving object ids...");
-    val fileMetaDataContext = dataFetcher.fetch();
-    // val fileMetaDatas = FileMetaData.filter(dataFetcher.fetch(),
-    // x -> !x.getVcfFilenameParser().getCallerType().getRealName().contains("broad")
-    // && x.getVcfFilenameParser().getCallerType() != CallerTypes.consensus);
 
     dumpToJson(fileMetaDataContext, "target/sorted_filemetaDatas.json");
-    loadVariantSetAndCallSets(fileMetaDataContext);
+    indexer.indexFileMetaDataContext(fileMetaDataContext);
     int count = 1;
     int total = fileMetaDataContext.size();
     for (val fileMetaData : fileMetaDataContext) {
@@ -125,24 +124,6 @@ public class Loader {
           fileMetaData.getFileSizeMb());
       loadFileMetaData(fileMetaData);
       count++;
-    }
-  }
-
-  /*
-   * TODO: very dirty. need to refactor. way to coupled
-   */
-  private void loadVariantSetAndCallSets(final FileMetaDataContext fileMetaDataContext) {
-    log.info("\tLoading variant_sets ...");
-    for (val fileMetaData : fileMetaDataContext) {
-      val variantSet = readVariantSet(fileMetaData);
-      indexer.indexVariantSet(variantSet);
-    }
-    log.info("\tLoading callsets ...");
-    val sampleMap = FileMetaData.groupFileMetaDatasBySamplesThenCallers(fileMetaDataContext);
-    val variantSetIdCache = indexer.getVariantSetIdCache();
-    for (val fileMetaData : fileMetaDataContext) {
-      val callSet = VCF.readCallSet(sampleMap, variantSetIdCache, fileMetaData);
-      indexer.indexCallSet(callSet);
     }
   }
 

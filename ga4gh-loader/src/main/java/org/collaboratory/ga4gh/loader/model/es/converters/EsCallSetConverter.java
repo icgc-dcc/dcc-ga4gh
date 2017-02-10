@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
 import org.elasticsearch.search.SearchHit;
 
@@ -49,8 +48,8 @@ public class EsCallSetConverter
         .end();
   }
 
-  public Set<EsCallSet> convertFromFileMetaData(FileMetaDataContext fileMetaDataContext,
-      IdCache<EsVariantSet, Integer> variantSetIdCache) {
+  public Set<EsCallSet> convertFromFileMetaDataContext(FileMetaDataContext fileMetaDataContext,
+      IdCache<String, Integer> variantSetIdCache) {
     val groupedBySampleMap = fileMetaDataContext.groupFileMetaDataBySample();
     val setBuilder = ImmutableSet.<EsCallSet> builder();
     val converter = new EsVariantSetConverter();
@@ -58,7 +57,7 @@ public class EsCallSetConverter
       val sampleName = entry.getKey();
       val fileMetaDataContextForSample = entry.getValue();
       val variantSetIds = converter.convertFromFileMetaDataContext(fileMetaDataContextForSample).stream()
-          .map(vs -> variantSetIdCache.getId(vs))
+          .map(vs -> variantSetIdCache.getId(vs.getName()))
           .collect(toImmutableSet());
       setBuilder.add(
           EsCallSet.builder()
