@@ -17,9 +17,20 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
+import java.io.IOException;
+import java.io.Serializable;
+
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
+
+import com.google.common.collect.Iterables;
+
 import lombok.Builder;
 import lombok.Singular;
+import lombok.SneakyThrows;
 import lombok.Value;
+import lombok.val;
 
 // ObjectNode is a bit heavy, this is just to minimize memory usage
 @Builder
@@ -31,4 +42,38 @@ public final class EsCallSet implements EsModel {
 
   @Singular
   private Iterable<Integer> variantSetIds;
+
+  /*
+   * Serializer needed for MapDB. Note: if EsCallSet member variables are added, removed or modified, this needs to be
+   * updated
+   */
+  public static class EsCallSetSerializer implements Serializer<EsCallSet>, Serializable {
+
+    @Override
+    public void serialize(DataOutput2 out, EsCallSet value) throws IOException {
+      out.writeUTF(value.getName());
+      out.writeUTF(value.getBioSampleId());
+      val size = Iterables.size(value.getVariantSetIds());
+      out.writeInt(size);
+      for (val variantSetId : value.getVariantSetIds()) {
+        out.writeInt(variantSetId);
+      }
+    }
+
+    @Override
+    @SneakyThrows
+    public EsCallSet deserialize(DataInput2 input, int available) throws IOException {
+      val name = input.readUTF();
+      val bioSampleId = input.readUTF();
+      val size = input.readInt();
+      val callSetBuilder = EsCallSet.builder()
+          .name(name)
+          .bioSampleId(bioSampleId);
+      for (int i = 0; i < size; i++) {
+        callSetBuilder.variantSetId(input.readInt());
+      }
+      return callSetBuilder.build();
+    }
+
+  }
 }

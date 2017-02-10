@@ -17,8 +17,17 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
+import java.io.IOException;
+import java.io.Serializable;
+
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
+
 import lombok.Builder;
+import lombok.SneakyThrows;
 import lombok.Value;
+import lombok.val;
 
 // ObjectNode is a bit heavy, this is just to minimize memory usage
 @Builder
@@ -28,5 +37,33 @@ public final class EsVariantSet implements EsModel {
   private String name;
   private String dataSetId;
   private String referenceSetId;
+
+  /*
+   * Serializer needed for MapDB. Note: if EsVariantSet member variables are added, removed or modified, this needs to
+   * be updated
+   */
+  public static class EsVariantSetSerializer implements Serializer<EsVariantSet>, Serializable {
+
+    @Override
+    public void serialize(DataOutput2 out, EsVariantSet value) throws IOException {
+      out.writeUTF(value.getName());
+      out.writeUTF(value.getDataSetId());
+      out.writeUTF(value.getReferenceSetId());
+    }
+
+    @Override
+    @SneakyThrows
+    public EsVariantSet deserialize(DataInput2 input, int available) throws IOException {
+      val name = input.readUTF();
+      val dataSetId = input.readUTF();
+      val referenceSetId = input.readUTF();
+      return EsVariantSet.builder()
+          .name(name)
+          .dataSetId(dataSetId)
+          .referenceSetId(referenceSetId)
+          .build();
+    }
+
+  }
 
 }
