@@ -17,16 +17,8 @@
  */
 package org.collaboratory.ga4gh.loader.model.metadata;
 
-import static java.util.stream.Collectors.groupingBy;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-
 import java.io.Serializable;
 import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
 
 import org.collaboratory.ga4gh.loader.PortalFiles;
 import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
@@ -35,7 +27,6 @@ import org.collaboratory.ga4gh.loader.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableMap;
 
 import lombok.Data;
 import lombok.NonNull;
@@ -79,11 +70,6 @@ public final class FileMetaData implements Serializable {
   @NonNull
   private final PortalVCFFilenameParser vcfFilenameParser;
 
-  /*
-   * State
-   */
-  private boolean corrupted = false;
-
   public static FileMetaData buildFileMetaData(@NonNull final ObjectNode objectNode) {
     val objectId = PortalFiles.getObjectId(objectNode);
     val fileId = PortalFiles.getFileId(objectNode);
@@ -98,34 +84,6 @@ public final class FileMetaData implements Serializable {
     return new FileMetaData(objectId, fileId, sampleId, donorId, dataType, referenceName, genomeBuild, fileSize,
         fileMd5sum,
         vcfFilenameParser);
-  }
-
-  public static Map<String, List<FileMetaData>> groupFileMetaDataBySample(
-      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaData(fileMetaDatas, FileMetaData::getSampleId);
-  }
-
-  public static Map<String, List<FileMetaData>> groupFileMetaDataByCaller(
-      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    return groupFileMetaData(fileMetaDatas, x -> x.getVcfFilenameParser().getCallerId());
-  }
-
-  public static Map<String, Set<String>> groupFileMetaDatasBySamplesThenCallers(
-      @NonNull final Iterable<FileMetaData> fileMetaDatas) {
-    val mapBuilder = ImmutableMap.<String, Set<String>> builder();
-    val bySamples = groupFileMetaDataBySample(fileMetaDatas);
-    for (val entry : bySamples.entrySet()) {
-      val sampleName = entry.getKey();
-      val callerSet = groupFileMetaDataByCaller(entry.getValue()).keySet();
-      mapBuilder.put(sampleName, callerSet);
-    }
-    return mapBuilder.build();
-  }
-
-  public static Map<String, List<FileMetaData>> groupFileMetaData(
-      @NonNull final Iterable<FileMetaData> fileMetaDatas,
-      final Function<? super FileMetaData, ? extends String> functor) {
-    return ImmutableMap.copyOf(stream(fileMetaDatas).collect(groupingBy(functor, toImmutableList())));
   }
 
   public boolean compare(final MutationTypes type) {
