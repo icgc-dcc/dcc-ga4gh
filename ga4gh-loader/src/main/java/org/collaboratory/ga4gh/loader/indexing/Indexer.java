@@ -104,7 +104,7 @@ public class Indexer {
 
   @SneakyThrows
   public void prepareIndex() {
-    val indexerConfiguration = IndexConfiguration.builder()
+    val indexContext = IndexCreatorContext.builder()
         .client(client)
         .indexingEnabled(true)
         .indexName(indexName)
@@ -117,7 +117,7 @@ public class Indexer {
         .typeName(VCF_HEADER_TYPE_NAME)
         .typeName(CALL_TYPE_NAME)
         .build();
-    val indexCreator = new IndexCreator(indexerConfiguration);
+    val indexCreator = new IndexCreator(indexContext);
     indexCreator.execute();
   }
 

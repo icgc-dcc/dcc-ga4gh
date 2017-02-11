@@ -28,7 +28,7 @@ import lombok.Value;
 
 @Builder
 @Value
-public class IndexConfiguration {
+public class IndexCreatorContext {
 
   /*
    * Es Client handle

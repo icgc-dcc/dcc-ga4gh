@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class IndexCreator {
 
   @NonNull
-  private final IndexConfiguration indexerConfiguration;
+  private final IndexCreatorContext indexerConfiguration;
 
   /*
    * Executes the indexing based on the configuration
