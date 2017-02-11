@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum CallerTypes {
 
-  MUSE_1_0rc_b391201_vcf("MUSE_1-0rc-b391201-vcf"), // fs
+  MUSE_1_0rc_b391201_vcf("MUSE_1-0rc-b391201-vcf"), //
   MUSE_1_0rc_vcf("MUSE_1-0rc-vcf"), //
   broad_dRanger("broad-dRanger"), //
   broad_dRanger_10("broad-dRanger-10"), //

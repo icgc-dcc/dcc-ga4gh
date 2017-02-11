@@ -37,6 +37,9 @@ public class BasicCallProcessor extends AbstractCallProcessor {
   @Singular
   private final List<String> sampleNames;
 
+  /*
+   * If this is false, then all calls are used. Otherwise, filtering will happen
+   */
   private final boolean sampleFilteringEnabled;
 
   /*
@@ -48,15 +51,14 @@ public class BasicCallProcessor extends AbstractCallProcessor {
     val genotypesContext = variantContext.getGenotypes();
     val commonInfoMap = variantContext.getCommonInfo().getAttributes();
     val altAlleles = variantContext.getAlternateAlleles();
+    // TODO: if list is empty, then throw exception,
+    // becuase was probably not expecting that, regardless of sampleFilteringEnabled's value
     return genotypesContext.stream()
         .filter(this::selectThisSample)
         .map(g -> createEsCall(variantSetId, callSetId, commonInfoMap, altAlleles, g))
         .collect(toImmutableList());
   }
 
-  /*
-   * If empty, then assumed that filtering is disabe
-   */
   protected boolean selectThisSample(Genotype genotype) {
     if (sampleFilteringEnabled) {
       return sampleNames.contains(genotype.getSampleName());
