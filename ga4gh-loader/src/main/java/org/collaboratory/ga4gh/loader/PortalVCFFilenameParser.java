@@ -23,7 +23,7 @@ import static org.icgc.dcc.common.core.util.Joiners.DOT;
 
 import java.io.Serializable;
 
-import org.collaboratory.ga4gh.loader.enums.CallerTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
 import org.icgc.dcc.common.core.util.Splitters;
 
 import com.google.common.collect.Iterables;

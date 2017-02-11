@@ -26,10 +26,6 @@ public class EsCallConverter
     implements ObjectNodeConverter<EsCall>,
     SearchHitConverter<EsCall> {
 
-  private static final int DEFAULT_REFERENCE_ALLELE_POSITION = 0;
-  private static final int ALTERNATIVE_ALLELE_INDEX_OFFSET = 1;
-  private static final int NOT_FOUND_ALLELE_INDEX = -1;
-
   @Override
   public EsCall convertFromSearchHit(SearchHit hit) {
     val callSetId = convertHitToInteger(hit, CALL_SET_ID);
@@ -49,30 +45,6 @@ public class EsCallConverter
         .build();
 
   }
-
-  // rtisma // TODO: Move this back to VCF, no business here
-  // rtisma public List<EsCall> convertFromVariantContext(final VariantContext variantContext, final int variantSetId,
-  // rtisma final int callSetId) {
-  // rtisma val genotypesContext = variantContext.getGenotypes();
-  // rtisma val commonInfoMap = variantContext.getCommonInfo().getAttributes();
-  // rtisma val altAlleles = variantContext.getAlternateAlleles();
-  // rtisma
-  // rtisma val callsBuilder = ImmutableList.<EsCall> builder();
-  // rtisma for (val genotype : genotypesContext) {
-  // rtisma val info = genotype.getExtendedAttributes();
-  // rtisma info.putAll(commonInfoMap);
-  // rtisma callsBuilder.add(
-  // rtisma EsCall.builder()
-  // rtisma .variantSetId(variantSetId)
-  // rtisma .callSetId(callSetId)
-  // rtisma .info(info)
-  // rtisma .genotypeLikelihood(genotype.getLog10PError())
-  // rtisma .isGenotypePhased(genotype.isPhased())
-  // rtisma .nonReferenceAlleles(VCF.convertGenotypeAlleles(altAlleles, genotype))
-  // rtisma .build());
-  // rtisma }
-  // rtisma return callsBuilder.build();
-  // rtisma }
 
   @Override
   public ObjectNode convertToObjectNode(EsCall call) {

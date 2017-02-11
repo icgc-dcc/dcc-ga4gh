@@ -25,9 +25,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
-import org.collaboratory.ga4gh.loader.enums.MutationTypes;
-import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
+import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.assertj.core.api.Assertions;
-import org.collaboratory.ga4gh.loader.enums.CallerTypes;
-import org.collaboratory.ga4gh.loader.enums.MutationTypes;
-import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;

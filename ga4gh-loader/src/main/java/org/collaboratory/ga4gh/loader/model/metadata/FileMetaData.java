@@ -22,9 +22,9 @@ import java.util.Comparator;
 
 import org.collaboratory.ga4gh.loader.PortalFiles;
 import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
-import org.collaboratory.ga4gh.loader.enums.CallerTypes;
-import org.collaboratory.ga4gh.loader.enums.MutationTypes;
-import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
