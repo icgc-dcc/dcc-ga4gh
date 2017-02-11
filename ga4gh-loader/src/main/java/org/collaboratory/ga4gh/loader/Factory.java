@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.io.Resources.getResource;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
@@ -18,6 +19,9 @@ import static org.collaboratory.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_D
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
+import static org.collaboratory.ga4gh.loader.vcf.CallProcessorManager.newCallProcessorManager;
+import static org.collaboratory.ga4gh.loader.vcf.processors.BasicCallProcessor.newUnFilteredBasicCallProcessor;
+import static org.collaboratory.ga4gh.loader.vcf.processors.DummyCallProcessor.newDummyCallProcessor;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
 import java.io.IOException;
@@ -31,6 +35,8 @@ import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsCallSetConverter;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantSetConverter;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
+import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -96,6 +102,14 @@ public class Factory {
     return newIdCacheFactory(USE_MAP_DB);
   }
 
+  public static CallProcessorManager createCallProcessManager() {
+    val allCallerTypesExceptConsensus = newArrayList(CallerTypes.values());
+    allCallerTypesExceptConsensus.remove(CallerTypes.consensus);
+    return newCallProcessorManager()
+        .addCallProcessor(newDummyCallProcessor(), CallerTypes.consensus)
+        .addCallProcessor(newUnFilteredBasicCallProcessor(), allCallerTypesExceptConsensus);
+  }
+
   public static Indexer newIndexer(Client client, DocumentWriter writer,
       IdCacheFactory idCacheFactory)
       throws Exception {
@@ -110,7 +124,8 @@ public class Factory {
   public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory)
       throws Exception {
     val indexer = newIndexer(client, writer, idCacheFactory);
-    return new Loader(indexer, newStorage());
+    val callProcessorManager = createCallProcessManager();
+    return new Loader(indexer, newStorage(), callProcessorManager);
   }
 
   public static Storage newStorage() {

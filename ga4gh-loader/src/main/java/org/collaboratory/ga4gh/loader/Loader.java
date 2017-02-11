@@ -18,6 +18,8 @@ import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.metadata.DonorData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
+import org.collaboratory.ga4gh.loader.vcf.VCF;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -34,6 +36,9 @@ public class Loader {
 
   @NonNull
   private final Storage storage;
+
+  @NonNull
+  private final CallProcessorManager callProcessorManager;
 
   private long globalFileMetaDataCount = -1;
   private long globalFileMetaDataTotal = -1;
@@ -151,8 +156,13 @@ public class Loader {
   }
 
   private void loadFile(@NonNull final File file, @NonNull final FileMetaData fileMetaData) {
+    val callProcessor = callProcessorManager.getCallProcessor(fileMetaData.getVcfFilenameParser().getCallerType());
     @Cleanup
-    val vcf = new VCF(file, fileMetaData, indexer.getVariantSetIdCache(), indexer.getCallSetIdCache());
+    val vcf = new VCF(file,
+        fileMetaData,
+        indexer.getVariantSetIdCache(),
+        indexer.getCallSetIdCache(),
+        callProcessor);
 
     log.info("\tReading variants ...");
     val variants = vcf.readVariantAndCalls();

@@ -1,14 +1,12 @@
-package org.collaboratory.ga4gh.loader;
+package org.collaboratory.ga4gh.loader.vcf;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.stream.Collectors.joining;
 import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.core.Names.VCF_HEADER;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.ByteArrayOutputStream;
@@ -16,32 +14,23 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
-import org.collaboratory.ga4gh.loader.enums.CallerTypes;
-import org.collaboratory.ga4gh.loader.enums.MutationTypes;
-import org.collaboratory.ga4gh.loader.enums.SubMutationTypes;
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
-import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
+import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFEncoder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -53,16 +42,23 @@ public class VCF implements Closeable {
   private static final boolean REQUIRE_INDEX_CFG = false;
   private static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
   private static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
-  private static final int DEFAULT_REFERENCE_ALLELE_POSITION = 0;
-  private static final int ALTERNATIVE_ALLELE_INDEX_OFFSET = 1;
+  private static final EsVariantConverter VARIANT_CONVERTER = new EsVariantConverter();
 
+  /*
+   * Dependancies
+   */
+  @Getter
   private final VCFFileReader vcf;
 
+  @Getter
   private final FileMetaData fileMetaData;
 
-  private final VCFEncoder encoder;
+  @Getter
+  private final CallProcessor callProcessor;
 
-  private final CallerTypes callerType;
+  /*
+   * Cached for speed
+   */
   private final String variantSetName;
   private final String callSetName;
   private final String mutationTypeString;
@@ -71,14 +67,23 @@ public class VCF implements Closeable {
   private final int variantSetId;
   private final int callSetId;
 
+  /*
+   * State
+   */
   private final CounterMonitor variantCallPairMonitor = newMonitor("VariantCallPairParsing", 250000);
+  private final VCFEncoder encoder;
 
+  // TODO: eliminate IdCache dependency and just inject variantSetId and callSetId directly.
+  // Create another class to do the extraction of callsetId and variantSetId and which constructs VCF.
+  // Currently really hard to test ( or atleast there is alot of mocking that has to be done)
   public VCF(@NonNull final File file,
       @NonNull final FileMetaData fileMetaData,
       @NonNull final IdCache<String, Integer> variantSetIdCache,
-      @NonNull final IdCache<String, Integer> callSetIdCache) {
+      @NonNull final IdCache<String, Integer> callSetIdCache,
+      @NonNull final CallProcessor callProcessor) {
     this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
     this.fileMetaData = fileMetaData;
+    this.callProcessor = callProcessor;
     this.encoder = new VCFEncoder(vcf.getFileHeader(),
 
         ALLOW_MISSING_FIELDS_IN_HEADER_CFG,
@@ -90,7 +95,6 @@ public class VCF implements Closeable {
     this.variantSetName = parser.getCallerId();
     this.callSetName = fileMetaData.getSampleId();
 
-    this.callerType = parser.getCallerType();
     this.mutationTypeString = parser.getMutationType();
     this.mutationSubTypeString = parser.getSubMutationType();
     this.isMutationTypesCorrect = isMutationTypesCorrect(mutationTypeString, mutationSubTypeString);
@@ -124,110 +128,9 @@ public class VCF implements Closeable {
     return vcf.getFileHeader();
   }
 
-  // ASSUMPTION: the CallSetName is a unique string
-  public static String createCallSetName(final FileMetaData fileMetaData) {
-    return fileMetaData.getSampleId();
-  }
-
-  public static EsCallSet readCallSet(final Map<String, Set<String>> sampleName2CallerListMap,
-      final IdCache<String, Integer> variantSetIdCache,
-      final FileMetaData fileMetaData) {
-    val callSetName = createCallSetName(fileMetaData);
-    val variantSetIds = sampleName2CallerListMap.get(callSetName).stream()
-        .map(x -> variantSetIdCache.getId(x))
-        .collect(toImmutableList());
-
-    return EsCallSet.builder()
-        .name(callSetName)
-        .variantSetIds(variantSetIds)
-        .bioSampleId(callSetName) // bio_sample_id == call_set_name
-        .build();
-  }
-
-  // TODO: [rtisma] -- temporarily using until implement uuid
-  private static String createVariantSetIds(String caller_id) {
-    return createVariantSetName(caller_id);
-  }
-
-  private static String createVariantSetName(String caller_id) {
-    return caller_id;
-  }
-
   private static boolean isMutationTypesCorrect(String mutationTypeString, String mutationSubTypeString) {
     return MutationTypes.somatic.equals(mutationTypeString) && (SubMutationTypes.indel.equals(mutationSubTypeString)
         || SubMutationTypes.snv_mnv.equals(mutationSubTypeString));
-  }
-
-  // TODO: [rtisma] - this method is wayyyyyyyyyyyy to big and doing to many things. refactoring needed
-  private List<EsCall> convertCalls(final VariantContext variantContext) {
-
-    val errorMessage = "CallerType: {} not implemented";
-    String tumorKey;
-    boolean hasCalls = true;
-    boolean foundCallerTypes = true;
-
-    // TODO: [rtisma] inneficient and redundant. Find the caller type for the file at the beginning, and then just use
-    // that in the if statement
-    // rtisma if (callerType == CallerTypes.MUSE_1_0rc_b391201_vcf || callerType == CallerTypes.MUSE_1_0rc_vcf) {
-    // rtisma val objectId = fileMetaData.getVcfFilenameParser().getObjectId();
-    // rtisma val sampleNameSet = genotypeContext.getSampleNames();
-    // rtisma val numSamples = sampleNameSet.size();
-    // rtisma if (numSamples > 2 || numSamples == 0) {
-    // rtisma log.error("Incorrectly formatted VCF file for {}", fileMetaData.getVcfFilenameParser().getFilename());
-    // rtisma } else if (numSamples == 2) {
-    // rtisma for (val name : sampleNameSet) {
-    // rtisma if (!name.equals(objectId)) {
-    // rtisma tumorKey = name;
-    // rtisma break;
-    // rtisma }
-    // rtisma }
-    // rtisma } else {
-    // rtisma tumorKey = sampleNameSet.iterator().next();
-    // rtisma }
-    // rtisma } else {
-    // rtisma foundCallerTypes = false;
-    // rtisma }
-
-    // checkState(foundCallerTypes, "Error: the callerType [%s] is not recognzed for filename [%s]",
-    // callerType,
-    // filename);
-
-    val numGenotypes = variantContext.getGenotypes().size();
-
-    // TODO: [rtisma] temporary untill fix above. Take first call, but not correct. Should descriminate by Sample Name
-    // which should be tumorKey. Assumption is the there is ATMOST 2 calls per variant
-    checkState(numGenotypes > 0, "The Genotypes [%s] should have calls for fileMetaData [%s]",
-        variantContext.getGenotypes(),
-        fileMetaData);
-    boolean foundCall = false;
-    // TODO: HACKKK need to properly select which call can be indexed. Calls associated with "normal" are not to be
-    // indexed
-    return createEsCall(variantSetName, callSetName, variantContext);
-    // rtisma try {
-    // rtisma return createEsCall(actualCallerId, sampleId, genotypesContext, commonInfoMap);
-    // rtisma // for (val call : callList) {
-    // rtisma // // if (genotype.getSampleName().equals(tumorKey)) {
-    // rtisma // return call;
-    // rtisma // // }
-    // rtisma // }
-    // rtisma } catch (TribbleException e) {
-    // rtisma if (!fileMetaData.isCorrupted()) {
-    // rtisma log.error("CORRUPTED VCF FILE [{}] -- Message [{}]: {}",
-    // rtisma fileMetaData.getVcfFilenameParser().getFilename(),
-    // rtisma e.getClass().getName(),
-    // rtisma e.getMessage());
-    // rtisma fileMetaData.setCorrupted(true); // Set to corrupted state so that dont have to log again
-    // rtisma }
-    // rtisma throw propagate(e);
-    // rtisma }
-  }
-
-  public static EsVariantSet readVariantSet(final FileMetaData fileMetaData) {
-    return EsVariantSet.builder()
-        .name(createVariantSetName(fileMetaData.getVcfFilenameParser().getCallerId()))
-        .dataSetId(fileMetaData.getDataType())
-        .referenceSetId(fileMetaData.getReferenceName())
-        .build();
   }
 
   @SneakyThrows
@@ -241,35 +144,21 @@ public class VCF implements Closeable {
     return object()
         .with(VCF_HEADER, ser)
         .with(DONOR_ID, fileMetaData.getDonorId())
-        .with(BIO_SAMPLE_ID, fileMetaData.getSampleId())
-        .with(VARIANT_SET_ID, createVariantSetIds(fileMetaData.getVcfFilenameParser().getCallerId()))
+        .with(BIO_SAMPLE_ID, callSetId)
+        .with(VARIANT_SET_ID, variantSetId)
         .end();
   }
 
   private EsVariantCallPair convertVariantCallPair(final VariantContext record) {
     variantCallPairMonitor.start();
-    val variant = EsVariant.builder()
-        .start(record.getStart())
-        .end(record.getEnd())
-        .referenceName(record.getContig())
-        .referenceBases(record.getReference().getBaseString())
-        .alternativeBases(
-            record.getAlternateAlleles()
-                .stream()
-                .map(a -> a.getBaseString())
-                .collect(toImmutableList()))
-        .build();
-
-    val calls = convertCalls(record);
-
+    val variant = VARIANT_CONVERTER.convertFromVariantContext(record);
+    val calls = callProcessor.createEsCallList(variantSetId, callSetId, record);
     val pair = EsVariantCallPair.builder()
         .calls(calls)
         .variant(variant)
         .build();
-
     variantCallPairMonitor.incr();
     variantCallPairMonitor.stop();
-
     return pair;
   }
 
@@ -278,70 +167,4 @@ public class VCF implements Closeable {
     vcf.close();
   }
 
-  /*
-   * Returns a list contain Allele IDs associated with the maternal and paternal alleles of this genotype. Allele ID (or
-   * index) 0 represents the reference allele. If there are N alternative alleles, then the Alternative Allele ID range
-   * is 1 to 0+N. Example, if the a variant has reference allele "A" and the alternative alleles are "[T,GG,ATG]", and
-   * the genotype is 2/1, this means the first allele of this genotype has ID 2, which maps to "ATG" and the second
-   * allele of this genotype has ID 1, which maps to "GG". TODO: test and verify empty or null alleles
-   * 
-   * @throws IllegalStateException when an allele from the genotype does not exist in the alternative alleles, or when
-   * an allele was not parsed correctly
-   * 
-   */
-  public static List<Integer> convertGenotypeAlleles(final List<Allele> alternativeAlleles, final Genotype genotype) {
-    val allelesBuilder = ImmutableList.<Integer> builder();
-    for (val allele : genotype.getAlleles()) {
-      if (allele.isNonReference()) {
-        val indexAltAllele = alternativeAlleles.indexOf(allele);
-        val foundIndex = indexAltAllele > -1;
-        checkState(foundIndex, "Could not find the allele [%s] in the alternative alleles list [%s] ",
-            allele.getBaseString(),
-            alternativeAlleles.stream()
-                .map(x -> x.getBaseString())
-                .collect(joining(",")));
-        allelesBuilder.add(ALTERNATIVE_ALLELE_INDEX_OFFSET + indexAltAllele);
-      } else {
-        allelesBuilder.add(DEFAULT_REFERENCE_ALLELE_POSITION);
-      }
-    }
-    val alleles = allelesBuilder.build();
-    val hasCorrectNumberOfAlleles = alleles.size() == genotype.getAlleles().size();
-    checkState(hasCorrectNumberOfAlleles,
-        "There was an error with creating the allele index list. AlternateAlleles: [%s], GenotypesAlleles: [%s]",
-        alternativeAlleles.stream().map(x -> x.getBaseString()).collect(joining(",")),
-        genotype.getAlleles().stream().map(x -> x.getBaseString()).collect(joining(",")));
-    return alleles;
-  }
-
-  // Might want to create a class that decorates EsCallBuilder, where you have EsMuseCallBuilder, EsSangerCallBuilder,
-  // etc..
-  // and each one has its own implementation of "convertVariantContext". Solves perf problem and avoids giant state
-  // machine
-  private List<EsCall> createEsCall(final String variantSetName,
-      final String callSetName,
-      final VariantContext variantContext) {
-
-    val genotypesContext = variantContext.getGenotypes();
-    val commonInfoMap = variantContext.getCommonInfo().getAttributes();
-    val altAlleles = variantContext.getAlternateAlleles();
-
-    val callsBuilder = ImmutableList.<EsCall> builder();
-    for (val genotype : genotypesContext) {
-      val info = genotype.getExtendedAttributes();
-      info.putAll(commonInfoMap);
-      callsBuilder.add(
-          EsCall.builder()
-              .variantSetId(variantSetId)
-              .callSetId(callSetId)
-              .info(info)
-              // .sampleName(genotype.getSampleName())
-              .genotypeLikelihood(genotype.getLog10PError())
-              .isGenotypePhased(genotype.isPhased())
-              .nonReferenceAlleles(convertGenotypeAlleles(altAlleles, genotype))
-              .build());
-    }
-
-    return callsBuilder.build();
-  }
 }
