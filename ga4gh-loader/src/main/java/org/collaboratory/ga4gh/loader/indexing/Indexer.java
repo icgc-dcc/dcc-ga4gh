@@ -3,8 +3,8 @@ package org.collaboratory.ga4gh.loader.indexing;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
+import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 
@@ -48,15 +48,15 @@ public class Indexer {
   /**
    * Constants.
    */
-  private static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
+  public static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
   public static final String CALLSET_TYPE_NAME = "callset";
   public static final String VARIANT_SET_TYPE_NAME = "variant_set";
   public static final String CALL_TYPE_NAME = "call";
   public static final String VARIANT_TYPE_NAME = "variant";
   public static final String VCF_HEADER_TYPE_NAME = "vcf_header";
   private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
-  private static final String DEFAULT_MAPPINGS_DIRNAME = "org/collaboratory/ga4gh/resources/mappings";
-  private static final String DEFAULT_MAPPING_JSON_EXTENSION = ".mapping.json";
+  public static final String DEFAULT_MAPPINGS_DIRNAME = "org/collaboratory/ga4gh/resources/mappings";
+  public static final String DEFAULT_MAPPING_JSON_EXTENSION = ".mapping.json";
 
   private static final EsVariantConverter VARIANT_CONVERTER = new EsVariantConverter();
   private static final EsVariantSetConverter VARIANT_SET_CONVERTER = new EsVariantSetConverter();
@@ -245,7 +245,7 @@ public class Indexer {
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
     val parent_variant_set_id = vcfHeader.path(VARIANT_SET_ID).textValue();
     checkState(
-        client.prepareIndex(INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
+        client.prepareIndex(PARENT_CHILD_INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
             .setContentType(SMILE)
             .setSource(createSource(vcfHeader))
             .setParent(parent_variant_set_id)

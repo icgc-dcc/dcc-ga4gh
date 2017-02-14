@@ -10,9 +10,11 @@ import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BY
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SHUFFLE;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SOMATIC_SSMS_ONLY;
 import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
-import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
+import static org.collaboratory.ga4gh.loader.Config.NESTED_INDEX_NAME;
+import static org.collaboratory.ga4gh.loader.Config.NESTED_SCROLL_SIZE;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
 import static org.collaboratory.ga4gh.loader.Config.NODE_PORT;
+import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.SORT_MODE;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_BYPASS_MD5_CHECK;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
@@ -32,7 +34,11 @@ import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdMixedCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
+import org.collaboratory.ga4gh.loader.indexing.ParentChild2NestedIndexConverter;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsCallConverter;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantCallPairConverter;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantSetConverter;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
@@ -44,6 +50,7 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.icgc.dcc.dcc.common.es.DocumentWriterConfiguration;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -79,10 +86,18 @@ public class Factory {
     return client;
   }
 
-  public static DocumentWriter newDocumentWriter(final Client client) {
+  public static DocumentWriter newParentChildDocumentWriter(final Client client) {
     return createDocumentWriter(new DocumentWriterConfiguration()
         .client(client)
-        .indexName(INDEX_NAME)
+        .indexName(PARENT_CHILD_INDEX_NAME)
+        .bulkSizeMb(BULK_SIZE_MB)
+        .threadsNum(BULK_NUM_THREADS));
+  }
+
+  public static DocumentWriter newNestedDocumentWriter(final Client client) {
+    return createDocumentWriter(new DocumentWriterConfiguration()
+        .client(client)
+        .indexName(NESTED_INDEX_NAME)
         .bulkSizeMb(BULK_SIZE_MB)
         .threadsNum(BULK_NUM_THREADS));
   }
@@ -110,10 +125,38 @@ public class Factory {
         .addCallProcessor(newUnFilteredBasicCallProcessor(), allCallerTypesExceptConsensus);
   }
 
+  public static EsVariantCallPairConverter newVariantCallPairConverter() {
+    val varConv = new EsVariantConverter();
+    val callConv = new EsCallConverter();
+    return EsVariantCallPairConverter.builder()
+        .variantSearchHitConverter(varConv)
+        .variantObjectNodeConverter(varConv)
+        .callSearchHitConverter(callConv)
+        .callObjectNodeConverter(callConv)
+        .build();
+  }
+
+  public static ParentChild2NestedIndexConverter newParentChild2NestedIndexConverter(@NonNull Client client,
+      @NonNull DocumentWriter writer) {
+    val converter = newVariantCallPairConverter();
+    return ParentChild2NestedIndexConverter.builder()
+        .childTypeName(Indexer.CALL_TYPE_NAME)
+        .parentTypeName(Indexer.VARIANT_TYPE_NAME)
+        .targetTypeName(ParentChild2NestedIndexConverter.VARIANT_NESTED_TYPE_NAME)
+        .nestedObjectNodeConverter(converter)
+        .searchHitConverter(converter)
+        .scrollSize(NESTED_SCROLL_SIZE)
+        .writer(writer)
+        .client(client)
+        .sourceIndexName(PARENT_CHILD_INDEX_NAME)
+        .targetIndexName(NESTED_INDEX_NAME)
+        .build();
+  }
+
   public static Indexer newIndexer(Client client, DocumentWriter writer,
       IdCacheFactory idCacheFactory)
       throws Exception {
-    return new Indexer(client, writer, INDEX_NAME,
+    return new Indexer(client, writer, PARENT_CHILD_INDEX_NAME,
         idCacheFactory.getVariantIdCache(),
         idCacheFactory.getVariantSetIdCache(),
         idCacheFactory.getCallSetIdCache(),

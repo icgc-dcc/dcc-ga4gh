@@ -1,7 +1,7 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Stopwatch.createStarted;
-import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
+import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
@@ -42,7 +42,7 @@ public class Benchmarks {
   @SneakyThrows
   public static void main(String[] args) {
     try (val client = newClient()) {
-      val benchmarks = new Benchmarks(client, INDEX_NAME);
+      val benchmarks = new Benchmarks(client, PARENT_CHILD_INDEX_NAME);
       benchmarks.execute();
     } catch (Exception e) {
       log.error("Exception running: ", e);

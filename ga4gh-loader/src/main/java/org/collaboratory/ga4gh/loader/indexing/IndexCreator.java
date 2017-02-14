@@ -25,17 +25,17 @@ import lombok.extern.slf4j.Slf4j;
 public class IndexCreator {
 
   @NonNull
-  private final IndexCreatorContext indexerConfiguration;
+  private final IndexCreatorContext indexCreatorContext;
 
   /*
    * Executes the indexing based on the configuration
    */
   public void execute() throws ExecutionException, InterruptedException {
 
-    if (indexerConfiguration.isIndexingEnabled()) {
+    if (indexCreatorContext.isIndexingEnabled()) {
 
-      val client = indexerConfiguration.getClient();
-      val indexName = indexerConfiguration.getIndexName();
+      val client = indexCreatorContext.getClient();
+      val indexName = indexCreatorContext.getIndexName();
 
       log.info("Preparing index {}...", indexName);
       val indexes = client.admin().indices();
@@ -45,10 +45,11 @@ public class IndexCreator {
         log.info("Deleted existing [{}] index", indexName);
       }
 
+      /// indexes.preparePutMapping(indices)
       val createIndexRequestBuilder = indexes.prepareCreate(indexName)
-          .setSettings(read(indexerConfiguration.getIndexSettingsFilename()).toString());
+          .setSettings(read(indexCreatorContext.getIndexSettingsFilename()).toString());
 
-      for (val typeName : indexerConfiguration.getTypeNames()) {
+      for (val typeName : indexCreatorContext.getTypeNames()) {
         addMapping(createIndexRequestBuilder, typeName);
       }
       checkState(createIndexRequestBuilder.execute().actionGet().isAcknowledged());
@@ -60,12 +61,12 @@ public class IndexCreator {
 
   @SneakyThrows
   private ObjectNode read(final String fileName) {
-    val url = Resources.getResource(indexerConfiguration.getMappingDirname() + "/" + fileName);
+    val url = Resources.getResource(indexCreatorContext.getMappingDirname() + "/" + fileName);
     return (ObjectNode) DEFAULT.readTree(url);
   }
 
   private void addMapping(@NonNull final CreateIndexRequestBuilder builder, @NonNull final String typeName) {
-    builder.addMapping(typeName, read(typeName + this.indexerConfiguration.getMappingFilenameExtension()).toString());
+    builder.addMapping(typeName, read(typeName + this.indexCreatorContext.getMappingFilenameExtension()).toString());
   }
 
 }

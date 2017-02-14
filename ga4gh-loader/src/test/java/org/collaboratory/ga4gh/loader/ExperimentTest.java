@@ -2,7 +2,7 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Stopwatch.createStarted;
 import static org.collaboratory.ga4gh.loader.Factory.newClient;
-import static org.collaboratory.ga4gh.loader.Factory.newDocumentWriter;
+import static org.collaboratory.ga4gh.loader.Factory.newParentChildDocumentWriter;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
@@ -39,7 +39,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
   public void testLoad() {
     log.info("Static Config:\n{}", Config.toConfigString());
     try (val client = newClient();
-        val writer = newDocumentWriter(client)) {
+        val writer = newParentChildDocumentWriter(client)) {
       log.info("yooo");
       val stopWatch = createStarted();
 
