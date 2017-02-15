@@ -1,22 +1,17 @@
 package org.collaboratory.ga4gh.loader.indexing;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Throwables.propagate;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
-import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
-import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
-import static org.elasticsearch.common.xcontent.XContentType.SMILE;
-
-import java.io.IOException;
-import java.util.stream.Stream;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import htsjdk.tribble.TribbleException;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
-import org.collaboratory.ga4gh.loader.model.es.EsCallSet;
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
+import org.collaboratory.ga4gh.loader.model.es.*;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsCallConverter;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsCallSetConverter;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
@@ -30,16 +25,17 @@ import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
 import org.icgc.dcc.dcc.common.es.json.JacksonFactory;
 import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
+import java.util.stream.Stream;
 
-import htsjdk.tribble.TribbleException;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Throwables.propagate;
+import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
+import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
+import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
+import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -62,6 +58,7 @@ public class Indexer {
   private static final EsVariantSetConverter VARIANT_SET_CONVERTER = new EsVariantSetConverter();
   private static final EsCallSetConverter CALL_SET_CONVERTER = new EsCallSetConverter();
   private static final EsCallConverter CALL_CONVERTER = new EsCallConverter();
+  private static final int MAX_NUM_SEGMENTS = 1;
 
   /**
    * Dependencies.
@@ -75,7 +72,7 @@ public class Indexer {
    * Configuration.
    */
   @NonNull
-  private final String indexName;
+  private final IndexCreatorContext indexCreatorContext;
 
   /*
    * State
@@ -98,27 +95,50 @@ public class Indexer {
 
   private int callId = 0;
 
+  @NonFinal
+  private IndexCreator indexCreator = null;
+
+
   private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor callMonitor = newMonitor("CallIndexing", MONITOR_INTERVAL_COUNT);
   private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", MONITOR_INTERVAL_COUNT);
 
   @SneakyThrows
   public void prepareIndex() {
-    val indexContext = IndexCreatorContext.builder()
-        .client(client)
-        .indexingEnabled(true)
-        .indexName(indexName)
-        .indexSettingsFilename(INDEX_SETTINGS_JSON_FILENAME)
-        .mappingDirname(DEFAULT_MAPPINGS_DIRNAME)
-        .mappingFilenameExtension(DEFAULT_MAPPING_JSON_EXTENSION)
-        .typeName(CALLSET_TYPE_NAME)
-        .typeName(VARIANT_SET_TYPE_NAME)
-        .typeName(VARIANT_TYPE_NAME)
-        .typeName(VCF_HEADER_TYPE_NAME)
-        .typeName(CALL_TYPE_NAME)
-        .build();
-    val indexCreator = new IndexCreator(indexContext);
-    indexCreator.execute();
+      lazyInitIndexCreator();
+      indexCreator.execute();
+  }
+
+  private void lazyInitIndexCreator(){
+    if (indexCreator == null){
+      indexCreator = new IndexCreator(indexCreatorContext);
+    }
+  }
+
+  public void optimize(){
+    lazyInitIndexCreator();
+    forceMergeAllIndices(MAX_NUM_SEGMENTS);
+    flushAllIndices();
+  }
+
+  private void flushAllIndices(){
+    log.info("Started paranoid flush...");
+    indexCreatorContext.getClient()
+    .admin().indices()
+    .prepareFlush()
+    .execute();
+    log.info("Finished flush");
+  }
+
+  @SneakyThrows
+  private void  forceMergeAllIndices(final int maxNumSegments){
+    log.info("Starting force merge on all indices...");
+    val client = indexCreatorContext.getClient();
+    val request = client.admin().indices().prepareForceMerge().setMaxNumSegments(maxNumSegments);
+    val response  = request.execute().get();
+    int numFailedShards = response.getFailedShards();
+    checkState(numFailedShards==0, "The request to forceMerge all indices to {} segments, had {} failed shards", maxNumSegments, numFailedShards);
+    log.info("Finished force merge on all indices");
   }
 
   private void writeVariantSet(final String variantSetId, @NonNull final EsVariantSet variantSet) throws IOException {
@@ -139,13 +159,13 @@ public class Indexer {
     val variantSets = variantSetConverter.convertFromFileMetaDataContext(fileMetaDataContext);
 
     log.info("Indexing VariantSets ...");
-    variantSets.stream().forEach(this::indexVariantSet);
+    variantSets.forEach(this::indexVariantSet);
 
     log.info("Converting CallSets from FileMetaDataContext...");
     val callSets = callSetConverter.convertFromFileMetaDataContext(fileMetaDataContext, variantSetIdCache);
 
     log.info("Indexing CallSets ...");
-    callSets.stream().forEach(this::indexCallSet);
+    callSets.forEach(this::indexCallSet);
   }
 
   @SneakyThrows
@@ -298,5 +318,6 @@ public class Indexer {
       return CALL_TYPE_NAME;
     }
   }
+
 
 }

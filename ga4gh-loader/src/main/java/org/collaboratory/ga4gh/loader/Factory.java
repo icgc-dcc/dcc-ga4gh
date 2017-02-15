@@ -33,6 +33,7 @@ import java.util.Properties;
 import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdMixedCacheFactory;
 import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
+import org.collaboratory.ga4gh.loader.indexing.IndexCreatorContext;
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.collaboratory.ga4gh.loader.indexing.ParentChild2NestedIndexConverter;
 import org.collaboratory.ga4gh.loader.model.es.converters.EsCallConverter;
@@ -153,10 +154,27 @@ public class Factory {
         .build();
   }
 
+  public static IndexCreatorContext newIndexCreatorContext(@NonNull final Client client, final String indexName){
+    return IndexCreatorContext.builder()
+            .client(client)
+            .indexingEnabled(true)
+            .indexName(indexName)
+            .indexSettingsFilename(Indexer.INDEX_SETTINGS_JSON_FILENAME)
+            .mappingDirname(Indexer.DEFAULT_MAPPINGS_DIRNAME)
+            .mappingFilenameExtension(Indexer.DEFAULT_MAPPING_JSON_EXTENSION)
+            .typeName(Indexer.CALLSET_TYPE_NAME)
+            .typeName(Indexer.VARIANT_SET_TYPE_NAME)
+            .typeName(Indexer.VARIANT_TYPE_NAME)
+            .typeName(Indexer.VCF_HEADER_TYPE_NAME)
+            .typeName(Indexer.CALL_TYPE_NAME)
+            .build();
+  }
+
   public static Indexer newIndexer(Client client, DocumentWriter writer,
       IdCacheFactory idCacheFactory)
       throws Exception {
-    return new Indexer(client, writer, PARENT_CHILD_INDEX_NAME,
+    val indexCreatorContext = newIndexCreatorContext(client, PARENT_CHILD_INDEX_NAME);
+    return new Indexer(client, writer, indexCreatorContext,
         idCacheFactory.getVariantIdCache(),
         idCacheFactory.getVariantSetIdCache(),
         idCacheFactory.getCallSetIdCache(),

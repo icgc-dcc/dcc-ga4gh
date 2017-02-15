@@ -1,24 +1,10 @@
 package org.collaboratory.ga4gh.loader;
 
-import static java.util.stream.Collectors.summingLong;
-import static org.collaboratory.ga4gh.loader.Config.LOADER_MODE;
-import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
-import static org.collaboratory.ga4gh.loader.Factory.newClient;
-import static org.collaboratory.ga4gh.loader.Factory.newFileMetaDataFetcher;
-import static org.collaboratory.ga4gh.loader.Factory.newIdCacheFactory;
-import static org.collaboratory.ga4gh.loader.Factory.newLoader;
-import static org.collaboratory.ga4gh.loader.Factory.newNestedDocumentWriter;
-import static org.collaboratory.ga4gh.loader.Factory.newParentChild2NestedIndexConverter;
-import static org.collaboratory.ga4gh.loader.Factory.newParentChildDocumentWriter;
-import static org.collaboratory.ga4gh.loader.LoaderModes.NESTED_ONLY;
-import static org.collaboratory.ga4gh.loader.LoaderModes.PARENT_CHILD_ONLY;
-import static org.collaboratory.ga4gh.loader.LoaderModes.PARENT_CHILD_THEN_NESTED;
-import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.metadata.DonorData;
@@ -27,11 +13,17 @@ import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
 import org.collaboratory.ga4gh.loader.vcf.VCF;
 
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+
+import static java.util.stream.Collectors.summingLong;
+import static org.collaboratory.ga4gh.loader.Config.LOADER_MODE;
+import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
+import static org.collaboratory.ga4gh.loader.Factory.*;
+import static org.collaboratory.ga4gh.loader.LoaderModes.*;
+import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -50,15 +42,18 @@ public class Loader {
   private long globalFileMetaDataTotal = -1;
 
   public static void main(String[] args) {
-
     log.info("Static Config:\n{}", Config.toConfigString());
     val idCacheFactory = newIdCacheFactory();
-    try (val client = newClient();
-        val pcWriter = newParentChildDocumentWriter(client);
-        val nestedWriter = newNestedDocumentWriter(client);) {
+    try ( val pcClient = newClient();
+        val nestedClient = newClient();
+        //DefaultDocumentWriter.close() also closes the client, so need 2 clients (or more verbose trycatch).
+        // Basically, when nesterWriter.close() is called, it calls client.close(),
+        // but pcwriter might still be open and have active requests.
+        val pcWriter = newParentChildDocumentWriter(pcClient);
+        val nestedWriter = newNestedDocumentWriter(nestedClient)) {
       if (LOADER_MODE == PARENT_CHILD_ONLY || LOADER_MODE == PARENT_CHILD_THEN_NESTED) {
         idCacheFactory.build();
-        val loader = newLoader(client, pcWriter, idCacheFactory);
+        val loader = newLoader(pcClient, pcWriter, idCacheFactory);
         val startMs = System.currentTimeMillis();
         val dataFetcher = newFileMetaDataFetcher();
         log.info("dataFetcher: {}", dataFetcher);
@@ -75,11 +70,9 @@ public class Loader {
         log.info("LoadTime(sec): {}", durationSec);
       }
       if (LOADER_MODE == NESTED_ONLY || LOADER_MODE == PARENT_CHILD_THEN_NESTED) {
-        val pc2nestedConverter = newParentChild2NestedIndexConverter(client, nestedWriter);
+        val pc2nestedConverter = newParentChild2NestedIndexConverter(nestedClient, nestedWriter);
         pc2nestedConverter.execute();
-
       }
-
     } catch (Exception e) {
       log.error("Exception running: ", e);
     }
@@ -144,6 +137,13 @@ public class Loader {
       loadFileMetaData(fileMetaData);
       count++;
     }
+
+    /*
+    Perform any optimizations using the indexer
+     */
+    log.info("Starting parent child optimizations...");
+    indexer.optimize();
+    log.info("Finished parent child optimizations");
   }
 
   public void loadUsingDonorDatas(@NonNull final FileMetaDataFetcher dataFetcher)

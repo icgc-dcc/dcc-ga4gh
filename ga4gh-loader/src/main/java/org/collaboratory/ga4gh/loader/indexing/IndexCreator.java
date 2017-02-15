@@ -15,6 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeAction;
+import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeRequestBuilder;
+import org.elasticsearch.shaded.apache.http.client.methods.RequestBuilder;
 
 /*
  * Prepares an index, by reading a configuration object to properly index the types and 
@@ -68,5 +71,6 @@ public class IndexCreator {
   private void addMapping(@NonNull final CreateIndexRequestBuilder builder, @NonNull final String typeName) {
     builder.addMapping(typeName, read(typeName + this.indexCreatorContext.getMappingFilenameExtension()).toString());
   }
+
 
 }
