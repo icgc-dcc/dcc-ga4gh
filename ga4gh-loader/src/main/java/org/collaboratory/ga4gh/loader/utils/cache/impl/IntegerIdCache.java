@@ -37,9 +37,4 @@ public class IntegerIdCache<K> extends AbstractIdCacheTemplate<K, Integer> {
     return out;
   }
 
-  @Override
-  public void purge() {
-
-  }
-
 }
