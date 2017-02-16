@@ -22,9 +22,9 @@ import lombok.val;
 import org.collaboratory.ga4gh.core.model.es.EsVariantSet;
 import org.elasticsearch.search.SearchHit;
 
-import static org.collaboratory.ga4gh.core.Names.DATA_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.NAME;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.DATA_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.NAME;
+import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_SET_ID;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 

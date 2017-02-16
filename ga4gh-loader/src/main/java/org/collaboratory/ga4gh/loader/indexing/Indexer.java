@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;

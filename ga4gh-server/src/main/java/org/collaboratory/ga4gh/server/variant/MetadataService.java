@@ -17,7 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.Names.BY_DATA_SET_ID;
+import static org.collaboratory.ga4gh.core.MiscNames.BY_DATA_SET_ID;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import org.elasticsearch.action.search.SearchResponse;

@@ -5,19 +5,19 @@ import lombok.val;
 import org.collaboratory.ga4gh.core.model.es.EsCall;
 import org.elasticsearch.search.SearchHit;
 
-import static org.collaboratory.ga4gh.core.Names.CALL_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.GENOTYPE_LIKELIHOOD;
-import static org.collaboratory.ga4gh.core.Names.GENOTYPE_PHASESET;
-import static org.collaboratory.ga4gh.core.Names.INFO;
-import static org.collaboratory.ga4gh.core.Names.NON_REFERENCE_ALLELES;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertIntegers;
+import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertMap;
+import static org.collaboratory.ga4gh.core.PropertyNames.GENOTYPE_PHASESET;
+import static org.collaboratory.ga4gh.core.PropertyNames.INFO;
+import static org.collaboratory.ga4gh.core.PropertyNames.NON_REFERENCE_ALLELES;
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.CALL_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.GENOTYPE_LIKELIHOOD;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToBoolean;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToDouble;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToObjectMap;
-import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertIntegers;
-import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 public class EsCallConverter

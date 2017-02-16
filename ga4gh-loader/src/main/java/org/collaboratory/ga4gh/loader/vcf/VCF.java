@@ -26,10 +26,10 @@ import java.util.Base64;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.VCF_HEADER;
+import static org.collaboratory.ga4gh.core.PropertyNames.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.MiscNames.DONOR_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.MiscNames.VCF_HEADER;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;

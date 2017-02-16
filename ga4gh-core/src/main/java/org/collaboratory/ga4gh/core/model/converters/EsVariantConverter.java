@@ -11,11 +11,11 @@ import org.elasticsearch.search.SearchHit;
 import java.util.List;
 
 import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertStrings;
-import static org.collaboratory.ga4gh.core.Names.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.core.Names.END;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.Names.START;
+import static org.collaboratory.ga4gh.core.PropertyNames.ALTERNATIVE_BASES;
+import static org.collaboratory.ga4gh.core.PropertyNames.END;
+import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_BASES;
+import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.PropertyNames.START;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToStringList;

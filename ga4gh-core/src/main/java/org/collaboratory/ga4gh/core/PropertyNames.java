@@ -17,14 +17,13 @@
  */
 package org.collaboratory.ga4gh.core;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor(access = PRIVATE)
-public final class Names {
+import static lombok.AccessLevel.PRIVATE;
 
-  public static final String ID = "id";
+@NoArgsConstructor(access = PRIVATE)
+public final class PropertyNames {
+
   public static final String NAME = "name";
   public static final String BIO_SAMPLE_ID = "bio_sample_id";
   public static final String VARIANT_SET_IDS = "variant_set_ids";
@@ -34,20 +33,18 @@ public final class Names {
   public static final String CALL_SET_ID = "call_set_id";
   public static final String DATA_SET_ID = "data_set_id";
   public static final String REFERENCE_SET_ID = "reference_set_id";
-  public static final String VCF_HEADER = "vcf_header";
-  public static final String DONOR_ID = "donor_id";
   public static final String START = "start";
   public static final String END = "end";
   public static final String REFERENCE_NAME = "reference_name";
-  public static final String RECORD = "record";
-  public static final String BY_DATA_SET_ID = "by_data_set_id";
-  public static final String FALSE = "false";
-  public static final String TRUE = "true";
   public static final String INFO = "info";
   public static final String REFERENCE_BASES = "reference_bases";
   public static final String ALTERNATIVE_BASES = "alternate_bases";
   public static final String GENOTYPE_LIKELIHOOD = "genotype_likelihood";
   public static final String GENOTYPE_PHASESET = "genotype_phaseset";
   public static final String NON_REFERENCE_ALLELES = "non_reference_alleles";
+
+  public static final String getAggNameForProperty(final String propertyName){
+    return "by_"+propertyName;
+  }
 }
 

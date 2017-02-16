@@ -17,21 +17,21 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.Names.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.Names.CALL_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.DATA_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.END;
-import static org.collaboratory.ga4gh.core.Names.GENOTYPE_LIKELIHOOD;
-import static org.collaboratory.ga4gh.core.Names.GENOTYPE_PHASESET;
-import static org.collaboratory.ga4gh.core.Names.INFO;
-import static org.collaboratory.ga4gh.core.Names.NAME;
-import static org.collaboratory.ga4gh.core.Names.NON_REFERENCE_ALLELES;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.Names.REFERENCE_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.START;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.core.MiscNames.ALTERNATIVE_BASES;
+import static org.collaboratory.ga4gh.core.MiscNames.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.MiscNames.CALL_SET_ID;
+import static org.collaboratory.ga4gh.core.MiscNames.DATA_SET_ID;
+import static org.collaboratory.ga4gh.core.MiscNames.END;
+import static org.collaboratory.ga4gh.core.MiscNames.GENOTYPE_LIKELIHOOD;
+import static org.collaboratory.ga4gh.core.MiscNames.GENOTYPE_PHASESET;
+import static org.collaboratory.ga4gh.core.MiscNames.INFO;
+import static org.collaboratory.ga4gh.core.MiscNames.NAME;
+import static org.collaboratory.ga4gh.core.MiscNames.NON_REFERENCE_ALLELES;
+import static org.collaboratory.ga4gh.core.MiscNames.REFERENCE_BASES;
+import static org.collaboratory.ga4gh.core.MiscNames.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.MiscNames.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.core.MiscNames.START;
+import static org.collaboratory.ga4gh.core.MiscNames.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToDouble;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToLong;

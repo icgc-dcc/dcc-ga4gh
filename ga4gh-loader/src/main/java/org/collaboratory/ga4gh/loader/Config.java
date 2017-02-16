@@ -1,15 +1,15 @@
 package org.collaboratory.ga4gh.loader;
 
+import lombok.val;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.lang.System.getProperty;
-import static org.collaboratory.ga4gh.core.Names.FALSE;
-import static org.collaboratory.ga4gh.core.Names.TRUE;
+import static org.collaboratory.ga4gh.core.MiscNames.FALSE;
+import static org.collaboratory.ga4gh.core.MiscNames.TRUE;
 import static org.collaboratory.ga4gh.loader.LoaderModes.parseLoaderMode;
-
-import lombok.val;
 
 enum LoaderModes {
   NESTED_ONLY(1), PARENT_CHILD_ONLY(2), PARENT_CHILD_THEN_NESTED(3);

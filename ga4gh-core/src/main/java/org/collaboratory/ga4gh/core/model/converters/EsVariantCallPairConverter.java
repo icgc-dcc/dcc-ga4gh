@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.val;
+import org.collaboratory.ga4gh.core.TypeNames;
 import org.collaboratory.ga4gh.core.model.es.EsCall;
 import org.collaboratory.ga4gh.core.model.es.EsVariant;
 import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
@@ -34,7 +35,8 @@ public class EsVariantCallPairConverter implements
     ObjectNodeConverter<EsVariantCallPair>,
     SearchHitConverter<EsVariantCallPair> {
 
-  private static final String CHILD_TYPE = "call";
+    private static final String CHILD_TYPE = TypeNames.CALL;
+
 
   @NonNull
   private final SearchHitConverter<EsVariant> variantSearchHitConverter;

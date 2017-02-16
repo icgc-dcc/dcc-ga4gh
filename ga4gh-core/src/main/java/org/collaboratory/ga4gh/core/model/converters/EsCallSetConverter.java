@@ -7,9 +7,9 @@ import org.collaboratory.ga4gh.core.model.es.EsCallSet;
 import org.elasticsearch.search.SearchHit;
 
 import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertIntegers;
-import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.Names.NAME;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.core.PropertyNames.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.NAME;
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_IDS;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;

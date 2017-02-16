@@ -66,7 +66,7 @@ public class IndexCreatorContext {
   private final boolean indexingEnabled;
 
   /*
-   * Names of the different types in this index
+   * MiscNames of the different types in this index
    */
   @NonNull
   @Singular
