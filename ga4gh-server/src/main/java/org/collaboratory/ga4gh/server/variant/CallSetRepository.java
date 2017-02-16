@@ -17,15 +17,11 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.MiscNames.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.MiscNames.NAME;
-import static org.collaboratory.ga4gh.core.MiscNames.VARIANT_SET_IDS;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.CALLSET_TYPE_NAME;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-
+import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
+import ga4gh.VariantServiceOuterClass.SearchCallSetsRequest;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -33,11 +29,14 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
 
-import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
-import ga4gh.VariantServiceOuterClass.SearchCallSetsRequest;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
+import static org.collaboratory.ga4gh.core.PropertyNames.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.NAME;
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.core.TypeNames.CALL_SET;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 /**
  * Perform queries against elasticsearch to find desired variants.
@@ -51,7 +50,7 @@ public class CallSetRepository {
 
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
-        .setTypes(CALLSET_TYPE_NAME)
+        .setTypes(CALL_SET)
         .addSort(NAME, SortOrder.ASC)
         .setSize(size);
   }
@@ -68,7 +67,7 @@ public class CallSetRepository {
   }
 
   public GetResponse findCallSetById(@NonNull GetCallSetRequest request) {
-    return client.prepareGet(INDEX_NAME, CALLSET_TYPE_NAME, request.getCallSetId()).get();
+    return client.prepareGet(INDEX_NAME, CALL_SET, request.getCallSetId()).get();
   }
 
 }

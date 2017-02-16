@@ -17,16 +17,15 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.server.config.ServerConfig.HEADER_TYPE_NAME;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
-
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.springframework.stereotype.Repository;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
+import static org.collaboratory.ga4gh.core.TypeNames.VCF_HEADER;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
 
 @Repository
 @RequiredArgsConstructor
@@ -36,7 +35,7 @@ public class HeaderRepository {
   private final Client client;
 
   public GetResponse getHeader(String objectId) {
-    val searchRequestBuilder = client.prepareGet(INDEX_NAME, HEADER_TYPE_NAME, objectId);
+    val searchRequestBuilder = client.prepareGet(INDEX_NAME, VCF_HEADER, objectId);
     return searchRequestBuilder.get();
   }
 

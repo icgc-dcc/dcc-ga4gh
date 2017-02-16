@@ -17,22 +17,18 @@
  */
 package org.collaboratory.ga4gh.server.config;
 
-import org.collaboratory.ga4gh.server.Factory;
 import org.collaboratory.ga4gh.server.reference.ReferenceGenome;
 import org.elasticsearch.client.Client;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static org.collaboratory.ga4gh.server.Factory.newClient;
+
 @Configuration
 public class ServerConfig {
 
   public static final String INDEX_NAME = "dcc-variants";
-  public static final String VARIANT_TYPE_NAME = "variant";
-  public static final String VARIANT_SET_TYPE_NAME = "variant_set";
-  public static final String CALLSET_TYPE_NAME = "callset";
-  public static final String CALL_TYPE_NAME = "call";
-  public static final String HEADER_TYPE_NAME = "vcf_header";
   public static final String NODE_ADDRESS = System.getProperty("node_address", "localhost");
   public static final int NODE_PORT = Integer.valueOf(System.getProperty("node_port", "9300"));
   public static final String FASTA_FILE_LOC = "target/GRCh37.fasta";
@@ -44,7 +40,6 @@ public class ServerConfig {
             + "\nNODE_ADDRESS: %s"
             + "\nNODE_PORT: %s",
         INDEX_NAME,
-        VARIANT_TYPE_NAME,
         NODE_ADDRESS,
         NODE_PORT);
   }
@@ -56,7 +51,7 @@ public class ServerConfig {
 
   @Bean
   public Client client() {
-    return Factory.newClient();
+    return newClient();
   }
 
 }

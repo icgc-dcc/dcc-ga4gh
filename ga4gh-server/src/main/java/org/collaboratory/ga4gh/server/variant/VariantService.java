@@ -17,45 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.MiscNames.ALTERNATIVE_BASES;
-import static org.collaboratory.ga4gh.core.MiscNames.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.MiscNames.CALL_SET_ID;
-import static org.collaboratory.ga4gh.core.MiscNames.DATA_SET_ID;
-import static org.collaboratory.ga4gh.core.MiscNames.END;
-import static org.collaboratory.ga4gh.core.MiscNames.GENOTYPE_LIKELIHOOD;
-import static org.collaboratory.ga4gh.core.MiscNames.GENOTYPE_PHASESET;
-import static org.collaboratory.ga4gh.core.MiscNames.INFO;
-import static org.collaboratory.ga4gh.core.MiscNames.NAME;
-import static org.collaboratory.ga4gh.core.MiscNames.NON_REFERENCE_ALLELES;
-import static org.collaboratory.ga4gh.core.MiscNames.REFERENCE_BASES;
-import static org.collaboratory.ga4gh.core.MiscNames.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.MiscNames.REFERENCE_SET_ID;
-import static org.collaboratory.ga4gh.core.MiscNames.START;
-import static org.collaboratory.ga4gh.core.MiscNames.VARIANT_SET_IDS;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToDouble;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToLong;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToObjectMap;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToStringList;
-import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToString;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
-import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.SearchHit;
-import org.icgc.dcc.common.core.util.stream.Streams;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
@@ -72,8 +34,44 @@ import ga4gh.Variants.VariantSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
+import org.icgc.dcc.common.core.util.stream.Streams;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static org.collaboratory.ga4gh.core.MiscNames.INFO;
+import static org.collaboratory.ga4gh.core.PropertyNames.ALTERNATIVE_BASES;
+import static org.collaboratory.ga4gh.core.PropertyNames.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.CALL_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.DATA_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.END;
+import static org.collaboratory.ga4gh.core.PropertyNames.GENOTYPE_LIKELIHOOD;
+import static org.collaboratory.ga4gh.core.PropertyNames.GENOTYPE_PHASESET;
+import static org.collaboratory.ga4gh.core.PropertyNames.NAME;
+import static org.collaboratory.ga4gh.core.PropertyNames.NON_REFERENCE_ALLELES;
+import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_BASES;
+import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.START;
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_IDS;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToDouble;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToLong;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToObjectMap;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
+import static org.collaboratory.ga4gh.core.SearchHits.convertHitToStringList;
+import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToString;
+import static org.collaboratory.ga4gh.core.TypeNames.CALL;
+import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 @Slf4j
 @Service
@@ -110,7 +108,7 @@ public class VariantService {
       return convertToVariant(response.getHits().getAt(0))
           .addAllCalls(
               Streams.stream(
-                  response.getHits().getAt(0).getInnerHits().get(CALL_TYPE_NAME))
+                  response.getHits().getAt(0).getInnerHits().get(CALL))
                   .map(x -> convertToCall(x).build())
                   .collect(toImmutableList()))
           .build();
@@ -152,7 +150,7 @@ public class VariantService {
     val responseBuilder = SearchVariantsResponse.newBuilder();
     for (val variantSearchHit : searchResponse.getHits()) {
       val variantBuilder = convertToVariant(variantSearchHit);
-      for (val callInnerHit : variantSearchHit.getInnerHits().get(CALL_TYPE_NAME)) {
+      for (val callInnerHit : variantSearchHit.getInnerHits().get(CALL)) {
         variantBuilder.addCalls(convertToCall(callInnerHit));
       }
       responseBuilder.addVariants(variantBuilder);

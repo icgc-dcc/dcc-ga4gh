@@ -17,22 +17,11 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.core.MiscNames.CALL_SET_ID;
-import static org.collaboratory.ga4gh.core.MiscNames.END;
-import static org.collaboratory.ga4gh.core.MiscNames.REFERENCE_NAME;
-import static org.collaboratory.ga4gh.core.MiscNames.START;
-import static org.collaboratory.ga4gh.core.MiscNames.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.CALL_TYPE_NAME;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_TYPE_NAME;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
-import static org.elasticsearch.index.query.QueryBuilders.idsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-
+import ga4gh.VariantServiceOuterClass.GetVariantRequest;
+import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -41,11 +30,21 @@ import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
 
-import ga4gh.VariantServiceOuterClass.GetVariantRequest;
-import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
+import static org.collaboratory.ga4gh.core.PropertyNames.CALL_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.END;
+import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_NAME;
+import static org.collaboratory.ga4gh.core.PropertyNames.START;
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.TypeNames.CALL;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
+import static org.elasticsearch.index.query.QueryBuilders.idsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 /**
  * Perform queries against elasticsearch to find desired variants.
@@ -59,7 +58,7 @@ public class VariantRepository {
 
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
-        .setTypes(VARIANT_TYPE_NAME)
+        .setTypes(VARIANT)
         .addSort(START, SortOrder.ASC)
         .setSize(size);
   }
@@ -74,7 +73,7 @@ public class VariantRepository {
         .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
         .must(rangeQuery(START).gte(request.getStart()))
         .must(rangeQuery(END).lt(request.getEnd()))
-        .must(hasChildQuery(CALL_TYPE_NAME, constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
+        .must(hasChildQuery(CALL, constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
 
     val constantScoreQuery = constantScoreQuery(boolQuery);
 
@@ -83,7 +82,7 @@ public class VariantRepository {
 
   public SearchResponse findVariantById(@NonNull GetVariantRequest request) {
     val searchRequestBuilder = createSearchRequest(1); // only want one variant
-    val childQuery = hasChildQuery(CALL_TYPE_NAME, matchAllQuery(), ScoreMode.None)
+    val childQuery = hasChildQuery(CALL, matchAllQuery(), ScoreMode.None)
         .innerHit(new InnerHitBuilder());
     val boolQuery = boolQuery()
         .must(idsQuery().addIds(request.getVariantId()))
