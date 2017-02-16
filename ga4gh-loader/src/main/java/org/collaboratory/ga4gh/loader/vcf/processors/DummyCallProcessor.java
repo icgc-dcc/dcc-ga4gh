@@ -6,8 +6,7 @@ import static org.collaboratory.ga4gh.loader.vcf.AbstractCallProcessor.UNKNOWN_A
 import java.util.List;
 import java.util.Map;
 
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
-import org.collaboratory.ga4gh.loader.model.es.EsCall.EsCallBuilder;
+import org.collaboratory.ga4gh.core.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.vcf.CallProcessor;
 
 import com.google.common.collect.ImmutableList;

@@ -37,6 +37,13 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- MapDB -->
+		<dependency>
+			<groupId>org.mapdb</groupId>
+			<artifactId>mapdb</artifactId>
+			<version>${mapdb.version}</version>
+		</dependency>
+
 		<!--  TODO: Might need to move this to project pom and let the rest inherrit -->
 		<dependency>
 			<groupId>org.icgc.dcc</groupId>
@@ -49,5 +56,16 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 			<groupId>org.icgc.dcc</groupId>
 			<artifactId>elasticsearch-shaded</artifactId>
 		</dependency>
+
+		<!-- Genomics -->
+		<dependency>
+			<groupId>com.github.samtools</groupId>
+			<artifactId>htsjdk</artifactId>
+		</dependency>
 	</dependencies>
+
+
+	<properties>
+		<mapdb.version>3.0.3</mapdb.version>
+	</properties>
 </project>

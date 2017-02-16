@@ -1,5 +1,16 @@
-package org.collaboratory.ga4gh.loader.model.es.converters;
+package org.collaboratory.ga4gh.core.model.converters;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import org.collaboratory.ga4gh.core.model.es.EsVariant;
+import org.elasticsearch.search.SearchHit;
+
+import java.util.List;
+
+import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertStrings;
 import static org.collaboratory.ga4gh.core.Names.ALTERNATIVE_BASES;
 import static org.collaboratory.ga4gh.core.Names.END;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_BASES;
@@ -8,20 +19,7 @@ import static org.collaboratory.ga4gh.core.Names.START;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToStringList;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertStrings;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-
-import java.util.List;
-
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
-import org.elasticsearch.search.SearchHit;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.VariantContext;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
 
 @RequiredArgsConstructor
 public class EsVariantConverter

@@ -1,4 +1,4 @@
-package org.collaboratory.ga4gh.loader.model.es.converters;
+package org.collaboratory.ga4gh.core.model.converters;
 
 import org.elasticsearch.search.SearchHit;
 

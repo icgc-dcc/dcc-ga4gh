@@ -1,8 +1,8 @@
-package org.collaboratory.ga4gh.loader.model.es.converters;
+package org.collaboratory.ga4gh.core.model.converters;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.val;
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
+import org.collaboratory.ga4gh.core.model.es.EsCall;
 import org.elasticsearch.search.SearchHit;
 
 import static org.collaboratory.ga4gh.core.Names.CALL_SET_ID;
@@ -16,8 +16,8 @@ import static org.collaboratory.ga4gh.core.SearchHits.convertHitToDouble;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToObjectMap;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertIntegers;
-import static org.collaboratory.ga4gh.loader.utils.JsonNodeConverters.convertMap;
+import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertIntegers;
+import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 public class EsCallConverter

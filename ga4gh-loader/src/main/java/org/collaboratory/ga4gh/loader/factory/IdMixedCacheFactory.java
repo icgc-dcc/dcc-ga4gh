@@ -5,7 +5,7 @@ import static org.collaboratory.ga4gh.loader.utils.cache.impl.RamCacheStorage.ne
 
 import java.io.IOException;
 
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.core.model.es.EsVariant;
 import org.mapdb.Serializer;
 
 /*

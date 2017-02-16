@@ -1,15 +1,14 @@
-package org.collaboratory.ga4gh.loader.utils;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static lombok.AccessLevel.PRIVATE;
-
-import java.nio.charset.CharsetEncoder;
+package org.collaboratory.ga4gh.core;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
-
 import lombok.NoArgsConstructor;
 import lombok.val;
+
+import java.nio.charset.CharsetEncoder;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class AsciiConverters {

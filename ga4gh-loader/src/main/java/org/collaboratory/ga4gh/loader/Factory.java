@@ -1,7 +1,37 @@
 package org.collaboratory.ga4gh.loader;
 
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantCallPairConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
+import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
+import org.collaboratory.ga4gh.loader.factory.IdMixedCacheFactory;
+import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
+import org.collaboratory.ga4gh.loader.indexing.IndexCreatorContext;
+import org.collaboratory.ga4gh.loader.indexing.Indexer;
+import org.collaboratory.ga4gh.loader.indexing.ParentChild2NestedIndexConverter;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
+import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.icgc.dcc.dcc.common.es.DocumentWriterConfiguration;
+import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.Properties;
+
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.io.Resources.getResource;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
@@ -20,41 +50,11 @@ import static org.collaboratory.ga4gh.loader.Config.STORAGE_BYPASS_MD5_CHECK;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.collaboratory.ga4gh.loader.vcf.CallProcessorManager.newCallProcessorManager;
 import static org.collaboratory.ga4gh.loader.vcf.processors.BasicCallProcessor.newUnFilteredBasicCallProcessor;
 import static org.collaboratory.ga4gh.loader.vcf.processors.DummyCallProcessor.newDummyCallProcessor;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.util.Properties;
-
-import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
-import org.collaboratory.ga4gh.loader.factory.IdMixedCacheFactory;
-import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
-import org.collaboratory.ga4gh.loader.indexing.IndexCreatorContext;
-import org.collaboratory.ga4gh.loader.indexing.Indexer;
-import org.collaboratory.ga4gh.loader.indexing.ParentChild2NestedIndexConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsCallConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsCallSetConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantCallPairConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantSetConverter;
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
-import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
-import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.icgc.dcc.dcc.common.es.DocumentWriterConfiguration;
-import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
-
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Factory {

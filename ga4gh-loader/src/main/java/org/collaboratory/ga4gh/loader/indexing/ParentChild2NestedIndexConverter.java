@@ -6,9 +6,9 @@ import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 import org.apache.lucene.search.join.ScoreMode;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
-import org.collaboratory.ga4gh.loader.model.es.converters.ObjectNodeConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.SearchHitConverter;
+import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
+import org.collaboratory.ga4gh.core.model.converters.ObjectNodeConverter;
+import org.collaboratory.ga4gh.core.model.converters.SearchHitConverter;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;

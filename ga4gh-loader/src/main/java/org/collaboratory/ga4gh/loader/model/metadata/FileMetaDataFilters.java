@@ -17,21 +17,18 @@
  */
 package org.collaboratory.ga4gh.loader.model.metadata;
 
-import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.val;
+import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
+import org.icgc.dcc.common.core.util.stream.Streams;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
-import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
-import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
-
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.val;
+import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 /*
  * Functions for filtering lists of FileMetaDatas
@@ -69,7 +66,7 @@ public class FileMetaDataFilters {
     // create list of parsers from that sorted list
     // biinary search, and if index found, retrieve from first list
     val fileMetaDataContextSorted = fileMetaDataContext.sortByFilename(false);
-    val parsers = stream(fileMetaDataContextSorted)
+    val parsers = Streams.stream(fileMetaDataContextSorted)
         .map(f -> f.getVcfFilenameParser())
         .collect(toImmutableList());
     val contextBuilder = FileMetaDataContext.builder();

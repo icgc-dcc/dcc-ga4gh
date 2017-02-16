@@ -20,7 +20,7 @@ package org.collaboratory.ga4gh.loader.vcf;
 import java.util.List;
 import java.util.Map;
 
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
+import org.collaboratory.ga4gh.core.model.es.EsCall;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;

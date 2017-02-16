@@ -17,18 +17,16 @@
  */
 package org.collaboratory.ga4gh.loader.model.metadata;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.stream.Collectors.summingInt;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import lombok.NonNull;
+import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-
-import lombok.NonNull;
-import lombok.Value;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.summingInt;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 @Value
 public class DonorData {

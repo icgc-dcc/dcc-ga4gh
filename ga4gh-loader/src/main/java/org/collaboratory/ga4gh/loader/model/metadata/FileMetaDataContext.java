@@ -1,7 +1,15 @@
-package org.collaboratory.ga4gh.loader.model.contexts;
+package org.collaboratory.ga4gh.loader.model.metadata;
 
-import static java.util.stream.Collectors.groupingBy;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Singular;
+import lombok.Value;
+import lombok.val;
+import org.collaboratory.ga4gh.core.ObjectPersistance;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -13,20 +21,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData.FileSizeComparator;
-import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Singular;
-import lombok.Value;
-import lombok.val;
+import static java.util.stream.Collectors.groupingBy;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 @Builder
 @Value
@@ -83,7 +79,7 @@ public class FileMetaDataContext implements Serializable, Iterable<FileMetaData>
 
   public FileMetaDataContext sortByFileSize(final boolean ascending) {
     val list = Lists.newArrayList(fileMetaDatas);
-    Collections.sort(list, new FileSizeComparator(ascending));
+    Collections.sort(list, new FileMetaData.FileSizeComparator(ascending));
     return new FileMetaDataContext(ImmutableList.copyOf(list));
   }
 

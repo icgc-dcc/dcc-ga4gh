@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.val;
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
+import org.collaboratory.ga4gh.core.model.es.EsCall;
 import org.collaboratory.ga4gh.loader.vcf.AbstractCallProcessor;
 
 import java.util.Collection;

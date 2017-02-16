@@ -15,21 +15,20 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.model.metadata;
+package org.collaboratory.ga4gh.loader;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
+import com.google.common.collect.Sets;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.assertj.core.api.Assertions;
+import org.collaboratory.ga4gh.core.ObjectPersistance;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
+import org.junit.Test;
 
 import java.io.IOException;
 
-import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-import org.collaboratory.ga4gh.loader.utils.ObjectPersistance;
-import org.junit.Test;
-
-import com.google.common.collect.Sets;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 
 @Slf4j
 public class FileMetaDataFetcherTest {
@@ -48,8 +47,8 @@ public class FileMetaDataFetcherTest {
     val fileMetaDataContextNew = FileMetaDataContext.restore(filename);
     val setOrig = Sets.newHashSet(fileMetaDataContextOrig);
     val setNew = Sets.newHashSet(fileMetaDataContextNew);
-    assertThat(setOrig.containsAll(setNew));
-    assertThat(setNew.containsAll(setOrig));
+    Assertions.assertThat(setOrig.containsAll(setNew));
+    Assertions.assertThat(setNew.containsAll(setOrig));
     log.info("SERIALIZER_TEST_OLD: \n{}", NEWLINE.join(fileMetaDataContextOrig));
     log.info("SERIALIZER_TEST_NEW: \n{}", NEWLINE.join(fileMetaDataContextNew));
   }
@@ -73,8 +72,8 @@ public class FileMetaDataFetcherTest {
 
     val setOrig = Sets.newHashSet(fileMetaDatasOrig);
     val setNew = Sets.newHashSet(fileMetaDatasNew);
-    assertThat(setOrig.containsAll(setNew));
-    assertThat(setNew.containsAll(setOrig));
+    Assertions.assertThat(setOrig.containsAll(setNew));
+    Assertions.assertThat(setNew.containsAll(setOrig));
     log.info("RESTORE_TEST_OLD: \n{}", NEWLINE.join(fileMetaDatasOrig));
     log.info("RESTORE_TEST_NEW: \n{}", NEWLINE.join(fileMetaDatasNew));
 
@@ -119,14 +118,14 @@ public class FileMetaDataFetcherTest {
 
     // Assert that 2 dataFetchers with same parameters except for SEED values, and shuffle ON,
     // result in FileMetaData lists that are DIFFERENT, therefore NOT EQUAL
-    assertThat(!fmdShuffle1.equals(fmdShuffle2));
+    Assertions.assertThat(!fmdShuffle1.equals(fmdShuffle2));
 
     // Assert that 2 dataFetchers with same parameters, regardless of SEED values, and shuffle OFF,
     // result in FileMetaData lists that are the SAME, therefore EQUAL
-    assertThat(fmdNonShuffle1.equals(fmdNonShuffle2));
+    Assertions.assertThat(fmdNonShuffle1.equals(fmdNonShuffle2));
 
     // Assert that 2 dataFetchers with same parameters, included same SEED values, and shuffle ON,
     // result in FileMetaData lists that are the SAME, therefore EQUAL
-    assertThat(fmdShuffle2.equals(fmdShuffle2_withSeed2));
+    Assertions.assertThat(fmdShuffle2.equals(fmdShuffle2_withSeed2));
   }
 }

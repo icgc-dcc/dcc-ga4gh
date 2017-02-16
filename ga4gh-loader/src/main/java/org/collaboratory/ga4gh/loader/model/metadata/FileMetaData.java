@@ -17,22 +17,19 @@
  */
 package org.collaboratory.ga4gh.loader.model.metadata;
 
-import java.io.Serializable;
-import java.util.Comparator;
-
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Data;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.collaboratory.ga4gh.loader.PortalFiles;
-import org.collaboratory.ga4gh.loader.PortalVCFFilenameParser;
 import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import lombok.Data;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import java.io.Serializable;
+import java.util.Comparator;
 
 //TODO: [rtisma] -- consider storing the CallerTypes, MutationTypes and MutationSubTypes enum values instead of string representation. Or atleast keep strings, just create functions to compare the string against the enum
 @Slf4j

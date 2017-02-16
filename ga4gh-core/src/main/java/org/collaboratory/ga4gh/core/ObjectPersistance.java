@@ -1,6 +1,6 @@
-package org.collaboratory.ga4gh.loader.utils;
+package org.collaboratory.ga4gh.core;
 
-import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import lombok.NoArgsConstructor;
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class ObjectPersistance {

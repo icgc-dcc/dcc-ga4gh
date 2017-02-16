@@ -1,20 +1,19 @@
-package org.collaboratory.ga4gh.loader.utils;
+package org.collaboratory.ga4gh.core;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.NoArgsConstructor;
+import lombok.val;
+
+import java.util.Collection;
+import java.util.Map;
 
 import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.core.TypeChecker.isObjectCollection;
 import static org.collaboratory.ga4gh.core.TypeChecker.isObjectMap;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-
-import java.util.Collection;
-import java.util.Map;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import lombok.NoArgsConstructor;
-import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
 public class JsonNodeConverters {

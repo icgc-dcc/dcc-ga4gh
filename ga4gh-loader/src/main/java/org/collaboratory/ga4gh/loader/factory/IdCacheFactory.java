@@ -20,7 +20,7 @@ package org.collaboratory.ga4gh.loader.factory;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.core.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.Purgeable;
 import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
 

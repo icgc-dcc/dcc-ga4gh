@@ -1,4 +1,4 @@
-package org.collaboratory.ga4gh.loader.model.es.converters;
+package org.collaboratory.ga4gh.loader.model.metadata.converters;
 
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 

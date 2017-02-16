@@ -15,22 +15,20 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.model.es;
-
-import java.io.IOException;
-import java.io.Serializable;
-
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
-import org.mapdb.Serializer;
+package org.collaboratory.ga4gh.core.model.es;
 
 import com.google.common.collect.Iterables;
-
 import lombok.Builder;
 import lombok.Singular;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.val;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
+
+import java.io.IOException;
+import java.io.Serializable;
 
 // ObjectNode is a bit heavy, this is just to minimize memory usage
 @Builder

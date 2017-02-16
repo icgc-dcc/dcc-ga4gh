@@ -15,21 +15,19 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader;
+package org.collaboratory.ga4gh.loader.model.metadata;
+
+import com.google.common.collect.Iterables;
+import lombok.Getter;
+import lombok.NonNull;
+import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
+import org.icgc.dcc.common.core.util.Splitters;
+
+import java.io.Serializable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.util.Joiners.DOT;
-
-import java.io.Serializable;
-
-import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
-import org.icgc.dcc.common.core.util.Splitters;
-
-import com.google.common.collect.Iterables;
-
-import lombok.Getter;
-import lombok.NonNull;
 
 /**
  * Takes a filename, and extracts particular fields characteristic of ICGC VCF files

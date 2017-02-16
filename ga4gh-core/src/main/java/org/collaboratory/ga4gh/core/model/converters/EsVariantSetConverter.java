@@ -15,32 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.model.es.converters;
+package org.collaboratory.ga4gh.core.model.converters;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.val;
+import org.collaboratory.ga4gh.core.model.es.EsVariantSet;
+import org.elasticsearch.search.SearchHit;
 
 import static org.collaboratory.ga4gh.core.Names.DATA_SET_ID;
 import static org.collaboratory.ga4gh.core.Names.NAME;
 import static org.collaboratory.ga4gh.core.Names.REFERENCE_SET_ID;
 import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-
-import java.util.Set;
-
-import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantSet;
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
-import org.elasticsearch.search.SearchHit;
-import org.icgc.dcc.common.core.util.stream.Collectors;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import lombok.val;
 
 public class EsVariantSetConverter
     implements ObjectNodeConverter<EsVariantSet>,
-    SearchHitConverter<EsVariantSet>,
-    FileMetaDataConverter<EsVariantSet>,
-    FileMetaDataContextConverter<Set<EsVariantSet>> {
+    SearchHitConverter<EsVariantSet>{
 
   @Override
   public EsVariantSet convertFromSearchHit(SearchHit hit) {
@@ -63,20 +53,5 @@ public class EsVariantSetConverter
         .end();
   }
 
-  @Override
-  public EsVariantSet convertFromFileMetaData(FileMetaData fileMetaData) {
-    return EsVariantSet.builder()
-        .name(fileMetaData.getVcfFilenameParser().getCallerId())
-        .dataSetId(fileMetaData.getDataType())
-        .referenceSetId(fileMetaData.getReferenceName())
-        .build();
-  }
-
-  @Override
-  public Set<EsVariantSet> convertFromFileMetaDataContext(FileMetaDataContext fileMetaDataContext) {
-    return stream(fileMetaDataContext)
-        .map(this::convertFromFileMetaData)
-        .collect(Collectors.toImmutableSet());
-  }
 
 }

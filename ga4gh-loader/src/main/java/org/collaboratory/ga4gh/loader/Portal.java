@@ -1,30 +1,29 @@
 package org.collaboratory.ga4gh.loader;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.transform;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static lombok.AccessLevel.PRIVATE;
-import static org.collaboratory.ga4gh.core.Names.ID;
-import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
-import static org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext.buildFileMetaDataContext;
-import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
-
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.List;
-
-import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
+
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.transform;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static lombok.AccessLevel.PRIVATE;
+import static org.collaboratory.ga4gh.core.Names.ID;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext.buildFileMetaDataContext;
+import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
+import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
+
 
 @NoArgsConstructor(access = PRIVATE)
 public final class Portal {

@@ -1,13 +1,22 @@
 package org.collaboratory.ga4gh.loader.vcf;
 
-import static com.google.common.base.Preconditions.checkState;
-import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
-import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
-import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
-import static org.collaboratory.ga4gh.core.Names.VCF_HEADER;
-import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFEncoder;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
+import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
+import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
+import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
+import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -16,25 +25,14 @@ import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.stream.Stream;
 
-import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
-import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
-import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
-import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
-import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFEncoder;
-import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFHeader;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.base.Preconditions.checkState;
+import static org.collaboratory.ga4gh.core.Names.BIO_SAMPLE_ID;
+import static org.collaboratory.ga4gh.core.Names.DONOR_ID;
+import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.Names.VCF_HEADER;
+import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 @Slf4j
 public class VCF implements Closeable {

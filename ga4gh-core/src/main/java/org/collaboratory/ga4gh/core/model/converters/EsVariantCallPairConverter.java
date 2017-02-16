@@ -15,29 +15,60 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.model.es;
+package org.collaboratory.ga4gh.core.model.converters;
 
-import static org.icgc.dcc.common.core.util.Joiners.COMMA;
-import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
-
-import com.google.common.collect.ImmutableList;
-
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Builder;
-import lombok.Value;
+import lombok.NonNull;
+import lombok.val;
+import org.collaboratory.ga4gh.core.model.es.EsCall;
+import org.collaboratory.ga4gh.core.model.es.EsVariant;
+import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
+import org.elasticsearch.search.SearchHit;
 
-// String implementation of EsVariant. This is the original, more memory heavy impl
-@Value
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+
 @Builder
-public final class EsStringVariant implements EsModel {
+public class EsVariantCallPairConverter implements
+    ObjectNodeConverter<EsVariantCallPair>,
+    SearchHitConverter<EsVariantCallPair> {
 
-  private int start;
-  private int end;
-  private String referenceName;
-  private String referenceBases;
-  private ImmutableList<String> alternativeBases;
+  private static final String CHILD_TYPE = "call";
+
+  @NonNull
+  private final SearchHitConverter<EsVariant> variantSearchHitConverter;
+
+  @NonNull
+  private final SearchHitConverter<EsCall> callSearchHitConverter;
+
+  @NonNull
+  private final ObjectNodeConverter<EsVariant> variantObjectNodeConverter;
+
+  @NonNull
+  private final ObjectNodeConverter<EsCall> callObjectNodeConverter;
 
   @Override
-  public String getName() {
-    return UNDERSCORE.join(start, end, referenceName, referenceBases, COMMA.join(alternativeBases));
+  public EsVariantCallPair convertFromSearchHit(SearchHit hit) {
+    val pair = EsVariantCallPair.builder()
+        .variant(variantSearchHitConverter.convertFromSearchHit(hit));
+
+    for (val innerHit : hit.getInnerHits().get(CHILD_TYPE)) {
+      pair.call(callSearchHitConverter.convertFromSearchHit(innerHit));
+    }
+    return pair.build();
   }
+
+  @Override
+  public ObjectNode convertToObjectNode(EsVariantCallPair t) {
+    val array = array();
+    for (val call : t.getCalls()) {
+      array.with(callObjectNodeConverter.convertToObjectNode(call));
+    }
+    return object()
+        .with(variantObjectNodeConverter.convertToObjectNode(t.getVariant()))
+        .with(CHILD_TYPE, array)
+        .end();
+  }
+
 }

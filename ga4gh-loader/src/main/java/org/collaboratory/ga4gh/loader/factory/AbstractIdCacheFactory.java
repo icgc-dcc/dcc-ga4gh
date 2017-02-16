@@ -22,7 +22,7 @@ import static org.collaboratory.ga4gh.loader.utils.cache.impl.LongIdCache.newLon
 
 import java.io.IOException;
 
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
+import org.collaboratory.ga4gh.core.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.cache.CacheStorage;
 import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
 

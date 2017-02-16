@@ -3,6 +3,7 @@ package org.collaboratory.ga4gh.loader.indexing;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
 import htsjdk.tribble.TribbleException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -10,25 +11,32 @@ import lombok.SneakyThrows;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-import org.collaboratory.ga4gh.loader.model.es.*;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsCallConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsCallSetConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantSetConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
+import org.collaboratory.ga4gh.core.model.es.EsCall;
+import org.collaboratory.ga4gh.core.model.es.EsCallSet;
+import org.collaboratory.ga4gh.core.model.es.EsVariant;
+import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
+import org.collaboratory.ga4gh.core.model.es.EsVariantSet;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
+import org.icgc.dcc.common.core.util.stream.Collectors;
+import org.icgc.dcc.common.core.util.stream.Streams;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
 import org.icgc.dcc.dcc.common.es.json.JacksonFactory;
 import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
 import static org.collaboratory.ga4gh.core.Names.VARIANT_SET_ID;
@@ -36,6 +44,8 @@ import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -158,16 +168,51 @@ public class Indexer {
 
   public void indexFileMetaDataContext(@NonNull final FileMetaDataContext fileMetaDataContext) {
     log.info("Converting VariantSets from FileMetaDataContext...");
-    val variantSets = variantSetConverter.convertFromFileMetaDataContext(fileMetaDataContext);
+    val variantSets = convertToSetOfEsVariantSets(fileMetaDataContext);
 
     log.info("Indexing VariantSets ...");
     variantSets.forEach(this::indexVariantSet);
 
     log.info("Converting CallSets from FileMetaDataContext...");
-    val callSets = callSetConverter.convertFromFileMetaDataContext(fileMetaDataContext, variantSetIdCache);
+    val callSets = convertToSetOfEsCallSets(fileMetaDataContext, variantSetIdCache);
 
     log.info("Indexing CallSets ...");
     callSets.forEach(this::indexCallSet);
+  }
+
+  private EsVariantSet convertToEsVariantSet(FileMetaData fileMetaData) {
+    return EsVariantSet.builder()
+        .name(fileMetaData.getVcfFilenameParser().getCallerId())
+        .dataSetId(fileMetaData.getDataType())
+        .referenceSetId(fileMetaData.getReferenceName())
+        .build();
+  }
+
+  private Set<EsVariantSet> convertToSetOfEsVariantSets(FileMetaDataContext fileMetaDataContext) {
+    return Streams.stream(fileMetaDataContext)
+        .map(this::convertToEsVariantSet)
+        .collect(Collectors.toImmutableSet());
+  }
+
+  private Set<EsCallSet> convertToSetOfEsCallSets(FileMetaDataContext fileMetaDataContext,
+      IdCache<String, Integer> variantSetIdCache) {
+    val groupedBySampleMap = fileMetaDataContext.groupFileMetaDataBySample();
+    val setBuilder = ImmutableSet.<EsCallSet> builder();
+    val converter = new EsVariantSetConverter();
+    for (val entry : groupedBySampleMap.entrySet()) {
+      val sampleName = entry.getKey();
+      val fileMetaDataContextForSample = entry.getValue();
+      val variantSetIds = convertToSetOfEsVariantSets(fileMetaDataContextForSample).stream()
+          .map(vs -> variantSetIdCache.getId(vs.getName()))
+          .collect(toImmutableSet());
+      setBuilder.add(
+          EsCallSet.builder()
+              .name(sampleName)
+              .variantSetIds(variantSetIds)
+              .bioSampleId(sampleName) // bio_sample_id == call_set_name
+              .build());
+    }
+    return setBuilder.build();
   }
 
   @SneakyThrows

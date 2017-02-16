@@ -17,10 +17,14 @@
  */
 package org.collaboratory.ga4gh.loader.model.metadata;
 
-import static com.google.common.base.Preconditions.checkState;
-import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
-import static org.collaboratory.ga4gh.loader.Portal.getAllFileMetaDatas;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterSelectedFilenamesInOrder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
+import lombok.val;
+import org.collaboratory.ga4gh.loader.Config;
+import org.collaboratory.ga4gh.loader.Portal;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -28,28 +32,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
-import lombok.val;
+import static com.google.common.base.Preconditions.checkState;
 
 /*
  * TODO: [rtisma] Temporary untill learn Portal api. Everything here can probably done via portal api
  * and then once get back ObjectNodes can convert to FileMetaData object, and then delete this class
  */
+//NOTE: had to add emptyBuilder becuase lombok intellij
+// plugin acting up and not working correctly
+// (said that FileMetaDataFetcherBuilder constructor was not public)
+@Builder(builderMethodName = "emptyBuilder")
 @Data
-@Builder
 public class FileMetaDataFetcher {
 
   public static final int DEFAULT_NUM_DONORS = 0;
   public static final int DEFAULT_MAX_FILESIZE_BYTES = 0;
   public static final int DEFAULT_LIMIT_NUM_FILES = 0;
-  public static final String DEFAULT_STORAGE_FILENAME = DEFAULT_FILE_META_DATA_STORE_FILENAME;
+  public static final String DEFAULT_STORAGE_FILENAME = Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
 
   private final int numDonors;
   private final long maxFileSizeBytes;
@@ -96,16 +95,17 @@ public class FileMetaDataFetcher {
   }
 
   // Define default builder
+
   public static FileMetaDataFetcherBuilder builder() {
-    return new FileMetaDataFetcherBuilder()
+    return emptyBuilder()
         .maxFileSizeBytes(DEFAULT_MAX_FILESIZE_BYTES)
         .numDonors(DEFAULT_NUM_DONORS)
         .somaticSSMsOnly(false)
         .seed(generateSeed())
         .limit(DEFAULT_LIMIT_NUM_FILES)
         .sort(false)
-        .ascending(false)
         .storageFilename(DEFAULT_STORAGE_FILENAME)
+        .ascending(false)
         .shuffle(false);
   }
 
@@ -175,7 +175,7 @@ public class FileMetaDataFetcher {
     if (fileExists && !isCreateNewFile()) {
       fileMetaDataContext = FileMetaDataContext.restore(storageFilename);
     } else {
-      fileMetaDataContext = getAllFileMetaDatas();
+      fileMetaDataContext = Portal.getAllFileMetaDatas();
       fileMetaDataContext.store(storageFilename);
     }
 
@@ -212,8 +212,115 @@ public class FileMetaDataFetcher {
         return outputFileMetaDataContext;
       }
     } else {
-      return filterSelectedFilenamesInOrder(fileMetaDataContext, specificFilenames);
+      return FileMetaDataFilters.filterSelectedFilenamesInOrder(fileMetaDataContext, specificFilenames);
     }
 
   }
+
+  public int getNumDonors() {
+    return this.numDonors;
+  }
+
+  public long getMaxFileSizeBytes() {
+    return this.maxFileSizeBytes;
+  }
+
+  public boolean isSomaticSSMsOnly() {
+    return this.somaticSSMsOnly;
+  }
+
+  public boolean isShuffle() {
+    return this.shuffle;
+  }
+
+  public long getSeed() {
+    return this.seed;
+  }
+
+  public int getLimit() {
+    return this.limit;
+  }
+
+  public boolean isSort() {
+    return this.sort;
+  }
+
+  public boolean isAscending() {
+    return this.ascending;
+  }
+
+  public String getStorageFilename() {
+    return this.storageFilename;
+  }
+
+  public boolean isCreateNewFile() {
+    return this.createNewFile;
+  }
+
+  public List<String> getSpecificFilenames() {
+    return this.specificFilenames;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) return true;
+    if (!(o instanceof FileMetaDataFetcher)) return false;
+    final FileMetaDataFetcher other = (FileMetaDataFetcher) o;
+    if (!other.canEqual(this)) return false;
+    if (this.getNumDonors() != other.getNumDonors()) return false;
+    if (this.getMaxFileSizeBytes() != other.getMaxFileSizeBytes()) return false;
+    if (this.isSomaticSSMsOnly() != other.isSomaticSSMsOnly()) return false;
+    if (this.isShuffle() != other.isShuffle()) return false;
+    if (this.getSeed() != other.getSeed()) return false;
+    if (this.getLimit() != other.getLimit()) return false;
+    if (this.isSort() != other.isSort()) return false;
+    if (this.isAscending() != other.isAscending()) return false;
+    final Object this$storageFilename = this.getStorageFilename();
+    final Object other$storageFilename = other.getStorageFilename();
+    if (this$storageFilename == null ? other$storageFilename != null : !this$storageFilename
+        .equals(other$storageFilename)) return false;
+    if (this.isCreateNewFile() != other.isCreateNewFile()) return false;
+    final Object this$specificFilenames = this.getSpecificFilenames();
+    final Object other$specificFilenames = other.getSpecificFilenames();
+    if (this$specificFilenames == null ? other$specificFilenames != null : !this$specificFilenames
+        .equals(other$specificFilenames)) return false;
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    final int PRIME = 59;
+    int result = 1;
+    result = result * PRIME + this.getNumDonors();
+    final long $maxFileSizeBytes = this.getMaxFileSizeBytes();
+    result = result * PRIME + (int) ($maxFileSizeBytes >>> 32 ^ $maxFileSizeBytes);
+    result = result * PRIME + (this.isSomaticSSMsOnly() ? 79 : 97);
+    result = result * PRIME + (this.isShuffle() ? 79 : 97);
+    final long $seed = this.getSeed();
+    result = result * PRIME + (int) ($seed >>> 32 ^ $seed);
+    result = result * PRIME + this.getLimit();
+    result = result * PRIME + (this.isSort() ? 79 : 97);
+    result = result * PRIME + (this.isAscending() ? 79 : 97);
+    final Object $storageFilename = this.getStorageFilename();
+    result = result * PRIME + ($storageFilename == null ? 43 : $storageFilename.hashCode());
+    result = result * PRIME + (this.isCreateNewFile() ? 79 : 97);
+    final Object $specificFilenames = this.getSpecificFilenames();
+    result = result * PRIME + ($specificFilenames == null ? 43 : $specificFilenames.hashCode());
+    return result;
+  }
+
+  protected boolean canEqual(Object other) {
+    return other instanceof FileMetaDataFetcher;
+  }
+
+  @Override
+  public String toString() {
+    return "org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher(numDonors=" + this.getNumDonors()
+        + ", maxFileSizeBytes=" + this.getMaxFileSizeBytes() + ", somaticSSMsOnly=" + this.isSomaticSSMsOnly()
+        + ", shuffle=" + this.isShuffle() + ", seed=" + this.getSeed() + ", limit=" + this.getLimit() + ", sort=" + this
+            .isSort()
+        + ", ascending=" + this.isAscending() + ", storageFilename=" + this.getStorageFilename()
+        + ", createNewFile=" + this.isCreateNewFile() + ", specificFilenames=" + this.getSpecificFilenames() + ")";
+  }
+
 }

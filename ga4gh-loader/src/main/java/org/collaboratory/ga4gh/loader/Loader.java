@@ -5,26 +5,34 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
-import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
-import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.loader.model.metadata.DonorData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
 import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
 import org.collaboratory.ga4gh.loader.vcf.VCF;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 
 import static java.util.stream.Collectors.summingLong;
 import static org.collaboratory.ga4gh.loader.Config.LOADER_MODE;
 import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
-import static org.collaboratory.ga4gh.loader.Factory.*;
-import static org.collaboratory.ga4gh.loader.LoaderModes.*;
+import static org.collaboratory.ga4gh.loader.Factory.newClient;
+import static org.collaboratory.ga4gh.loader.Factory.newFileMetaDataFetcher;
+import static org.collaboratory.ga4gh.loader.Factory.newIdCacheFactory;
+import static org.collaboratory.ga4gh.loader.Factory.newLoader;
+import static org.collaboratory.ga4gh.loader.Factory.newNestedDocumentWriter;
+import static org.collaboratory.ga4gh.loader.Factory.newParentChild2NestedIndexConverter;
+import static org.collaboratory.ga4gh.loader.Factory.newParentChildDocumentWriter;
+import static org.collaboratory.ga4gh.loader.LoaderModes.NESTED_ONLY;
+import static org.collaboratory.ga4gh.loader.LoaderModes.PARENT_CHILD_ONLY;
+import static org.collaboratory.ga4gh.loader.LoaderModes.PARENT_CHILD_THEN_NESTED;
 import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
+
 
 @Slf4j
 @RequiredArgsConstructor

@@ -15,55 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.model.es;
+package org.collaboratory.ga4gh.core.model.es;
 
-import java.io.IOException;
-import java.io.Serializable;
-
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
-import org.mapdb.Serializer;
-
+import com.google.common.collect.ImmutableList;
 import lombok.Builder;
-import lombok.SneakyThrows;
 import lombok.Value;
-import lombok.val;
 
-// ObjectNode is a bit heavy, this is just to minimize memory usage
-@Builder
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
+import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
+
+// String implementation of EsVariant. This is the original, more memory heavy impl
 @Value
-public final class EsVariantSet implements EsModel {
+@Builder
+public final class EsStringVariant implements EsModel {
 
-  private String name;
-  private String dataSetId;
-  private String referenceSetId;
+  private int start;
+  private int end;
+  private String referenceName;
+  private String referenceBases;
+  private ImmutableList<String> alternativeBases;
 
-  /*
-   * Serializer needed for MapDB. Note: if EsVariantSet member variables are added, removed or modified, this needs to
-   * be updated
-   */
-  public static class EsVariantSetSerializer implements Serializer<EsVariantSet>, Serializable {
-
-    @Override
-    public void serialize(DataOutput2 out, EsVariantSet value) throws IOException {
-      out.writeUTF(value.getName());
-      out.writeUTF(value.getDataSetId());
-      out.writeUTF(value.getReferenceSetId());
-    }
-
-    @Override
-    @SneakyThrows
-    public EsVariantSet deserialize(DataInput2 input, int available) throws IOException {
-      val name = input.readUTF();
-      val dataSetId = input.readUTF();
-      val referenceSetId = input.readUTF();
-      return EsVariantSet.builder()
-          .name(name)
-          .dataSetId(dataSetId)
-          .referenceSetId(referenceSetId)
-          .build();
-    }
-
+  @Override
+  public String getName() {
+    return UNDERSCORE.join(start, end, referenceName, referenceBases, COMMA.join(alternativeBases));
   }
-
 }

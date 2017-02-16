@@ -15,62 +15,54 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.model.es.converters;
-
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
-import org.collaboratory.ga4gh.loader.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.model.es.EsVariantCallPair;
-import org.elasticsearch.search.SearchHit;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
+package org.collaboratory.ga4gh.core.model.es;
 
 import lombok.Builder;
-import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.val;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
 
+import java.io.IOException;
+import java.io.Serializable;
+
+// ObjectNode is a bit heavy, this is just to minimize memory usage
 @Builder
-public class EsVariantCallPairConverter implements
-    ObjectNodeConverter<EsVariantCallPair>,
-    SearchHitConverter<EsVariantCallPair> {
+@Value
+public final class EsVariantSet implements EsModel {
 
-  private static final String CHILD_TYPE = "call";
+  private String name;
+  private String dataSetId;
+  private String referenceSetId;
 
-  @NonNull
-  private final SearchHitConverter<EsVariant> variantSearchHitConverter;
+  /*
+   * Serializer needed for MapDB. Note: if EsVariantSet member variables are added, removed or modified, this needs to
+   * be updated
+   */
+  public static class EsVariantSetSerializer implements Serializer<EsVariantSet>, Serializable {
 
-  @NonNull
-  private final SearchHitConverter<EsCall> callSearchHitConverter;
-
-  @NonNull
-  private final ObjectNodeConverter<EsVariant> variantObjectNodeConverter;
-
-  @NonNull
-  private final ObjectNodeConverter<EsCall> callObjectNodeConverter;
-
-  @Override
-  public EsVariantCallPair convertFromSearchHit(SearchHit hit) {
-    val pair = EsVariantCallPair.builder()
-        .variant(variantSearchHitConverter.convertFromSearchHit(hit));
-
-    for (val innerHit : hit.getInnerHits().get(CHILD_TYPE)) {
-      pair.call(callSearchHitConverter.convertFromSearchHit(innerHit));
+    @Override
+    public void serialize(DataOutput2 out, EsVariantSet value) throws IOException {
+      out.writeUTF(value.getName());
+      out.writeUTF(value.getDataSetId());
+      out.writeUTF(value.getReferenceSetId());
     }
-    return pair.build();
-  }
 
-  @Override
-  public ObjectNode convertToObjectNode(EsVariantCallPair t) {
-    val array = array();
-    for (val call : t.getCalls()) {
-      array.with(callObjectNodeConverter.convertToObjectNode(call));
+    @Override
+    @SneakyThrows
+    public EsVariantSet deserialize(DataInput2 input, int available) throws IOException {
+      val name = input.readUTF();
+      val dataSetId = input.readUTF();
+      val referenceSetId = input.readUTF();
+      return EsVariantSet.builder()
+          .name(name)
+          .dataSetId(dataSetId)
+          .referenceSetId(referenceSetId)
+          .build();
     }
-    return object()
-        .with(variantObjectNodeConverter.convertToObjectNode(t.getVariant()))
-        .with(CHILD_TYPE, array)
-        .end();
+
   }
 
 }

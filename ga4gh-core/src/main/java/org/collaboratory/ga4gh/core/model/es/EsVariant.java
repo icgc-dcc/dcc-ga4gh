@@ -15,32 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.model.es;
+package org.collaboratory.ga4gh.core.model.es;
 
-import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.boxByteArray;
-import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.checkPureAscii;
-import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToByteObjectArray;
-import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToBytePrimitiveArray;
-import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.convertToString;
-import static org.collaboratory.ga4gh.loader.utils.AsciiConverters.unboxByteArray;
-import static org.icgc.dcc.common.core.util.Joiners.COMMA;
-import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-
-import java.io.IOException;
-import java.io.Serializable;
-
+import com.google.common.collect.ImmutableList;
+import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
+import lombok.ToString;
+import lombok.val;
+import org.collaboratory.ga4gh.core.AsciiConverters;
 import org.icgc.dcc.common.core.util.stream.Streams;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
 
-import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.io.Serializable;
 
-import lombok.EqualsAndHashCode;
-import lombok.SneakyThrows;
-import lombok.ToString;
-import lombok.val;
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
+import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 // Byte packed implementation of EsVariant. Assumes that referenceBases and alternative bases
 // are ASCII only. Instead of storing 2 Bytes per character for bases, store one. 
@@ -99,12 +92,12 @@ public final class EsVariant implements Serializable, EsModel {
   }
 
   public String getReferenceBases() {
-    return convertToString(referenceBases);
+    return AsciiConverters.convertToString(referenceBases);
   }
 
   public ImmutableList<String> getAlternativeBases() {
     return Streams.stream(alternativeBases)
-        .map(x -> convertToString(x))
+        .map(x -> AsciiConverters.convertToString(x))
         .collect(toImmutableList());
   }
 
@@ -137,17 +130,17 @@ public final class EsVariant implements Serializable, EsModel {
     }
 
     public EsVariantBuilder referenceBases(final String referenceBases) {
-      checkPureAscii(referenceBases);
-      this.referenceBases = convertToBytePrimitiveArray(referenceBases);
+      AsciiConverters.checkPureAscii(referenceBases);
+      this.referenceBases = AsciiConverters.convertToBytePrimitiveArray(referenceBases);
       return this;
     }
 
     public EsVariantBuilder alternativeBase(final String alternativeBase) {
-      checkPureAscii(alternativeBase);
+      AsciiConverters.checkPureAscii(alternativeBase);
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<Byte[]> builder();
       }
-      this.alternativeBases.add(convertToByteObjectArray(alternativeBase));
+      this.alternativeBases.add(AsciiConverters.convertToByteObjectArray(alternativeBase));
       return this;
     }
 
@@ -170,7 +163,7 @@ public final class EsVariant implements Serializable, EsModel {
 
       byte[][] b = new byte[alternativeBases.size()][];
       for (int i = 0; i < alternativeBases.size(); i++) {
-        b[i] = unboxByteArray(alternativeBases.get(i));
+        b[i] = AsciiConverters.unboxByteArray(alternativeBases.get(i));
       }
       return new EsVariant(start, end, referenceName, referenceBases, b);
     }
@@ -179,7 +172,7 @@ public final class EsVariant implements Serializable, EsModel {
       if (this.alternativeBases == null) {
         this.alternativeBases = ImmutableList.<Byte[]> builder();
       }
-      this.alternativeBases.add(boxByteArray(alternativeBase));
+      this.alternativeBases.add(AsciiConverters.boxByteArray(alternativeBase));
       return this;
     }
 
