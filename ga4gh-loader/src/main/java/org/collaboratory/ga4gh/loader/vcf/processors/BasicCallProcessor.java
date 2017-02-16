@@ -1,14 +1,5 @@
 package org.collaboratory.ga4gh.loader.vcf.processors;
 
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import org.collaboratory.ga4gh.loader.model.es.EsCall;
-import org.collaboratory.ga4gh.loader.vcf.AbstractCallProcessor;
-
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -16,6 +7,14 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.val;
+import org.collaboratory.ga4gh.loader.model.es.EsCall;
+import org.collaboratory.ga4gh.loader.vcf.AbstractCallProcessor;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 @Builder
 @RequiredArgsConstructor

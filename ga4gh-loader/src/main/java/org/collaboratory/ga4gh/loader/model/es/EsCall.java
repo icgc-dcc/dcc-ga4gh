@@ -17,13 +17,13 @@
  */
 package org.collaboratory.ga4gh.loader.model.es;
 
-import static org.icgc.dcc.common.core.util.Joiners.COLON;
+import lombok.Builder;
+import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
 
-import lombok.Builder;
-import lombok.Value;
+import static org.icgc.dcc.common.core.util.Joiners.COLON;
 
 /*
  * ObjectNode is a bit heavy, this is just to minimize memory usage
