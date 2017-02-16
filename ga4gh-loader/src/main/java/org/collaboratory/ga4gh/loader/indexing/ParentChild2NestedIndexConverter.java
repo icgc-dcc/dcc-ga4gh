@@ -1,14 +1,16 @@
 package org.collaboratory.ga4gh.loader.indexing;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-
+import com.google.common.collect.Lists;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.lucene.search.join.ScoreMode;
-import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.core.model.converters.ObjectNodeConverter;
 import org.collaboratory.ga4gh.core.model.converters.SearchHitConverter;
+import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -19,14 +21,11 @@ import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
 import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 
-import com.google.common.collect.Lists;
-
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT_NESTED;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 @Builder
 @Slf4j
@@ -131,7 +130,7 @@ public class ParentChild2NestedIndexConverter {
 
     @Override
     public String getIndexType() {
-      return VARIANT_NESTED_TYPE_NAME;
+      return VARIANT_NESTED;
     }
 
   }

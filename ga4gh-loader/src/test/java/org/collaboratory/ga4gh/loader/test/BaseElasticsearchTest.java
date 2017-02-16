@@ -17,15 +17,16 @@
  */
 package org.collaboratory.ga4gh.loader.test;
 
-import static com.google.common.base.Preconditions.checkState;
-import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
-import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-
-import java.io.File;
-
+import com.carrotsearch.randomizedtesting.annotations.SeedDecorators;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.io.Resources;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.collaboratory.ga4gh.loader.Config;
-import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.test.ESIntegTestCase;
@@ -34,16 +35,13 @@ import org.elasticsearch.test.ESIntegTestCase.Scope;
 import org.icgc.dcc.common.es.security.SecurityManagerWorkaroundSeedDecorator;
 import org.junit.Before;
 
-import com.carrotsearch.randomizedtesting.annotations.SeedDecorators;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.io.Resources;
+import java.io.File;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.base.Preconditions.checkState;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT;
+import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
+import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 @Slf4j
 @SeedDecorators(value = SecurityManagerWorkaroundSeedDecorator.class)
@@ -103,7 +101,7 @@ public abstract class BaseElasticsearchTest extends ESIntegTestCase {
   }
 
   protected GetResponse getVariant(@NonNull String variantId) {
-    return prepareGet().setType(Indexer.VARIANT_TYPE_NAME).setId(variantId).get();
+    return prepareGet().setType(VARIANT).setId(variantId).get();
   }
 
   protected GetRequestBuilder prepareGet() {

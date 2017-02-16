@@ -40,6 +40,11 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
 import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.TypeNames.CALL;
+import static org.collaboratory.ga4gh.core.TypeNames.CALL_SET;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT_SET;
+import static org.collaboratory.ga4gh.core.TypeNames.VCF_HEADER;
 import static org.collaboratory.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.utils.CounterMonitor.newMonitor;
@@ -55,10 +60,6 @@ public class Indexer {
    * Constants.
    */
   public static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
-  public static final String CALLSET_TYPE_NAME = "callset";
-  public static final String VARIANT_SET_TYPE_NAME = "variant_set";
-  public static final String CALL_TYPE_NAME = "call";
-  public static final String VARIANT_TYPE_NAME = "variant";
   public static final String VCF_HEADER_TYPE_NAME = "vcf_header";
   private static final ObjectWriter BINARY_WRITER = JacksonFactory.getObjectWriter();
   public static final String DEFAULT_MAPPINGS_DIRNAME = "org/collaboratory/ga4gh/resources/mappings";
@@ -312,11 +313,11 @@ public class Indexer {
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
     val parent_variant_set_id = vcfHeader.path(VARIANT_SET_ID).textValue();
     checkState(
-        client.prepareIndex(PARENT_CHILD_INDEX_NAME, VCF_HEADER_TYPE_NAME, objectId)
+        client.prepareIndex(PARENT_CHILD_INDEX_NAME, VCF_HEADER, objectId)
             .setContentType(SMILE)
             .setSource(createSource(vcfHeader))
             .setParent(parent_variant_set_id)
-            .setRouting(VARIANT_SET_TYPE_NAME)
+            .setRouting(VARIANT)
             .get().status().equals(RestStatus.CREATED));
   }
 
@@ -337,7 +338,7 @@ public class Indexer {
 
     @Override
     public String getIndexType() {
-      return Indexer.VARIANT_TYPE_NAME;
+      return VARIANT;
     }
   }
 
@@ -345,7 +346,7 @@ public class Indexer {
 
     @Override
     public String getIndexType() {
-      return VARIANT_SET_TYPE_NAME;
+      return VARIANT_SET;
     }
 
   }
@@ -354,7 +355,7 @@ public class Indexer {
 
     @Override
     public String getIndexType() {
-      return CALLSET_TYPE_NAME;
+      return CALL_SET;
     }
   }
 
@@ -362,7 +363,7 @@ public class Indexer {
 
     @Override
     public String getIndexType() {
-      return CALL_TYPE_NAME;
+      return CALL;
     }
   }
 

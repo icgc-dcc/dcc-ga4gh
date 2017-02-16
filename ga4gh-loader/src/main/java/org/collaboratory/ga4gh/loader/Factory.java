@@ -31,7 +31,12 @@ import java.util.Properties;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.io.Resources.getResource;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
+import static org.collaboratory.ga4gh.core.TypeNames.CALL;
+import static org.collaboratory.ga4gh.core.TypeNames.CALL_SET;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT_NESTED;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT_SET;
+import static org.collaboratory.ga4gh.core.TypeNames.VCF_HEADER;
 import static org.collaboratory.ga4gh.loader.Config.ASCENDING_MODE;
 import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
@@ -50,6 +55,7 @@ import static org.collaboratory.ga4gh.loader.Config.STORAGE_BYPASS_MD5_CHECK;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.collaboratory.ga4gh.loader.vcf.CallProcessorManager.newCallProcessorManager;
 import static org.collaboratory.ga4gh.loader.vcf.processors.BasicCallProcessor.newUnFilteredBasicCallProcessor;
 import static org.collaboratory.ga4gh.loader.vcf.processors.DummyCallProcessor.newDummyCallProcessor;
@@ -146,9 +152,9 @@ public class Factory {
       @NonNull DocumentWriter writer) {
     val converter = newVariantCallPairConverter();
     return ParentChild2NestedIndexConverter.builder()
-        .childTypeName(Indexer.CALL_TYPE_NAME)
-        .parentTypeName(Indexer.VARIANT_TYPE_NAME)
-        .targetTypeName(ParentChild2NestedIndexConverter.VARIANT_NESTED_TYPE_NAME)
+        .childTypeName(CALL)
+        .parentTypeName(VARIANT)
+        .targetTypeName(VARIANT_NESTED)
         .nestedObjectNodeConverter(converter)
         .searchHitConverter(converter)
         .scrollSize(NESTED_SCROLL_SIZE)
@@ -167,11 +173,11 @@ public class Factory {
             .indexSettingsFilename(Indexer.INDEX_SETTINGS_JSON_FILENAME)
             .mappingDirname(Indexer.DEFAULT_MAPPINGS_DIRNAME)
             .mappingFilenameExtension(Indexer.DEFAULT_MAPPING_JSON_EXTENSION)
-            .typeName(Indexer.CALLSET_TYPE_NAME)
-            .typeName(Indexer.VARIANT_SET_TYPE_NAME)
-            .typeName(Indexer.VARIANT_TYPE_NAME)
-            .typeName(Indexer.VCF_HEADER_TYPE_NAME)
-            .typeName(Indexer.CALL_TYPE_NAME)
+            .typeName(CALL_SET)
+            .typeName(VARIANT_SET)
+            .typeName(VARIANT)
+            .typeName(VCF_HEADER)
+            .typeName(CALL)
             .build();
   }
 
