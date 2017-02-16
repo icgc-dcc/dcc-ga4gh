@@ -62,6 +62,11 @@ public class Factory {
   private static final String TRANSPORT_SETTINGS_FILENAME =
       "org/collaboratory/ga4gh/resources/settings/transport.properties";
 
+  private static final EsVariantConverter VARIANT_CONVERTER = new EsVariantConverter();
+  private static final EsVariantSetConverter VARIANT_SET_CONVERTER = new EsVariantSetConverter();
+  private static final EsCallSetConverter CALL_SET_CONVERTER = new EsCallSetConverter();
+  private static final EsCallConverter CALL_CONVERTER = new EsCallConverter();
+
   private static Properties newResourceProperties(final String filename) throws IOException {
     val uri = getResource(filename);
     val prop = new Properties();
@@ -178,15 +183,17 @@ public class Factory {
         idCacheFactory.getVariantIdCache(),
         idCacheFactory.getVariantSetIdCache(),
         idCacheFactory.getCallSetIdCache(),
-        new EsVariantSetConverter(),
-        new EsCallSetConverter());
+        VARIANT_SET_CONVERTER,
+        CALL_SET_CONVERTER,
+        VARIANT_CONVERTER,
+        CALL_CONVERTER);
   }
 
   public static Loader newLoader(Client client, DocumentWriter writer, IdCacheFactory idCacheFactory)
       throws Exception {
     val indexer = newIndexer(client, writer, idCacheFactory);
     val callProcessorManager = createCallProcessManager();
-    return new Loader(indexer, newStorage(), callProcessorManager);
+    return new Loader(indexer, newStorage(), callProcessorManager, VARIANT_CONVERTER);
   }
 
   public static Storage newStorage() {

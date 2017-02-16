@@ -42,7 +42,6 @@ public class VCF implements Closeable {
   private static final boolean REQUIRE_INDEX_CFG = false;
   private static final boolean ALLOW_MISSING_FIELDS_IN_HEADER_CFG = true;
   private static final boolean OUTPUT_TRAILING_FORMAT_FIELDS_CFG = true;
-  private static final EsVariantConverter VARIANT_CONVERTER = new EsVariantConverter();
 
   /*
    * Dependancies
@@ -55,6 +54,8 @@ public class VCF implements Closeable {
 
   @Getter
   private final CallProcessor callProcessor;
+
+  private final EsVariantConverter variantConverter;
 
   /*
    * Cached for speed
@@ -80,8 +81,10 @@ public class VCF implements Closeable {
       @NonNull final FileMetaData fileMetaData,
       @NonNull final IdCache<String, Integer> variantSetIdCache,
       @NonNull final IdCache<String, Integer> callSetIdCache,
-      @NonNull final CallProcessor callProcessor) {
+      @NonNull final CallProcessor callProcessor,
+      @NonNull final EsVariantConverter variantConverter) {
     this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
+    this.variantConverter = variantConverter;
     this.fileMetaData = fileMetaData;
     this.callProcessor = callProcessor;
     this.encoder = new VCFEncoder(vcf.getFileHeader(),
@@ -151,7 +154,7 @@ public class VCF implements Closeable {
 
   private EsVariantCallPair convertVariantCallPair(final VariantContext record) {
     variantCallPairMonitor.start();
-    val variant = VARIANT_CONVERTER.convertFromVariantContext(record);
+    val variant = variantConverter.convertFromVariantContext(record);
     val calls = callProcessor.createEsCallList(variantSetId, callSetId, record);
     val pair = EsVariantCallPair.builder()
         .calls(calls)

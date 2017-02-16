@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.collaboratory.ga4gh.loader.model.contexts.FileMetaDataContext;
+import org.collaboratory.ga4gh.loader.model.es.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.loader.model.metadata.DonorData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
@@ -37,6 +38,9 @@ public class Loader {
 
   @NonNull
   private final CallProcessorManager callProcessorManager;
+
+  @NonNull
+  private final EsVariantConverter variantConverter;
 
   private long globalFileMetaDataCount = -1;
   private long globalFileMetaDataTotal = -1;
@@ -176,7 +180,8 @@ public class Loader {
         fileMetaData,
         indexer.getVariantSetIdCache(),
         indexer.getCallSetIdCache(),
-        callProcessor);
+        callProcessor,
+        variantConverter);
 
     log.info("\tReading variants ...");
     val variants = vcf.readVariantAndCalls();

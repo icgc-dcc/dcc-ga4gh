@@ -54,10 +54,6 @@ public class Indexer {
   public static final String DEFAULT_MAPPINGS_DIRNAME = "org/collaboratory/ga4gh/resources/mappings";
   public static final String DEFAULT_MAPPING_JSON_EXTENSION = ".mapping.json";
 
-  private static final EsVariantConverter VARIANT_CONVERTER = new EsVariantConverter();
-  private static final EsVariantSetConverter VARIANT_SET_CONVERTER = new EsVariantSetConverter();
-  private static final EsCallSetConverter CALL_SET_CONVERTER = new EsCallSetConverter();
-  private static final EsCallConverter CALL_CONVERTER = new EsCallConverter();
   private static final int MAX_NUM_SEGMENTS = 1;
 
   /**
@@ -92,6 +88,12 @@ public class Indexer {
 
   @NonNull
   private final EsCallSetConverter callSetConverter;
+
+  @NonNull
+  private final EsVariantConverter variantConverter;
+
+  @NonNull
+  private final EsCallConverter callConverter;
 
   private int callId = 0;
 
@@ -142,7 +144,7 @@ public class Indexer {
   }
 
   private void writeVariantSet(final String variantSetId, @NonNull final EsVariantSet variantSet) throws IOException {
-    writer.write(new IndexDocument(variantSetId, VARIANT_SET_CONVERTER.convertToObjectNode(variantSet),
+    writer.write(new IndexDocument(variantSetId, variantSetConverter.convertToObjectNode(variantSet),
         new VariantSetDocumentType()));
   }
 
@@ -255,7 +257,7 @@ public class Indexer {
 
   private void writeCall(final String parentVariantId, final String callId, @NonNull final EsCall call)
       throws IOException {
-    writer.write(new IndexDocument(callId, CALL_CONVERTER.convertToObjectNode(call), new CallDocumentType(),
+    writer.write(new IndexDocument(callId, callConverter.convertToObjectNode(call), new CallDocumentType(),
         parentVariantId));
 
   }
@@ -278,12 +280,12 @@ public class Indexer {
   private void writeCallSet(final String callSetId, @NonNull final EsCallSet callSet)
       throws IOException {
     writer.write(
-        new IndexDocument(callSetId, CALL_SET_CONVERTER.convertToObjectNode(callSet), new CallSetDocumentType()));
+        new IndexDocument(callSetId, callSetConverter.convertToObjectNode(callSet), new CallSetDocumentType()));
   }
 
   private void writeVariant(final String variantId, @NonNull final EsVariant variant) throws IOException {
     writer
-        .write(new IndexDocument(variantId, VARIANT_CONVERTER.convertToObjectNode(variant), new VariantDocumentType()));
+        .write(new IndexDocument(variantId, variantConverter.convertToObjectNode(variant), new VariantDocumentType()));
   }
 
   private static class VariantDocumentType implements IndexDocumentType {
