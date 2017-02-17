@@ -17,29 +17,29 @@
  */
 package org.collaboratory.ga4gh.loader;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterBySize;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterSomaticSSMs;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.isSomaticSSM;
-import static org.icgc.dcc.common.core.util.Joiners.DOT;
-
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableList;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.assertj.core.api.Assertions;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters;
 import org.collaboratory.ga4gh.loader.model.metadata.PortalVCFFilenameParser;
 import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
 import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.List;
+import java.util.Set;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.collaboratory.ga4gh.loader.Portal.getFileMetaDatasForNumDonors;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterBySize;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.filterSomaticSSMs;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFilters.isSomaticSSM;
+import static org.icgc.dcc.common.core.util.Joiners.DOT;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 @Slf4j
 public class PortalTest {
@@ -74,13 +74,9 @@ public class PortalTest {
   }
 
   private static Set<FileMetaData> expectedFilterSomaticSSMs(final Iterable<FileMetaData> fileMetaDatas) {
-    val builder = ImmutableSet.<FileMetaData> builder();
-    for (val fileMetaData : fileMetaDatas) {
-      if (isSomaticSSM(fileMetaData)) {
-        builder.add(fileMetaData);
-      }
-    }
-    return builder.build();
+    return stream(fileMetaDatas)
+        .filter(FileMetaDataFilters::isSomaticSSM)
+        .collect(toImmutableSet());
   }
 
   private static boolean isExpectedSomaticSSMClassification(final MutationTypes mutation,

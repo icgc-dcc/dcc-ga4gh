@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader;
 
+import com.google.common.base.Stopwatch;
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,9 @@ import java.util.List;
 import static java.util.stream.Collectors.summingLong;
 import static org.collaboratory.ga4gh.loader.Config.LOADER_MODE;
 import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
+import static org.collaboratory.ga4gh.loader.LoaderModes.NESTED_ONLY;
+import static org.collaboratory.ga4gh.loader.LoaderModes.PARENT_CHILD_ONLY;
+import static org.collaboratory.ga4gh.loader.LoaderModes.PARENT_CHILD_THEN_NESTED;
 import static org.collaboratory.ga4gh.loader.factory.MainFactory.newClient;
 import static org.collaboratory.ga4gh.loader.factory.MainFactory.newFileMetaDataFetcher;
 import static org.collaboratory.ga4gh.loader.factory.MainFactory.newIdCacheFactory;
@@ -28,11 +32,8 @@ import static org.collaboratory.ga4gh.loader.factory.MainFactory.newLoader;
 import static org.collaboratory.ga4gh.loader.factory.MainFactory.newNestedDocumentWriter;
 import static org.collaboratory.ga4gh.loader.factory.MainFactory.newParentChild2NestedIndexConverter;
 import static org.collaboratory.ga4gh.loader.factory.MainFactory.newParentChildDocumentWriter;
-import static org.collaboratory.ga4gh.loader.LoaderModes.NESTED_ONLY;
-import static org.collaboratory.ga4gh.loader.LoaderModes.PARENT_CHILD_ONLY;
-import static org.collaboratory.ga4gh.loader.LoaderModes.PARENT_CHILD_THEN_NESTED;
 import static org.collaboratory.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
-
+import static org.icgc.dcc.common.core.util.Formats.formatDuration;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -66,20 +67,17 @@ public class Loader {
       if (LOADER_MODE == PARENT_CHILD_ONLY || LOADER_MODE == PARENT_CHILD_THEN_NESTED) {
         idCacheFactory.build();
         val loader = newLoader(pcClient, pcWriter, idCacheFactory);
-        val startMs = System.currentTimeMillis();
         val dataFetcher = newFileMetaDataFetcher();
         log.info("dataFetcher: {}", dataFetcher);
 
         log.info("Resolving object ids...");
         val fileMetaDataContext = dataFetcher.fetch();
 
+        val watch = Stopwatch.createStarted();
         loader.loadUsingFileMetaDataContext(fileMetaDataContext);
+        watch.stop();
 
-        val endMs = System.currentTimeMillis();
-        val durationSec = (endMs - startMs) / 1000;
-        val durationMin = (endMs - startMs) / (60000);
-        log.info("LoadTime(min): {}", durationMin);
-        log.info("LoadTime(sec): {}", durationSec);
+        log.info("LoadTime: {}", formatDuration(watch));
       }
       if (LOADER_MODE == NESTED_ONLY || LOADER_MODE == PARENT_CHILD_THEN_NESTED) {
         val pc2nestedConverter = newParentChild2NestedIndexConverter(nestedClient, nestedWriter);

@@ -52,6 +52,33 @@ public class VariantServiceTest {
   private static VariantService variantService;
   private static Client client;
 
+  @BeforeClass
+  public static void init() {
+    log.info("Config: \n{}", ServerConfig.toConfigString());
+    try {
+      client = newClient();
+      val variantRepo = new VariantRepository(client);
+      val headerRepo = new HeaderRepository(client);
+      val callSetRepo = new CallSetRepository(client);
+      val variantSetRepo = new VariantSetRepository(client);
+      val esVariantConverter = new EsVariantConverter();
+      val esVariantSetConverter = new EsVariantSetConverter();
+      val esCallSetConverter = new EsCallSetConverter();
+      val esCallConverter = new EsCallConverter();
+
+      variantService =
+          new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esCallConverter, esVariantConverter);
+    } catch (Exception e) {
+      log.error("Message[{}] : {}\nStackTrace: {}", e.getClass().getName(), e.getMessage(), e);
+    }
+  }
+
+  @AfterClass
+  public static void shutdown() {
+    client.close();
+  }
+
+
   public static void main(String[] args) {
     val esVariantConverter = new EsVariantConverter();
     val esVariantSetConverter = new EsVariantSetConverter();
@@ -116,32 +143,6 @@ public class VariantServiceTest {
     log.info("GetVariantSetResponse: {} ", variantSet);
     log.info("GetVariantResponse: {} ", variant);
     log.info("GetCallSetResponse: {} ", callSet);
-  }
-
-  @BeforeClass
-  public static void init() {
-    log.info("Config: \n{}", ServerConfig.toConfigString());
-    try {
-      client = newClient();
-      val variantRepo = new VariantRepository(client);
-      val headerRepo = new HeaderRepository(client);
-      val callSetRepo = new CallSetRepository(client);
-      val variantSetRepo = new VariantSetRepository(client);
-      val esVariantConverter = new EsVariantConverter();
-      val esVariantSetConverter = new EsVariantSetConverter();
-      val esCallSetConverter = new EsCallSetConverter();
-      val esCallConverter = new EsCallConverter();
-
-      variantService =
-          new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esCallConverter, esVariantConverter);
-    } catch (Exception e) {
-      log.error("Message[{}] : {}\nStackTrace: {}", e.getClass().getName(), e.getMessage(), e);
-    }
-  }
-
-  @AfterClass
-  public static void shutdown() {
-    client.close();
   }
 
   @Ignore
