@@ -66,7 +66,7 @@ public class VariantRepository {
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
     val searchRequestBuilder = createSearchRequest(request.getPageSize());
     val childBoolQuery = boolQuery().must(matchQuery(VARIANT_SET_ID, request.getVariantSetId()));
-    request.getCallSetIdsList().stream().forEach(id -> childBoolQuery.should(matchQuery(CALL_SET_ID, id.toString())));
+    request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(CALL_SET_ID, id)));
     val constChildBoolQuery = constantScoreQuery(childBoolQuery);
 
     val boolQuery = boolQuery()
