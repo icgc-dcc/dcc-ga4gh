@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.factory;
+package org.collaboratory.ga4gh.loader.factory.idcache;
 
 import org.collaboratory.ga4gh.core.model.es.EsVariant;
 import org.collaboratory.ga4gh.loader.utils.Purgeable;

@@ -1,6 +1,6 @@
-package org.collaboratory.ga4gh.loader.factory.impl;
+package org.collaboratory.ga4gh.loader.factory.idcache.impl;
 
-import org.collaboratory.ga4gh.loader.factory.AbstractIdCacheFactoryTemplate;
+import org.collaboratory.ga4gh.loader.factory.idcache.AbstractIdCacheFactoryTemplate;
 
 import java.io.IOException;
 

@@ -1,7 +1,7 @@
-package org.collaboratory.ga4gh.loader.factory.impl;
+package org.collaboratory.ga4gh.loader.factory.idcache.impl;
 
 import org.collaboratory.ga4gh.core.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.factory.AbstractIdCacheFactoryTemplate;
+import org.collaboratory.ga4gh.loader.factory.idcache.AbstractIdCacheFactoryTemplate;
 import org.mapdb.Serializer;
 
 import java.io.IOException;
