@@ -1,4 +1,4 @@
-package org.collaboratory.ga4gh.loader.vcf.processors;
+package org.collaboratory.ga4gh.loader.vcf.callprocessors.impl;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.val;
 import org.collaboratory.ga4gh.core.model.es.EsCall;
-import org.collaboratory.ga4gh.loader.vcf.AbstractCallProcessor;
+import org.collaboratory.ga4gh.loader.vcf.callprocessors.AbstractCallProcessor;
 
 import java.util.Collection;
 import java.util.List;

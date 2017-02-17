@@ -1,11 +1,10 @@
-package org.collaboratory.ga4gh.loader.utils.cache.impl;
-
-import static com.google.common.base.Preconditions.checkState;
-
-import org.collaboratory.ga4gh.loader.utils.cache.AbstractIdCacheTemplate;
-import org.collaboratory.ga4gh.loader.utils.cache.CacheStorage;
+package org.collaboratory.ga4gh.loader.utils.cache.id.impl;
 
 import lombok.val;
+import org.collaboratory.ga4gh.loader.utils.cache.id.AbstractIdCacheTemplate;
+import org.collaboratory.ga4gh.loader.utils.cache.storage.CacheStorage;
+
+import static com.google.common.base.Preconditions.checkState;
 
 public class LongIdCache<K> extends AbstractIdCacheTemplate<K, Long> {
 

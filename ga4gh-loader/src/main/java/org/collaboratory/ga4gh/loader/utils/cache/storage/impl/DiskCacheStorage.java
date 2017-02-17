@@ -1,20 +1,19 @@
-package org.collaboratory.ga4gh.loader.utils.cache.impl;
+package org.collaboratory.ga4gh.loader.utils.cache.storage.impl;
+
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.collaboratory.ga4gh.loader.utils.cache.storage.CacheStorage;
+import org.icgc.dcc.common.core.util.Joiners;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
-
-import org.collaboratory.ga4gh.loader.utils.cache.CacheStorage;
-import org.icgc.dcc.common.core.util.Joiners;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
-
-import lombok.NonNull;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DiskCacheStorage<K, V> implements CacheStorage<K, V> {

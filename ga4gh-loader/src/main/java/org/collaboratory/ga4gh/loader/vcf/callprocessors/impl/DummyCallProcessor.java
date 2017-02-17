@@ -1,4 +1,4 @@
-package org.collaboratory.ga4gh.loader.vcf.processors;
+package org.collaboratory.ga4gh.loader.vcf.callprocessors.impl;
 
 import com.google.common.collect.ImmutableList;
 import htsjdk.variant.variantcontext.Allele;
@@ -6,13 +6,13 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import lombok.RequiredArgsConstructor;
 import org.collaboratory.ga4gh.core.model.es.EsCall;
-import org.collaboratory.ga4gh.loader.vcf.CallProcessor;
+import org.collaboratory.ga4gh.loader.vcf.callprocessors.CallProcessor;
 
 import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static org.collaboratory.ga4gh.loader.vcf.AbstractCallProcessor.UNKNOWN_ALLELE_INDEX;
+import static org.collaboratory.ga4gh.loader.vcf.callprocessors.AbstractCallProcessor.UNKNOWN_ALLELE_INDEX;
 
 /**
  * Implementation that creates a DummyCall for a specific callSet and variantSet, and uses the  variantContext info field.

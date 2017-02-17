@@ -1,4 +1,4 @@
-package org.collaboratory.ga4gh.loader;
+package org.collaboratory.ga4gh.loader.factory;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -9,9 +9,10 @@ import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsVariantCallPairConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
-import org.collaboratory.ga4gh.loader.factory.IdCacheFactory;
-import org.collaboratory.ga4gh.loader.factory.IdMixedCacheFactory;
-import org.collaboratory.ga4gh.loader.factory.IdRamCacheFactory;
+import org.collaboratory.ga4gh.loader.Loader;
+import org.collaboratory.ga4gh.loader.Storage;
+import org.collaboratory.ga4gh.loader.factory.impl.IdMixedCacheFactory;
+import org.collaboratory.ga4gh.loader.factory.impl.IdRamCacheFactory;
 import org.collaboratory.ga4gh.loader.indexing.IndexCreatorContext;
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.collaboratory.ga4gh.loader.indexing.ParentChild2NestedIndexConverter;
@@ -57,13 +58,13 @@ import static org.collaboratory.ga4gh.loader.Config.STORAGE_PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
 import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
 import static org.collaboratory.ga4gh.loader.vcf.CallProcessorManager.newCallProcessorManager;
-import static org.collaboratory.ga4gh.loader.vcf.processors.BasicCallProcessor.newUnFilteredBasicCallProcessor;
-import static org.collaboratory.ga4gh.loader.vcf.processors.DummyCallProcessor.newDummyCallProcessor;
+import static org.collaboratory.ga4gh.loader.vcf.callprocessors.impl.BasicCallProcessor.newUnFilteredBasicCallProcessor;
+import static org.collaboratory.ga4gh.loader.vcf.callprocessors.impl.DummyCallProcessor.newDummyCallProcessor;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
 
 @Slf4j
-public class Factory {
+public class MainFactory {
 
   private static final String TRANSPORT_SETTINGS_FILENAME =
       "org/collaboratory/ga4gh/resources/settings/transport.properties";

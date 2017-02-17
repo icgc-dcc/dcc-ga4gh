@@ -15,53 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.factory;
+package org.collaboratory.ga4gh.loader.vcf.callprocessors;
 
-import static org.collaboratory.ga4gh.loader.utils.cache.impl.IntegerIdCache.newIntegerIdCache;
-import static org.collaboratory.ga4gh.loader.utils.cache.impl.LongIdCache.newLongIdCache;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
+import org.collaboratory.ga4gh.core.model.es.EsCall;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
-import org.collaboratory.ga4gh.core.model.es.EsVariant;
-import org.collaboratory.ga4gh.loader.utils.cache.CacheStorage;
-import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
+/**
+ * Processes calls in a variant context
+ */
+public interface CallProcessor {
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+  /*
+   * creates a list of EsCall objects
+   */
+  List<EsCall> createEsCallList(int variantSetId, int callSetId, String callSetName,
+      VariantContext variantContext);
 
-@RequiredArgsConstructor
-public abstract class AbstractIdCacheFactory implements IdCacheFactory {
-
-  private final int initId;
-
-  @Getter
-  private IdCache<EsVariant, Long> variantIdCache;
-
-  @Getter
-  private IdCache<String, Integer> variantSetIdCache;
-
-  @Getter
-  private IdCache<String, Integer> callSetIdCache;
-
-  protected CacheStorage<EsVariant, Long> variantCacheStorage;
-  protected CacheStorage<String, Integer> variantSetCacheStorage;
-  protected CacheStorage<String, Integer> callSetCacheStorage;
-
-  @Override
-  public final void build() throws IOException {
-    buildCacheStorage();
-    variantIdCache = newLongIdCache(variantCacheStorage, (long) initId);
-    variantSetIdCache = newIntegerIdCache(variantSetCacheStorage, initId);
-    callSetIdCache = newIntegerIdCache(callSetCacheStorage, initId);
-  }
-
-  @Override
-  public final void purge() {
-    variantSetIdCache.purge();
-    variantIdCache.purge();
-    callSetIdCache.purge();
-  }
-
-  protected abstract void buildCacheStorage() throws IOException;
-
+  /*
+   * Creates a single EsCall object
+   */
+  EsCall createEsCall(final int variantSetId,
+      final int callSetId,
+      final String callSetName,
+      final Map<String, Object> commonInfoMap,
+      final List<Allele> alternativeAlleles,
+      final Genotype genotype);
 }

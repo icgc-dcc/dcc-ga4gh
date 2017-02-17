@@ -1,4 +1,4 @@
-package org.collaboratory.ga4gh.loader.vcf;
+package org.collaboratory.ga4gh.loader.vcf.callprocessors;
 
 import com.google.common.collect.ImmutableList;
 import htsjdk.variant.variantcontext.Allele;

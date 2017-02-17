@@ -1,11 +1,11 @@
-package org.collaboratory.ga4gh.loader.utils.cache.impl;
+package org.collaboratory.ga4gh.loader.utils.cache.storage.impl;
 
-import static com.google.common.collect.Maps.newHashMap;
+import org.collaboratory.ga4gh.loader.utils.cache.storage.CacheStorage;
 
 import java.io.IOException;
 import java.util.Map;
 
-import org.collaboratory.ga4gh.loader.utils.cache.CacheStorage;
+import static com.google.common.collect.Maps.newHashMap;
 
 public class RamCacheStorage<K, V> implements CacheStorage<K, V> {
 

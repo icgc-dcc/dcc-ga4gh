@@ -23,7 +23,7 @@ import org.collaboratory.ga4gh.core.model.es.EsVariantSet;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
-import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
+import org.collaboratory.ga4gh.loader.utils.cache.id.IdCache;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
 import org.icgc.dcc.common.core.util.stream.Collectors;

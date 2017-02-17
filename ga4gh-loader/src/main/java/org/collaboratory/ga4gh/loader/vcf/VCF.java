@@ -14,7 +14,8 @@ import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
-import org.collaboratory.ga4gh.loader.utils.cache.IdCache;
+import org.collaboratory.ga4gh.loader.utils.cache.id.IdCache;
+import org.collaboratory.ga4gh.loader.vcf.callprocessors.CallProcessor;
 import org.collaboratory.ga4gh.loader.vcf.enums.MutationTypes;
 import org.collaboratory.ga4gh.loader.vcf.enums.SubMutationTypes;
 

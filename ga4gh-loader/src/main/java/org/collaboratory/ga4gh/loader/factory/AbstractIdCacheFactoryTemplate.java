@@ -15,82 +15,66 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.utils.cache;
+package org.collaboratory.ga4gh.loader.factory;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
-
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.val;
+import org.collaboratory.ga4gh.core.model.es.EsVariant;
+import org.collaboratory.ga4gh.loader.utils.cache.storage.CacheStorage;
+import org.collaboratory.ga4gh.loader.utils.cache.id.IdCache;
 
-public abstract class AbstractIdCacheTemplate<K, ID extends Number> implements IdCache<K, ID> {
+import java.io.IOException;
 
-  private Map<K, ID> cache;
-  private CacheStorage<K, ID> cacheStorage;
+import static lombok.AccessLevel.PROTECTED;
+import static org.collaboratory.ga4gh.loader.utils.cache.id.impl.IntegerIdCache.newIntegerIdCache;
+import static org.collaboratory.ga4gh.loader.utils.cache.id.impl.LongIdCache.newLongIdCache;
 
-  @Getter(AccessLevel.PROTECTED)
-  @Setter(AccessLevel.PROTECTED)
-  private ID count;
+@RequiredArgsConstructor
+public abstract class AbstractIdCacheFactoryTemplate implements IdCacheFactory {
 
-  public AbstractIdCacheTemplate(@NonNull final CacheStorage<K, ID> cacheStorage, final ID initCount) {
-    this.count = initCount;
-    this.cacheStorage = cacheStorage;
-    this.cache = cacheStorage.getMap();
+  private final int initId;
 
-    this.checkIdLowerBound();
-    this.checkIdUpperBound();
-  }
+  @Getter
+  private IdCache<EsVariant, Long> variantIdCache;
 
-  protected abstract void checkIdLowerBound();
+  @Getter
+  private IdCache<String, Integer> variantSetIdCache;
 
-  protected abstract void checkIdUpperBound();
+  @Getter
+  private IdCache<String, Integer> callSetIdCache;
 
-  protected abstract ID incr();
+  @Setter(PROTECTED)
+  private CacheStorage<EsVariant, Long> variantCacheStorage;
 
-  @Override
-  public void add(final K k) {
-    checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
-    if (!cache.containsKey(k)) {
-      cache.put(k, incr());
-    }
-  }
+  @Setter(PROTECTED)
+  private CacheStorage<String, Integer> variantSetCacheStorage;
 
-  @Override
-  public boolean contains(final K k) {
-    return cache.containsKey(k);
-  }
+  @Setter(PROTECTED)
+  private CacheStorage<String, Integer> callSetCacheStorage;
 
   @Override
-  public String getIdAsString(@NonNull K k) {
-    return getId(k).toString();
+  public final void build() throws IOException {
+    buildCacheStorage();
+    variantIdCache = newLongIdCache(variantCacheStorage, (long) initId);
+    variantSetIdCache = newIntegerIdCache(variantSetCacheStorage, initId);
+    callSetIdCache = newIntegerIdCache(callSetCacheStorage, initId);
   }
 
   @Override
-  public ID getId(@NonNull K k) {
-    checkArgument(cache.containsKey(k), "The following key doesnt not exist in the cache: \n%s", k);
-    return cache.get(k);
+  public final void purge() {
+    variantSetIdCache.purge();
+    variantIdCache.purge();
+    callSetIdCache.purge();
   }
 
   @Override
-  public Map<ID, K> getReverseCache() {
-    val map = ImmutableMap.<ID, K> builder();
-    for (val entry : cache.entrySet()) {
-      val key = entry.getKey();
-      val idValue = entry.getValue();
-      map.put(idValue, key);
-    }
-    return map.build();
+  public final void close() throws IOException{
+    variantCacheStorage.close();
+    variantSetCacheStorage.close();
+    callSetCacheStorage.close();
   }
 
-  @Override
-  public void purge() {
-    cacheStorage.purge();
-  }
+  protected abstract void buildCacheStorage() throws IOException;
 
 }

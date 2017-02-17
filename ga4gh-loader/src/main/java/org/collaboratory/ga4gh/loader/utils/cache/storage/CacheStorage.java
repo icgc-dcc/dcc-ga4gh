@@ -15,22 +15,14 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.collaboratory.ga4gh.loader.utils.cache;
-
-import java.util.Map;
+package org.collaboratory.ga4gh.loader.utils.cache.storage;
 
 import org.collaboratory.ga4gh.loader.utils.Purgeable;
 
-public interface IdCache<K, ID> extends Purgeable {
+import java.io.Closeable;
+import java.util.Map;
 
-  void add(K k);
+public interface CacheStorage<K, V> extends Closeable, Purgeable {
 
-  boolean contains(K k);
-
-  String getIdAsString(K k);
-
-  ID getId(K k);
-
-  Map<ID, K> getReverseCache();
-
+  Map<K, V> getMap();
 }

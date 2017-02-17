@@ -1,15 +1,15 @@
 package org.collaboratory.ga4gh.loader.vcf;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Maps.newHashMap;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import lombok.NonNull;
+import lombok.val;
+import org.collaboratory.ga4gh.loader.vcf.callprocessors.CallProcessor;
+import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
 
 import java.util.Map;
 
-import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
-
-import lombok.NonNull;
-import lombok.val;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Maps.newHashMap;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 public class CallProcessorManager {
 

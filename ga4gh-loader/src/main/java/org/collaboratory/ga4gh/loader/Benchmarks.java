@@ -2,7 +2,7 @@ package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Stopwatch.createStarted;
 import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
-import static org.collaboratory.ga4gh.loader.Factory.newClient;
+import static org.collaboratory.ga4gh.loader.factory.MainFactory.newClient;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 import java.io.PrintWriter;

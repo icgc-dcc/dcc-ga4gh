@@ -1,8 +1,8 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Stopwatch.createStarted;
-import static org.collaboratory.ga4gh.loader.Factory.newClient;
-import static org.collaboratory.ga4gh.loader.Factory.newParentChildDocumentWriter;
+import static org.collaboratory.ga4gh.loader.factory.MainFactory.newClient;
+import static org.collaboratory.ga4gh.loader.factory.MainFactory.newParentChildDocumentWriter;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
