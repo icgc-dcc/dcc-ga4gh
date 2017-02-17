@@ -1,5 +1,6 @@
 package org.collaboratory.ga4gh.loader.factory;
 
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import java.util.Properties;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.io.Resources.getResource;
+import static lombok.AccessLevel.PRIVATE;
 import static org.collaboratory.ga4gh.core.TypeNames.CALL;
 import static org.collaboratory.ga4gh.core.TypeNames.CALL_SET;
 import static org.collaboratory.ga4gh.core.TypeNames.VARIANT;
@@ -65,6 +67,7 @@ import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWri
 
 
 @Slf4j
+@NoArgsConstructor(access = PRIVATE)
 public class MainFactory {
 
   private static final String TRANSPORT_SETTINGS_FILENAME =
