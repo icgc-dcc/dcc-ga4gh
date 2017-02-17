@@ -1,7 +1,17 @@
 package org.collaboratory.ga4gh.loader;
 
-import static org.collaboratory.ga4gh.server.Factory.newClient;
-
+import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
+import ga4gh.VariantServiceOuterClass.GetVariantRequest;
+import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
+import ga4gh.VariantServiceOuterClass.SearchCallSetsRequest;
+import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
+import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
 import org.collaboratory.ga4gh.server.config.ServerConfig;
 import org.collaboratory.ga4gh.server.variant.CallSetRepository;
 import org.collaboratory.ga4gh.server.variant.HeaderRepository;
@@ -15,14 +25,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
-import ga4gh.VariantServiceOuterClass.GetVariantRequest;
-import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
-import ga4gh.VariantServiceOuterClass.SearchCallSetsRequest;
-import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
-import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static org.collaboratory.ga4gh.server.Factory.newClient;
 
 /*
  * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.
@@ -50,6 +53,10 @@ public class VariantServiceTest {
   private static Client client;
 
   public static void main(String[] args) {
+    val esVariantConverter = new EsVariantConverter();
+    val esVariantSetConverter = new EsVariantSetConverter();
+    val esCallSetConverter = new EsCallSetConverter();
+    val esCallConverter = new EsCallConverter();
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
         .setStart(0)
         .setEnd(10000000)
@@ -95,7 +102,7 @@ public class VariantServiceTest {
     val callSetRepo = new CallSetRepository(client);
     val variantSetRepo = new VariantSetRepository(client);
 
-    val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo);
+    val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esCallConverter, esVariantConverter);
 
     val variant = variantService.getVariant(getVariantRequest);
     val searchVariantResponse = variantService.searchVariants(searchVariantRequest);
@@ -120,8 +127,13 @@ public class VariantServiceTest {
       val headerRepo = new HeaderRepository(client);
       val callSetRepo = new CallSetRepository(client);
       val variantSetRepo = new VariantSetRepository(client);
+      val esVariantConverter = new EsVariantConverter();
+      val esVariantSetConverter = new EsVariantSetConverter();
+      val esCallSetConverter = new EsCallSetConverter();
+      val esCallConverter = new EsCallConverter();
+
       variantService =
-          new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo);
+          new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esCallConverter, esVariantConverter);
     } catch (Exception e) {
       log.error("Message[{}] : {}\nStackTrace: {}", e.getClass().getName(), e.getMessage(), e);
     }

@@ -98,7 +98,7 @@ public class Indexer {
   private final EsVariantSetConverter variantSetConverter;
 
   @NonNull
-  private final EsCallSetConverter callSetConverter;
+  private final EsCallSetConverter esCallSetConverter;
 
   @NonNull
   private final EsVariantConverter variantConverter;
@@ -326,7 +326,7 @@ public class Indexer {
   private void writeCallSet(final String callSetId, @NonNull final EsCallSet callSet)
       throws IOException {
     writer.write(
-        new IndexDocument(callSetId, callSetConverter.convertToObjectNode(callSet), new CallSetDocumentType()));
+        new IndexDocument(callSetId, esCallSetConverter.convertToObjectNode(callSet), new CallSetDocumentType()));
   }
 
   private void writeVariant(final String variantId, @NonNull final EsVariant variant) throws IOException {
