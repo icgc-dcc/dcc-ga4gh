@@ -36,8 +36,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
 import org.elasticsearch.action.get.GetResponse;
@@ -49,6 +49,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.Map;
 
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_ID;
 import static org.collaboratory.ga4gh.core.TypeNames.CALL;
 import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -259,12 +260,15 @@ public class VariantService {
   @SneakyThrows
   private Call convertToCall(@NonNull SearchHit hit) {
     val esCall = esCallConverter.convertFromSearchHit(hit);
+    val variantSetId = esCall.getVariantSetId();
+    val info = esCall.getInfo();
+    info.put(VARIANT_SET_ID, variantSetId);
     return Call.newBuilder()
         .setCallSetId(Integer.toString(esCall.getCallSetId()))
         .setCallSetName(esCall.getCallSetName())
         .addAllGenotype(esCall.getNonReferenceAlleles())
         .addGenotypeLikelihood(esCall.getGenotypeLikelihood())
-        .putAllInfo(createInfo(esCall.getInfo()))
+        .putAllInfo(createInfo(info))
         .setPhaseset(Boolean.toString(esCall.isGenotypePhased()))
         .build();
   }
