@@ -157,13 +157,15 @@ public final class EsVariant implements Serializable, EsModel {
     }
 
     public EsVariant build() {
-      ImmutableList<Byte[]> alternativeBases =
-          this.alternativeBases == null ? ImmutableList.<Byte[]> of() : this.alternativeBases
-              .build();
-
-      byte[][] b = new byte[alternativeBases.size()][];
-      for (int i = 0; i < alternativeBases.size(); i++) {
-        b[i] = AsciiConverters.unboxByteArray(alternativeBases.get(i));
+      byte[][] b = null;
+      if (this.alternativeBases != null){
+        val altBases = this.alternativeBases.build();
+        b = new byte[altBases.size()][];
+        for (int i = 0; i < altBases.size(); i++) {
+          b[i] = AsciiConverters.unboxByteArray(altBases.get(i));
+        }
+      } else {
+        b = new byte[1][]; // Better than passing in null...
       }
       return new EsVariant(start, end, referenceName, referenceBases, b);
     }

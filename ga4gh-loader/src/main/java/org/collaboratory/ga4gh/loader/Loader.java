@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static java.util.stream.Collectors.summingLong;
 import static org.collaboratory.ga4gh.loader.Config.LOADER_MODE;
 import static org.collaboratory.ga4gh.loader.Debug.dumpToJson;
 import static org.collaboratory.ga4gh.loader.LoaderModes.NESTED_ONLY;
@@ -91,8 +90,9 @@ public class Loader {
   private void resetGlobalFileMetaDataCounters(@NonNull final List<DonorData> donorDataList) {
     globalFileMetaDataCount = 1;
     globalFileMetaDataTotal = donorDataList.stream()
-        .map(x -> x.getTotalFileMetaCount())
-        .collect(summingLong(Long::longValue));
+        .map(DonorData::getTotalFileMetaCount)
+        .mapToLong(Long::longValue)
+        .sum();
   }
 
   private void loadSample(@NonNull final FileMetaDataContext fileMetaDataContext) {
