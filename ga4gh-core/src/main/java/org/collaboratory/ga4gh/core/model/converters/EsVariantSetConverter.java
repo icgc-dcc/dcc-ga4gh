@@ -22,26 +22,34 @@ import lombok.val;
 import org.collaboratory.ga4gh.core.model.es.EsVariantSet;
 import org.elasticsearch.search.SearchHit;
 
+import java.util.Map;
+
 import static org.collaboratory.ga4gh.core.PropertyNames.DATA_SET_ID;
 import static org.collaboratory.ga4gh.core.PropertyNames.NAME;
 import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_SET_ID;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
+import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToString;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 public class EsVariantSetConverter
     implements ObjectNodeConverter<EsVariantSet>,
-    SearchHitConverter<EsVariantSet>{
+    SearchHitConverter<EsVariantSet>,
+    SourceConverter<EsVariantSet>{
 
   @Override
-  public EsVariantSet convertFromSearchHit(SearchHit hit) {
-    val name = convertHitToString(hit, NAME);
-    val dataSetId = convertHitToString(hit, DATA_SET_ID);
-    val referenceSetId = convertHitToString(hit, REFERENCE_SET_ID);
+  public EsVariantSet convertFromSource(Map<String, Object> source) {
+    val name = convertSourceToString(source, NAME);
+    val dataSetId = convertSourceToString(source, DATA_SET_ID);
+    val referenceSetId = convertSourceToString(source, REFERENCE_SET_ID);
     return EsVariantSet.builder()
         .name(name)
         .dataSetId(dataSetId)
         .referenceSetId(referenceSetId)
         .build();
+  }
+
+  @Override
+  public EsVariantSet convertFromSearchHit(SearchHit hit) {
+    return convertFromSource(hit.getSource());
   }
 
   @Override

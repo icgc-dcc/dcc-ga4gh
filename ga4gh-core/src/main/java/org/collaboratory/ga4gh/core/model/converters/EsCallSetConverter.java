@@ -6,29 +6,37 @@ import lombok.val;
 import org.collaboratory.ga4gh.core.model.es.EsCallSet;
 import org.elasticsearch.search.SearchHit;
 
+import java.util.Map;
+
 import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertIntegers;
 import static org.collaboratory.ga4gh.core.PropertyNames.BIO_SAMPLE_ID;
 import static org.collaboratory.ga4gh.core.PropertyNames.NAME;
 import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_IDS;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToIntegerList;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
+import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToIntegerList;
+import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToString;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 @RequiredArgsConstructor
 public class EsCallSetConverter
     implements ObjectNodeConverter<EsCallSet>,
-    SearchHitConverter<EsCallSet> {
+    SearchHitConverter<EsCallSet> ,
+    SourceConverter<EsCallSet> {
 
   @Override
-  public EsCallSet convertFromSearchHit(SearchHit hit) {
-    val name = convertHitToString(hit, NAME);
-    val bioSampleId = convertHitToString(hit, BIO_SAMPLE_ID);
-    val variantSetIds = convertHitToIntegerList(hit, VARIANT_SET_IDS);
+  public EsCallSet convertFromSource(Map<String, Object> source) {
+    val name = convertSourceToString(source, NAME);
+    val bioSampleId = convertSourceToString(source, BIO_SAMPLE_ID);
+    val variantSetIds = convertSourceToIntegerList(source, VARIANT_SET_IDS);
     return EsCallSet.builder()
         .name(name)
         .bioSampleId(bioSampleId)
         .variantSetIds(variantSetIds)
         .build();
+  }
+
+  @Override
+  public EsCallSet convertFromSearchHit(SearchHit hit) {
+    return convertFromSource(hit.getSource());
   }
 
   @Override

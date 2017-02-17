@@ -9,6 +9,7 @@ import org.collaboratory.ga4gh.core.model.es.EsVariant;
 import org.elasticsearch.search.SearchHit;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertStrings;
 import static org.collaboratory.ga4gh.core.PropertyNames.ALTERNATIVE_BASES;
@@ -16,23 +17,24 @@ import static org.collaboratory.ga4gh.core.PropertyNames.END;
 import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_BASES;
 import static org.collaboratory.ga4gh.core.PropertyNames.REFERENCE_NAME;
 import static org.collaboratory.ga4gh.core.PropertyNames.START;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToInteger;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToString;
-import static org.collaboratory.ga4gh.core.SearchHits.convertHitToStringList;
+import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToInteger;
+import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToString;
+import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToStringList;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 @RequiredArgsConstructor
 public class EsVariantConverter
     implements ObjectNodeConverter<EsVariant>,
-    SearchHitConverter<EsVariant> {
+    SearchHitConverter<EsVariant> ,
+  SourceConverter<EsVariant> {
 
   @Override
-  public EsVariant convertFromSearchHit(SearchHit hit) {
-    val start = convertHitToInteger(hit, START);
-    val end = convertHitToInteger(hit, END);
-    val referenceName = convertHitToString(hit, REFERENCE_NAME);
-    val referenceBases = convertHitToString(hit, REFERENCE_BASES);
-    val alternateBases = convertHitToStringList(hit, ALTERNATIVE_BASES);
+  public EsVariant convertFromSource(Map<String, Object> source) {
+    val start = convertSourceToInteger(source, START);
+    val end = convertSourceToInteger(source, END);
+    val referenceName = convertSourceToString(source, REFERENCE_NAME);
+    val referenceBases = convertSourceToString(source, REFERENCE_BASES);
+    val alternateBases = convertSourceToStringList(source, ALTERNATIVE_BASES);
     return EsVariant.builder()
         .start(start)
         .end(end)
@@ -40,6 +42,12 @@ public class EsVariantConverter
         .referenceBases(referenceBases)
         .alternativeBases(alternateBases)
         .build();
+
+  }
+
+  @Override
+  public EsVariant convertFromSearchHit(SearchHit hit) {
+    return convertFromSource(hit.getSource());
   }
 
   public EsVariant convertFromVariantContext(VariantContext variantContext) {
