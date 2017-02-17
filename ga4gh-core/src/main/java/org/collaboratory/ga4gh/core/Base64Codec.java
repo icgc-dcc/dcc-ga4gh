@@ -17,7 +17,11 @@
  */
 package org.collaboratory.ga4gh.core;
 
-import static lombok.AccessLevel.PRIVATE;
+import lombok.Cleanup;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,10 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class Base64Codec {
@@ -38,21 +39,18 @@ public final class Base64Codec {
   @SneakyThrows
   public static String serialize(@NonNull final Object o) {
     val baos = new ByteArrayOutputStream();
+    @Cleanup
     val oos = new ObjectOutputStream(baos);
     oos.writeObject(o);
-    oos.close();
     val serialized = baos.toByteArray();
-    baos.close();
     return ENCODER.encodeToString(serialized);
   }
 
   @SneakyThrows
   public static Object deserialize(@NonNull final String input) {
     val bais = new ByteArrayInputStream(DECODER.decode(input));
+    @Cleanup
     val ois = new ObjectInputStream(bais);
-    val object = ois.readObject();
-    ois.close();
-    bais.close();
-    return object;
+    return ois.readObject();
   }
 }
