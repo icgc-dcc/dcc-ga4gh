@@ -14,6 +14,9 @@ import java.util.Map;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.collaboratory.ga4gh.loader.vcf.AbstractCallProcessor.UNKNOWN_ALLELE_INDEX;
 
+/**
+ * Implementation that creates a DummyCall for a specific callSet and variantSet, and uses the  variantContext info field.
+ */
 @RequiredArgsConstructor
 public class DummyCallProcessor implements CallProcessor {
 

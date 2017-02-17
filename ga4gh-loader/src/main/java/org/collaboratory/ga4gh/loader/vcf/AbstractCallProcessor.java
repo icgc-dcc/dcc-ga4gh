@@ -1,16 +1,18 @@
 package org.collaboratory.ga4gh.loader.vcf;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.stream.Collectors.joining;
-
-import java.util.List;
-
 import com.google.common.collect.ImmutableList;
-
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import lombok.val;
 
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.joining;
+
+/**
+ * Contains methods that are needed by all CallProcessor implementations
+ */
 public abstract class AbstractCallProcessor implements CallProcessor {
 
   public static final int DEFAULT_REFERENCE_ALLELE_POSITION = 0;

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 
+ * Processes calls in a variant context
  */
 public interface CallProcessor {
 
