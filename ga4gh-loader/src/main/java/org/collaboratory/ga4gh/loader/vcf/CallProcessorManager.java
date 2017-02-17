@@ -33,7 +33,7 @@ public class CallProcessorManager {
 
   public CallProcessorManager addCallProcessor(@NonNull CallProcessor processor, @NonNull CallerTypes callerType) {
     checkState(!map.containsKey(callerType),
-        "The mapping of any callerType to CallProcessor is a many to one relationship. The callerType [%s] cannot be mapped to the instance of class [%s]",
+        "The callerType [%s] cannot be mapped to the instance of class [%s]. Reason: There cannot be repeated CallerTypes in this manager. Every added CallerType must be unique and non-existent in the current CallProcessorManager instance.",
         callerType, processor.getClass().getName());
     map.put(callerType, processor);
     return this;
