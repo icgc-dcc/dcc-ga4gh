@@ -1,12 +1,12 @@
 package org.collaboratory.ga4gh.core;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import org.elasticsearch.search.SearchHit;
 
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.search.SearchHit;
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 public class SearchHits {
 
@@ -48,7 +48,21 @@ public class SearchHits {
   }
 
   @SuppressWarnings("unchecked")
-  public static Map<String, Object> convertSourceToMap(final Map<String, Object> source, String field) {
+  public static List<Integer> convertSourceToIntegerList(final Map<String, Object> source, String field) {
+    return convertSourceToObjectList(source, field).stream()
+        .map(o -> Integer.parseInt(o.toString()))
+        .collect(toImmutableList());
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<String> convertSourceToStringList(final Map<String, Object> source, String field) {
+    return convertSourceToObjectList(source, field).stream()
+        .map(Object::toString)
+        .collect(toImmutableList());
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Map<String, Object> convertSourceToObjectMap(final Map<String, Object> source, String field) {
     return (Map<String, Object>) getAttributeFromSource(source, field);
   }
 
@@ -77,19 +91,15 @@ public class SearchHits {
   }
 
   public static List<Integer> convertHitToIntegerList(final SearchHit hit, String field) {
-    return convertSourceToObjectList(getSource(hit), field).stream()
-        .map(o -> Integer.parseInt(o.toString()))
-        .collect(toImmutableList());
+    return convertSourceToIntegerList(getSource(hit), field);
   }
 
   public static List<String> convertHitToStringList(final SearchHit hit, String field) {
-    return convertSourceToObjectList(getSource(hit), field).stream()
-        .map(o -> o.toString())
-        .collect(toImmutableList());
+    return convertSourceToStringList(getSource(hit), field);
   }
 
   public static Map<String, Object> convertHitToObjectMap(final SearchHit hit, String field) {
-    return convertSourceToMap(getSource(hit), field);
+    return convertSourceToObjectMap(getSource(hit), field);
   }
 
 }
