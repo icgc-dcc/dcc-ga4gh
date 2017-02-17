@@ -33,6 +33,7 @@ import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class Base64Codec {
+
   private static final Base64.Encoder ENCODER = Base64.getEncoder();
   private static final Base64.Decoder DECODER = Base64.getDecoder();
 
@@ -53,4 +54,5 @@ public final class Base64Codec {
     val ois = new ObjectInputStream(bais);
     return ois.readObject();
   }
+
 }

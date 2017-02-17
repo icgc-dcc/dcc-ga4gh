@@ -43,8 +43,8 @@ public class EsCallSetConverter
   public ObjectNode convertToObjectNode(EsCallSet callSet) {
     return object()
         .with(NAME, callSet.getName())
-        .with(VARIANT_SET_IDS, convertIntegers(callSet.getVariantSetIds()))
         .with(BIO_SAMPLE_ID, callSet.getBioSampleId())
+        .with(VARIANT_SET_IDS, convertIntegers(callSet.getVariantSetIds()))
         .end();
   }
 

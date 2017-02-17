@@ -30,22 +30,22 @@ public class EsCallConverter
     SourceConverter<EsCall> {
 
   @Override public EsCall convertFromSource(Map<String, Object> source) {
+    val variantSetId = convertSourceToInteger(source, VARIANT_SET_ID);
     val callSetId = convertSourceToInteger(source, CALL_SET_ID);
     val callSetName = convertSourceToString(source, CALL_SET_NAME);
-    val genotypeLikelihood = convertSourceToDouble(source, GENOTYPE_LIKELIHOOD);
     val info = convertSourceToObjectMap(source, INFO);
+    val genotypeLikelihood = convertSourceToDouble(source, GENOTYPE_LIKELIHOOD);
     val isGenotypePhased = convertSourceToBoolean(source, GENOTYPE_PHASESET);
     val nonReferenceAlleles = convertSourceToIntegerList(source, NON_REFERENCE_ALLELES);
-    val variantSetId = convertSourceToInteger(source, VARIANT_SET_ID);
 
     return EsCall.builder()
+        .variantSetId(variantSetId)
         .callSetId(callSetId)
         .callSetName(callSetName)
-        .genotypeLikelihood(genotypeLikelihood)
         .info(info)
+        .genotypeLikelihood(genotypeLikelihood)
         .isGenotypePhased(isGenotypePhased)
         .nonReferenceAlleles(nonReferenceAlleles)
-        .variantSetId(variantSetId)
         .build();
   }
 

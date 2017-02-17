@@ -27,9 +27,7 @@ public final class MiscNames {
   public static final String ID = "id";
   public static final String VCF_HEADER = "vcf_header";
   public static final String DONOR_ID = "donor_id";
-  public static final String RECORD = "record";
   public static final String FALSE = "false";
   public static final String TRUE = "true";
-  public static final String INFO = "info";
-}
 
+}
