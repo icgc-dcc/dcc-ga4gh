@@ -36,6 +36,7 @@ public class EsCall implements EsModel {
 
   private int variantSetId;
   private int callSetId;
+  private String callSetName;
   private Map<String, Object> info;
   private double genotypeLikelihood;
   private boolean isGenotypePhased;
@@ -45,7 +46,7 @@ public class EsCall implements EsModel {
   @Override
   public String getName() {
     return COLON.join(
-        variantSetId, callSetId);
+        variantSetId, callSetName);
   }
 
 }

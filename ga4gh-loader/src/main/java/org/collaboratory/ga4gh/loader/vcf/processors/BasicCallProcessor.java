@@ -46,6 +46,7 @@ public class BasicCallProcessor extends AbstractCallProcessor {
    */
   @Override
   public List<EsCall> createEsCallList(final int variantSetId, final int callSetId,
+      final String callSetName,
       final VariantContext variantContext) {
     val genotypesContext = variantContext.getGenotypes();
     val commonInfoMap = variantContext.getCommonInfo().getAttributes();
@@ -54,7 +55,7 @@ public class BasicCallProcessor extends AbstractCallProcessor {
     // becuase was probably not expecting that, regardless of sampleFilteringEnabled's value
     return genotypesContext.stream()
         .filter(this::selectThisSample)
-        .map(g -> createEsCall(variantSetId, callSetId, commonInfoMap, altAlleles, g))
+        .map(g -> createEsCall(variantSetId, callSetId, callSetName, commonInfoMap, altAlleles, g))
         .collect(toImmutableList());
   }
 
@@ -67,7 +68,7 @@ public class BasicCallProcessor extends AbstractCallProcessor {
   }
 
   @Override
-  public EsCall createEsCall(final int variantSetId, final int callSetId, final Map<String, Object> commonInfoMap,
+  public EsCall createEsCall(final int variantSetId, final int callSetId, final String callSetName, final Map<String, Object> commonInfoMap,
       final List<Allele> alternativeAlleles, final Genotype genotype) {
 
     val info = genotype.getExtendedAttributes();
@@ -75,6 +76,7 @@ public class BasicCallProcessor extends AbstractCallProcessor {
     return EsCall.builder()
         .variantSetId(variantSetId)
         .callSetId(callSetId)
+        .callSetName(callSetName)
         .info(info)
         .genotypeLikelihood(genotype.getLog10PError())
         .isGenotypePhased(genotype.isPhased())

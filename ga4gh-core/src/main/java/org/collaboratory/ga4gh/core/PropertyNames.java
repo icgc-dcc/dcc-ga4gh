@@ -27,10 +27,9 @@ public final class PropertyNames {
   public static final String NAME = "name";
   public static final String BIO_SAMPLE_ID = "bio_sample_id";
   public static final String VARIANT_SET_IDS = "variant_set_ids";
-  public static final String GENOTYPE = "genotype";
-  public static final String PHASESET = "phaseset";
   public static final String VARIANT_SET_ID = "variant_set_id";
   public static final String CALL_SET_ID = "call_set_id";
+  public static final String CALL_SET_NAME = "call_set_name";
   public static final String DATA_SET_ID = "data_set_id";
   public static final String REFERENCE_SET_ID = "reference_set_id";
   public static final String START = "start";

@@ -259,11 +259,9 @@ public class VariantService {
   @SneakyThrows
   private Call convertToCall(@NonNull SearchHit hit) {
     val esCall = esCallConverter.convertFromSearchHit(hit);
-
     return Call.newBuilder()
         .setCallSetId(Integer.toString(esCall.getCallSetId()))
-        //TODO: add callSetName back into EsCall model...dont know how i forgot that...
-        .setCallSetName(Integer.toString(esCall.getCallSetId()))
+        .setCallSetName(esCall.getCallSetName())
         .addAllGenotype(esCall.getNonReferenceAlleles())
         .addGenotypeLikelihood(esCall.getGenotypeLikelihood())
         .putAllInfo(createInfo(esCall.getInfo()))

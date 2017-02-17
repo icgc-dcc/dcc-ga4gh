@@ -9,6 +9,10 @@
 				"type": "integer",
 				"index": "true"
 			},
+			"call_set_name": {
+				"type": "keyword",
+				"index": "true"
+			},
 			"info": {
 				"type" : "object"
 			},

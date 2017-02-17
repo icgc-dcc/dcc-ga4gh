@@ -153,7 +153,7 @@ public class VCF implements Closeable {
   private EsVariantCallPair convertVariantCallPair(final VariantContext record) {
     variantCallPairMonitor.start();
     val variant = variantConverter.convertFromVariantContext(record);
-    val calls = callProcessor.createEsCallList(variantSetId, callSetId, record);
+    val calls = callProcessor.createEsCallList(variantSetId, callSetId, callSetName, record);
     val pair = EsVariantCallPair.builder()
         .calls(calls)
         .variant(variant)

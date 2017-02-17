@@ -17,14 +17,13 @@
  */
 package org.collaboratory.ga4gh.loader.vcf;
 
-import java.util.List;
-import java.util.Map;
-
-import org.collaboratory.ga4gh.core.model.es.EsCall;
-
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
+import org.collaboratory.ga4gh.core.model.es.EsCall;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * 
@@ -34,7 +33,7 @@ public interface CallProcessor {
   /*
    * creates a list of EsCall objects
    */
-  List<EsCall> createEsCallList(int variantSetId, int callSetId,
+  List<EsCall> createEsCallList(int variantSetId, int callSetId, String callSetName,
       VariantContext variantContext);
 
   /*
@@ -42,6 +41,7 @@ public interface CallProcessor {
    */
   EsCall createEsCall(final int variantSetId,
       final int callSetId,
+      final String callSetName,
       final Map<String, Object> commonInfoMap,
       final List<Allele> alternativeAlleles,
       final Genotype genotype);

@@ -10,6 +10,7 @@ import java.util.Map;
 import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertIntegers;
 import static org.collaboratory.ga4gh.core.JsonNodeConverters.convertMap;
 import static org.collaboratory.ga4gh.core.PropertyNames.CALL_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.CALL_SET_NAME;
 import static org.collaboratory.ga4gh.core.PropertyNames.GENOTYPE_LIKELIHOOD;
 import static org.collaboratory.ga4gh.core.PropertyNames.GENOTYPE_PHASESET;
 import static org.collaboratory.ga4gh.core.PropertyNames.INFO;
@@ -20,6 +21,7 @@ import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToDouble;
 import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToInteger;
 import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToIntegerList;
 import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToObjectMap;
+import static org.collaboratory.ga4gh.core.SearchHits.convertSourceToString;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 public class EsCallConverter
@@ -29,6 +31,7 @@ public class EsCallConverter
 
   @Override public EsCall convertFromSource(Map<String, Object> source) {
     val callSetId = convertSourceToInteger(source, CALL_SET_ID);
+    val callSetName = convertSourceToString(source, CALL_SET_NAME);
     val genotypeLikelihood = convertSourceToDouble(source, GENOTYPE_LIKELIHOOD);
     val info = convertSourceToObjectMap(source, INFO);
     val isGenotypePhased = convertSourceToBoolean(source, GENOTYPE_PHASESET);
@@ -37,6 +40,7 @@ public class EsCallConverter
 
     return EsCall.builder()
         .callSetId(callSetId)
+        .callSetName(callSetName)
         .genotypeLikelihood(genotypeLikelihood)
         .info(info)
         .isGenotypePhased(isGenotypePhased)
@@ -56,6 +60,7 @@ public class EsCallConverter
     return object()
         .with(VARIANT_SET_ID, call.getVariantSetId())
         .with(CALL_SET_ID, call.getCallSetId())
+        .with(CALL_SET_NAME, call.getCallSetName())
         .with(INFO, convertMap(call.getInfo()))
         .with(GENOTYPE_LIKELIHOOD, Double.toString(call.getGenotypeLikelihood()))
         .with(GENOTYPE_PHASESET, call.isGenotypePhased())
