@@ -2,13 +2,14 @@ package org.collaboratory.ga4gh.loader.factory;
 
 import lombok.NonNull;
 import org.collaboratory.ga4gh.loader.model.metadata.fetcher.Fetcher;
-import org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.LimitFetcherDecorator;
-import org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.MaxFileSizeFetcherDecorator;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.LimitFetcherDecorator.newLimitFetcherDecorator;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.MaxFileSizeFetcherDecorator.newMaxFileSizeFetcherDecorator;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.OrderFetcherDecorator.newShuffleFetcherDecoratorWithSeed;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.OrderFetcherDecorator.newSizeSortingFetcherDecorator;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.SSMFetcherDecorator.newSSMFetcherDecorator;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.AllFetcher.newAllFetcher;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.AllFetcher.newAllFetcherDefaultStorageFilename;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.NumDonorsFetcher.newNumDonorsFetcher;
@@ -30,6 +31,9 @@ public class FetcherFactory {
   private String storageFilename = "target/allData.dat";
   private boolean forceNewFile = false;
   private boolean enableDefaultPersistance = false;
+
+
+  private boolean enableSSMFiltering = false;
 
   public static FetcherFactory builder(){
     return new FetcherFactory();
@@ -84,6 +88,11 @@ public class FetcherFactory {
     return this;
   }
 
+  public FetcherFactory setSSMFiltering(final boolean enableSSMFiltering){
+    this.enableSSMFiltering = enableSSMFiltering;
+    return this;
+  }
+
   public FetcherFactory setNumDonors(final int numDonors){
     return setNumDonors(true, numDonors);
   }
@@ -135,11 +144,16 @@ public class FetcherFactory {
     }
 
     if (enableMaxFileSizeBytes){
-      fetcher = MaxFileSizeFetcherDecorator.newMaxFileSizeFetcherDecorator(fetcher, maxFileSizeBytes);
+      fetcher = newMaxFileSizeFetcherDecorator(fetcher, maxFileSizeBytes);
     }
 
     if (enableLimiting){
-      fetcher = LimitFetcherDecorator.newLimitFetcherDecorator(fetcher, limit);
+      fetcher = newLimitFetcherDecorator(fetcher, limit);
+    }
+
+    if (enableSSMFiltering){
+      fetcher = newSSMFetcherDecorator(fetcher);
+
     }
     return fetcher;
   }

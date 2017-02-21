@@ -8,23 +8,20 @@ import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.metadata.fetcher.Fetcher;
 
 @RequiredArgsConstructor
-public class FilterFilesFetcherDecorator implements Fetcher {
+public class SSMFetcherDecorator implements Fetcher {
+  private static final String SSM_DATA_TYPE = "SSM";
 
-  public static FilterFilesFetcherDecorator newLimitFetcherDecorator(final Fetcher fetcher, final int limit){
-    return new FilterFilesFetcherDecorator(fetcher, limit);
+  public static SSMFetcherDecorator newSSMFetcherDecorator(final Fetcher fetcher){
+    return new SSMFetcherDecorator(fetcher);
   }
 
   @NonNull
   private final Fetcher fetcher;
 
-  private final int limit;
-
   @Override
   @SneakyThrows
   public FileMetaDataContext fetch() {
     val fileMetaDataContext = fetcher.fetch();
-    val size = fileMetaDataContext.size();
-    val subFileMetaDataList = fileMetaDataContext.getFileMetaDatas().subList(0, Math.min(limit, size));
-    return FileMetaDataContext.builder().fileMetaDatas(subFileMetaDataList).build();
+    return fileMetaDataContext.filter(x -> x.getDataType().equals(SSM_DATA_TYPE));
   }
 }

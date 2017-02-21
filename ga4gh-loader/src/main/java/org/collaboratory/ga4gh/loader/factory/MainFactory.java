@@ -217,7 +217,7 @@ public class MainFactory {
         .setSort(SORT_MODE, ASCENDING_MODE)
         .setShuffle(! SORT_MODE, seed)
         .setMaxFileSizeBytes(DATA_FETCHER_MAX_FILESIZE_BYTES>0, DATA_FETCHER_MAX_FILESIZE_BYTES)
+        .setSSMFiltering(true) //TODO: need to support for other data types
         .build();
-
   }
 }
