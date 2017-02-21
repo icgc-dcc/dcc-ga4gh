@@ -16,7 +16,7 @@ import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext.
 @RequiredArgsConstructor(access = PRIVATE)
 public class AllFetcher implements Fetcher {
 
-  private static final String DEFAULT_STORAGE_FILENAME = "target/allFileMetaDatas.bin";
+  private static final String DEFAULT_STORAGE_FILENAME = "target/allFileMetaDatas.dat";
 
   @NonNull
   private String storageFilename;

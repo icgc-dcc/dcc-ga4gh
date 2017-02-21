@@ -101,13 +101,13 @@ public class VCF implements Closeable {
     this.mutationSubTypeString = parser.getSubMutationType();
     this.isMutationTypesCorrect = isMutationTypesCorrect(mutationTypeString, mutationSubTypeString);
 
-    checkState(isMutationTypesCorrect,
-        "Error: the mutationType(%s) must be of type [%s], and the subMutationType(%s) can be eitheror of [%s ,%s]",
-        mutationTypeString,
-        MutationTypes.somatic,
-        mutationSubTypeString,
-        SubMutationTypes.indel,
-        SubMutationTypes.snv_mnv);
+//    checkState(isMutationTypesCorrect,
+//        "Error: the mutationType(%s) must be of type [%s], and the subMutationType(%s) can be eitheror of [%s ,%s]",
+//        mutationTypeString,
+//        MutationTypes.somatic,
+//        mutationSubTypeString,
+//        SubMutationTypes.indel,
+//        SubMutationTypes.snv_mnv);
 
     val variantSetNameExistsInCache = variantSetIdCache.contains(variantSetName);
     val callSetNameExistsInCache = callSetIdCache.contains(callSetName);

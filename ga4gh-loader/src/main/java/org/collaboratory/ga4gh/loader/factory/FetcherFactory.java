@@ -1,40 +1,147 @@
 package org.collaboratory.ga4gh.loader.factory;
 
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.NonNull;
 import org.collaboratory.ga4gh.loader.model.metadata.fetcher.Fetcher;
-import org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.NumDonorsFetcher;
+import org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.LimitFetcherDecorator;
+import org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.MaxFileSizeFetcherDecorator;
 
-import static lombok.AccessLevel.PRIVATE;
-import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.OrderFetcherDecorator.newShuffleFetcherDecorator;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.OrderFetcherDecorator.newShuffleFetcherDecoratorWithSeed;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.OrderFetcherDecorator.newSizeSortingFetcherDecorator;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.AllFetcher.newAllFetcher;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.AllFetcher.newAllFetcherDefaultStorageFilename;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.NumDonorsFetcher.newNumDonorsFetcher;
 
-@Slf4j
-@NoArgsConstructor(access = PRIVATE)
 public class FetcherFactory {
+  private boolean enableSorting = false;
+  private boolean sortAscending = false;
+  private long shuffleSeed = -1;
+  private int limit = -1;
+  private long maxFileSizeBytes = -1;
 
-  private static final String STORAGE_FILENAME = "target/allFileMetaDatas.bin";
-  private static final boolean FORCE_NEW_FILE = false;
+  private boolean enableLimiting = false;
+  private boolean enableMaxFileSizeBytes = false;
 
+  private boolean enableNumDonors = false;
+  private int numDonors = -1;
 
-  public static Fetcher newSizeSortedNumDonorFetcher(final int numDonors, final boolean sortAscending){
-    return newSizeSortingFetcherDecorator(
-        new NumDonorsFetcher(numDonors)
-        ,sortAscending);
+  private boolean enableAllFiles = false;
+  private String storageFilename = "target/allData.dat";
+  private boolean forceNewFile = false;
+  private boolean enableDefaultPersistance = false;
+
+  public static FetcherFactory builder(){
+    return new FetcherFactory();
   }
 
-  public static Fetcher newSizeSortedAllFilesFetcher(final boolean sortAscending){
-    return newSizeSortingFetcherDecorator(
-        newAllFetcher(STORAGE_FILENAME,FORCE_NEW_FILE)
-        ,sortAscending);
+  public FetcherFactory setSort(final boolean sortAscending){
+    return setSort(true, sortAscending);
   }
 
-  public static Fetcher newShuffledAllFilesFetcher(){
-    return newShuffleFetcherDecorator(newAllFetcher(STORAGE_FILENAME, FORCE_NEW_FILE));
+  public FetcherFactory setSort(final boolean enableSorting, final boolean sortAscending){
+    this.enableSorting = enableSorting;
+    this.sortAscending = sortAscending;
+    return this;
   }
 
-  public static Fetcher newShuffledNumDonorsFetcher(final int numDonors){
-    return newShuffleFetcherDecorator(new NumDonorsFetcher(numDonors));
+  public FetcherFactory setShuffle(final long shuffleSeed){
+    return setShuffle(true, shuffleSeed);
   }
+
+  public FetcherFactory setShuffle(final boolean enableShuffling, final long shuffleSeed){
+    this.enableSorting = ! enableShuffling;
+    this.shuffleSeed = shuffleSeed;
+    return this;
+  }
+
+  public FetcherFactory setLimit(final int limit){
+    return setLimit(true, limit);
+  }
+
+  public FetcherFactory setLimit(final boolean enableLimiting, final int limit){
+    this.enableLimiting = enableLimiting;
+    this.limit = limit;
+    checkArgument(limit > 0);
+    return this;
+  }
+
+  public FetcherFactory setMaxFileSizeBytes(final long maxFileSizeBytes){
+    return setMaxFileSizeBytes(true, maxFileSizeBytes);
+  }
+
+  public FetcherFactory setMaxFileSizeBytes(final boolean enableMaxFileSizeBytes , final long maxFileSizeBytes){
+    this.enableMaxFileSizeBytes = enableMaxFileSizeBytes;
+    this.maxFileSizeBytes = maxFileSizeBytes;
+    checkArgument(maxFileSizeBytes > 0);
+    return this;
+  }
+
+  public FetcherFactory setNumDonors(final boolean enableNumDonors, final int numDonors){
+    this.enableNumDonors = enableNumDonors;
+    this.numDonors = numDonors;
+    checkArgument(numDonors > 0);
+    return this;
+  }
+
+  public FetcherFactory setNumDonors(final int numDonors){
+    return setNumDonors(true, numDonors);
+  }
+
+  public FetcherFactory setAllFiles(final String storageFilename, final boolean forceNewFile){
+    return setAllFiles(true, storageFilename, forceNewFile);
+  }
+
+  public FetcherFactory setAllFiles(final boolean enableAllFiles, @NonNull final String storageFilename, final boolean forceNewFile){
+    this.enableAllFiles = enableAllFiles;
+    this.enableDefaultPersistance = false;
+    this.storageFilename = storageFilename;
+    this.forceNewFile = forceNewFile;
+    return this;
+  }
+
+  public FetcherFactory setAllFiles(final boolean forceNewFile){
+    return setAllFiles(true, forceNewFile);
+  }
+
+  public FetcherFactory setAllFiles(final boolean enableAllFiles, final boolean forceNewFile){
+    this.enableAllFiles = enableAllFiles;
+    this.enableDefaultPersistance = true;
+    this.forceNewFile = forceNewFile;
+    return this;
+  }
+
+
+  public Fetcher build(){
+    Fetcher fetcher;
+    checkState(enableAllFiles != enableNumDonors, "enableAllFiles [{}] cannot match the value of enableNumDonors [{}]",
+        enableAllFiles,
+        enableNumDonors);
+    if (enableAllFiles){
+      if (enableDefaultPersistance){
+        fetcher = newAllFetcherDefaultStorageFilename(forceNewFile);
+      } else {
+        fetcher = newAllFetcher(storageFilename, forceNewFile);
+      }
+    } else { //enableNumDonors
+      fetcher = newNumDonorsFetcher(numDonors);
+    }
+
+
+    if (enableSorting){
+      fetcher  = newSizeSortingFetcherDecorator(fetcher, sortAscending);
+    }else{
+      fetcher = newShuffleFetcherDecoratorWithSeed(fetcher, shuffleSeed);
+    }
+
+    if (enableMaxFileSizeBytes){
+      fetcher = MaxFileSizeFetcherDecorator.newMaxFileSizeFetcherDecorator(fetcher, maxFileSizeBytes);
+    }
+
+    if (enableLimiting){
+      fetcher = LimitFetcherDecorator.newLimitFetcherDecorator(fetcher, limit);
+    }
+    return fetcher;
+  }
+
 }

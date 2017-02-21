@@ -2,11 +2,11 @@ package org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.metadata.fetcher.Fetcher;
-
-import java.io.IOException;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -16,6 +16,7 @@ enum OrderMode{
   SORT_FILE_SIZE_MODE;
 }
 @RequiredArgsConstructor(access = PRIVATE)
+@Slf4j
 public class OrderFetcherDecorator implements Fetcher {
 
   public static OrderFetcherDecorator newSizeSortingFetcherDecorator(@NonNull final Fetcher fetcher, final boolean sortAscending){
@@ -50,10 +51,12 @@ public class OrderFetcherDecorator implements Fetcher {
   //TODO: either shuffled, sorted. if was neither, then wouldnt use this class
 
   @Override
-  public FileMetaDataContext fetch() throws IOException, ClassNotFoundException {
+  @SneakyThrows
+  public FileMetaDataContext fetch() {
     val fileMetaDataContext = fetcher.fetch();
 
     if(orderMode == OrderMode.SHUFFLE_MODE){
+      log.info("Shuffle Fetcher Seed is {}", shuffleSeed);
       return fileMetaDataContext.shuffle(shuffleSeed);
     } else if(orderMode == OrderMode.SORT_FILE_SIZE_MODE){
       return fileMetaDataContext.sortByFileSize(sortAscending);

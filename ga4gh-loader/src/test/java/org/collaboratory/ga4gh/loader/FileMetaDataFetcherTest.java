@@ -30,8 +30,11 @@ import org.junit.Test;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.LimitFetcherDecorator.newLimitFetcherDecorator;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.MaxFileSizeFetcherDecorator.newMaxFileSizeFetcherDecorator;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.AllFetcher.newAllFetcherDefaultStorageFilename;
 import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.impl.NumDonorsFetcher.newNumDonorsFetcher;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 @Slf4j
 public class FileMetaDataFetcherTest {
@@ -200,5 +203,36 @@ public class FileMetaDataFetcherTest {
       val e2 =  ctx2.getFileMetaDatas().get(i);
       assertThat(e1.equals(e2));
     }
+  }
+
+  @Test
+  @SneakyThrows
+  public void testMaxFileSizeFetcher(){
+    val numDonors = 8;
+    val fetcher = newNumDonorsFetcher(numDonors);
+    val maxFileSizeBytes = 10*1024*1024L; //10 MB
+    val maxFilesizeDecorator = newMaxFileSizeFetcherDecorator(fetcher,  maxFileSizeBytes);
+    val ctx = maxFilesizeDecorator.fetch();
+    val numFilesGreaterThanLimit = stream(ctx).filter(x -> x.getFileSize() >= maxFileSizeBytes).count();
+    assertThat(numFilesGreaterThanLimit == 0).describedAs("The number of files greater than {} should be 0", maxFileSizeBytes);
+  }
+
+  @Test
+  @SneakyThrows
+  public void testLimitFetcher(){
+    val numDonors = 8;
+    val limit = 10;
+    val fetcher = newNumDonorsFetcher(numDonors);
+    val ctxOrig = fetcher.fetch();
+
+    assertThat(ctxOrig.size()).isGreaterThan(limit);
+
+    val limitFetcher = newLimitFetcherDecorator(fetcher,  limit);
+    val ctxLimit = limitFetcher.fetch();
+    assertThat(ctxLimit.size()).isEqualTo(limit);
+
+    val tooBigLimitFetcher = newLimitFetcherDecorator(limitFetcher, limit+10);
+    val ctxExtra = tooBigLimitFetcher.fetch();
+    assertThat(ctxExtra.size()).isEqualTo(limit);
   }
 }

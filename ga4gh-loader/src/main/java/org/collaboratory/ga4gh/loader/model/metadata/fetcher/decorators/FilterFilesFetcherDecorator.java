@@ -2,11 +2,10 @@ package org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.metadata.fetcher.Fetcher;
-
-import java.io.IOException;
 
 @RequiredArgsConstructor
 public class FilterFilesFetcherDecorator implements Fetcher {
@@ -21,7 +20,8 @@ public class FilterFilesFetcherDecorator implements Fetcher {
   private final int limit;
 
   @Override
-  public FileMetaDataContext fetch() throws IOException, ClassNotFoundException {
+  @SneakyThrows
+  public FileMetaDataContext fetch() {
     val fileMetaDataContext = fetcher.fetch();
     val size = fileMetaDataContext.size();
     val subFileMetaDataList = fileMetaDataContext.getFileMetaDatas().subList(0, Math.min(limit, size));
