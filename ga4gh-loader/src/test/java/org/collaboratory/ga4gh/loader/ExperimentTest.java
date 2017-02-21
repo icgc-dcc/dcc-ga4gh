@@ -1,5 +1,22 @@
 package org.collaboratory.ga4gh.loader;
 
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.lucene.search.join.ScoreMode;
+import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
+import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
+import org.collaboratory.ga4gh.loader.test.BaseElasticsearchTest;
+import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.InnerHitBuilder;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import static com.google.common.base.Stopwatch.createStarted;
 import static org.collaboratory.ga4gh.loader.factory.MainFactory.newClient;
 import static org.collaboratory.ga4gh.loader.factory.MainFactory.newParentChildDocumentWriter;
@@ -7,24 +24,6 @@ import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-
-import org.apache.lucene.search.join.ScoreMode;
-import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
-import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
-import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
-import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
-import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
-import org.collaboratory.ga4gh.loader.test.BaseElasticsearchTest;
-import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.junit.Test;
-
-import com.google.common.collect.Lists;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ExperimentTest extends BaseElasticsearchTest {
@@ -36,6 +35,7 @@ public class ExperimentTest extends BaseElasticsearchTest {
 
   // public static void main(String[] args) {
   @Test
+  @Ignore
   public void testLoad() {
     log.info("Static Config:\n{}", Config.toConfigString());
     try (val client = newClient();
