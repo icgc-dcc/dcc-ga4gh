@@ -54,18 +54,16 @@ public class Config {
   public static final int BULK_NUM_THREADS = parseInt(getProperty("num_threads", "5"));
   public static final int BULK_SIZE_MB = parseInt(getProperty("bulk_size_mb", "5"));
   public static final boolean STORAGE_PERSIST_MODE = parseBoolean(getProperty("persist_mode", FALSE));
-  public static final boolean SORT_MODE = parseBoolean(getProperty("sort_mode", TRUE));
-  public static final boolean ASCENDING_MODE = parseBoolean(getProperty("ascending_mode", FALSE));
-  public static final boolean DATA_FETCHER_SHUFFLE = !SORT_MODE;
-  public static final boolean DATA_FETCHER_SOMATIC_SSMS_ONLY = true;
-  public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = parseLong(getProperty("max_filesize_bytes", "0"));
-  public static final int DATA_FETCHER_NUM_DONORS = 30;
-  public static final int DATA_FETCHER_LIMIT = parseInt(getProperty("fetch_limit", "0"));
   public static final String STORAGE_OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
-  public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.bin";
+  public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.dat";
   public static final boolean USE_MAP_DB = parseBoolean(getProperty("use_map_db", TRUE));
   public static final int MONITOR_INTERVAL_COUNT = 500000;
   public static final boolean STORAGE_BYPASS_MD5_CHECK = parseBoolean(getProperty("bypass_md5_check", FALSE));
+
+  public static final boolean SORT_MODE = parseBoolean(getProperty("sort_mode", TRUE));
+  public static final boolean ASCENDING_MODE = parseBoolean(getProperty("ascending_mode", FALSE));
+  public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = parseLong(getProperty("max_filesize_bytes", "0"));
+  public static final int DATA_FETCHER_LIMIT = parseInt(getProperty("fetch_limit", "0"));
 
   public static String toConfigString() {
     return String.format("PARENT_CHILD_INDEX_NAME: %s"
@@ -83,10 +81,7 @@ public class Config {
         + "\nPERSIST_MODE: %s"
         + "\nSORT_MODE: %s"
         + "\nASCENDING_MODE: %s"
-        + "\nDATA_FETCHER_SHUFFLE: %s"
-        + "\nDATA_FETCHER_SOMATIC_SSMS_ONLY: %s"
         + "\nDATA_FETCHER_MAX_FILESIZE_BYTES: %s"
-        + "\nDATA_FETCHER_NUM_DONORS: %s"
         + "\nOUTPUT_VCF_STORAGE_DIR: %s"
         + "\nFILE_META_DATA_STORE_FILENAME: %s"
         + "\nUSE_MAP_DB: %s"
@@ -107,10 +102,7 @@ public class Config {
         STORAGE_PERSIST_MODE,
         SORT_MODE,
         ASCENDING_MODE,
-        DATA_FETCHER_SHUFFLE,
-        DATA_FETCHER_SOMATIC_SSMS_ONLY,
         DATA_FETCHER_MAX_FILESIZE_BYTES,
-        DATA_FETCHER_NUM_DONORS,
         STORAGE_OUTPUT_VCF_STORAGE_DIR,
         DEFAULT_FILE_META_DATA_STORE_FILENAME,
         USE_MAP_DB,
