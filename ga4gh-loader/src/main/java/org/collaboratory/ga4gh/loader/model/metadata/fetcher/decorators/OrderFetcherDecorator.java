@@ -15,6 +15,10 @@ enum OrderMode{
   SORT_FILENAME_MODE,
   SORT_FILE_SIZE_MODE;
 }
+
+/**
+ * TODO: ditch Fetcher dependancy, and directly depend on FileMetaDataContext, and just make this decorator a decorator for FileMetaDataContext
+ */
 @RequiredArgsConstructor(access = PRIVATE)
 @Slf4j
 public class OrderFetcherDecorator implements Fetcher {

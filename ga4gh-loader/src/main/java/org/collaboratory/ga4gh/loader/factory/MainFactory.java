@@ -18,7 +18,7 @@ import org.collaboratory.ga4gh.loader.factory.idcache.impl.IdRamCacheFactory;
 import org.collaboratory.ga4gh.loader.indexing.IndexCreatorContext;
 import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.collaboratory.ga4gh.loader.indexing.ParentChild2NestedIndexConverter;
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.model.metadata.fetcher.Fetcher;
 import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
 import org.collaboratory.ga4gh.loader.vcf.enums.CallerTypes;
 import org.elasticsearch.client.Client;
@@ -46,9 +46,6 @@ import static org.collaboratory.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.collaboratory.ga4gh.loader.Config.BULK_SIZE_MB;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_LIMIT;
 import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_MAX_FILESIZE_BYTES;
-import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SHUFFLE;
-import static org.collaboratory.ga4gh.loader.Config.DATA_FETCHER_SOMATIC_SSMS_ONLY;
-import static org.collaboratory.ga4gh.loader.Config.DEFAULT_FILE_META_DATA_STORE_FILENAME;
 import static org.collaboratory.ga4gh.loader.Config.NESTED_INDEX_NAME;
 import static org.collaboratory.ga4gh.loader.Config.NESTED_SCROLL_SIZE;
 import static org.collaboratory.ga4gh.loader.Config.NODE_ADDRESS;
@@ -59,7 +56,7 @@ import static org.collaboratory.ga4gh.loader.Config.STORAGE_BYPASS_MD5_CHECK;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.collaboratory.ga4gh.loader.Config.STORAGE_PERSIST_MODE;
 import static org.collaboratory.ga4gh.loader.Config.USE_MAP_DB;
-import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher.generateSeed;
+import static org.collaboratory.ga4gh.loader.model.metadata.fetcher.decorators.OrderFetcherDecorator.generateSeed;
 import static org.collaboratory.ga4gh.loader.vcf.CallProcessorManager.newCallProcessorManager;
 import static org.collaboratory.ga4gh.loader.vcf.callprocessors.impl.BasicCallProcessor.newUnFilteredBasicCallProcessor;
 import static org.collaboratory.ga4gh.loader.vcf.callprocessors.impl.DummyCallProcessor.newDummyCallProcessor;
@@ -211,20 +208,16 @@ public class MainFactory {
     return new Storage(STORAGE_PERSIST_MODE, STORAGE_OUTPUT_VCF_STORAGE_DIR, STORAGE_BYPASS_MD5_CHECK);
   }
 
-  public static FileMetaDataFetcher newFileMetaDataFetcher() {
-    long seed = generateSeed();
-    if (DATA_FETCHER_SHUFFLE) {
-      log.info("Using seed [{}] for FileMetaDataFetcher instance", seed);
-    }
-    return FileMetaDataFetcher.builder()
-        .sort(SORT_MODE)
-        .ascending(ASCENDING_MODE)
-        .seed(seed)
-        .storageFilename(DEFAULT_FILE_META_DATA_STORE_FILENAME)
-        .somaticSSMsOnly(DATA_FETCHER_SOMATIC_SSMS_ONLY)
-        .maxFileSizeBytes(DATA_FETCHER_MAX_FILESIZE_BYTES)
-        .limit(DATA_FETCHER_LIMIT)
+  public static Fetcher newFileMetaDataFetcher() {
+    val seed = generateSeed();
+    log.info("using Seed {} for Fetcher", seed);
+    return FetcherFactory.builder()
+        .setAllFiles(false)
+        .setLimit(DATA_FETCHER_LIMIT > 0, DATA_FETCHER_LIMIT)
+        .setSort(SORT_MODE, ASCENDING_MODE)
+        .setShuffle(! SORT_MODE, seed)
+        .setMaxFileSizeBytes(DATA_FETCHER_MAX_FILESIZE_BYTES>0, DATA_FETCHER_MAX_FILESIZE_BYTES)
         .build();
-  }
 
+  }
 }

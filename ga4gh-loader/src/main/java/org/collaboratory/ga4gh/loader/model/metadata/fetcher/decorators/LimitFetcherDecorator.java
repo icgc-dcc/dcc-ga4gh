@@ -7,6 +7,9 @@ import lombok.val;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.collaboratory.ga4gh.loader.model.metadata.fetcher.Fetcher;
 
+/**
+ * TODO: ditch Fetcher dependancy, and directly depend on FileMetaDataContext, and just make this decorator a decorator for FileMetaDataContext
+ */
 @RequiredArgsConstructor
 public class LimitFetcherDecorator implements Fetcher {
 

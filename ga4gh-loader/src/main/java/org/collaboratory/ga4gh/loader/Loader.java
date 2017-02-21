@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch;
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
@@ -11,7 +12,7 @@ import org.collaboratory.ga4gh.loader.indexing.Indexer;
 import org.collaboratory.ga4gh.loader.model.metadata.DonorData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaData;
 import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
-import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataFetcher;
+import org.collaboratory.ga4gh.loader.model.metadata.fetcher.Fetcher;
 import org.collaboratory.ga4gh.loader.vcf.CallProcessorManager;
 import org.collaboratory.ga4gh.loader.vcf.VCF;
 
@@ -156,8 +157,8 @@ public class Loader {
     log.info("Finished parent child optimizations");
   }
 
-  public void loadUsingDonorDatas(@NonNull final FileMetaDataFetcher dataFetcher)
-      throws ClassNotFoundException, IOException {
+  @SneakyThrows
+  public void loadUsingDonorDatas(@NonNull final Fetcher dataFetcher){
     indexer.prepareIndex();
     log.info("Resolving object ids...");
     val donorDataList = buildDonorDataList(dataFetcher.fetch());
