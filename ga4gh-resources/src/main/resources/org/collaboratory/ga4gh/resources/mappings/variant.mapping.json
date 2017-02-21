@@ -1,10 +1,6 @@
 {
 	"variant": {
 		"properties": {
-			"id": {
-				"type": "keyword",
-				"index": "true"
-			},
 			"start": {
 				"type": "long",
 				"index": "true"
@@ -17,8 +13,12 @@
 				"type": "keyword",
 				"index": "true"
 			},
-			"record": {
-				"type": "text",
+			"reference_bases": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"alternate_bases": {
+				"type": "keyword",
 				"index": "false"
 			}
 		},

@@ -17,28 +17,7 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.server.Factory.newClient;
-import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.icgc.dcc.common.core.util.stream.Streams;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ga4gh.Metadata.Dataset;
-import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
-import ga4gh.MetadataServiceOuterClass.SearchDatasetsResponse;
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
@@ -52,29 +31,46 @@ import ga4gh.Variants.Call;
 import ga4gh.Variants.CallSet;
 import ga4gh.Variants.Variant;
 import ga4gh.Variants.VariantSet;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderVersion;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.Map;
+
+import static org.collaboratory.ga4gh.core.PropertyNames.VARIANT_SET_ID;
+import static org.collaboratory.ga4gh.core.TypeNames.CALL;
+import static org.collaboratory.ga4gh.server.util.Protobufs.createInfo;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class VariantService {
 
-  private final static long DEFAULT_CALLSET_CREATED_VALUE = 0;
-  private final static long DEFAULT_CALLSET_UPDATED_VALUE = 0;
-  private final static int DEFAULT_CALL_GENOTYPE_VALUE = 1;
-  private final static double DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE = 0.0;
+  private static final Variant EMPTY_VARIANT = Variant.newBuilder().build();
+  private static final VariantSet EMPTY_VARIANT_SET = VariantSet.newBuilder().build();
+  private static final CallSet EMPTY_CALL_SET = CallSet.newBuilder().build();
+  private static final int FIRST_ELEMENT_POS = 0;
+  private final static long DEFAULT_CREATED_VALUE = 0;
+  private final static long DEFAULT_UPDATED_VALUE = 0;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @NonNull
   private final VariantRepository variantRepository;
+
   @NonNull
   private final HeaderRepository headerRepository;
 
@@ -84,150 +80,40 @@ public class VariantService {
   @NonNull
   private final VariantSetRepository variantSetRepository;
 
-  public static void main(String[] args) {
-    val searchVariantRequest = SearchVariantsRequest.newBuilder()
-        .setEnd(50000000)
-        .setStart(0)
-        .setPageSize(10)
-        .setReferenceName("7")
-        .setVariantSetId("consensus")
-        .addCallSetIds("SA557454")
-        .build();
+  @NonNull
+  private final EsVariantSetConverter esVariantSetConverter;
 
-    val searchVariantSetRequest = SearchVariantSetsRequest.newBuilder()
-        .setDatasetId("SSM")
-        .build();
+  @NonNull
+  private final EsCallSetConverter esEsCallSetConverter;
 
-    val searchCallSetRequest = SearchCallSetsRequest.newBuilder()
-        .setVariantSetId("consensus")
-        .setBioSampleId("SA557454")
-        .setName("SA557454")
-        .setPageSize(100)
-        .build();
+  @NonNull
+  private final EsCallConverter esCallConverter;
 
-    val getVariantRequest = GetVariantRequest.newBuilder()
-        .setVariantId("27043136_27043136_7_C_T")
-        .build();
+  @NonNull
+  private final EsVariantConverter esVariantConverter;
 
-    val getVariantSetRequest = GetVariantSetRequest.newBuilder()
-        .setVariantSetId("consensus")
-        .build();
-
-    val getCallSetRequest = GetCallSetRequest.newBuilder()
-        .setCallSetId("SA557454")
-        .build();
-
-    val client = newClient();
-    val variantRepo = new VariantRepository(client);
-    val headerRepo = new HeaderRepository(client);
-    val callSetRepo = new CallSetRepository(client);
-    val variantSetRepo = new VariantSetRepository(client);
-
-    val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo);
-    val searchVariantResponse = variantService.searchVariants(searchVariantRequest);
-    val searchVariantSetResponse = variantService.searchVariantSets(searchVariantSetRequest);
-    val searchCallSetResponse = variantService.searchCallSets(searchCallSetRequest);
-    val callSet = variantService.getCallSet(getCallSetRequest);
-    val variantSet = variantService.getVariantSet(getVariantSetRequest);
-    val variant = variantService.getVariant(getVariantRequest);
-    log.info("SearchVariantResponse: {} ", searchVariantResponse);
-    log.info("SearchVariantSetResponse: {} ", searchVariantSetResponse);
-    log.info("SearchCallSetResponse: {} ", searchCallSetResponse);
-    log.info("GetVariantSetResponse: {} ", variantSet);
-    log.info("GetVariantResponse: {} ", variant);
-    log.info("GetCallSetResponse: {} ", callSet);
-  }
-
-  public SearchVariantSetsResponse searchVariantSets(@NonNull SearchVariantSetsRequest request) {
-    log.info("Getting VariantSetIds for data_set_id: " + request.getDatasetId());
-    val response = this.variantSetRepository.findVariantSets(request);
-    return buildSearchVariantSetsResponse(response);
-  }
-
-  private static SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
-    return SearchVariantSetsResponse.newBuilder()
-        .setNextPageToken("N/A")
-        .addAllVariantSets(
-            Arrays.stream(response.getHits().getHits())
-                .map(h -> convertToVariantSet(h).build())
-                .collect(toImmutableList()))
-        .build();
-  }
-
-  private static VariantSet.Builder convertToVariantSet(final String id, @NonNull Map<String, Object> source) {
-    return VariantSet.newBuilder()
-        .setId(id)
-        .setName(source.get("name").toString())
-        .setDatasetId(source.get("data_set_id").toString())
-        .setReferenceSetId(source.get("reference_set_id").toString());
-  }
-
-  private static CallSet.Builder convertToCallSet(final String id, @NonNull Map<String, Object> source) {
-    return CallSet.newBuilder()
-        .setId(id)
-        .setName(source.get("name").toString())
-        .setBioSampleId(source.get("bio_sample_id").toString())
-        // TODO: [rtisma] [BUG] need to properly add variant_set_ids if there is more than one
-        .addVariantSetIds(source.get("variant_set_ids").toString())
-        // .addAlVariantSetIds(
-        // Streams.stream(source.).map(vs -> vs.toString())
-        // .collect(Collectors.toList()))
-        .setCreated(DEFAULT_CALLSET_CREATED_VALUE)
-        .setUpdated(DEFAULT_CALLSET_UPDATED_VALUE);
-  }
-
-  private static VariantSet.Builder convertToVariantSet(@NonNull SearchHit hit) {
-    return convertToVariantSet(hit.getId(), hit.getSource());
-  }
-
-  private static CallSet.Builder convertToCallSet(@NonNull SearchHit hit) {
-    return convertToCallSet(hit.getId(), hit.getSource());
-  }
-
-  public SearchCallSetsResponse searchCallSets(@NonNull SearchCallSetsRequest request) {
-    log.info("Getting CallSetIds for variant_set_id: " + request.getVariantSetId());
-    val response = this.callsetRepository.findCallSets(request);
-    return buildSearchCallSetsResponse(response);
-  }
-
-  private static SearchCallSetsResponse buildSearchCallSetsResponse(@NonNull SearchResponse response) {
-    return SearchCallSetsResponse.newBuilder()
-        .setNextPageToken("N/A")
-        .addAllCallSets(
-            Arrays.stream(response.getHits().getHits())
-                .map(h -> convertToCallSet(h).build())
-                .collect(toImmutableList()))
-        .build();
-  }
-
-  public VariantSet getVariantSet(@NonNull GetVariantSetRequest request) {
-    log.info("VariantSetId to Get: {}", request.getVariantSetId());
-    GetResponse response = variantSetRepository.findVariantSetById(request);
-    return convertToVariantSet(response.getId(), response.getSource()).build();
-  }
-
-  public CallSet getCallSet(@NonNull GetCallSetRequest request) {
-    log.info("CallSetId to Get: {}", request.getCallSetId());
-    GetResponse response = callsetRepository.findCallSetById(request);
-    return convertToCallSet(response.getId(), response.getSource()).build();
-  }
-
+  /*
+   * Variant Processing
+   */
   public Variant getVariant(@NonNull GetVariantRequest request) {
     log.info("VariantId to Get: {}", request.getVariantId());
     SearchResponse response = variantRepository.findVariantById(request);
-    assert (response.getHits().getTotalHits() == 1);
-    return convertToVariant(response.getHits().getAt(0))
-        .addAllCalls(
-            Streams.stream(
-                response.getHits().getAt(0).getInnerHits().get("call"))
-                .map(x -> convertToCall(x).build())
-                .collect(toImmutableList()))
-        .build();
+    if (response.getHits().getTotalHits() == 1) {
+      val hit = response.getHits().getAt(FIRST_ELEMENT_POS);
+      return convertToVariant(hit)
+          .addAllCalls(
+              stream(
+                  hit.getInnerHits().get(CALL))
+                  .map(this::convertToCall)
+                  .collect(toImmutableList()))
+          .build();
+    } else {
+      return EMPTY_VARIANT;
+    }
   }
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
     // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
-    val nextPageToken = "nextPageToken";
 
     log.info("pageToken: {}", request.getPageToken());
     log.info("pageSize: {}", request.getPageSize());
@@ -241,72 +127,150 @@ public class VariantService {
     return buildSearchVariantResponse(response);
   }
 
-  public SearchDatasetsResponse searchDatasets(@NonNull SearchDatasetsRequest request) {
-    val response = variantSetRepository.searchAllDataSets(request);
-    return buildSearchDatasetsResponse(response);
+  private  Variant.Builder convertToVariant(@NonNull SearchHit hit) {
+    val esVariant = esVariantConverter.convertFromSearchHit(hit);
+
+    return Variant.newBuilder()
+        .setId(hit.getId())
+        .setReferenceName(esVariant.getReferenceName())
+        .setReferenceBases(esVariant.getReferenceBases())
+        .addAllAlternateBases(esVariant.getAlternativeBases())
+        .setStart(esVariant.getStart())
+        .setEnd(esVariant.getEnd())
+        .setCreated(DEFAULT_CREATED_VALUE)
+        .setUpdated(DEFAULT_UPDATED_VALUE);
   }
 
-  private static SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
-    Terms datasets = searchResponse.getAggregations().get("by_data_set_id");
-    return SearchDatasetsResponse.newBuilder()
-        .addAllDatasets(datasets.getBuckets().stream()
-            .map(b -> Dataset.newBuilder()
-                .setId(b.getKey().toString())
-                .setName(b.getKey().toString())
-                .build())
-            .collect(toImmutableList()))
-        .build();
-  }
-
-  private static SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
+  private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
     val responseBuilder = SearchVariantsResponse.newBuilder();
     for (val variantSearchHit : searchResponse.getHits()) {
       val variantBuilder = convertToVariant(variantSearchHit);
-      for (val callInnerHit : variantSearchHit.getInnerHits().get("call")) {
+      for (val callInnerHit : variantSearchHit.getInnerHits().get(CALL)) {
         variantBuilder.addCalls(convertToCall(callInnerHit));
       }
-      responseBuilder.addVariants(variantBuilder);
+      responseBuilder.addVariants(variantBuilder.build());
     }
     return responseBuilder.build();
   }
 
-  @SneakyThrows
-  private static Call.Builder convertToCall(@NonNull SearchHit hit) {
-    return Call.newBuilder()
-        .setCallSetId(hit.getSource().get("call_set_id").toString())
-        .setCallSetName(hit.getSource().get("bio_sample_id").toString()) // TODO: [rtisma] need to add call_set_name to
-                                                                         // ES mapping
-        .addGenotype(DEFAULT_CALL_GENOTYPE_VALUE)
-        .addGenotypeLikelihood(DEFAULT_CALL_GENOTYPE_LIKELIHOOD_VALUE)
-        .setPhaseset(hit.getSource().get("phaseset").toString());
+  /*
+   * VariantSet Processing
+   */
+  public VariantSet getVariantSet(@NonNull GetVariantSetRequest request) {
+    log.info("VariantSetId to Get: {}", request.getVariantSetId());
+    GetResponse response = variantSetRepository.findVariantSetById(request);
+    if (response.isSourceEmpty()) {
+      return EMPTY_VARIANT_SET;
+    } else {
+      return convertToVariantSet(response.getId(), response.getSource());
+    }
   }
 
-  // TODO: [rtisma] cleaniup
-  // This function is only to be used for searchHits from the SearchVariants service. Its not the same as the GetVariant
-  // service
+  public SearchVariantSetsResponse searchVariantSets(@NonNull SearchVariantSetsRequest request) {
+    log.info("Getting VariantSetIds for data_set_id: " + request.getDatasetId());
+    val response = this.variantSetRepository.findVariantSets(request);
+    return buildSearchVariantSetsResponse(response);
+  }
+
+  private VariantSet convertToVariantSet(final String id, @NonNull Map<String, Object> source) {
+    val esVariantSet = esVariantSetConverter.convertFromSource(source);
+    return VariantSet.newBuilder()
+        .setId(id)
+        .setName(esVariantSet.getName())
+        .setDatasetId(esVariantSet.getDataSetId())
+        .setReferenceSetId(esVariantSet.getReferenceSetId())
+        .build();
+  }
+
+  private VariantSet convertToVariantSet(@NonNull SearchHit hit) {
+    if (hit.hasSource()) {
+      return convertToVariantSet(hit.getId(), hit.getSource());
+    } else {
+      return EMPTY_VARIANT_SET;
+    }
+  }
+
+  private SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
+    return SearchVariantSetsResponse.newBuilder()
+        .setNextPageToken("N/A")
+        .addAllVariantSets(
+            Arrays.stream(response.getHits().getHits())
+                .map(this::convertToVariantSet)
+                .collect(toImmutableList()))
+        .build();
+  }
+
+  /*
+   * CallSet Processing
+   */
+  // TODO: [rtisma] -- should return 204 No content status code if no results. To indicate request was ok, just no
+  // results
+  public CallSet getCallSet(@NonNull GetCallSetRequest request) {
+    log.info("CallSetId to Get: {}", request.getCallSetId());
+    GetResponse response = callsetRepository.findCallSetById(request);
+    if (response.isSourceEmpty()) {
+      return EMPTY_CALL_SET;
+    } else {
+      return convertToCallSet(response.getId(), response.getSource());
+    }
+  }
+
+  public SearchCallSetsResponse searchCallSets(@NonNull SearchCallSetsRequest request) {
+    log.info("Getting CallSetIds for variant_set_id: " + request.getVariantSetId());
+    val response = callsetRepository.findCallSets(request);
+    return buildSearchCallSetsResponse(response);
+  }
+
+  private CallSet convertToCallSet(final String id, @NonNull Map<String, Object> source) {
+    val esCallSet = esEsCallSetConverter.convertFromSource(source);
+    return CallSet.newBuilder()
+        .setId(id)
+        .setName(esCallSet.getName())
+        .setBioSampleId(esCallSet.getBioSampleId())
+        .addAllVariantSetIds(
+            stream( esCallSet.getVariantSetIds())
+            .map(Object::toString)
+            .collect(toImmutableList()))
+        .setCreated(DEFAULT_CREATED_VALUE)
+        .setUpdated(DEFAULT_UPDATED_VALUE)
+        .build();
+  }
+
+  private CallSet convertToCallSet(@NonNull SearchHit hit) {
+    if (hit.hasSource()) {
+      return convertToCallSet(hit.getId(), hit.getSource());
+    } else {
+      return EMPTY_CALL_SET;
+    }
+  }
+
+  private SearchCallSetsResponse buildSearchCallSetsResponse(@NonNull SearchResponse response) {
+    return SearchCallSetsResponse.newBuilder()
+        .setNextPageToken("N/A")
+        .addAllCallSets(
+            Arrays.stream(response.getHits().getHits())
+                .map(this::convertToCallSet)
+                .collect(toImmutableList()))
+        .build();
+  }
+
+  /*
+   * Call Processing
+   */
   @SneakyThrows
-  private static Variant.Builder convertToVariant(@NonNull SearchHit hit) {
-    JsonNode json = MAPPER.readTree(hit.getSourceAsString());
-    // TODO: [rtisma][HACK] - need to find a solution for getting vcfHEader
-    val dummyHeader = new VCFHeader();
-    val codec = new VCFCodec();
-    codec.setVCFHeader(dummyHeader, VCFHeaderVersion.VCF4_1);
-    VariantContext vc = codec.decode(json.get("record").asText());
-
-    List<String> alt = vc.getAlternateAlleles().stream()
-        .map(al -> al.getBaseString())
-        .collect(toImmutableList());
-
-    return Variant.newBuilder()
-        .setId(hit.getId())
-        .setReferenceName(hit.getSource().get("reference_name").toString())
-        .setReferenceBases(vc.getReference().getBaseString())
-        .addAllAlternateBases(alt)
-        .setStart(vc.getStart())
-        .setEnd(vc.getEnd())
-        .putAllInfo(createInfo(vc.getCommonInfo()))
-        .setCreated(0)
-        .setUpdated(0);
+  private Call convertToCall(@NonNull SearchHit hit) {
+    val esCall = esCallConverter.convertFromSearchHit(hit);
+    val variantSetId = esCall.getVariantSetId();
+    val info = esCall.getInfo();
+    info.put(VARIANT_SET_ID, variantSetId);
+    return Call.newBuilder()
+        .setCallSetId(Integer.toString(esCall.getCallSetId()))
+        .setCallSetName(esCall.getCallSetName())
+        .addAllGenotype(esCall.getNonReferenceAlleles())
+        .addGenotypeLikelihood(esCall.getGenotypeLikelihood())
+        .putAllInfo(createInfo(info))
+        .setPhaseset(Boolean.toString(esCall.isGenotypePhased()))
+        .build();
   }
 
 }

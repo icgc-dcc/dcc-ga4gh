@@ -17,20 +17,22 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import ga4gh.Metadata.Dataset;
 import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
 import ga4gh.MetadataServiceOuterClass.SearchDatasetsResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import static org.collaboratory.ga4gh.server.variant.VariantSetRepository.BY_DATA_SET_ID;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class MetadataService {
@@ -44,15 +46,22 @@ public class MetadataService {
   }
 
   private SearchDatasetsResponse buildSearchDatasetsResponse(@NonNull SearchResponse searchResponse) {
-    val datasets = (Terms) searchResponse.getAggregations().get("by_data_set_id");
-    return SearchDatasetsResponse.newBuilder()
-        .addAllDatasets(datasets.getBuckets().stream()
-            .map(b -> Dataset.newBuilder()
-                .setId(b.getKey().toString())
-                .setName(b.getKey().toString())
-                .build())
-            .collect(toImmutableList()))
-        .build();
+    val datasets = (Terms) searchResponse.getAggregations().get(BY_DATA_SET_ID);
+    val buckets = datasets.getBuckets();
+    val hasBuckets = buckets.size() > 0;
+    if (hasBuckets) {
+      log.info("Datasets");
+      return SearchDatasetsResponse.newBuilder()
+          .addAllDatasets(datasets.getBuckets().stream()
+              .map(b -> Dataset.newBuilder()
+                  .setId(b.getKey().toString())
+                  .setName(b.getKey().toString())
+                  .build())
+              .collect(toImmutableList()))
+          .build();
+    } else {
+      return SearchDatasetsResponse.newBuilder().build();
+    }
   }
 
 }

@@ -17,6 +17,9 @@
  */
 package org.collaboratory.ga4gh.server.util;
 
+import static org.collaboratory.ga4gh.core.TypeChecker.isObjectCollection;
+import static org.collaboratory.ga4gh.core.TypeChecker.isObjectMap;
+
 import java.util.Collection;
 import java.util.Map;
 
@@ -35,11 +38,11 @@ public class Protobufs {
   @SuppressWarnings("unchecked")
   public static ListValue createListValueFromObject(Object obj) {
     val listValueBuilder = ListValue.newBuilder();
-    if (TypeChecker.isObjectCollection(obj)) {
+    if (isObjectCollection(obj)) {
       for (Object elementObj : (Collection<Object>) obj) {
         listValueBuilder.addValues(Value.newBuilder().setStringValue(elementObj.toString()));
       }
-    } else if (TypeChecker.isObjectMap(obj)) { // TODO: still incomplete
+    } else if (isObjectMap(obj)) {
       val map = ImmutableMap.<String, Value> builder();
       for (val entry : ((Map<?, ?>) obj).entrySet()) {
         map.put(entry.getKey().toString(), Value.newBuilder().setStringValue(entry.getValue().toString()).build());
@@ -51,11 +54,24 @@ public class Protobufs {
     return listValueBuilder.build();
   }
 
-  public static Map<String, ListValue> createInfo(CommonInfo commonInfo) {
+  public static ListValue createListValueFromDoubles(final Iterable<Double> doubles) {
+    val listValueBuilder = ListValue.newBuilder();
+    for (val d : doubles) {
+      listValueBuilder.addValues(
+          Value.newBuilder().setNumberValue(d));
+    }
+    return listValueBuilder.build();
+  }
+
+  public static Map<String, ListValue> createInfo(Map<String, Object> commonInfoMap) {
     val map = ImmutableMap.<String, ListValue> builder();
-    for (Map.Entry<String, Object> entry : commonInfo.getAttributes().entrySet()) {
+    for (Map.Entry<String, Object> entry : commonInfoMap.entrySet()) {
       map.put(entry.getKey(), createListValueFromObject(entry.getValue()));
     }
     return map.build();
+  }
+
+  public static Map<String, ListValue> createInfo(CommonInfo commonInfo) {
+    return createInfo(commonInfo.getAttributes());
   }
 }

@@ -17,27 +17,28 @@
  */
 package org.collaboratory.ga4gh.server.variant;
 
-import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
-import static org.collaboratory.ga4gh.server.config.ServerConfig.VARIANT_SET_TYPE_NAME;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.sort.SortOrder;
-import org.springframework.stereotype.Repository;
-
 import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.stereotype.Repository;
+
+import static org.collaboratory.ga4gh.core.PropertyNames.DATA_SET_ID;
+import static org.collaboratory.ga4gh.core.PropertyNames.getAggNameForProperty;
+import static org.collaboratory.ga4gh.core.TypeNames.VARIANT_SET;
+import static org.collaboratory.ga4gh.server.config.ServerConfig.INDEX_NAME;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 /**
  * Perform queries against elasticsearch to find desired variants.
@@ -46,13 +47,15 @@ import lombok.val;
 @RequiredArgsConstructor
 public class VariantSetRepository {
 
+  public static final String BY_DATA_SET_ID = getAggNameForProperty(DATA_SET_ID);
+
   @NonNull
   private final Client client;
 
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
-        .setTypes(VARIANT_SET_TYPE_NAME)
-        .addSort("data_set_id", SortOrder.ASC)
+        .setTypes(VARIANT_SET)
+        .addSort(DATA_SET_ID, SortOrder.ASC)
         .setSize(size);
   }
 
@@ -61,9 +64,9 @@ public class VariantSetRepository {
     val constantBoolQuery = constantScoreQuery(
         boolQuery()
             .must(
-                QueryBuilders.matchAllQuery()));
+                matchAllQuery()));
 
-    val agg = AggregationBuilders.terms("by_data_set_id").field("data_set_id");
+    val agg = AggregationBuilders.terms(BY_DATA_SET_ID).field(DATA_SET_ID);
     return searchRequestBuilder.setQuery(constantBoolQuery).addAggregation(agg).get();
   }
 
@@ -72,12 +75,12 @@ public class VariantSetRepository {
     val constantBoolQuery = constantScoreQuery(
         boolQuery()
             .must(
-                matchQuery("data_set_id", request.getDatasetId())));
+                matchQuery(DATA_SET_ID, request.getDatasetId())));
     return searchRequestBuilder.setQuery(constantBoolQuery).get();
   }
 
   public GetResponse findVariantSetById(@NonNull GetVariantSetRequest request) {
-    return client.prepareGet(INDEX_NAME, VARIANT_SET_TYPE_NAME, request.getVariantSetId()).get();
+    return client.prepareGet(INDEX_NAME, VARIANT_SET, request.getVariantSetId()).get();
   }
 
 }

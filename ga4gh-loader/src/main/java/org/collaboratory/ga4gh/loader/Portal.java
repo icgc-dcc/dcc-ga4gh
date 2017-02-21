@@ -1,33 +1,43 @@
 package org.collaboratory.ga4gh.loader;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.transform;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static lombok.AccessLevel.PRIVATE;
-import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
-import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
-
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.List;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext;
+
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.transform;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static lombok.AccessLevel.PRIVATE;
+import static org.collaboratory.ga4gh.core.MiscNames.ID;
+import static org.collaboratory.ga4gh.loader.model.metadata.FileMetaDataContext.buildFileMetaDataContext;
+import static org.collaboratory.ga4gh.loader.Config.PORTAL_API;
+import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
+
 
 @NoArgsConstructor(access = PRIVATE)
 public final class Portal {
 
+  /*
+   * Constants
+   */
+  private static final String REPOSITORY_FILES_ENDPOINT = "/api/v1/repository/files";
+  private static final String DONORS_ENDPOINT = "/api/v1/donors";
   private static final int PORTAL_FETCH_SIZE = 100;
   private static final String REPOSITORY_NAME = "Collaboratory - Toronto";
   private static final String FILE_FORMAT = "VCF";
   private static final int DEFAULT_BUF_DONOR_SIZE = 50;
+  private static final String HITS = "hits";
 
   /**
    * Gets all Collaboratory VCF files.
@@ -37,7 +47,7 @@ public final class Portal {
     val size = PORTAL_FETCH_SIZE;
     int from = 1;
 
-    while (from < 21) {
+    while (true) {
       val url = getUrl(size, from);
       val result = read(url);
       val hits = getHits(result);
@@ -54,6 +64,14 @@ public final class Portal {
       from += size;
     }
     return fileMetas.build();
+  }
+
+  public static FileMetaDataContext getFileMetaDatasForNumDonors(int numDonors) {
+    return buildFileMetaDataContext(getFileMetasForNumDonors(numDonors));
+  }
+
+  public static FileMetaDataContext getAllFileMetaDatas() {
+    return buildFileMetaDataContext(getAllFileMetas());
   }
 
   public static List<ObjectNode> getFileMetasForNumDonors(int numDonors) {
@@ -81,10 +99,9 @@ public final class Portal {
   }
 
   private static String getIdFromHit(JsonNode hit) {
-    return hit.path("id").textValue();
+    return hit.path(ID).textValue();
   }
 
-  // TODO: [rtisma] - donorIds retrieved from here are not searchable in repository. need to investigate why
   private static Iterable<String> getDonorIds(final int startPos, final int numDonors) {
     checkState(numDonors > 0);
     checkState(startPos > 0);
@@ -110,30 +127,20 @@ public final class Portal {
   }
 
   private static JsonNode getHits(JsonNode result) {
-    return result.get("hits");
+    return result.get(HITS);
   }
 
   @SneakyThrows
   private static URL getDonersUrl(int size, int from) {
-    val endpoint = PORTAL_API + "/api/v1/donors";
+    val endpoint = PORTAL_API + DONORS_ENDPOINT;
     return new URL(endpoint + "?" + "from=" + from + "&size=" + size + "&order=desc&facetsOnly=false");
   }
 
+  // TODO: [rtisma] -- need to updated this. When request N donors, sometimes get < N donors back. Make sure filtering
+  // correctly for SSM only
   @SneakyThrows
-  private static URL getFilesForDonerUrl(final String donorId, final int from, final int size) {
-    val endpoint = PORTAL_API + "/api/v1/repository/files";
-
-    // {"file":{"repoName":{"is":["Collaboratory - Toronto"]},"fileFormat":{"is":["VCF"]},"donorId":{"is":["DO222843"]}}
-    String filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
-        + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]},"
-        + "\"donorId\":{\"is\":[\"" + donorId + "\"]}}}", UTF_8.name());
-    return new URL(
-        endpoint + "?" + "filters=" + filters + "&" + "from=" + from + "&" + "size=" + size + "&sort=id&order=desc");
-  }
-
-  @SneakyThrows
-  private static URL getFilesForDonersUrl(Iterable<String> donorIterable, int size, int from) {
-    val endpoint = PORTAL_API + "/api/v1/repository/files";
+  private static URL getFilesForDonersUrl(@NonNull Iterable<String> donorIterable, final int size, final int from) {
+    val endpoint = PORTAL_API + REPOSITORY_FILES_ENDPOINT;
 
     String donorsCSV = Joiner.on("\",\"").join(donorIterable);
     // {"file":{"repoName":{"is":["Collaboratory - Toronto"]},"fileFormat":{"is":["VCF"]},"donorId":{"is":["DO222843"]}}
@@ -146,7 +153,7 @@ public final class Portal {
 
   @SneakyThrows
   private static URL getUrl(int size, int from) {
-    val endpoint = PORTAL_API + "/api/v1/repository/files";
+    val endpoint = PORTAL_API + REPOSITORY_FILES_ENDPOINT;
     val filters = URLEncoder.encode("{\"file\":{\"repoName\":{\"is\":[\"" + REPOSITORY_NAME + "\"]},"
         + "\"fileFormat\":{\"is\":[\"" + FILE_FORMAT + "\"]}}}", UTF_8.name());
 

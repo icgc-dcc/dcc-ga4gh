@@ -1,16 +1,12 @@
 {
 	"callset": {
 		"properties": {
-			"id": {
-				"type": "keyword",
-				"index": "true"
-			},
 			"name": {
 				"type": "keyword",
 				"index": "true"
 			},
 			"variant_set_ids": {
-				"type": "keyword",
+				"type": "integer",
 				"index": "true"
 			},
 			"bio_sample_id": {

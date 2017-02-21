@@ -1,33 +1,32 @@
 {
 	"call": {
 		"properties": {
-			"id": {
-				"type": "keyword",
-				"index": "true"
-			},
-			"name": {
-				"type": "keyword",
-				"index": "true"
-			},
-			"genotype": {
+			"variant_set_id": {
 				"type": "integer",
 				"index": "true"
 			},
-			"phaseset": {
-				"type": "keyword",
-				"index": "true"
-			},
-			"variant_set_id": {
-				"type": "keyword",
-				"index": "true"
-			},
 			"call_set_id": {
+				"type": "integer",
+				"index": "true"
+			},
+			"call_set_name": {
 				"type": "keyword",
 				"index": "true"
 			},
-			"bio_sample_id": {
+			"info": {
+				"type" : "object"
+			},
+			"genotype_likelihood": {
 				"type": "keyword",
-				"index": "true"
+				"index": "false"
+			},
+			"genotype_phaseset": {
+				"type": "boolean",
+				"index": "false"
+			},
+			"non_reference_alleles": {
+				"type": "integer",
+				"index": "false"
 			}
 		},
 		"_all": {

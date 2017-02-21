@@ -1,10 +1,6 @@
 {
 	"variant_set": {
 		"properties": {
-			"id": {
-				"type": "keyword",
-				"index": "true"
-			},
 			"name": {
 				"type": "keyword",
 				"index": "true"

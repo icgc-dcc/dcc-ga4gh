@@ -1,12 +1,13 @@
 package org.collaboratory.ga4gh.loader;
 
 import static com.google.common.base.Stopwatch.createStarted;
-import static org.collaboratory.ga4gh.loader.Config.INDEX_NAME;
-import static org.collaboratory.ga4gh.loader.Factory.newClient;
+import static org.collaboratory.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
+import static org.collaboratory.ga4gh.loader.factory.MainFactory.newClient;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
@@ -22,6 +23,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -31,18 +33,21 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Benchmarks {
 
+  @NonNull
+  private final Client client;
+
+  @NonNull
+  private final String indexName;
+
   @SneakyThrows
   public static void main(String[] args) {
     try (val client = newClient()) {
-      val benchmarks = new Benchmarks(client, INDEX_NAME);
+      val benchmarks = new Benchmarks(client, PARENT_CHILD_INDEX_NAME);
       benchmarks.execute();
     } catch (Exception e) {
       log.error("Exception running: ", e);
     }
   }
-
-  private final Client client;
-  private final String indexName;
 
   public void execute() {
     count(rangeQuery("start").from(10_000_000).to(20_000_000));
@@ -108,8 +113,13 @@ public class Benchmarks {
   public static void writeToFile(final String filename, final String message, final boolean overwrite) {
     val writer = new PrintWriter(filename);
     val path = Paths.get(filename);
-    val dir = path.getParent();
-    if (Files.exists(dir) == false) {
+    Path dir = path.getParent();
+    if (dir == null) {
+      dir = Paths.get("./");
+    }
+
+    val dirDoesNotExist = !Files.exists(dir);
+    if (dirDoesNotExist) {
       Files.createDirectories(dir);
     }
     writer.write(message);

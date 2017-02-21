@@ -2,7 +2,7 @@
 	"vcf_header": {
 		"properties": {
 			"variant_set_id": {
-				"type": "keyword",
+				"type": "integer",
 				"index": "true"
 			},
 			"donor_id": {
@@ -14,7 +14,7 @@
 				"index": "true"
 			},
 			"vcf_header": {
-				"type": "keyword",
+				"type": "binary",
 				"index": "false"
 			}
 		},

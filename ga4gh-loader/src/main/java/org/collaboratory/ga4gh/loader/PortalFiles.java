@@ -17,13 +17,13 @@
  */
 package org.collaboratory.ga4gh.loader;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.collaboratory.ga4gh.loader.model.metadata.PortalVCFFilenameParser;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class PortalFiles {

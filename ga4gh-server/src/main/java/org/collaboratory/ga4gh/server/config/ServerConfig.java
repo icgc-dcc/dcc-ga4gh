@@ -17,33 +17,36 @@
  */
 package org.collaboratory.ga4gh.server.config;
 
-import org.collaboratory.ga4gh.server.Factory;
+import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
+import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
 import org.collaboratory.ga4gh.server.reference.ReferenceGenome;
 import org.elasticsearch.client.Client;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static java.lang.Integer.parseInt;
+import static java.lang.System.getProperty;
+import static org.collaboratory.ga4gh.server.Factory.newClient;
+
 @Configuration
 public class ServerConfig {
 
-  public static final String INDEX_NAME = "dcc-variants";
-  public static final String VARIANT_TYPE_NAME = "variant";
-  public static final String VARIANT_SET_TYPE_NAME = "variant_set";
-  public static final String CALLSET_TYPE_NAME = "callset";
-  public static final String CALL_TYPE_NAME = "call";
-  public static final String HEADER_TYPE_NAME = "vcf_header";
-  public static final String NODE_ADDRESS = System.getProperty("node_address", "localhost");
-  public static final int NODE_PORT = Integer.valueOf(System.getProperty("node_port", "9300"));
+  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants");
+  public static final String NODE_ADDRESS = getProperty("node_address", "localhost");
+  public static final int NODE_PORT = parseInt(getProperty("node_port", "9300"));
   public static final String FASTA_FILE_LOC = "target/GRCh37.fasta";
 
   public static String toConfigString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("INDEX_NAME: " + INDEX_NAME + "\n");
-    sb.append("TYPE_NAME: " + VARIANT_TYPE_NAME + "\n");
-    sb.append("NODE_ADDRESS: " + NODE_ADDRESS + "\n");
-    sb.append("NODE_PORT: " + NODE_PORT + "\n");
-    return sb.toString();
+    return String.format(
+        "INDEX_NAME: %s"
+            + "\nNODE_ADDRESS: %s"
+            + "\nNODE_PORT: %s",
+        INDEX_NAME,
+        NODE_ADDRESS,
+        NODE_PORT);
   }
 
   @Bean
@@ -53,7 +56,27 @@ public class ServerConfig {
 
   @Bean
   public Client client() {
-    return Factory.newClient();
+    return newClient();
+  }
+
+  @Bean
+  public EsVariantConverter esVariantConverter(){
+    return new EsVariantConverter();
+  }
+
+  @Bean
+  public EsVariantSetConverter esVariantSetConverter(){
+    return new EsVariantSetConverter();
+  }
+
+  @Bean
+  public EsCallSetConverter esCallSetConverter(){
+    return new EsCallSetConverter();
+  }
+
+  @Bean
+  public EsCallConverter esCallConverter(){
+    return new EsCallConverter();
   }
 
 }

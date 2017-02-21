@@ -1,0 +1,61 @@
+{
+	"variant_nested": {
+		"properties": {
+			"start": {
+				"type": "long",
+				"index": "true"
+			},
+			"end": {
+				"type": "long",
+				"index": "true"
+			},
+			"reference_name": {
+				"type": "keyword",
+				"index": "true"
+			},
+			"reference_bases": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"alternate_bases": {
+				"type": "keyword",
+				"index": "false"
+			},
+			"call": {
+				"type" : "nested",
+				"properties": {
+					"variant_set_id": {
+						"type": "integer",
+						"index": "true"
+					},
+					"call_set_id": {
+						"type": "integer",
+						"index": "true"
+					},
+					"info": {
+						"type" : "object"
+					},
+					"genotype_likelihood": {
+						"type": "keyword",
+						"index": "false"
+					},
+					"genotype_phaseset": {
+						"type": "boolean",
+						"index": "false"
+					},
+					"non_reference_alleles": {
+						"type": "integer",
+						"index": "false"
+					}
+				}
+			}
+			
+		},
+		"_all": {
+			"enabled": false
+		},
+		"_source": {
+			"enabled": true
+		}
+	}
+}
