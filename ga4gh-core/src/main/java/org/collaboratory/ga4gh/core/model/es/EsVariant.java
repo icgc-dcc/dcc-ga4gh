@@ -35,8 +35,10 @@ import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
-// Byte packed implementation of EsVariant. Assumes that referenceBases and alternative bases
-// are ASCII only. Instead of storing 2 Bytes per character for bases, store one. 
+/**
+ * Byte packed implementation of EsVariant. Assumes that referenceBases and alternative bases
+ * are ASCII only. Instead of storing 2 Bytes per character for bases, store one.
+*/
 @ToString
 @EqualsAndHashCode
 public final class EsVariant implements Serializable, EsModel {
