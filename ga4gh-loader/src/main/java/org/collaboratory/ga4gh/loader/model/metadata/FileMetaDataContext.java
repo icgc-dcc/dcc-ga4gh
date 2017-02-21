@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
@@ -29,6 +30,8 @@ import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 public class FileMetaDataContext implements Serializable, Iterable<FileMetaData> {
 
   private static final long serialVersionUID = 1486673032L;
+  private static final FileMetaData.FilenameComparator FILENAME_COMPARATOR = new FileMetaData.FilenameComparator();
+  private static final FileMetaData.FileSizeComparator FILE_SIZE_COMPARATOR = new FileMetaData.FileSizeComparator();
 
   @Singular
   private final List<FileMetaData> fileMetaDatas;
@@ -43,13 +46,15 @@ public class FileMetaDataContext implements Serializable, Iterable<FileMetaData>
 
   public FileMetaDataContext filter(@NonNull final Predicate<? super FileMetaData> predicate) {
     val builder = FileMetaDataContext.builder();
-    fileMetaDatas.stream().filter(predicate).forEach(x -> builder.fileMetaData(x));
+    fileMetaDatas.stream().filter(predicate).forEach(builder::fileMetaData);
     return builder.build();
   }
 
   public static FileMetaDataContext buildFileMetaDataContext(@NonNull final Iterable<ObjectNode> objectNodes) {
     val builder = FileMetaDataContext.builder();
-    stream(objectNodes).map(FileMetaData::buildFileMetaData).forEach(x -> builder.fileMetaData(x));
+    stream(objectNodes)
+        .map(FileMetaData::buildFileMetaData)
+        .forEach(builder::fileMetaData);
     return builder.build();
   }
 
@@ -79,13 +84,17 @@ public class FileMetaDataContext implements Serializable, Iterable<FileMetaData>
 
   public FileMetaDataContext sortByFileSize(final boolean ascending) {
     val list = Lists.newArrayList(fileMetaDatas);
-    Collections.sort(list, new FileMetaData.FileSizeComparator(ascending));
+    Collections.sort(list, FILE_SIZE_COMPARATOR);
+
+    if (! ascending){
+      Collections.reverse(list);
+    }
     return new FileMetaDataContext(ImmutableList.copyOf(list));
   }
 
   public FileMetaDataContext sortByFilename(final boolean ascending) {
     val list = Lists.newArrayList(fileMetaDatas);
-    Collections.sort(list, new FileMetaData.FilenameComparator());
+    Collections.sort(list, FILENAME_COMPARATOR);
     val fileMetaDataList = ImmutableList.copyOf(list);
     return FileMetaDataContext.builder()
         .fileMetaDatas(fileMetaDataList)
@@ -112,6 +121,14 @@ public class FileMetaDataContext implements Serializable, Iterable<FileMetaData>
 
   public int size() {
     return fileMetaDatas.size();
+  }
+
+  public FileMetaDataContext shuffle(final long seed){
+    val rand = new Random();
+    rand.setSeed(seed);
+    val list = Lists.<FileMetaData> newArrayList(getFileMetaDatas());
+    Collections.shuffle(list, rand);
+    return FileMetaDataContext.builder().fileMetaDatas(ImmutableList.copyOf(list)).build();
   }
 
 }
