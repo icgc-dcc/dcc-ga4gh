@@ -20,7 +20,6 @@ package org.collaboratory.ga4gh.loader.model.metadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.collaboratory.ga4gh.loader.PortalFiles;
@@ -115,28 +114,22 @@ public final class FileMetaData implements Serializable {
     return (double) getFileSize() / (1024 * 1024);
   }
 
-  @RequiredArgsConstructor
   public static class FileSizeComparator implements Comparator<FileMetaData> {
-
-    private final boolean ascending;
 
     @Override
     public int compare(FileMetaData f1, FileMetaData f2) {
-      if (ascending) {
         return Long.compare(f1.getFileSize(), f2.getFileSize());
-      } else {
-        return Long.compare(f2.getFileSize(), f1.getFileSize());
-      }
     }
+
   }
 
-  @RequiredArgsConstructor
   public static class FilenameComparator implements Comparator<FileMetaData> {
 
     @Override
     public int compare(FileMetaData f1, FileMetaData f2) {
       return f1.getVcfFilenameParser().getFilename().compareTo(f2.getVcfFilenameParser().getFilename());
     }
+
   }
 
 }
