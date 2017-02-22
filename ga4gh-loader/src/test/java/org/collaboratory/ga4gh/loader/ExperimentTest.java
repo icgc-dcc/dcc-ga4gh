@@ -8,9 +8,12 @@ import org.collaboratory.ga4gh.core.model.converters.EsCallConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsCallSetConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsVariantConverter;
 import org.collaboratory.ga4gh.core.model.converters.EsVariantSetConverter;
+import org.collaboratory.ga4gh.core.model.es.EsVariant;
 import org.collaboratory.ga4gh.core.model.es.EsVariantCallPair;
 import org.collaboratory.ga4gh.loader.test.BaseElasticsearchTest;
 import org.collaboratory.ga4gh.loader.utils.CounterMonitor;
+import org.collaboratory.ga4gh.loader.utils.cache.id.impl.LongIdCache;
+import org.collaboratory.ga4gh.loader.utils.cache.storage.impl.RamCacheStorage;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.InnerHitBuilder;
@@ -96,6 +99,44 @@ public class ExperimentTest extends BaseElasticsearchTest {
     } catch (Exception e) {
       log.error("Exception running: ", e);
     }
+
+  }
+
+  @Test
+  public void testDifferentDataSetsAndOverlappingVariants(){
+    val v1Builder = EsVariant.builder()
+        .start(1)
+        .end(10)
+        .referenceName("myname")
+        .referenceBases("AATT")
+        .alternativeBase("AAT");
+
+    val v1 = v1Builder.build();
+    val v2 = v1Builder
+        .start(11)
+        .end(33)
+        .build();
+
+    val vc11 = VariantIdContext.builder().dataType("D1").variant(v1).build();
+    val vc12 = VariantIdContext.builder().dataType("D1").variant(v2).build();
+    val vc21 = VariantIdContext.builder().dataType("D2").variant(v1).build();
+    val vc22 = VariantIdContext.builder().dataType("D2").variant(v2).build();
+
+    val cache = RamCacheStorage.<VariantIdContext,Long>newRamCacheStorage();
+    val idCache = LongIdCache.newLongIdCache(cache, 1L);
+    idCache.add(vc11);
+    idCache.add(vc12);
+    idCache.add(vc21);
+    idCache.add(vc22);
+
+    log.info("vc11: {}", idCache.getIdAsString(vc11));
+    log.info("vc12: {}", idCache.getIdAsString(vc12));
+    log.info("vc21: {}", idCache.getIdAsString(vc21));
+    log.info("vc22: {}", idCache.getIdAsString(vc22));
+
+    idCache.add(vc21);
+    log.info("vc21: {}", idCache.getIdAsString(vc21));
+
 
   }
 
