@@ -19,7 +19,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.collaboratory</groupId>
+		<groupId>org.icgc.dcc</groupId>
 		<artifactId>ga4gh</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
@@ -33,17 +33,18 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
 		<!-- GA4GH -->
 		<dependency>
-			<groupId>org.collaboratory</groupId>
+			<groupId>org.icgc.dcc</groupId>
 			<artifactId>ga4gh-schema</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
-			<groupId>org.collaboratory</groupId>
+			<groupId>org.icgc.dcc</groupId>
 			<artifactId>ga4gh-resources</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.collaboratory</groupId>
+			<groupId>org.icgc.dcc</groupId>
 			<artifactId>ga4gh-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -110,7 +111,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 				<version>${spring-boot-maven-plugin.version}</version>
 				<configuration>
 					<fork>true</fork>
-					<mainClass>org.collaboratory.ga4gh.server.ServerMain</mainClass>
+					<mainClass>org.icgc.dcc.ga4gh.server.ServerMain</mainClass>
 				</configuration>
 				<executions>
 					<execution>

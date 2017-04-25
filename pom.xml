@@ -24,7 +24,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		<version>31</version>
 	</parent>
 
-	<groupId>org.collaboratory</groupId>
+	<groupId>org.icgc.dcc</groupId>
 	<artifactId>ga4gh</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -74,7 +74,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 		<dependencies>
 			<!-- GA4GH -->
 			<dependency>
-				<groupId>org.collaboratory</groupId>
+				<groupId>org.icgc.dcc</groupId>
 				<artifactId>ga4gh-schema</artifactId>
 				<version>${project.version}</version>
 			</dependency>
