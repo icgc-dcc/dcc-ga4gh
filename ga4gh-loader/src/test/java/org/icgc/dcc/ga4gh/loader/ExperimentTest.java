@@ -4,12 +4,12 @@ import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.lucene.search.join.ScoreMode;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallSetConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantSetConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariant;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariantCallPair;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.loader.test.BaseElasticsearchTest;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.cache.id.impl.LongIdCache;
@@ -31,10 +31,10 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 @Slf4j
 public class ExperimentTest extends BaseElasticsearchTest {
 
-  private static final EsVariantConverter VARIANT_CONVERTER = new EsVariantConverter();
-  private static final EsVariantSetConverter VARIANT_SET_CONVERTER = new EsVariantSetConverter();
-  private static final EsCallSetConverter CALL_SET_CONVERTER = new EsCallSetConverter();
-  private static final EsCallConverter CALL_CONVERTER = new EsCallConverter();
+  private static final EsVariantConverterJson VARIANT_CONVERTER = new EsVariantConverterJson();
+  private static final EsVariantSetConverterJson VARIANT_SET_CONVERTER = new EsVariantSetConverterJson();
+  private static final EsCallSetConverterJson CALL_SET_CONVERTER = new EsCallSetConverterJson();
+  private static final EsCallConverterJson CALL_CONVERTER = new EsCallConverterJson();
 
   // public static void main(String[] args) {
   @Test

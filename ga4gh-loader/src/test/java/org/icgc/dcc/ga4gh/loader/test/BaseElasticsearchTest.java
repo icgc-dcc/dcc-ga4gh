@@ -38,7 +38,7 @@ import org.junit.Before;
 import java.io.File;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VARIANT;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
@@ -83,7 +83,7 @@ public abstract class BaseElasticsearchTest extends ESIntegTestCase {
   @SneakyThrows
   protected void indexData(Class<?> testClass) {
     val dataFile = new File(FIXTURES_DIR, testClass.getSimpleName() + ".txt");
-    log.info("Loading data from: {}", dataFile);
+    log.info("Loading dao from: {}", dataFile);
 
     val iterator = READER.readValues(dataFile);
     while (iterator.hasNext()) {
@@ -92,7 +92,7 @@ public abstract class BaseElasticsearchTest extends ESIntegTestCase {
       val indexName = indexMetadata.get("_index").textValue();
       val indexType = indexMetadata.get("_type").textValue();
       val indexId = indexMetadata.get("_id").textValue();
-      checkState(iterator.hasNext(), "Incorrect format of input test data file. Expected data after document metadata");
+      checkState(iterator.hasNext(), "Incorrect format of input test dao file. Expected dao after document metadata");
       val doc = (ObjectNode) iterator.next();
       val indexRequest = client().prepareIndex(indexName, indexType, indexId).setSource(doc.toString());
       indexRandom(true, indexRequest);

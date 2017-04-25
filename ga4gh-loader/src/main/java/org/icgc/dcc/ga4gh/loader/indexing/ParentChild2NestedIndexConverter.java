@@ -8,9 +8,9 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.lucene.search.join.ScoreMode;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.ObjectNodeConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.SearchHitConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariantCallPair;
+import org.icgc.dcc.ga4gh.common.model.converters.JsonObjectNodeConverter;
+import org.icgc.dcc.ga4gh.common.model.converters.SearchHitConverter;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -21,7 +21,7 @@ import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
 import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VARIANT_NESTED;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_NESTED;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
@@ -62,7 +62,7 @@ public class ParentChild2NestedIndexConverter {
   private final SearchHitConverter<EsVariantCallPair> searchHitConverter;
 
   @NonNull
-  private final ObjectNodeConverter<EsVariantCallPair> nestedObjectNodeConverter;
+  private final JsonObjectNodeConverter<EsVariantCallPair> nestedJsonObjectNodeConverter;
 
   private final CounterMonitor variantMonitor = CounterMonitor.newMonitor("VariantMonitor", 2000);
 
@@ -137,7 +137,7 @@ public class ParentChild2NestedIndexConverter {
 
   @SneakyThrows
   private void indexPair(EsVariantCallPair pair) {
-    writer.write(new IndexDocument(getNextVariantId(), nestedObjectNodeConverter.convertToObjectNode(pair),
+    writer.write(new IndexDocument(getNextVariantId(), nestedJsonObjectNodeConverter.convertToObjectNode(pair),
         new VariantNestedDocumentType()));
     variantMonitor.incr();
   }

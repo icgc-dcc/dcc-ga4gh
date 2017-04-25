@@ -20,7 +20,7 @@ package org.icgc.dcc.ga4gh.loader.factory.idcache;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.loader.utils.cache.storage.CacheStorage;
 import org.icgc.dcc.ga4gh.loader.utils.cache.id.IdCache;
 import org.icgc.dcc.ga4gh.loader.utils.cache.id.impl.IntegerIdCache;

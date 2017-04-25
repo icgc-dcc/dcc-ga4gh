@@ -30,10 +30,10 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.springframework.stereotype.Repository;
 
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.BIO_SAMPLE_ID;
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.NAME;
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.VARIANT_SET_IDS;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.CALL_SET;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.BIO_SAMPLE_ID;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.NAME;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;

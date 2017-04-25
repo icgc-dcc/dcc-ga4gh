@@ -5,7 +5,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import lombok.RequiredArgsConstructor;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.loader.vcf.callprocessors.CallProcessor;
 import org.icgc.dcc.ga4gh.loader.vcf.callprocessors.AbstractCallProcessor;
 

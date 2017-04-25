@@ -10,8 +10,8 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariantCallPair;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.cache.id.IdCache;
@@ -27,10 +27,10 @@ import java.util.Base64;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.BIO_SAMPLE_ID;
-import static org.icgc.dcc.ga4gh.common.resources.MiscNames.DONOR_ID;
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.VARIANT_SET_ID;
-import static org.icgc.dcc.ga4gh.common.resources.MiscNames.VCF_HEADER;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.BIO_SAMPLE_ID;
+import static org.icgc.dcc.ga4gh.common.MiscNames.DONOR_ID;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
+import static org.icgc.dcc.ga4gh.common.MiscNames.VCF_HEADER;
 import static org.icgc.dcc.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
@@ -54,7 +54,7 @@ public class VCF implements Closeable {
   @Getter
   private final CallProcessor callProcessor;
 
-  private final EsVariantConverter variantConverter;
+  private final EsVariantConverterJson variantConverter;
 
   /*
    * Cached for speed
@@ -81,7 +81,7 @@ public class VCF implements Closeable {
       @NonNull final IdCache<String, Integer> variantSetIdCache,
       @NonNull final IdCache<String, Integer> callSetIdCache,
       @NonNull final CallProcessor callProcessor,
-      @NonNull final EsVariantConverter variantConverter) {
+      @NonNull final EsVariantConverterJson variantConverter) {
     this.vcf = new VCFFileReader(file, REQUIRE_INDEX_CFG);
     this.variantConverter = variantConverter;
     this.fileMetaData = fileMetaData;

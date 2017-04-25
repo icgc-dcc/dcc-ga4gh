@@ -7,8 +7,8 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.lang.System.getProperty;
-import static org.icgc.dcc.ga4gh.common.resources.MiscNames.FALSE;
-import static org.icgc.dcc.ga4gh.common.resources.MiscNames.TRUE;
+import static org.icgc.dcc.ga4gh.common.MiscNames.FALSE;
+import static org.icgc.dcc.ga4gh.common.MiscNames.TRUE;
 import static org.icgc.dcc.ga4gh.loader.LoaderModes.parseLoaderMode;
 
 enum LoaderModes {

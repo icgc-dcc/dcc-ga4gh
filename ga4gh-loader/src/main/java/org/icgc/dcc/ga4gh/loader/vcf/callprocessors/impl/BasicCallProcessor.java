@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.loader.vcf.callprocessors.AbstractCallProcessor;
 
 import java.util.Collection;

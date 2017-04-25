@@ -36,10 +36,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallSetConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantSetConverter;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
@@ -50,8 +50,8 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.Map;
 
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.VARIANT_SET_ID;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.CALL;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
 import static org.icgc.dcc.ga4gh.server.util.Protobufs.createInfo;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
@@ -82,16 +82,16 @@ public class VariantService {
   private final VariantSetRepository variantSetRepository;
 
   @NonNull
-  private final EsVariantSetConverter esVariantSetConverter;
+  private final EsVariantSetConverterJson esVariantSetConverter;
 
   @NonNull
-  private final EsCallSetConverter esEsCallSetConverter;
+  private final EsCallSetConverterJson esEsCallSetConverter;
 
   @NonNull
-  private final EsCallConverter esCallConverter;
+  private final EsCallConverterJson esCallConverter;
 
   @NonNull
-  private final EsVariantConverter esVariantConverter;
+  private final EsVariantConverterJson esVariantConverter;
 
   /*
    * Variant Processing

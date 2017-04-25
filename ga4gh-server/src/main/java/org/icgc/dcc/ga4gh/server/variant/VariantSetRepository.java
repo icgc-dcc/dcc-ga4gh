@@ -32,9 +32,9 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.springframework.stereotype.Repository;
 
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.DATA_SET_ID;
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.getAggNameForProperty;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VARIANT_SET;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.DATA_SET_ID;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.getAggNameForProperty;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;

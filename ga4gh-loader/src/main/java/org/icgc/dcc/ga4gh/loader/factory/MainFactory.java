@@ -5,11 +5,11 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallSetConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantCallPairConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantSetConverter;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.loader.Loader;
 import org.icgc.dcc.ga4gh.loader.Storage;
 import org.icgc.dcc.ga4gh.loader.factory.idcache.IdCacheFactory;
@@ -39,12 +39,12 @@ import java.util.Properties;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.io.Resources.getResource;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.CALL;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.CALL_SET;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VARIANT;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VARIANT_NESTED;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VARIANT_SET;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VCF_HEADER;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_NESTED;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VCF_HEADER;
 import static org.icgc.dcc.dcc.common.es.DocumentWriterFactory.createDocumentWriter;
 
 
@@ -55,10 +55,10 @@ public class MainFactory {
   private static final String TRANSPORT_SETTINGS_FILENAME =
       "org/icgc/dcc/ga4gh/resources/settings/transport.properties";
 
-  private static final EsVariantConverter VARIANT_CONVERTER = new EsVariantConverter();
-  private static final EsVariantSetConverter VARIANT_SET_CONVERTER = new EsVariantSetConverter();
-  private static final EsCallSetConverter CALL_SET_CONVERTER = new EsCallSetConverter();
-  private static final EsCallConverter CALL_CONVERTER = new EsCallConverter();
+  private static final EsVariantConverterJson VARIANT_CONVERTER = new EsVariantConverterJson();
+  private static final EsVariantSetConverterJson VARIANT_SET_CONVERTER = new EsVariantSetConverterJson();
+  private static final EsCallSetConverterJson CALL_SET_CONVERTER = new EsCallSetConverterJson();
+  private static final EsCallConverterJson CALL_CONVERTER = new EsCallConverterJson();
 
   private static Properties newResourceProperties(final String filename) throws IOException {
     val uri = getResource(filename);
@@ -124,14 +124,14 @@ public class MainFactory {
         .addCallProcessor(BasicCallProcessor.newUnFilteredBasicCallProcessor(), allCallerTypesExceptConsensus);
   }
 
-  public static EsVariantCallPairConverter newVariantCallPairConverter() {
-    val varConv = new EsVariantConverter();
-    val callConv = new EsCallConverter();
-    return EsVariantCallPairConverter.builder()
+  public static EsVariantCallPairConverterJson newVariantCallPairConverter() {
+    val varConv = new EsVariantConverterJson();
+    val callConv = new EsCallConverterJson();
+    return EsVariantCallPairConverterJson.builder()
         .variantSearchHitConverter(varConv)
-        .variantObjectNodeConverter(varConv)
+        .variantJsonObjectNodeConverter(varConv)
         .callSearchHitConverter(callConv)
-        .callObjectNodeConverter(callConv)
+        .callJsonObjectNodeConverter(callConv)
         .build();
   }
 
@@ -142,7 +142,7 @@ public class MainFactory {
         .childTypeName(CALL)
         .parentTypeName(VARIANT)
         .targetTypeName(VARIANT_NESTED)
-        .nestedObjectNodeConverter(converter)
+        .nestedJsonObjectNodeConverter(converter)
         .searchHitConverter(converter)
         .scrollSize(Config.NESTED_SCROLL_SIZE)
         .writer(writer)
@@ -203,7 +203,7 @@ public class MainFactory {
         .setSort(Config.SORT_MODE, Config.ASCENDING_MODE)
         .setShuffle(! Config.SORT_MODE, seed)
         .setMaxFileSizeBytes(Config.DATA_FETCHER_MAX_FILESIZE_BYTES>0, Config.DATA_FETCHER_MAX_FILESIZE_BYTES)
-        .setSSMFiltering(true) //TODO: need to support for other data types
+        .setSSMFiltering(true) //TODO: need to support for other dao types
         .build();
   }
 }

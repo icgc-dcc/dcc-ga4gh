@@ -24,7 +24,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.springframework.stereotype.Repository;
 
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VCF_HEADER;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VCF_HEADER;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 
 @Repository

@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.ga4gh.server.util;
 
-import static org.icgc.dcc.ga4gh.common.resources.TypeChecker.isObjectCollection;
-import static org.icgc.dcc.ga4gh.common.resources.TypeChecker.isObjectMap;
+import static org.icgc.dcc.ga4gh.common.TypeChecker.isObjectCollection;
+import static org.icgc.dcc.ga4gh.common.TypeChecker.isObjectMap;
 
 import java.util.Collection;
 import java.util.Map;

@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantConverter;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
+import org.icgc.dcc.ga4gh.loader.factory.MainFactory;
 import org.icgc.dcc.ga4gh.loader.indexing.Indexer;
 import org.icgc.dcc.ga4gh.loader.model.metadata.DonorData;
 import org.icgc.dcc.ga4gh.loader.model.metadata.FileMetaData;
@@ -15,16 +16,14 @@ import org.icgc.dcc.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.icgc.dcc.ga4gh.loader.model.metadata.fetcher.Fetcher;
 import org.icgc.dcc.ga4gh.loader.vcf.CallProcessorManager;
 import org.icgc.dcc.ga4gh.loader.vcf.VCF;
-import org.icgc.dcc.ga4gh.loader.factory.MainFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static org.icgc.dcc.ga4gh.loader.Debug.dumpToJson;
-import static org.icgc.dcc.ga4gh.loader.factory.MainFactory.newIdCacheFactory;
-import static org.icgc.dcc.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
 import static org.icgc.dcc.common.core.util.Formats.formatDuration;
+import static org.icgc.dcc.ga4gh.loader.Debug.dumpToJson;
+import static org.icgc.dcc.ga4gh.loader.model.metadata.DonorData.buildDonorDataList;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -40,7 +39,7 @@ public class Loader {
   private final CallProcessorManager callProcessorManager;
 
   @NonNull
-  private final EsVariantConverter variantConverter;
+  private final EsVariantConverterJson variantConverter;
 
   private long globalFileMetaDataCount = -1;
   private long globalFileMetaDataTotal = -1;

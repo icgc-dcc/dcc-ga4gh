@@ -11,15 +11,15 @@ import lombok.SneakyThrows;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallSetConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantSetConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsCall;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsCallSet;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariant;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariantCallPair;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariantSet;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.loader.model.metadata.FileMetaData;
 import org.icgc.dcc.ga4gh.loader.model.metadata.FileMetaDataContext;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
@@ -40,12 +40,12 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
-import static org.icgc.dcc.ga4gh.common.resources.PropertyNames.VARIANT_SET_ID;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.CALL;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.CALL_SET;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VARIANT;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VARIANT_SET;
-import static org.icgc.dcc.ga4gh.common.resources.TypeNames.VCF_HEADER;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
+import static org.icgc.dcc.ga4gh.common.TypeNames.VCF_HEADER;
 import static org.icgc.dcc.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
@@ -94,16 +94,16 @@ public class Indexer {
   private final IdCache<String, Integer> callSetIdCache;
 
   @NonNull
-  private final EsVariantSetConverter variantSetConverter;
+  private final EsVariantSetConverterJson variantSetConverter;
 
   @NonNull
-  private final EsCallSetConverter esCallSetConverter;
+  private final EsCallSetConverterJson esCallSetConverter;
 
   @NonNull
-  private final EsVariantConverter variantConverter;
+  private final EsVariantConverterJson variantConverter;
 
   @NonNull
-  private final EsCallConverter callConverter;
+  private final EsCallConverterJson callConverter;
 
   private int callId = 0;
 
@@ -198,7 +198,7 @@ public class Indexer {
       IdCache<String, Integer> variantSetIdCache) {
     val groupedBySampleMap = fileMetaDataContext.groupFileMetaDataBySample();
     val setBuilder = ImmutableSet.<EsCallSet> builder();
-    val converter = new EsVariantSetConverter();
+    val converter = new EsVariantSetConverterJson();
     for (val entry : groupedBySampleMap.entrySet()) {
       val sampleName = entry.getKey();
       val fileMetaDataContextForSample = entry.getValue();
@@ -307,7 +307,7 @@ public class Indexer {
 
   }
 
-  // TODO: [rtisma] rethink how will organize this data
+  // TODO: [rtisma] rethink how will organize this dao
   @SneakyThrows
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
     val parent_variant_set_id = vcfHeader.path(VARIANT_SET_ID).textValue();

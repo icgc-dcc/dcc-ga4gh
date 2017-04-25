@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.ga4gh.loader.factory.idcache;
 
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.loader.utils.Purgeable;
 import org.icgc.dcc.ga4gh.loader.utils.cache.id.IdCache;
 

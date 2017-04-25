@@ -8,10 +8,10 @@ import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsCallSetConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantConverter;
-import org.icgc.dcc.ga4gh.common.resources.model.converters.EsVariantSetConverter;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.icgc.dcc.ga4gh.server.variant.CallSetRepository;
 import org.icgc.dcc.ga4gh.server.variant.HeaderRepository;
@@ -61,10 +61,10 @@ public class VariantServiceTest {
       val headerRepo = new HeaderRepository(client);
       val callSetRepo = new CallSetRepository(client);
       val variantSetRepo = new VariantSetRepository(client);
-      val esVariantConverter = new EsVariantConverter();
-      val esVariantSetConverter = new EsVariantSetConverter();
-      val esCallSetConverter = new EsCallSetConverter();
-      val esCallConverter = new EsCallConverter();
+      val esVariantConverter = new EsVariantConverterJson();
+      val esVariantSetConverter = new EsVariantSetConverterJson();
+      val esCallSetConverter = new EsCallSetConverterJson();
+      val esCallConverter = new EsCallConverterJson();
 
       variantService =
           new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esCallConverter, esVariantConverter);
@@ -80,10 +80,10 @@ public class VariantServiceTest {
 
 
   public static void main(String[] args) {
-    val esVariantConverter = new EsVariantConverter();
-    val esVariantSetConverter = new EsVariantSetConverter();
-    val esCallSetConverter = new EsCallSetConverter();
-    val esCallConverter = new EsCallConverter();
+    val esVariantConverter = new EsVariantConverterJson();
+    val esVariantSetConverter = new EsVariantSetConverterJson();
+    val esCallSetConverter = new EsCallSetConverterJson();
+    val esCallConverter = new EsCallConverterJson();
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
         .setStart(0)
         .setEnd(10000000)

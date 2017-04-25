@@ -1,6 +1,6 @@
 package org.icgc.dcc.ga4gh.loader.factory.idcache.impl;
 
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.loader.factory.idcache.AbstractIdCacheFactoryTemplate;
 import org.icgc.dcc.ga4gh.loader.utils.cache.storage.impl.DiskCacheStorage;
 import org.icgc.dcc.ga4gh.loader.utils.cache.storage.impl.RamCacheStorage;

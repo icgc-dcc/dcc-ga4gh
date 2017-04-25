@@ -9,7 +9,7 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.resources.ObjectPersistance;
+import org.icgc.dcc.ga4gh.common.ObjectPersistance;
 
 import java.io.IOException;
 import java.io.Serializable;

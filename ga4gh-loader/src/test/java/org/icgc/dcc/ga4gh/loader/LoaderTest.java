@@ -32,7 +32,7 @@ public class LoaderTest extends BaseElasticsearchTest {
       log.info("Creating index...");
       createIndex();
   
-      log.info("Loading data...");
+      log.info("Loading dao...");
       indexData();
   
       val response = getVariant("035fba3f-dfef-50be-9f43-0b3831fa983f");

@@ -20,7 +20,7 @@ package org.icgc.dcc.ga4gh.loader.vcf.callprocessors;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import org.icgc.dcc.ga4gh.common.resources.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 
 import java.util.List;
 import java.util.Map;

@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.transform;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.ga4gh.common.resources.MiscNames.ID;
+import static org.icgc.dcc.ga4gh.common.MiscNames.ID;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 
