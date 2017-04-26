@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 /**
- * TODO: Too much going on here. Remove unused methods, and create a filter for each
+ * TODO: Too much going on here. Remove unused methods, and persistObject a filter for each
  */
 @Builder
 @Value

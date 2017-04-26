@@ -17,7 +17,7 @@ import java.util.Map;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 /**
- * Basic implementation of CallProcessor that allows you to create Calls based on their SampleName.
+ * Basic implementation of CallProcessor that allows you to persistObject Calls based on their SampleName.
  */
 @Builder
 @RequiredArgsConstructor

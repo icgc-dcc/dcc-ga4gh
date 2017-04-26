@@ -30,7 +30,7 @@ import org.icgc.dcc.ga4gh.loader.vcf.enums.SubMutationTypes;
 import java.io.Serializable;
 import java.util.Comparator;
 
-//TODO: [rtisma] -- consider storing the CallerTypes, MutationTypes and MutationSubTypes enum values instead of string representation. Or atleast keep strings, just create functions to compare the string against the enum
+//TODO: [rtisma] -- consider storing the CallerTypes, MutationTypes and MutationSubTypes enum values instead of string representation. Or atleast keep strings, just persistObject functions to compare the string against the enum
 @Slf4j
 @Data
 public final class FileMetaData implements Serializable {

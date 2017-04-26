@@ -12,10 +12,10 @@ import java.nio.file.Path;
 import static lombok.AccessLevel.PRIVATE;
 
 @RequiredArgsConstructor(access =  PRIVATE)
-public class LocalFileRestorer<T extends Serializable> implements FileRestorer<Path, T> {
+public class FileObjectRestorer<T extends Serializable> implements ObjectRestorer<Path, T> {
 
-  public static <T extends Serializable> LocalFileRestorer<T> newLocalFileRestorer(Path persistedPath){
-    return new LocalFileRestorer<T>(persistedPath);
+  public static <T extends Serializable> FileObjectRestorer<T> newFileObjectRestorer(Path persistedPath){
+    return new FileObjectRestorer<T>(persistedPath);
   }
 
   @NonNull

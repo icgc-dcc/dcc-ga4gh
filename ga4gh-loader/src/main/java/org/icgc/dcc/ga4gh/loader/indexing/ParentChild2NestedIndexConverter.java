@@ -167,7 +167,7 @@ public class ParentChild2NestedIndexConverter {
   // source index name
   // target index name (in IndexCreatorContext)
   // target index mapping (so variant mapping with nested structure) (in IndexCreatorContext). For now
-  // ...create manual mapping.json file, but later might want some automatic solution
+  // ...persistObject manual mapping.json file, but later might want some automatic solution
 
   // parent type name
   // scroll timeout
@@ -176,9 +176,9 @@ public class ParentChild2NestedIndexConverter {
   // searchHitConverter<T> for response
 
   // Instructions:
-  // create target index
+  // persistObject target index
   // reindex everything but variants and calls (get all types, and exclude parents and child)
-  // create query,
+  // persistObject query,
   // scroll through
   // Convert searchhit to esModel
 

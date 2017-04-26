@@ -3,7 +3,7 @@ package org.icgc.dcc.ga4gh.loader2.persistance;
 import java.io.IOException;
 import java.io.Serializable;
 
-public interface FileRestorer<P, T extends Serializable> {
+public interface ObjectRestorer<P, T extends Serializable> {
 
   @SuppressWarnings("unchecked") T restore() throws IOException, ClassNotFoundException;
 
