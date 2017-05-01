@@ -2,6 +2,9 @@ package org.icgc.dcc.ga4gh.loader;
 
 import lombok.val;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
@@ -54,9 +57,9 @@ public class Config {
   public static final int BULK_NUM_THREADS = parseInt(getProperty("num_threads", "5"));
   public static final int BULK_SIZE_MB = parseInt(getProperty("bulk_size_mb", "5"));
   public static final boolean STORAGE_PERSIST_MODE = parseBoolean(getProperty("persist_mode", FALSE));
-  public static final String STORAGE_OUTPUT_VCF_STORAGE_DIR = "target/storedVCFs";
+  public static final String STORAGE_OUTPUT_VCF_STORAGE_DIR = getProperty("vcf_dir","target/storedVCFs");
   public static final String DEFAULT_FILE_META_DATA_STORE_FILENAME = "target/allFileMetaDatas.dat";
-  public static final boolean USE_MAP_DB = parseBoolean(getProperty("use_map_db", TRUE));
+  public static final boolean USE_MAP_DB = parseBoolean(getProperty("use_map_db", FALSE));
   public static final int MONITOR_INTERVAL_COUNT = 500000;
   public static final boolean STORAGE_BYPASS_MD5_CHECK = parseBoolean(getProperty("bypass_md5_check", FALSE));
 
@@ -64,6 +67,10 @@ public class Config {
   public static final boolean ASCENDING_MODE = parseBoolean(getProperty("ascending_mode", FALSE));
   public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = parseLong(getProperty("max_filesize_bytes", "0"));
   public static final int DATA_FETCHER_LIMIT = parseInt(getProperty("fetch_limit", "0"));
+
+  public static final Path PERSISTED_DIRPATH = Paths.get("persisted");
+  public static final Path VARIANT_SET_ID_STORAGE_DB_PATH = PERSISTED_DIRPATH.resolve("variantSetIdStorage.db");
+  public static final Path CALL_SET_ID_STORAGE_DB_PATH = PERSISTED_DIRPATH.resolve("callSetIdStorage.db");
 
   public static String toConfigString() {
     return String.format("PARENT_CHILD_INDEX_NAME: %s"

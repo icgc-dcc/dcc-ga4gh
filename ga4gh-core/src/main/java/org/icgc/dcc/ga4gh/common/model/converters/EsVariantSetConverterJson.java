@@ -19,14 +19,16 @@ package org.icgc.dcc.ga4gh.common.model.converters;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.val;
+import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.PropertyNames;
 import org.icgc.dcc.ga4gh.common.SearchHits;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
-import org.elasticsearch.search.SearchHit;
+import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 
 import java.util.Map;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.ga4gh.common.model.es.EsVariantSet.createEsVariantSet;
 
 public class EsVariantSetConverterJson
     implements JsonObjectNodeConverter<EsVariantSet>,
@@ -57,6 +59,14 @@ public class EsVariantSetConverterJson
         .with(PropertyNames.DATA_SET_ID, variantSet.getDataSetId())
         .with(PropertyNames.REFERENCE_SET_ID, variantSet.getReferenceSetId())
         .end();
+  }
+
+  public static EsVariantSet convertFromPortalMetadata(PortalMetadata portalMetadata){
+    val name = portalMetadata.getPortalFilename().getWorkflow();
+    val dataSetId = portalMetadata.getDataType();
+    val referenceName = portalMetadata.getReferenceName();
+    return createEsVariantSet(name, dataSetId, referenceName);
+
   }
 
 

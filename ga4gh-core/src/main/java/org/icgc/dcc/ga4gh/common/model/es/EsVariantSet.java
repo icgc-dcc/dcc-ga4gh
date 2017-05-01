@@ -33,14 +33,18 @@ import java.io.Serializable;
 @Value
 public final class EsVariantSet implements EsModel {
 
+  public static EsVariantSet createEsVariantSet(String name, String dataSetId, String referenceSetId) {
+    return new EsVariantSet(name, dataSetId, referenceSetId);
+  }
+
   private String name;
   private String dataSetId;
   private String referenceSetId;
 
   /*
-   * Serializer needed for MapDB. Note: if EsVariantSet member variables are added, removed or modified, this needs to
-   * be updated
-   */
+     * Serializer needed for MapDB. Note: if EsVariantSet member variables are added, removed or modified, this needs to
+     * be updated
+     */
   public static class EsVariantSetSerializer implements Serializer<EsVariantSet>, Serializable {
 
     @Override

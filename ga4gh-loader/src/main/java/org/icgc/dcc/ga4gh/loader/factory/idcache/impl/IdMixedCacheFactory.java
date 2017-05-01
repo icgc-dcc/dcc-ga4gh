@@ -9,7 +9,7 @@ import org.mapdb.Serializer;
 import java.io.IOException;
 
 /*
- * Mix of disk cache and ram caches. 
+ * Mix of disk idstorage and ram caches.
  * EsVariant is diskCached, and the rest are ramCached  (since they dont need that much memory)
  */
 public final class IdMixedCacheFactory extends AbstractIdCacheFactoryTemplate {

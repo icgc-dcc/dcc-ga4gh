@@ -45,7 +45,9 @@ import static org.icgc.dcc.common.core.util.Joiners.COLON;
  */
 @Builder
 @Value
-public class EsCall implements EsModel {
+public class EsCall implements EsModel, Serializable {
+
+  private static final long serialVersionUID = 1493648275L;
 
   public static final String TYPE_NAME = "call";
 

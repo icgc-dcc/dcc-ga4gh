@@ -73,7 +73,7 @@ public class VCF implements Closeable {
   private final CounterMonitor variantCallPairMonitor = newMonitor("VariantCallPairParsing", 250000);
   private final VCFEncoder encoder;
 
-  // TODO: eliminate IdCache dependency and just inject variantSetId and callSetId directly.
+  // TODO: eliminate IdStorage dependency and just inject variantSetId and callSetId directly.
   // Create another class to do the extraction of callsetId and variantSetId and which constructs VCF.
   // Currently really hard to test ( or atleast there is alot of mocking that has to be done)
   public VCF(@NonNull final File file,

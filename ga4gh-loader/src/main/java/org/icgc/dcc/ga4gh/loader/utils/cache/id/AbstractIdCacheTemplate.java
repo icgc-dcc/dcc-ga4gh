@@ -73,7 +73,7 @@ public abstract class AbstractIdCacheTemplate<K, ID extends Number> implements I
 
   @Override
   public ID getId(@NonNull K k) {
-    checkArgument(cache.containsKey(k), "The following key doesnt not exist in the cache: \n%s", k);
+    checkArgument(cache.containsKey(k), "The following key doesnt not exist in the idstorage: \n%s", k);
     return cache.get(k);
   }
 

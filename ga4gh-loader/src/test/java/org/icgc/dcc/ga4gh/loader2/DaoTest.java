@@ -5,73 +5,32 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.assertj.core.util.Maps;
-import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson2;
+import org.assertj.core.util.Sets;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant2;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
-import org.icgc.dcc.ga4gh.loader2.storage.StorageFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static java.lang.Integer.MAX_VALUE;
-import static java.lang.Integer.MIN_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
-import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
-import static org.icgc.dcc.ga4gh.loader.utils.CounterMonitor.newMonitor;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.icgc.dcc.ga4gh.loader2.CallSetIdStorageFactory.createCallSetIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
+import static org.icgc.dcc.ga4gh.loader2.VariantSetIdStorageFactory.createVariantSetIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory.newDefaultPortalMetadataDaoFactory;
+import static org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory.newFileObjectRestorerFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
-import static org.icgc.dcc.ga4gh.loader2.utils.VCF.newDefaultVCFFileReader;
 
 @Slf4j
 public class DaoTest {
-
-  @Test
-  @Ignore
-  public void testDao(){
-    val storage = StorageFactory.builder()
-        .bypassMD5Check(false)
-        .outputVcfDir(Paths.get(STORAGE_OUTPUT_VCF_STORAGE_DIR))
-        .persistVcfDownloads(true)
-        .token(TOKEN)
-        .build()
-        .getStorage();
-
-    val localFileRestorerFactory = FileObjectRestorerFactory.newFileObjectRestorerFactory("test.persisted");
-    val query = newPortalCollabVcfFileQueryCreator();
-    val portalMetadataDaoFactory = newDefaultPortalMetadataDaoFactory(localFileRestorerFactory, query);
-    val portalMetadataDao = portalMetadataDaoFactory.getPortalMetadataDao();
-    int min = MAX_VALUE;
-    int max = MIN_VALUE;
-    long numVariants = 0;
-    val counterMonitor = newMonitor("call", 2000000);
-    counterMonitor.start();
-    val total = portalMetadataDao.findAll().size();
-    int count = 0;
-    val variantConverter = new EsVariantConverterJson2();
-
-    for (val portalMetadata : portalMetadataDao.findAll()){
-      val file = storage.getFile(portalMetadata);
-      log.info("Downloaded [{}/{}]: {}", ++count, total, portalMetadata.getPortalFilename().getFilename());
-      for (val variant : newDefaultVCFFileReader(file)){
-        val esVariant2 = variantConverter.convertFromVariantContext(variant);
-      }
-      if (count > 3000){
-        break;
-
-      }
-    }
-    counterMonitor.stop();
-    counterMonitor.displaySummary();
-    log.info("MinDiff: {}", min);
-    log.info("MaxDiff: {}", max);
-    log.info("NumVariants: {}", numVariants);
-
-  }
+  private static final Path DEFAULT_PERSISTED_OUTPUT_DIR = Paths.get("test.persisted");
+  private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY = newFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
 
   @Test
   @SneakyThrows
@@ -176,6 +135,54 @@ public class DaoTest {
     val oVar = variantSerializer.deserialize(dataInput2, 0);
     assertThat(iVar).isEqualTo(oVar);
 
+  }
+
+  @Test
+  public void testPreProcessor(){
+    val useDisk = false;
+    val variantSetIdPersistPath = Paths.get("variantSetIdStorage.dat");
+    val callSetIdPersistPath = Paths.get("callSetIdStorage.dat");
+
+    val query = newPortalCollabVcfFileQueryCreator();
+    val portalMetadataDaoFactory = newDefaultPortalMetadataDaoFactory(FILE_OBJECT_RESTORER_FACTORY, query);
+    val portalMetadataDao = portalMetadataDaoFactory.getPortalMetadataDao();
+
+
+    val variantSetIdStorageFactory = createVariantSetIdStorageFactory(variantSetIdPersistPath, useDisk);
+    val callSetIdStorageFactory = createCallSetIdStorageFactory(callSetIdPersistPath, useDisk);
+
+    val preProcessor = createPreProcessor(portalMetadataDao,variantSetIdStorageFactory, callSetIdStorageFactory);
+    preProcessor.init();
+    assertThat(preProcessor.isInitialized()).isTrue();
+    val variantSetIdMap = preProcessor.getVariantSetIdStorage().getIdMap();
+    val callSetIdMap = preProcessor.getCallSetIdStorage().getIdMap();
+    val sampleMap = portalMetadataDao.groupBySampleId();
+
+
+    for (val esCallSet : callSetIdMap.values()){
+      val callSetName = esCallSet.getName();
+      assertThat(sampleMap).containsKey(callSetName);
+      val bioSampleId = esCallSet.getBioSampleId();
+      assertThat(callSetName).isEqualTo(bioSampleId);
+
+      val actualSetOfVariantSets = Sets.<EsVariantSet>newHashSet();
+      for (val variantSetId : esCallSet.getVariantSetIds()){
+
+        // Check that the variantSetId contained inside esCallSet is actually in the VariantSetIdMap
+        assertThat(variantSetIdMap).containsKey(variantSetId);
+
+        val variantSet = variantSetIdMap.get(variantSetId);
+        actualSetOfVariantSets.add(variantSet);
+      }
+
+      val expectedSetOfVariantSets = sampleMap.get(callSetName).stream()
+          .map(EsVariantSetConverterJson::convertFromPortalMetadata)
+          .collect(toImmutableSet());
+
+      //Assert that the sets are equal
+      assertThat(expectedSetOfVariantSets.containsAll(actualSetOfVariantSets));
+      assertThat(actualSetOfVariantSets).containsAll(expectedSetOfVariantSets);
+    }
   }
 
 }
