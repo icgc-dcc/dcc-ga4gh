@@ -44,19 +44,17 @@ public class SecondLoader {
     val query = newPortalCollabVcfFileQueryCreator();
     val portalMetadataDaoFactory = newDefaultPortalMetadataDaoFactory(localFileRestorerFactory, query);
     val portalMetadataDao = portalMetadataDaoFactory.getPortalMetadataDao();
-    val startStat = new Stat("start");
-    val endStat = new Stat("end");
-    long numVariants = 0;
-    val counterMonitor = newMonitor("call", 2000000);
-    counterMonitor.start();
-    val total = portalMetadataDao.findAll().size();
-    int count = 0;
 
     val variantSetIdStorageFactory = createVariantSetIdStorageFactory(VARIANT_SET_ID_STORAGE_DB_PATH, USE_MAP_DB);
     val callSetIdStorageFactory = createCallSetIdStorageFactory(CALL_SET_ID_STORAGE_DB_PATH, USE_MAP_DB);
     val preProcessor = createPreProcessor(portalMetadataDao, variantSetIdStorageFactory, callSetIdStorageFactory);
     preProcessor.init();
 
+    long numVariants = 0;
+    int count = 0;
+    val total = portalMetadataDao.findAll().size();
+    val counterMonitor = newMonitor("call", 2000000);
+    counterMonitor.start();
     for (val portalMetadata : portalMetadataDao.findAll()){
       try{
         val file = storage.getFile(portalMetadata);
@@ -78,8 +76,6 @@ public class SecondLoader {
     counterMonitor.stop();
     counterMonitor.displaySummary();
     log.info("NumVariants: {}", numVariants);
-    log.info("StartStat: {}", startStat);
-    log.info("EndStat: {}", endStat);
 
 
   }
