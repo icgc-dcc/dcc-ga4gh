@@ -18,6 +18,7 @@
 package org.icgc.dcc.ga4gh.loader2.utils.idstorage.id;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -26,6 +27,7 @@ import lombok.val;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorage;
 
 import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -93,4 +95,8 @@ public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements
     mapStorage.purge();
   }
 
+  @Override
+  public Set<K> getObjects() {
+    return ImmutableSet.copyOf(cache.keySet());
+  }
 }

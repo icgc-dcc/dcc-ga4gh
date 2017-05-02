@@ -20,6 +20,7 @@ package org.icgc.dcc.ga4gh.loader2.utils.idstorage.id;
 import org.icgc.dcc.ga4gh.loader2.utils.Purgeable;
 
 import java.util.Map;
+import java.util.Set;
 
 public interface IdStorage<K, ID> extends Purgeable {
 
@@ -32,5 +33,7 @@ public interface IdStorage<K, ID> extends Purgeable {
   ID getId(K k);
 
   Map<ID, K> getIdMap();
+
+  Set<K> getObjects();
 
 }

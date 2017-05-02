@@ -3,16 +3,16 @@ package org.icgc.dcc.ga4gh.common.model.converters;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.PropertyNames;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
-import org.elasticsearch.search.SearchHit;
 
 import java.util.Map;
 
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.ga4gh.common.JsonNodeConverters.convertIntegers;
 import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToIntegerList;
 import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToString;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 @RequiredArgsConstructor
 public class EsCallSetConverterJson

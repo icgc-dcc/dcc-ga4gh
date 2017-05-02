@@ -34,13 +34,28 @@ import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 @Getter
 public enum WorkflowTypes {
 
-  CONSENSUS("consensus", set(" PCAWG SNV-MNV callers", "PCAWG InDel callers")),
-  SANGER("sanger", set("Sanger variant call pipeline")),
-  DKFZ_EMBL("dkfz", set("DKFZ/EMBL variant call pipeline")),
-  BROAD("broad", set("Broad variant call pipeline")),
-  MUSE("muse", set("MUSE variant call pipeline") ),
-  SMUFIN("smufin", set("SMUFIN variant call pipeline") ),
-  UNKNOWN("unknown", set("UNKNOWN variant call pipeline") );
+  CONSENSUS                        ("consensus"),
+  BROAD_SNOWMAN                    ("broad-snowman"),
+  BROAD_SNOWMAN_10                 ("broad-snowman-10"),
+  BROAD_SNOWMAN_11                 ("broad-snowman-11"),
+  BROAD_SNOWMAN_13                 ("broad-snowman-13"),
+  BROAD_SNOWMAN_14                 ("broad-snowman-14"),
+  BROAD_MUTECT_V3                  ("broad-mutect-v3"),
+  SVCP_1_0_2                       ("svcp_1-0-2"),
+  SVCP_1_0_3                       ("svcp_1-0-3"),
+  SVCP_1_0_4                       ("svcp_1-0-4"),
+  SVCP_1_0_5                       ("svcp_1-0-5"),
+  SVCP_1_0_6                       ("svcp_1-0-6"),
+  SVCP_1_0_7                       ("svcp_1-0-7"),
+  SVCP_1_0_8                       ("svcp_1-0-8"),
+  MUSE_1_0RC_B391201_VCF           ("MUSE_1-0rc-b391201-vcf"),
+  MUSE_1_0RC_VCF                   ("MUSE_1-0rc-vcf"),
+  DKFZ_SNVCALLING_1_0_132_1        ("dkfz-snvCalling_1-0-132-1"),
+  DKFZ_SNVCALLING_1_0_132_1_HPC    ("dkfz-snvCalling_1-0-132-1-hpc"),
+  DKFZ_INDELCALLING_1_0_132_1      ("dkfz-indelCalling_1-0-132-1"),
+  DKFZ_INDELCALLING_1_0_132_1_HPC  ("dkfz-indelCalling_1-0-132-1-hpc"),
+  UNKNOWN("unknown");
+
 
   private static final boolean DEFAULT_NO_ERRORS_FLAG = false;
   private static Set<String> set(String ... strings){
@@ -49,9 +64,6 @@ public enum WorkflowTypes {
 
   @NonNull
   private final String name;
-
-  @NonNull
-  private final Set<String> portalSoftwareNames;
 
   public boolean equals(@NonNull final String name) {
     return this.getName().equals(name);
