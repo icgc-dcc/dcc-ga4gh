@@ -129,8 +129,12 @@ public class CounterMonitor implements Countable<Integer> {
     return Formats.formatRate(counter.getCount(), watch);
   }
 
+  public int getInstCount(){
+    return counter.getCount()-previousCount;
+  }
+
   public String getInstRate() {
-    val currentIntervalCount = counter.getCount() - previousCount;
+    val currentIntervalCount = getInstCount();
     val intervalElapsedTime = getElapsedTimeSeconds() - previousTime;
     val rate = intervalElapsedTime == 0 ? 0 : currentIntervalCount / intervalElapsedTime;
     return Formats.formatRate(rate);
@@ -156,15 +160,17 @@ public class CounterMonitor implements Countable<Integer> {
   @Override
   public String toString() {
     val currentCount = counter.getCount();
+    val instCount = getInstCount();
     val totalTime = getElapsedTimeSeconds();
     val intervalElapsedTime = totalTime - previousTime;
     val instRate = getInstRate();
     val avgRate = getAvgRate();
     return String.format(
-        "[CounterMonitor-%s] -- CountInterval: %s   Count: %s   TotalElapsedTime(s): %s   IntervalElapsedTime(s): %s   InstantaeousRate(count/sec): %s  AvgRate(count/sec): %s",
+        "[CounterMonitor-%s] -- CountInterval: %s   Count: %s   InstCount: %s  TotalElapsedTime(s): %s   IntervalElapsedTime(s): %s   InstRate(count/sec): %s  AvgRate(count/sec): %s",
         name,
         countInterval,
         currentCount,
+        instCount,
         totalTime,
         intervalElapsedTime,
         instRate,
