@@ -69,8 +69,6 @@ public class Config {
   public static final int DATA_FETCHER_LIMIT = parseInt(getProperty("fetch_limit", "0"));
 
   public static final Path PERSISTED_DIRPATH = Paths.get("persisted");
-  public static final Path VARIANT_SET_ID_STORAGE_DB_PATH = PERSISTED_DIRPATH.resolve("variantSetIdStorage.db");
-  public static final Path CALL_SET_ID_STORAGE_DB_PATH = PERSISTED_DIRPATH.resolve("callSetIdStorage.db");
 
   public static String toConfigString() {
     return String.format("PARENT_CHILD_INDEX_NAME: %s"

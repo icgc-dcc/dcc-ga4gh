@@ -9,7 +9,6 @@ import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDao;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
-import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorageFactory;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
@@ -18,18 +17,20 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 public class PreProcessor {
 
   public static PreProcessor createPreProcessor(PortalMetadataDao portalMetadataDao,
-      IdStorageFactory<EsVariantSet> variantSetIdStorageFactory,
-      IdStorageFactory<EsCallSet> callSetIdStorageFactory) {
-    return new PreProcessor(portalMetadataDao, variantSetIdStorageFactory, callSetIdStorageFactory);
+      IdStorage<EsCallSet, Integer> callSetIdStorage,
+      IdStorage<EsVariantSet, Integer> variantSetIdStorage) {
+    return new PreProcessor(portalMetadataDao, callSetIdStorage, variantSetIdStorage);
   }
 
   @NonNull private final PortalMetadataDao portalMetadataDao;
-  @NonNull final private IdStorageFactory<EsVariantSet> variantSetIdStorageFactory;
-  @NonNull final private IdStorageFactory<EsCallSet> callSetIdStorageFactory;
+  @NonNull private final IdStorage<EsCallSet, Integer> callSetIdStorage;
+  @NonNull private final IdStorage<EsVariantSet, Integer> variantSetIdStorage;
 
+  /**
+   * State
+   */
   @Getter private boolean initialized = false;
-  private IdStorage<EsCallSet, Integer> callSetIdStorage;
-  private IdStorage<EsVariantSet, Integer> variantSetIdStorage;
+
 
   private void checkProcessed(){
     checkState(isInitialized(), "The PreProcessor was not initiallized. Call the init() method first");
@@ -46,8 +47,6 @@ public class PreProcessor {
   }
 
   public void init(){
-    this.variantSetIdStorage = variantSetIdStorageFactory.createIntegerIdStorage();
-    this.callSetIdStorage = callSetIdStorageFactory.createIntegerIdStorage();
 
     // Populate VariantSetIdStorage
     portalMetadataDao

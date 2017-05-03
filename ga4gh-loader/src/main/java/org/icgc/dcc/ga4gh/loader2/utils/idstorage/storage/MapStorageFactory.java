@@ -29,7 +29,7 @@ public class MapStorageFactory<K, V> {
 
   @SneakyThrows
   public DiskMapStorage<K, V> createDiskMapStorage(){
-    return newDiskMapStorage(name, keySerializer, valueSerializer,outputDir.toString(),persistFile);
+    return newDiskMapStorage(name, keySerializer, valueSerializer,outputDir,persistFile);
   }
 
   public RamMapStorage<K, V> createRamMapStorage(){

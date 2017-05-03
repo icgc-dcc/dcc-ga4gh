@@ -20,12 +20,14 @@ import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
-import static org.icgc.dcc.ga4gh.loader2.CallSetIdStorageFactory.createCallSetIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
+import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
-import static org.icgc.dcc.ga4gh.loader2.VariantSetIdStorageFactory.createVariantSetIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory.newDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory.newFileObjectRestorerFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
+import static org.icgc.dcc.ga4gh.loader2.utils.IntegerIdStorageFactory.createIntegerIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader2.utils.LongIdStorageFactory.createLongIdStorageFactory;
 
 @Slf4j
 public class DaoTest {
@@ -146,12 +148,16 @@ public class DaoTest {
     val query = newPortalCollabVcfFileQueryCreator();
     val portalMetadataDaoFactory = newDefaultPortalMetadataDaoFactory(FILE_OBJECT_RESTORER_FACTORY, query);
     val portalMetadataDao = portalMetadataDaoFactory.getPortalMetadataDao();
+    val integerIdStorageFactory = createIntegerIdStorageFactory(PERSISTED_DIRPATH);
+    val longIdStorageFactory = createLongIdStorageFactory(PERSISTED_DIRPATH);
+
+    val variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(USE_MAP_DB);
+    val callSetIdStorage = integerIdStorageFactory.createCallSetIdStorage(USE_MAP_DB);
+    val variantIdStorage = longIdStorageFactory.createVariantIdStorage(USE_MAP_DB);
 
 
-    val variantSetIdStorageFactory = createVariantSetIdStorageFactory(variantSetIdPersistPath, useDisk);
-    val callSetIdStorageFactory = createCallSetIdStorageFactory(callSetIdPersistPath, useDisk);
 
-    val preProcessor = createPreProcessor(portalMetadataDao,variantSetIdStorageFactory, callSetIdStorageFactory);
+    val preProcessor = createPreProcessor(portalMetadataDao,callSetIdStorage,variantSetIdStorage);
     preProcessor.init();
     assertThat(preProcessor.isInitialized()).isTrue();
     val variantSetIdMap = preProcessor.getVariantSetIdStorage().getIdMap();
