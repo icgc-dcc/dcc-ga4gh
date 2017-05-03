@@ -7,7 +7,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson2;
-import org.icgc.dcc.ga4gh.common.types.WorkflowTypes;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader2.callconverter.CallConverterStrategyMux;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
@@ -15,11 +14,11 @@ import org.icgc.dcc.ga4gh.loader2.storage.StorageFactory;
 
 import java.nio.file.Paths;
 
+import static com.google.common.collect.Iterators.partition;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
-import static org.icgc.dcc.ga4gh.loader.utils.CounterMonitor.newMonitor;
 import static org.icgc.dcc.ga4gh.loader2.CallSetDao.createCallSetDao;
 import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader2.VcfProcessor.createVcfProcessor;
@@ -64,26 +63,20 @@ public class SecondLoader {
     long numVariants = 0;
     int count = 0;
     val total = portalMetadataDao.findAll().size();
-    val counterMonitor = newMonitor("call", 2000000);
-    counterMonitor.start();
+    val numPartitions = 4;
+    val partitions = partition(portalMetadataDao.findAll().iterator(), numPartitions);
+    val callCounterMonitor = CounterMonitor.newMonitor("callCounterMonitor", 500000);
     for (val portalMetadata : portalMetadataDao.findAll()){
 
       try{
-        val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
-        if (workflowType == WorkflowTypes.CONSENSUS){
-          continue;
-        }
         log.info("Downloading [{}/{}]: {}", ++count, total, portalMetadata.getPortalFilename().getFilename());
         val file = storage.getFile(portalMetadata);
-        val callCounterMonitor = CounterMonitor.newMonitor("callCounterMonitor", 500000);
         val variantConverter = createVcfProcessor(portalMetadata,file,
             variantIdStorage,
             variantSetIdStorage,
             callSetIdStorage,
             callSetDao, callCounterMonitor);
 
-
-//        val esVcfHeader = createEsVcfHeader(portalMetadata, vcfFileHeader);
         callCounterMonitor.start();
         variantConverter.streamVariants().forEach(x -> x.numCalls());
         callCounterMonitor.stop();
@@ -96,8 +89,6 @@ public class SecondLoader {
       }
 
     }
-    counterMonitor.stop();
-    counterMonitor.displaySummary();
     log.info("NumVariants: {}", numVariants);
 
 
