@@ -19,13 +19,14 @@ import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
+import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader2.CallSetDao.createCallSetDao;
 import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader2.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory.newDefaultPortalMetadataDaoFactory;
+import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
-import static org.icgc.dcc.ga4gh.loader2.utils.IntegerIdStorageFactory.createIntegerIdStorageFactory;
-import static org.icgc.dcc.ga4gh.loader2.utils.LongIdStorageFactory.createLongIdStorageFactory;
 
 @Slf4j
 public class SecondLoader {
@@ -50,7 +51,7 @@ public class SecondLoader {
     val integerIdStorageFactory = createIntegerIdStorageFactory(PERSISTED_DIRPATH);
     val longIdStorageFactory = createLongIdStorageFactory(PERSISTED_DIRPATH);
 
-    val useMapDB = false;
+    val useMapDB = USE_MAP_DB;
     val variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(useMapDB);
     val callSetIdStorage = integerIdStorageFactory.createCallSetIdStorage(useMapDB);
     val variantIdStorage = longIdStorageFactory.createVariantIdStorage(useMapDB);
@@ -65,28 +66,24 @@ public class SecondLoader {
     val total = portalMetadataDao.findAll().size();
     val numPartitions = 4;
     val partitions = partition(portalMetadataDao.findAll().iterator(), numPartitions);
-    val callCounterMonitor = CounterMonitor.newMonitor("callCounterMonitor", 500000);
+    val variantCounterMonitor = CounterMonitor.newMonitor("variantCounterMonitor", 500000);
     for (val portalMetadata : portalMetadataDao.findAll()){
-
       try{
         log.info("Downloading [{}/{}]: {}", ++count, total, portalMetadata.getPortalFilename().getFilename());
-        val file = storage.getFile(portalMetadata);
-        val variantConverter = createVcfProcessor(portalMetadata,file,
-            variantIdStorage,
-            variantSetIdStorage,
-            callSetIdStorage,
-            callSetDao, callCounterMonitor);
-
-        callCounterMonitor.start();
-        variantConverter.streamVariants().forEach(x -> x.numCalls());
-        callCounterMonitor.stop();
-        callCounterMonitor.displaySummary();
-        log.info("done");
+        val vcfFile = storage.getFile(portalMetadata);
+        val vcfProcessor = createVcfProcessor( variantIdStorage, variantSetIdStorage, callSetIdStorage,
+            callSetDao, variantCounterMonitor);
+        variantCounterMonitor.start();
+        vcfProcessor.process(portalMetadata, vcfFile);
 
       } catch (Exception e){
         log.error("Exception [{}]: {}\n{}", e.getClass().getName(), e.getMessage(), NEWLINE.join(e.getStackTrace()));
 
+      } finally{
+        variantCounterMonitor.stop();
+        variantCounterMonitor.displaySummary();
       }
+
 
     }
     log.info("NumVariants: {}", numVariants);

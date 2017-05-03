@@ -6,11 +6,11 @@ import org.icgc.dcc.ga4gh.common.types.WorkflowTypes;
 import org.icgc.dcc.ga4gh.loader2.callconverter.impl.EmptyCallConverterStrategy;
 import org.icgc.dcc.ga4gh.loader2.callconverter.impl.SingleCallConverterStrategy;
 
+import static org.icgc.dcc.ga4gh.loader2.callconverter.TumorCallConverterStrategyTypes.NT_CALL_CONVERTER_STRATEGY;
 import static org.icgc.dcc.ga4gh.loader2.callconverter.TumorCallConverterStrategyTypes.TUMOR_CALL_CONVERTER_STRATEGY;
 import static org.icgc.dcc.ga4gh.loader2.callconverter.TumorCallConverterStrategyTypes.TUMOUR_CALL_CONVERTER_STRATEGY;
-import static org.icgc.dcc.ga4gh.loader2.callconverter.TumorCallConverterStrategyTypes.NT_CALL_CONVERTER_STRATEGY;
 import static org.icgc.dcc.ga4gh.loader2.callconverter.impl.DualCallConverterStrategy.createDualCallConverterStrategy;
-import static org.icgc.dcc.ga4gh.loader2.callconverter.impl.UuidTumorGenotypeClassifier.createUuidTumorGenotypeClassifier;
+import static org.icgc.dcc.ga4gh.loader2.callconverter.impl.FunctorTumorGenotypeClassifier.createFunctorTumorGenotypeClassifier;
 
 public class CallConverterStrategyMux {
   private static final EmptyCallConverterStrategy EMPTY_CALL_CONVERTER_STRATEGY = new EmptyCallConverterStrategy();
@@ -22,7 +22,7 @@ public class CallConverterStrategyMux {
     val portalFilename = portalMetadata.getPortalFilename();
     val tumorAliquotId = portalFilename.getAliquotId();
     val workflowType = WorkflowTypes.parseMatch(portalFilename.getWorkflow(), F_CHECK_CORRECT_WORKTYPE);
-    val uuidTumorGenotypeClassifier = createUuidTumorGenotypeClassifier(tumorAliquotId);
+    val uuidTumorGenotypeClassifier = createFunctorTumorGenotypeClassifier(tumorAliquotId, String::equals);
     val uuidCallConverterPos0 = createDualCallConverterStrategy(uuidTumorGenotypeClassifier, false);
     switch(workflowType){
       case CONSENSUS:

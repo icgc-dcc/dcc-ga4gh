@@ -1,4 +1,4 @@
-package org.icgc.dcc.ga4gh.loader2.utils;
+package org.icgc.dcc.ga4gh.loader2.factory.impl;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -6,6 +6,8 @@ import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant2;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
+import org.icgc.dcc.ga4gh.common.model.es.EsVcfHeader;
+import org.icgc.dcc.ga4gh.loader2.factory.IdStorageFactory;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IntegerIdStorage;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorageFactory;
@@ -21,7 +23,7 @@ public class IntegerIdStorageFactory implements IdStorageFactory<Integer> {
   private static final EsVariant2.EsVariantSerializer ES_VARIANT2_SERIALIZER = new EsVariant2.EsVariantSerializer();
   private static final EsVariantSet.EsVariantSetSerializer ES_VARIANT_SET_SERIALIZER = new EsVariantSet.EsVariantSetSerializer();
   private static final EsCallSet.EsCallSetSerializer ES_CALL_SET_SERIALIZER = new EsCallSet.EsCallSetSerializer();
-  private static final boolean DEFAULT_PERSIST_FILE = false;
+  private static final boolean DEFAULT_PERSIST_FILE = true;
 
   public static IntegerIdStorageFactory createIntegerIdStorageFactory(Path outputDir) {
     return new IntegerIdStorageFactory(outputDir);
@@ -46,4 +48,5 @@ public class IntegerIdStorageFactory implements IdStorageFactory<Integer> {
         ES_CALL_SET_SERIALIZER, INTEGER,outputDir,DEFAULT_PERSIST_FILE);
     return IntegerIdStorage.<EsCallSet>newIntegerIdStorage(factory.createMapStorage(useDisk), 0);
   }
+
 }

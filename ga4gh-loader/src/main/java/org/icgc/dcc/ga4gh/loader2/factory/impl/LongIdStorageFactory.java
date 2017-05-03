@@ -1,4 +1,4 @@
-package org.icgc.dcc.ga4gh.loader2.utils;
+package org.icgc.dcc.ga4gh.loader2.factory.impl;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -6,6 +6,7 @@ import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant2;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
+import org.icgc.dcc.ga4gh.loader2.factory.IdStorageFactory;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.LongIdStorage;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorageFactory;
@@ -20,7 +21,7 @@ public class LongIdStorageFactory implements IdStorageFactory<Long> {
   private static final EsVariant2.EsVariantSerializer ES_VARIANT2_SERIALIZER = new EsVariant2.EsVariantSerializer();
   private static final EsVariantSet.EsVariantSetSerializer ES_VARIANT_SET_SERIALIZER = new EsVariantSet.EsVariantSetSerializer();
   private static final EsCallSet.EsCallSetSerializer ES_CALL_SET_SERIALIZER = new EsCallSet.EsCallSetSerializer();
-  private static final boolean DEFAULT_PERSIST_FILE = false;
+  private static final boolean DEFAULT_PERSIST_FILE = true;
 
   public static LongIdStorageFactory createLongIdStorageFactory(Path outputDir) {
     return new LongIdStorageFactory(outputDir);

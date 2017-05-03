@@ -46,7 +46,7 @@ public class JsonNodeConverters {
     return array.end();
   }
 
-  public static ArrayNode convertJsonNodes(Iterable<JsonNode> values) {
+  public static <T extends JsonNode> ArrayNode convertJsonNodes(Iterable<T> values) {
     val builder = array();
     values.forEach(builder::with);
     return builder.end();

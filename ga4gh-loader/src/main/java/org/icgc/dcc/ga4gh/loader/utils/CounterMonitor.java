@@ -1,15 +1,13 @@
 package org.icgc.dcc.ga4gh.loader.utils;
 
-import java.util.concurrent.TimeUnit;
-
+import com.google.common.base.Stopwatch;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.icgc.dcc.common.core.util.Formats;
 import org.slf4j.Logger;
 
-import com.google.common.base.Stopwatch;
-
-import lombok.Getter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class CounterMonitor implements Countable<Integer> {
@@ -74,15 +72,17 @@ public class CounterMonitor implements Countable<Integer> {
   }
 
   public void start() {
-    setRunningState(true);
-    watch.start();
-    // logger.info("Started CounterMonitor-{}", name);
+    if (!isRunning()){
+      setRunningState(true);
+      watch.start();
+    }
   }
 
   public void stop() {
-    watch.stop();
-    setRunningState(false);
-    // logger.info("Stopped CounterMonitor-{}", name);
+    if (isRunning()){
+      watch.stop();
+      setRunningState(false);
+    }
   }
 
   public float getElapsedTimeSeconds() {

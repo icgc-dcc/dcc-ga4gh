@@ -34,6 +34,7 @@ public final class PropertyNames {
   public static final String REFERENCE_SET_ID = "reference_set_id";
   public static final String START = "start";
   public static final String END = "end";
+  public static final String CALLS = "calls";
   public static final String REFERENCE_NAME = "reference_name";
   public static final String INFO = "info";
   public static final String REFERENCE_BASES = "reference_bases";

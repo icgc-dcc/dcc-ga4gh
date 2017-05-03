@@ -26,8 +26,8 @@ import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory.newDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory.newFileObjectRestorerFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
-import static org.icgc.dcc.ga4gh.loader2.utils.IntegerIdStorageFactory.createIntegerIdStorageFactory;
-import static org.icgc.dcc.ga4gh.loader2.utils.LongIdStorageFactory.createLongIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 
 @Slf4j
 public class DaoTest {
