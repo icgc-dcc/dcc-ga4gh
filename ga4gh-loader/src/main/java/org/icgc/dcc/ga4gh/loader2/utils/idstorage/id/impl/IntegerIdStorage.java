@@ -9,12 +9,14 @@ public class IntegerIdStorage<K> extends AbstractIdStorageTemplate<K, Integer> {
 
   private static final Integer SINGLE_INCREMENT_AMOUNT = 1;
 
-  public static <K> IntegerIdStorage<K> newIntegerIdStorage(final MapStorage<K, Integer> cache, Integer initId) {
-    return new IntegerIdStorage<K>(cache, initId);
+  public static <K> IntegerIdStorage<K> createIntegerIdStorage(
+      MapStorage<K, Integer> objectCentricMapStorage, Integer initCount) {
+    return new IntegerIdStorage<K>(objectCentricMapStorage, initCount);
   }
 
-  public IntegerIdStorage(final MapStorage<K, Integer> cache, Integer initId) {
-    super(cache, initId);
+  private IntegerIdStorage(
+      MapStorage<K, Integer> objectCentricMapStorage, Integer initCount) {
+    super(objectCentricMapStorage, initCount);
   }
 
   @Override
@@ -36,5 +38,6 @@ public class IntegerIdStorage<K> extends AbstractIdStorageTemplate<K, Integer> {
     setCount(getCount() + SINGLE_INCREMENT_AMOUNT);
     return out;
   }
+
 
 }

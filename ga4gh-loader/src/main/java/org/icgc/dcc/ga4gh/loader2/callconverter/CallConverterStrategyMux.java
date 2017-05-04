@@ -23,7 +23,7 @@ public class CallConverterStrategyMux {
     val tumorAliquotId = portalFilename.getAliquotId();
     val workflowType = WorkflowTypes.parseMatch(portalFilename.getWorkflow(), F_CHECK_CORRECT_WORKTYPE);
     val uuidTumorGenotypeClassifier = createFunctorTumorGenotypeClassifier(tumorAliquotId, String::equals);
-    val uuidCallConverterPos0 = createDualCallConverterStrategy(uuidTumorGenotypeClassifier, false);
+    val uuidCallConverterPos0 = createDualCallConverterStrategy(uuidTumorGenotypeClassifier, true);
     switch(workflowType){
       case CONSENSUS:
         return EMPTY_CALL_CONVERTER_STRATEGY;

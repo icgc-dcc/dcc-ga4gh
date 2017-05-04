@@ -17,8 +17,6 @@
  */
 package org.icgc.dcc.ga4gh.loader2.utils.idstorage.id;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -27,23 +25,23 @@ import lombok.val;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorage;
 
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements IdStorage<K, ID> {
 
-  private Map<K, ID> cache;
-  private MapStorage<K, ID> mapStorage;
+  private Map<K, ID> objectCentricCache;
+  private MapStorage<K, ID> objectCentricMapStorage;
 
   @Getter(AccessLevel.PROTECTED)
   @Setter(AccessLevel.PROTECTED)
   private ID count;
 
-  public AbstractIdStorageTemplate(@NonNull final MapStorage<K, ID> mapStorage, final ID initCount) {
+  public AbstractIdStorageTemplate(@NonNull final MapStorage<K, ID> objectCentricMapStorage, final ID initCount) {
     this.count = initCount;
-    this.mapStorage = mapStorage;
-    this.cache = mapStorage.getMap();
+    this.objectCentricMapStorage = objectCentricMapStorage;
+    this.objectCentricCache = objectCentricMapStorage.getMap();
 
     this.checkIdLowerBound();
     this.checkIdUpperBound();
@@ -58,14 +56,15 @@ public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements
   @Override
   public void add(final K k) {
     checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor
-    if (!cache.containsKey(k)) {
-      cache.put(k, incr());
+    if (!containsObject(k)) {
+      val i = incr();
+      objectCentricCache.put(k, i);
     }
   }
 
   @Override
-  public boolean contains(final K k) {
-    return cache.containsKey(k);
+  public boolean containsObject(final K k) {
+    return objectCentricCache.containsKey(k);
   }
 
   @Override
@@ -75,28 +74,18 @@ public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements
 
   @Override
   public ID getId(@NonNull K k) {
-    checkArgument(cache.containsKey(k), "The following key doesnt not exist in the idstorage: \n%s", k);
-    return cache.get(k);
-  }
-
-  @Override
-  public Map<ID, K> getIdMap() {
-    val map = ImmutableMap.<ID, K> builder();
-    for (val entry : cache.entrySet()) {
-      val key = entry.getKey();
-      val idValue = entry.getValue();
-      map.put(idValue, key);
-    }
-    return map.build();
+    checkArgument(objectCentricCache.containsKey(k), "The following key doesnt not exist in the idstorage: \n%s", k);
+    return objectCentricCache.get(k);
   }
 
   @Override
   public void purge() {
-    mapStorage.purge();
+    objectCentricMapStorage.purge();
   }
 
   @Override
-  public Set<K> getObjects() {
-    return ImmutableSet.copyOf(cache.keySet());
+  public Stream<Map.Entry<K, ID>> streamEntries(){
+    return objectCentricCache.entrySet().stream();
   }
+
 }

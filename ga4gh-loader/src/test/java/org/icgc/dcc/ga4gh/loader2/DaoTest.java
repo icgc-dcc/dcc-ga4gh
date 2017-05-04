@@ -1,15 +1,15 @@
 package org.icgc.dcc.ga4gh.loader2;
 
-import com.google.common.collect.Lists;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.assertj.core.util.Maps;
-import org.assertj.core.util.Sets;
-import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant2;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
 import org.junit.Test;
 import org.mapdb.DataInput2;
@@ -18,33 +18,46 @@ import org.mapdb.DataOutput2;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.EsVariantCallPairSerializer.createEsVariantCallPairSerializer;
+import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.createEsVariantCallPair2;
 import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory.newDefaultPortalMetadataDaoFactory;
-import static org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory.newFileObjectRestorerFactory;
-import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory.newFileObjectRestorerFactory;
+import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
 
 @Slf4j
 public class DaoTest {
   private static final Path DEFAULT_PERSISTED_OUTPUT_DIR = Paths.get("test.persisted");
   private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY = newFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
 
+  private int yoyo(int i){
+    return i += 4;
+
+  }
+  @Test
+  public void testMe(){
+    int i = 0;
+    assertThat(yoyo(i)).isEqualTo(4);
+  }
+
   @Test
   @SneakyThrows
   public void testVariantSerialization(){
-    val iVar = EsVariant2.createEsVariant2()
-        .setStart(4)
-        .setEnd(50)
-        .setReferenceBases("GAA")
-        .setAlternativeBases(Lists.newArrayList("GAT", "GTT"))
-        .setReferenceName("referenceName");
+    val iVar = EsVariant.builder()
+        .start(4)
+        .end(50)
+        .referenceBases("GAA")
+        .alternativeBases(newArrayList("GAT", "GTT"))
+        .referenceName("referenceName")
+        .build();
 
-    val variantSerializer = new EsVariant2.EsVariantSerializer();
+    val variantSerializer = new EsVariant.EsVariantSerializer();
     val dataOutput2 = new DataOutput2();
     variantSerializer.serialize(dataOutput2, iVar);
 
@@ -61,7 +74,7 @@ public class DaoTest {
     randomMap.put("integer", new Integer(9));
     randomMap.put("double", new Double(4.6));
     randomMap.put("string", "string");
-    randomMap.put("stringList", Lists.newArrayList("hello", "there"));
+    randomMap.put("stringList", newArrayList("hello", "there"));
 
     val iCall = EsCall.builder()
         .callSetId(94949)
@@ -69,7 +82,7 @@ public class DaoTest {
         .genotypeLikelihood(1.444)
         .info(randomMap)
         .isGenotypePhased(true)
-        .nonReferenceAlleles(Lists.newArrayList(1,4,2,5,6))
+        .nonReferenceAlleles(newArrayList(1,4,2,5,6))
         .variantSetId(4949)
         .build();
 
@@ -90,13 +103,13 @@ public class DaoTest {
     randomMap1.put("integer", new Integer(9));
     randomMap1.put("double", new Double(4.6));
     randomMap1.put("string", "string");
-    randomMap1.put("stringList", Lists.newArrayList("hello", "there"));
+    randomMap1.put("stringList", newArrayList("hello", "there"));
 
     val randomMap2 = Maps.<String, Object>newHashMap();
     randomMap2.put("integer", new Integer(9292));
     randomMap2.put("double", new Double(9393.99));
     randomMap2.put("string", "the string");
-    randomMap2.put("integerList", Lists.newArrayList(1,502,9,290));
+    randomMap2.put("integerList", newArrayList(1,502,9,290));
     randomMap2.put("prevMap", randomMap1);
 
     val iCall1 = EsCall.builder()
@@ -105,7 +118,7 @@ public class DaoTest {
         .genotypeLikelihood(1.444)
         .info(randomMap1)
         .isGenotypePhased(true)
-        .nonReferenceAlleles(Lists.newArrayList(1,4,2,5,6))
+        .nonReferenceAlleles(newArrayList(1,4,2,5,6))
         .variantSetId(4949)
         .build();
 
@@ -115,27 +128,30 @@ public class DaoTest {
         .genotypeLikelihood(1.747474)
         .info(randomMap2)
         .isGenotypePhased(false)
-        .nonReferenceAlleles(Lists.newArrayList(39,482,99,33))
+        .nonReferenceAlleles(newArrayList(39,482,99,33))
         .variantSetId(9393)
         .build();
 
-    val iVar = EsVariant2.createEsVariant2()
-        .setStart(4)
-        .setEnd(50)
-        .setReferenceBases("GAA")
-        .setAlternativeBases(Lists.newArrayList("GAT", "GTT"))
-        .setReferenceName("referenceName")
-        .addCall(iCall1)
-        .addCall(iCall2);
+    val iVar = EsVariant.builder()
+        .start(4)
+        .end(50)
+        .referenceBases("GAA")
+        .alternativeBases(newArrayList("GAT", "GTT"))
+        .referenceName("referenceName")
+        .build();
 
-    val variantSerializer = new EsVariant2.EsVariantSerializer();
+    val iVariantCallPair = createEsVariantCallPair2(iVar, newArrayList(iCall1,iCall2));
+
+    val variantSerializer = new EsVariant.EsVariantSerializer();
+    val callSerializer = new EsCall.EsCallSerializer();
+    val variantCallSerializer = createEsVariantCallPairSerializer(variantSerializer,callSerializer);
     val dataOutput2 = new DataOutput2();
-    variantSerializer.serialize(dataOutput2, iVar);
+    variantCallSerializer.serialize(dataOutput2, iVariantCallPair);
 
     val bytes = dataOutput2.copyBytes();
     val dataInput2 = new DataInput2.ByteArray(bytes);
-    val oVar = variantSerializer.deserialize(dataInput2, 0);
-    assertThat(iVar).isEqualTo(oVar);
+    val oVariantPairPair = variantCallSerializer.deserialize(dataInput2, 0);
+    assertThat(iVariantCallPair).isEqualTo(oVariantPairPair);
 
   }
 
@@ -160,35 +176,65 @@ public class DaoTest {
     val preProcessor = createPreProcessor(portalMetadataDao,callSetIdStorage,variantSetIdStorage);
     preProcessor.init();
     assertThat(preProcessor.isInitialized()).isTrue();
-    val variantSetIdMap = preProcessor.getVariantSetIdStorage().getIdMap();
-    val callSetIdMap = preProcessor.getCallSetIdStorage().getIdMap();
-    val sampleMap = portalMetadataDao.groupBySampleId();
+  }
+
+  @Test
+  @SneakyThrows
+  public void testVariantCallObjectNodeConversion(){
+    val randomMap1 = Maps.<String, Object>newHashMap();
+    randomMap1.put("integer", new Integer(9));
+    randomMap1.put("double", new Double(4.6));
+    randomMap1.put("string", "string");
+    randomMap1.put("stringList", newArrayList("hello", "there"));
+
+    val randomMap2 = Maps.<String, Object>newHashMap();
+    randomMap2.put("integer", new Integer(9292));
+    randomMap2.put("double", new Double(9393.99));
+    randomMap2.put("string", "the string");
+    randomMap2.put("integerList", newArrayList(1,502,9,290));
+    randomMap2.put("prevMap", randomMap1);
+
+    val variant = EsVariant.builder()
+        .alternativeBase("ACTT")
+        .referenceBases("ATCC")
+        .referenceName("1")
+        .end(10)
+        .start(1)
+        .build();
+
+    val iCall1 = EsCall.builder()
+        .callSetId(94949)
+        .callSetName("sdfsdf")
+        .genotypeLikelihood(1.444)
+        .info(randomMap1)
+        .isGenotypePhased(true)
+        .nonReferenceAlleles(newArrayList(1,4,2,5,6))
+        .variantSetId(4949)
+        .build();
+
+    val iCall2 = EsCall.builder()
+        .callSetId(9494444)
+        .callSetName("sdfsdfe234j")
+        .genotypeLikelihood(1.747474)
+        .info(randomMap2)
+        .isGenotypePhased(false)
+        .nonReferenceAlleles(newArrayList(39,482,99,33))
+        .variantSetId(9393)
+        .build();
+
+    val variantCallPair = createEsVariantCallPair2(variant, newArrayList(iCall1, iCall2));
+    val variantConverter = new EsVariantConverterJson();
+    val callConverter = new EsCallConverterJson();
+    val converter = new EsVariantCallPairConverterJson2(variantConverter, callConverter, variantConverter, callConverter);
+    val actualJson = converter.convertToObjectNode(variantCallPair);
+    val o = new ObjectMapper();
+    val path = Paths.get("src/test/resources/fixtures/variantCallPair.json");
+    val expectedJson = o.readTree(path.toFile());
+
+    assertThat(actualJson).isEqualTo(expectedJson);
 
 
-    for (val esCallSet : callSetIdMap.values()){
-      val callSetName = esCallSet.getName();
-      assertThat(sampleMap).containsKey(callSetName);
-      val bioSampleId = esCallSet.getBioSampleId();
-      assertThat(callSetName).isEqualTo(bioSampleId);
 
-      val actualSetOfVariantSets = Sets.<EsVariantSet>newHashSet();
-      for (val variantSetId : esCallSet.getVariantSetIds()){
-
-        // Check that the variantSetId contained inside esCallSet is actually in the VariantSetIdMap
-        assertThat(variantSetIdMap).containsKey(variantSetId);
-
-        val variantSet = variantSetIdMap.get(variantSetId);
-        actualSetOfVariantSets.add(variantSet);
-      }
-
-      val expectedSetOfVariantSets = sampleMap.get(callSetName).stream()
-          .map(EsVariantSetConverterJson::convertFromPortalMetadata)
-          .collect(toImmutableSet());
-
-      //Assert that the sets are equal
-      assertThat(expectedSetOfVariantSets.containsAll(actualSetOfVariantSets));
-      assertThat(actualSetOfVariantSets).containsAll(expectedSetOfVariantSets);
-    }
   }
 
 }

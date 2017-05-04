@@ -7,6 +7,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson2;
+import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
+import org.icgc.dcc.ga4gh.common.types.WorkflowTypes;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader2.callconverter.CallConverterStrategyMux;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
@@ -68,7 +70,13 @@ public class SecondLoader {
     val partitions = partition(portalMetadataDao.findAll().iterator(), numPartitions);
     val variantCounterMonitor = CounterMonitor.newMonitor("variantCounterMonitor", 500000);
     for (val portalMetadata : portalMetadataDao.findAll()){
+
+      if (skipPortatMetadata(portalMetadata)){
+        continue;
+      }
+
       try{
+
         log.info("Downloading [{}/{}]: {}", ++count, total, portalMetadata.getPortalFilename().getFilename());
         val vcfFile = storage.getFile(portalMetadata);
         val vcfProcessor = createVcfProcessor( variantIdStorage, variantSetIdStorage, callSetIdStorage,
@@ -87,8 +95,11 @@ public class SecondLoader {
 
     }
     log.info("NumVariants: {}", numVariants);
+  }
 
-
+  private static boolean skipPortatMetadata(PortalMetadata portalMetadata){
+    val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
+    return workflowType == WorkflowTypes.CONSENSUS || portalMetadata.getFileSize() > 7000000 ;
   }
 
   @RequiredArgsConstructor

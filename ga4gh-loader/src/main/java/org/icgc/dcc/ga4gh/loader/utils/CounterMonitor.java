@@ -111,7 +111,7 @@ public class CounterMonitor implements Countable<Integer> {
         val instRate = getInstRate();
         val avgRate = getAvgRate();
         logger.info(
-            "[CounterMonitor-{}] -- CountInterval: {}   Count: {}   TotalElapsedTime(s): {}   IntervalElapsedTime(s): {}   InstantaeousRate(count/s): {}  AvgRate(count/s): {}",
+            "[CounterMonitor-{}] -- CountInterval: {}   Count: {}   TotalElapsedTime(s): {}   IntervalElapsedTime(s): {}   InstantaeousRate(counter/s): {}  AvgRate(counter/s): {}",
             name,
             countInterval,
             currentCount,
@@ -166,7 +166,7 @@ public class CounterMonitor implements Countable<Integer> {
     val instRate = getInstRate();
     val avgRate = getAvgRate();
     return String.format(
-        "[CounterMonitor-%s] -- CountInterval: %s   Count: %s   InstCount: %s  TotalElapsedTime(s): %s   IntervalElapsedTime(s): %s   InstRate(count/sec): %s  AvgRate(count/sec): %s",
+        "[CounterMonitor-%s] -- CountInterval: %s   Count: %s   InstCount: %s  TotalElapsedTime(s): %s   IntervalElapsedTime(s): %s   InstRate(counter/sec): %s  AvgRate(counter/sec): %s",
         name,
         countInterval,
         currentCount,

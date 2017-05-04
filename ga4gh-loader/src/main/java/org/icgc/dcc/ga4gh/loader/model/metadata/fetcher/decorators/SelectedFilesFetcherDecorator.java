@@ -36,7 +36,7 @@ public class SelectedFilesFetcherDecorator implements Fetcher {
     val map = Maps.<String, FileMetaData>newHashMap();
     for(val f : fileMetaDataContext){
       val fn = f.getVcfFilenameParser().getFilename();
-      checkState(! map.containsKey(fn), "The map already contains the key {}. These means there are duplicate files names, when the assumption is that they are unique", fn);
+      checkState(! map.containsKey(fn), "The map already containsObject the key {}. These means there are duplicate files names, when the assumption is that they are unique", fn);
       map.put(fn, f);
     }
 

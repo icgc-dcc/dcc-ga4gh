@@ -17,19 +17,21 @@ import org.icgc.dcc.dcc.common.es.json.JacksonFactory;
 import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
-import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson2;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant2;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.loader.Config;
 import org.icgc.dcc.ga4gh.loader.indexing.IndexCreator;
 import org.icgc.dcc.ga4gh.loader.indexing.IndexCreatorContext;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext;
 
-import java.io.IOException;
+import java.util.function.BiConsumer;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
@@ -80,7 +82,7 @@ public class Indexer2 {
   @NonNull private final IdStorage<String, Integer> callSetIdStorage;
   @NonNull private final EsVariantSetConverterJson variantSetConverter;
   @NonNull private final EsCallSetConverterJson esCallSetConverter;
-  @NonNull private final EsVariantConverterJson2 variantConverter;
+  @NonNull private final EsVariantCallPairConverterJson2 variantCallPairConverter;
   @NonNull private final EsCallConverterJson callConverter;
 
 
@@ -130,52 +132,52 @@ public class Indexer2 {
   }
 
 
-  @SneakyThrows
-  public void indexVariantSets(@NonNull IdStorage<EsVariantSet, Integer> variantSetIdStorage) {
-    for(val entry : variantSetIdStorage.getIdMap().entrySet()){
-      val variantSetId = entry.getKey();
-      val variantSet = entry.getValue();
-      writeVariantSet(variantSetId.toString(), variantSet);
+  private <K, ID> void indexIdStorage(IdStorage<K,ID> idStorage, BiConsumer<K, ID> consumer){
+    val iterator = idStorage.streamEntries().iterator();
+    while(iterator.hasNext()){
+      val entry = iterator.next();
+      val k = entry.getKey();
+      val id = entry.getValue();
+      consumer.accept(k, id);
     }
-  }
 
-  private void writeVariantSet(final String variantSetId, @NonNull final EsVariantSet variantSet) throws IOException {
-    writer.write(new IndexDocument(variantSetId, variantSetConverter.convertToObjectNode(variantSet),
-        new VariantSetDocumentType()));
   }
 
   @SneakyThrows
-  public void indexCallSets(@NonNull IdStorage<EsCallSet, Integer> callSetIdStorage) {
-    for(val entry : callSetIdStorage.getIdMap().entrySet()){
-      val callSetId = entry.getKey();
-      val callSet = entry.getValue();
-      writeCallSet(callSetId.toString(), callSet);
-    }
-  }
-
-  @SneakyThrows
-  private void writeCallSet(final String callSetId, @NonNull final EsCallSet callSet) {
-    writer.write( new IndexDocument(callSetId, esCallSetConverter.convertToObjectNode(callSet),
-        new CallSetDocumentType()));
-  }
-
-  @SneakyThrows
-  public void indexVariants(@NonNull IdStorage<EsVariant2, Long> variantIdStorage){
+  public void indexVariants(@NonNull IdStorage<EsVariantCallPair2, IdStorageContext<Long, EsCall>> variantIdStorage){
     variantMonitor.start();
-    for(val entry : variantIdStorage.getIdMap().entrySet()){
-      val variantId = entry.getKey();
-      val variant = entry.getValue();
-      writeVariant(variantId.toString(), variant);
-      variantMonitor.incr();
-    }
+    indexIdStorage(variantIdStorage, this::writeVariant);
     variantMonitor.stop();
   }
 
   @SneakyThrows
-  private void writeVariant(final String variantId, @NonNull final EsVariant2 variant){
-    writer.write(new IndexDocument(variantId, variantConverter.convertToObjectNode(variant),
-        new VariantDocumentType()));
+  public void indexVariantSets(@NonNull IdStorage<EsVariantSet, Integer> variantSetIdStorage) {
+    indexIdStorage(variantSetIdStorage, this::writeVariantSet);
+  }
 
+  @SneakyThrows
+  public void indexCallSets(@NonNull IdStorage<EsCallSet, Integer> callSetIdStorage) {
+    indexIdStorage(callSetIdStorage, this::writeCallSet);
+  }
+
+  @SneakyThrows
+  private void writeVariant(@NonNull EsVariantCallPair2 esVariantCallPair, @NonNull IdStorageContext<Long, EsCall> idStorageContext){
+    val variantId = idStorageContext.getId();
+    val data = variantCallPairConverter.convertToObjectNode(esVariantCallPair);
+    writer.write(new IndexDocument(variantId.toString(), data, new VariantDocumentType()));
+    variantMonitor.incr();
+  }
+
+  @SneakyThrows
+  private void writeCallSet(@NonNull EsCallSet callSet, @NonNull Integer callSetId) {
+    val data = esCallSetConverter.convertToObjectNode(callSet);
+    writer.write( new IndexDocument(callSetId.toString(),data, new CallSetDocumentType()));
+  }
+
+  @SneakyThrows
+  private void writeVariantSet(@NonNull EsVariantSet variantSet, @NonNull Integer variantSetId) {
+    val data = variantSetConverter.convertToObjectNode(variantSet);
+    writer.write(new IndexDocument(variantSetId.toString(), data, new VariantSetDocumentType()));
   }
 
   private static byte[] createSource(@NonNull final Object document) {

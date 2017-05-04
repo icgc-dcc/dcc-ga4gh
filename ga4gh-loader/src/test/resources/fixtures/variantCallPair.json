@@ -1,0 +1,67 @@
+﻿{
+  "start": 1,
+  "end": 10,
+  "reference_name": "1",
+  "reference_bases": "ATCC",
+  "alternate_bases": [
+    "ACTT"
+  ],
+  "calls": [
+    {
+      "variant_set_id": 4949,
+      "call_set_id": 94949,
+      "call_set_name": "sdfsdf",
+      "info": {
+        "string": "string",
+        "double": "4.6",
+        "stringList": [
+          "hello",
+          "there"
+        ],
+        "integer": "9"
+      },
+      "genotype_likelihood": "1.444",
+      "genotype_phaseset": true,
+      "non_reference_alleles": [
+        1,
+        4,
+        2,
+        5,
+        6
+      ]
+    },
+    {
+      "variant_set_id": 9393,
+      "call_set_id": 9494444,
+      "call_set_name": "sdfsdfe234j",
+      "info": {
+        "prevMap": {
+          "string": "string",
+          "double": "4.6",
+          "stringList": [
+            "hello",
+            "there"
+          ],
+          "integer": "9"
+        },
+        "string": "the string",
+        "double": "9393.99",
+        "integerList": [
+          "1",
+          "502",
+          "9",
+          "290"
+        ],
+        "integer": "9292"
+      },
+      "genotype_likelihood": "1.747474",
+      "genotype_phaseset": false,
+      "non_reference_alleles": [
+        39,
+        482,
+        99,
+        33
+      ]
+    }
+  ]
+}

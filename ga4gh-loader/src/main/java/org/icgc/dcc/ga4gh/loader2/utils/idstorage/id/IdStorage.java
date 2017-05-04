@@ -20,20 +20,20 @@ package org.icgc.dcc.ga4gh.loader2.utils.idstorage.id;
 import org.icgc.dcc.ga4gh.loader2.utils.Purgeable;
 
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Stream;
 
 public interface IdStorage<K, ID> extends Purgeable {
 
   void add(K k);
 
-  boolean contains(K k);
+  boolean containsObject(K k);
 
-  String getIdAsString(K k);
+  default String getIdAsString(K k){
+    return k.toString();
+  }
 
   ID getId(K k);
 
-  Map<ID, K> getIdMap();
-
-  Set<K> getObjects();
+  Stream<Map.Entry<K, ID>> streamEntries();
 
 }

@@ -75,7 +75,7 @@ public class Benchmarks {
   private void count(QueryBuilder builder) {
     val query = client.prepareSearch(indexName).setSource(new SearchSourceBuilder().size(0).query(builder));
 
-    log.info(">>> Executing count: {}", builder);
+    log.info(">>> Executing counter: {}", builder);
     val watch = createStarted();
     val response = query.execute().get();
     log.info("<<< Took: {}", watch);

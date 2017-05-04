@@ -20,7 +20,8 @@ public class CallSetDao {
 
   private static Map<String, EsCallSet> createMap(IdStorage<EsCallSet, Integer> idStorage) {
     val map = Maps.<String, EsCallSet>newHashMap();
-    idStorage.getObjects().forEach(x -> map.put(x.getName(), x));
+    idStorage.streamEntries()
+        .forEach(x ->  map.put(x.getKey().getName(), x.getKey()));
     return map;
   }
 

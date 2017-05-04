@@ -9,12 +9,13 @@ public class LongIdStorage<K> extends AbstractIdStorageTemplate<K, Long> {
 
   private static final Long SINGLE_INCREMENT_AMOUNT = 1L;
 
-  public static <K> LongIdStorage<K> newLongIdStorage(final MapStorage<K, Long> mapStorage, final Long initId) {
-    return new LongIdStorage<K>(mapStorage, initId);
+  public static <K> LongIdStorage<K> createLongIdStorage(
+      MapStorage<K, Long> objectCentricMapStorage, Long initCount) {
+    return new LongIdStorage<K>(objectCentricMapStorage, initCount);
   }
 
-  public LongIdStorage(final MapStorage<K, Long> mapStorage, final Long initId) {
-    super(mapStorage, initId);
+  private LongIdStorage( MapStorage<K, Long> objectCentricMapStorage, Long initCount) {
+    super(objectCentricMapStorage, initCount);
   }
 
   @Override

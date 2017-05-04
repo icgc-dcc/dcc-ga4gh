@@ -8,6 +8,7 @@ import static lombok.AccessLevel.PRIVATE;
 public class TypeNames {
   public static final String CALL_SET = "callset";
   public static final String CALL = "call";
+  public static final String CALLS = "calls";
   public static final String VARIANT_SET = "variant_set";
   public static final String VARIANT = "variant";
   public static final String VARIANT_NESTED = "variant_nested";

@@ -6,7 +6,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.elasticsearch.search.SearchHit;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant2;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant2Impl;
 
 import java.util.List;
 import java.util.Map;
@@ -28,14 +28,14 @@ import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToStringList;
 
 @RequiredArgsConstructor
 public class EsVariantConverterJson2
-    implements JsonObjectNodeConverter<EsVariant2>,
-    SearchHitConverter<EsVariant2> ,
-  SourceConverter<EsVariant2> {
+    implements JsonObjectNodeConverter<EsVariant2Impl>,
+    SearchHitConverter<EsVariant2Impl> ,
+  SourceConverter<EsVariant2Impl> {
 
   private static final EsCallConverterJson ES_CALL_CONVERTER_JSON = new EsCallConverterJson();
 
   @Override
-  public EsVariant2 convertFromSource(Map<String, Object> source) {
+  public EsVariant2Impl convertFromSource(Map<String, Object> source) {
     val start = convertSourceToInteger(source, START);
     val end = convertSourceToInteger(source, END);
     val referenceName = convertSourceToString(source, REFERENCE_NAME);
@@ -43,7 +43,7 @@ public class EsVariantConverterJson2
     val alternateBases = convertSourceToStringList(source, ALTERNATIVE_BASES);
     val callObjectNodes = convertSourceToObjectList(source, CALLS);
     //TODO: implement calls creation
-    return EsVariant2.createEsVariant2()
+    return EsVariant2Impl.createEsVariant2()
         .setStart(start)
         .setEnd(end)
         .setReferenceName(referenceName)
@@ -53,18 +53,18 @@ public class EsVariantConverterJson2
   }
 
   @Override
-  public EsVariant2 convertFromSearchHit(SearchHit hit) {
+  public EsVariant2Impl convertFromSearchHit(SearchHit hit) {
     return convertFromSource(hit.getSource());
   }
 
-  public EsVariant2 convertFromVariantContext(VariantContext variantContext) {
+  public EsVariant2Impl convertFromVariantContext(VariantContext variantContext) {
     val referenceBases = convertAlleleToByteArray(variantContext.getReference());
     val alternativeBases = convertAlleles(variantContext.getAlternateAlleles());
     val start = variantContext.getStart();
     val end = variantContext.getEnd();
     val referenceName = variantContext.getContig();
 
-    return EsVariant2.createEsVariant2()
+    return EsVariant2Impl.createEsVariant2()
         .setStart(start)
         .setEnd(end)
         .setReferenceName(referenceName)
@@ -73,7 +73,7 @@ public class EsVariantConverterJson2
   }
 
   @Override
-  public ObjectNode convertToObjectNode(EsVariant2 variant) {
+  public ObjectNode convertToObjectNode(EsVariant2Impl variant) {
     val calls = variant.getCalls().stream().map(ES_CALL_CONVERTER_JSON::convertToObjectNode).collect(toList());
     return object()
         .with(START, variant.getStart())

@@ -74,7 +74,7 @@ public class PreProcessor {
           .variantSetIds(variantSetIds)
           .build();
 
-      // Store EsCallSet in IdStorage
+      // Store EsCallSet in IdStorage2
       callSetIdStorage.add(esCallSet);
       initialized = true;
     }
