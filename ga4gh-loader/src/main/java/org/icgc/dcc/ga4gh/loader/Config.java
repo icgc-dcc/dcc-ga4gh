@@ -67,6 +67,8 @@ public class Config {
   public static final boolean ASCENDING_MODE = parseBoolean(getProperty("ascending_mode", FALSE));
   public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = parseLong(getProperty("max_filesize_bytes", "0"));
   public static final int DATA_FETCHER_LIMIT = parseInt(getProperty("fetch_limit", "0"));
+  public static final boolean INDEX_ONLY = parseBoolean(getProperty("index_only", FALSE));
+  public static final String VARIANT_MAP_DB_FILENAME = getProperty("variant_map_db_filename", "variant.db");
 
   public static final Path PERSISTED_DIRPATH = Paths.get("persisted");
 

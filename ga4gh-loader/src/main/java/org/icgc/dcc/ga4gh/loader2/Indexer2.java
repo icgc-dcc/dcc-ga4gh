@@ -15,13 +15,11 @@ import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
 import org.icgc.dcc.dcc.common.es.json.JacksonFactory;
 import org.icgc.dcc.dcc.common.es.model.IndexDocument;
-import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.loader.Config;
@@ -77,13 +75,9 @@ public class Indexer2 {
    * State
    */
   // Keys are strings NAMES, since those should never collide
-  @NonNull private final IdStorage<EsVariant, Long> variantIdStorage;
-  @NonNull private final IdStorage<String, Integer> variantSetIdStorage;
-  @NonNull private final IdStorage<String, Integer> callSetIdStorage;
   @NonNull private final EsVariantSetConverterJson variantSetConverter;
   @NonNull private final EsCallSetConverterJson esCallSetConverter;
   @NonNull private final EsVariantCallPairConverterJson2 variantCallPairConverter;
-  @NonNull private final EsCallConverterJson callConverter;
 
 
   @NonFinal
