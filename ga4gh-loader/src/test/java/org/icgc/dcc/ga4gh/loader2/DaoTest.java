@@ -9,11 +9,15 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant.EsVariantSerializer;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext.IdStorageContextSerializer;
 import org.junit.Test;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,11 +34,16 @@ import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.cr
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory.newFileObjectRestorerFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
+import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext.IdStorageContextSerializer.createIdStorageContextSerializer;
 
 @Slf4j
 public class DaoTest {
   private static final Path DEFAULT_PERSISTED_OUTPUT_DIR = Paths.get("test.persisted");
   private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY = newFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
+  private static final EsVariantSerializer ES_VARIANT_SERIALIZER = new EsVariantSerializer();
+  private static final EsCallSerializer ES_CALL_SERIALIZER = new EsCallSerializer();
+  private static final IdStorageContextSerializer<Long,EsCall> ID_STORAGE_CONTEXT_SERIALIZER = createIdStorageContextSerializer(
+      Serializer.LONG,ES_CALL_SERIALIZER);
 
   private int yoyo(int i){
     return i += 4;
@@ -57,7 +66,7 @@ public class DaoTest {
         .referenceName("referenceName")
         .build();
 
-    val variantSerializer = new EsVariant.EsVariantSerializer();
+    val variantSerializer = new EsVariantSerializer();
     val dataOutput2 = new DataOutput2();
     variantSerializer.serialize(dataOutput2, iVar);
 
@@ -86,7 +95,7 @@ public class DaoTest {
         .variantSetId(4949)
         .build();
 
-    val callSerializer = new EsCall.EsCallSerializer();
+    val callSerializer = new EsCallSerializer();
     val dataOutput2 = new DataOutput2();
     callSerializer.serialize(dataOutput2, iCall);
 
@@ -142,8 +151,8 @@ public class DaoTest {
 
     val iVariantCallPair = createEsVariantCallPair2(iVar, newArrayList(iCall1,iCall2));
 
-    val variantSerializer = new EsVariant.EsVariantSerializer();
-    val callSerializer = new EsCall.EsCallSerializer();
+    val variantSerializer = new EsVariantSerializer();
+    val callSerializer = new EsCallSerializer();
     val variantCallSerializer = createEsVariantCallPairSerializer(variantSerializer,callSerializer);
     val dataOutput2 = new DataOutput2();
     variantCallSerializer.serialize(dataOutput2, iVariantCallPair);
@@ -232,9 +241,7 @@ public class DaoTest {
     val expectedJson = o.readTree(path.toFile());
 
     assertThat(actualJson).isEqualTo(expectedJson);
-
-
-
   }
+
 
 }
