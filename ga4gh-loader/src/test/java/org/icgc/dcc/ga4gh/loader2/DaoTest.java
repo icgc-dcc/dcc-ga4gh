@@ -1,10 +1,12 @@
 package org.icgc.dcc.ga4gh.loader2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Stopwatch;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.assertj.core.util.Maps;
+import org.assertj.core.util.Sets;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
@@ -21,9 +23,11 @@ import org.mapdb.Serializer;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.util.Formats.formatRate;
 import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.EsVariantCallPairSerializer.createEsVariantCallPairSerializer;
 import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.createEsVariantCallPair2;
 import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
@@ -241,6 +245,193 @@ public class DaoTest {
     val expectedJson = o.readTree(path.toFile());
 
     assertThat(actualJson).isEqualTo(expectedJson);
+  }
+
+  @Test
+  public void testK2(){
+    char low = Character.MIN_VALUE;
+    char high = Character.MAX_VALUE;
+    val charSet = Sets.<Character>newHashSet();
+    charSet.add('A');
+    charSet.add('C');
+    charSet.add('G');
+    charSet.add('T');
+    for (char i=low; i< high; i++){
+      val result = isBaseFinalStatic(i);
+      assertThat(result).isEqualTo(charSet.contains(i));
+    }
+
+  }
+  @Test
+  public void testK(){
+    val n = 999;
+    char low = Character.MIN_VALUE;
+    char high = Character.MAX_VALUE;
+
+    long count = n*(long)(high-low);
+    val watch1 = Stopwatch.createStarted();
+    for (int j =0; j<n;j++){
+      for (char i=low; i< high; i++){
+        val b = isBaseFinalStatic(i);
+      }
+    }
+    watch1.stop();
+
+    val charSet = Sets.<Character>newHashSet();
+    charSet.add('A');
+    charSet.add('C');
+    charSet.add('G');
+    charSet.add('T');
+
+    val watch2 = Stopwatch.createStarted();
+    for (int j =0; j<n;j++){
+      for (char i=low; i< high; i++){
+        val c = isBaseFinalStatic(i);
+      }
+    }
+    watch2.stop();
+
+    log.info("FastWay: {}:  {}", watch1, formatRate(count,watch1));
+    log.info("FuncWay:  {}:  {}", watch2, formatRate(count,watch2));
+
+
+  }
+
+
+  private final static char f1 = 0x41;
+  private final static char mask1 = 0x02;
+  private final static char f2 = 0x43;
+  private final static char mask2 = 0x04;
+  private final static char f3 = 0x54;
+
+
+  private final static byte com = 0x54;
+  private final static byte col1 = 0x47;
+  private final static byte col2 = 0x43;
+
+
+  private final static Map<Byte, Character> DECODE_MAP = Maps.newHashMap();
+  private final static Map<Character, Byte> ENCODE_MAP = Maps.newHashMap();
+  static {
+    DECODE_MAP.put((byte)0x00, 'A');
+    DECODE_MAP.put((byte)0x01, 'C');
+    DECODE_MAP.put((byte)0x02, 'G');
+    DECODE_MAP.put((byte)0x03, 'T');
+
+    ENCODE_MAP.put('A', (byte)0x00 );
+    ENCODE_MAP.put('C', (byte)0x01 );
+    ENCODE_MAP.put('G', (byte)0x02 );
+    ENCODE_MAP.put('T', (byte)0x03 );
+  }
+
+
+  @Test
+  public void testEncoderSpeed(){
+    val n = 99999;
+    char low = Character.MIN_VALUE;
+    char high = Character.MAX_VALUE;
+
+    long count = n*(long)(high-low);
+    Map<Character, Byte> ENCODE_MAP = Maps.newHashMap();
+    val watch1 = Stopwatch.createStarted();
+    for (int j =0; j<n;j++){
+      for (char i=low; i< high; i++){
+        ENCODE_MAP.get(i);
+      }
+    }
+    watch1.stop();
+
+    val watch2 = Stopwatch.createStarted();
+    for (int j =0; j<n;j++){
+      for (char i=low; i< high; i++){
+        val c = encodeBase(i);
+      }
+    }
+    watch2.stop();
+    log.info("HashWay: {}:  {}", watch1, formatRate(count,watch1));
+    log.info("FastWay: {}:  {}", watch2, formatRate(count,watch2));
+
+
+  }
+
+  @Test
+  public void testDecoderSpeed(){
+    val n = 999999999;
+    byte low = 0;
+    char high = 4;
+
+    long count = n*(long)(high-low);
+    Map<Byte, Character> DECODE_MAP = Maps.newHashMap();
+    DECODE_MAP.put((byte)0x00, 'A');
+    DECODE_MAP.put((byte)0x01, 'C');
+    DECODE_MAP.put((byte)0x02, 'G');
+    DECODE_MAP.put((byte)0x03, 'T');
+    val watch1 = Stopwatch.createStarted();
+    for (int j =0; j<n;j++){
+      for (byte i=low; i<high; i++){
+        DECODE_MAP.get(i);
+      }
+    }
+    watch1.stop();
+
+    val watch2 = Stopwatch.createStarted();
+    for (int j =0; j<n;j++){
+      for (byte i=low; i< high; i++){
+        val c = decodeBase(i);
+      }
+    }
+    watch2.stop();
+    log.info("HashWay: {}:  {}", watch1, formatRate(count,watch1));
+    log.info("FastWay: {}:  {}", watch2, formatRate(count,watch2));
+
+  }
+
+  private static int encodeBase(char i){
+    if (isBaseFinalStatic(i)){
+      val c1 = i == col1 | i == com ;
+      val c2 = i == col2 | i == com ;
+      return (c1 ? 0x02 | (c2 ? 1 : 0) : (c2 ? 1 : 0));
+    } else {
+      return (byte)0x0F;
+    }
+  }
+
+  private static final char  decodeBase(byte  i){
+    val im = i & 0x3;
+    val b0 = ~(im & im >> 1) & 0x1;
+    val b1 = ((im ^ im >> 1) & 0x1) << 1;
+    val b2 = (im & 0x2) << 1;
+    val b3 = 0;
+    val b4 = ((im & im >> 1) & 0x1) << 4;
+    val b5 = 0x2<<5;
+    val out = (char)(b0 | b1 | b2 | b3 | b4 | b5);
+    return out;
+
+  }
+
+  @Test
+  public void testDecode(){
+    assertThat(decodeBase((byte)0x00)).isEqualTo('A');
+    assertThat(decodeBase((byte)0x01)).isEqualTo('C');
+    assertThat(decodeBase((byte)0x02)).isEqualTo('G');
+    assertThat(decodeBase((byte)0x03)).isEqualTo('T');
+
+  }
+
+  @Test
+  public void testEncode(){
+    assertThat(encodeBase('A')).isEqualTo(0x00);
+    assertThat(encodeBase('C')).isEqualTo(0x01);
+    assertThat(encodeBase('G')).isEqualTo(0x02);
+    assertThat(encodeBase('T')).isEqualTo(0x03);
+    assertThat(encodeBase('K')).isEqualTo(0x0F);
+  }
+
+
+  private static boolean isBaseFinalStatic(char x){
+    return  (x & ~mask1) == f1 |
+        (x & ~mask2) == f2 |
+        (x == f3);
   }
 
 
