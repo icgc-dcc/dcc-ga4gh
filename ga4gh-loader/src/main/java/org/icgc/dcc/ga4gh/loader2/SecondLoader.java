@@ -42,11 +42,13 @@ import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAP_DB_FILENAME;
+import static org.icgc.dcc.ga4gh.loader.factory.MainFactory.newDocumentWriter;
 import static org.icgc.dcc.ga4gh.loader2.CallSetDao.createCallSetDao;
-import static org.icgc.dcc.ga4gh.loader2.IndexerMainTest.newDocumentWriter;
 import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader2.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory.newDefaultPortalMetadataDaoFactory;
+import static org.icgc.dcc.ga4gh.loader2.factory.IdStorageFactory.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
@@ -117,6 +119,10 @@ public class SecondLoader {
         if (skipPortatMetadata(portalMetadata)){
           continue;
         }
+//        if (count > 10){
+//          break;
+//
+//        }
 
         try{
 
@@ -150,9 +156,11 @@ public class SecondLoader {
           val writer = newDocumentWriter(client, TEST_INDEX_NAME, bulkSizeMb, bulkNumThreads)) {
         val ctx = createIndexCreatorContext(client);
         val indexer2 = new Indexer2(client,writer,ctx,ES_VARIANT_SET_CONVERTER_JSON, ES_CALL_SET_CONVERTER_JSON, ES_VARIANT_CALL_PAIR_CONVERTER_JSON_2);
+        indexer2.prepareIndex();
         val persistFile = true;
         log.info("Resurrecting map db file [{}] ", mapDbPath);
-        val factory = createMapStorageFactory(name,ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_SERIALIZER,mapDbPath.getParent(),persistFile);
+        val factory = createMapStorageFactory(name,ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,mapDbPath.getParent(),
+            VARIANT_MAPDB_ALLOCATION,persistFile);
 
         val mapStorage = factory.createDiskMapStorage();
         log.info("Creating VariantIdStorage object...");

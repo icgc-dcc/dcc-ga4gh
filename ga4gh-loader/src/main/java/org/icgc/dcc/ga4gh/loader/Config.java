@@ -71,6 +71,9 @@ public class Config {
   public static final String VARIANT_MAP_DB_FILENAME = getProperty("variant_map_db_filename", "variant.db");
 
   public static final Path PERSISTED_DIRPATH = Paths.get("persisted");
+  public static final boolean DEFAULT_PERSIST_MAPDB_FILE = true;
+  public static final long DEFAULT_MAPDB_ALLOCATION = 2 * 1024 * 1024;
+  public static final long VARIANT_MAPDB_ALLOCATION = 1024 * 1024 * 1024; //1GB
 
   public static String toConfigString() {
     return String.format("PARENT_CHILD_INDEX_NAME: %s"

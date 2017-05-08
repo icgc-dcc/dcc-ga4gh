@@ -17,19 +17,20 @@ public class MapStorageFactory<K, V> {
 
   public static <K, V> MapStorageFactory<K, V> createMapStorageFactory(String name, Serializer<K> keySerializer,
       Serializer<V> valueSerializer,
-      Path outputDir, boolean persistFile) {
-    return new MapStorageFactory<K, V>(name, keySerializer, valueSerializer, outputDir, persistFile);
+      Path outputDir, final long allocation, boolean persistFile) {
+    return new MapStorageFactory<K, V>(name, keySerializer, valueSerializer, outputDir, allocation, persistFile);
   }
 
   @NonNull  private final String name;
   @NonNull private final Serializer<K> keySerializer;
   @NonNull private final Serializer<V> valueSerializer;
   @NonNull private final Path outputDir;
+  private final long allocation;
   private final boolean persistFile;
 
   @SneakyThrows
   public DiskMapStorage<K, V> createDiskMapStorage(){
-    return newDiskMapStorage(name, keySerializer, valueSerializer,outputDir,persistFile);
+    return newDiskMapStorage(name, keySerializer, valueSerializer,outputDir,allocation,persistFile);
   }
 
   public RamMapStorage<K, V> createRamMapStorage(){

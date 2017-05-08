@@ -51,12 +51,6 @@
 						"type": "integer",
 						"index": "false"
 					}
-				},
-				"_all": {
-					"enabled": false
-				},
-				"_source": {
-					"enabled": true
 				}
 			}
 		},

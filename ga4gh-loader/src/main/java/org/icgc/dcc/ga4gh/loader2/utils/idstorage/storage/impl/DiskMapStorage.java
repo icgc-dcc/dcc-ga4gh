@@ -25,6 +25,7 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
   private final boolean persistFile;
   private final Serializer<K> keySerializer;
   private final Serializer<V> idSerializer;
+  private final long allocation;
   private Map<K, V> map;
 
   private static Path generateFilepath(String name, Path outputDir) {
@@ -35,14 +36,16 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
       final Serializer<K> keySerializer,
       final Serializer<V> idSerializer,
       final Path outputDir,
+      final long allocation,
       final boolean persistFile) throws IOException {
-    return new DiskMapStorage<K, V>(name, keySerializer, idSerializer, outputDir, persistFile);
+    return new DiskMapStorage<K, V>(name, keySerializer, idSerializer, outputDir, allocation, persistFile);
   }
 
   public DiskMapStorage(@NonNull final String name,
       @NonNull final Serializer<K> keySerializer,
       @NonNull final Serializer<V> idSerializer,
       @NonNull final Path outputDir,
+      final long allocation,
       final boolean persistFile)
       throws IOException {
     this.name = name;
@@ -50,6 +53,7 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
     this.persistFile = persistFile;
     this.keySerializer = keySerializer;
     this.idSerializer = idSerializer;
+    this.allocation = allocation;
     val filename = generateFilepath(name, outputDir);
     init(filename);
   }
@@ -62,16 +66,18 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
       Files.createDirectories(filepath.getParent());
     }
 
-    this.db = createEntityDB(filepath);
+    this.db = createEntityDB(filepath, this.allocation);
     this.map = newEntityMap(db, name, keySerializer, idSerializer);
   }
 
-  private static DB createEntityDB(Path filepath) {
+  private static DB createEntityDB(Path filepath, final long allocation) {
     return DBMaker
         .fileDB(filepath.toFile())
         .concurrencyDisable()
         .fileMmapEnable()
         .closeOnJvmShutdown()
+        .allocateIncrement(allocation)
+        .allocateStartSize(allocation)
         .make();
   }
 

@@ -93,6 +93,14 @@ public class MainFactory {
         .threadsNum(Config.BULK_NUM_THREADS));
   }
 
+  public static DocumentWriter newDocumentWriter(final Client client, String indexName, int bulkSizeMb, int bulkNumThreads) {
+    return createDocumentWriter(new DocumentWriterConfiguration()
+        .client(client)
+        .indexName(indexName)
+        .bulkSizeMb(bulkSizeMb)
+        .threadsNum(bulkNumThreads));
+  }
+
   public static DocumentWriter newNestedDocumentWriter(final Client client) {
     return createDocumentWriter(new DocumentWriterConfiguration()
         .client(client)
