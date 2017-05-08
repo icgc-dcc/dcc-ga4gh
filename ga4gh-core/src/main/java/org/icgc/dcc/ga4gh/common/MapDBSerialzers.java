@@ -16,12 +16,29 @@ import static lombok.AccessLevel.PRIVATE;
 public class MapDBSerialzers {
 
   @SneakyThrows
+  public static <T> void serializeArray(DataOutput2 out, Serializer<T> serializer, Object[] objects){
+    out.packInt(objects.length);
+    for (val object : objects){
+      serializer.serialize(out, (T)object);
+    }
+  }
+
+  @SneakyThrows
   public static <T> void serializeList(DataOutput2 out, Serializer<T> serializer, List<T> objects){
     val n = objects.size();
     out.packInt(n);
     for (val object : objects){
       serializer.serialize(out, object);
     }
+  }
+
+  @SneakyThrows
+  public static <T> T[] deserializeArray(DataInput2 in, int available, Serializer<T> serializer){
+    val array = new Object[in.unpackInt()];
+    for (int i=0;i<array.length;i++){
+      array[i] = serializer.deserialize(in,available);
+    }
+    return (T[])array;
   }
 
   @SneakyThrows
