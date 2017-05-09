@@ -1,10 +1,11 @@
-package org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl;
+package org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl;
 
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.val;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.IdStorageContext;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
@@ -15,29 +16,29 @@ import java.util.List;
 
 @Value
 @RequiredArgsConstructor
-public class IdStorageContext<ID, K> {
+public class IdStorageContextImpl<ID, K> implements IdStorageContext<ID, K> {
 
-  public static <ID, K> IdStorageContext<ID, K> createIdStorageContext(ID id) {
-    return new IdStorageContext<ID, K>(id);
+  public static <ID, K> IdStorageContextImpl<ID, K> createIdStorageContext(ID id) {
+    return new IdStorageContextImpl<ID, K>(id);
   }
 
   @NonNull private final ID id;
   private List<K> objects = Lists.newArrayList();
 
-  public void add(K object){
+  @Override public void add(K object){
     objects.add(object);
   }
 
-  public void addAll(List<K> objects){
+  @Override public void addAll(List<K> objects){
     this.objects.addAll(objects);
   }
 
   @RequiredArgsConstructor
-  public static class IdStorageContextSerializer<ID,K> implements Serializer<IdStorageContext<ID,K>> {
+  public static class IdStorageContextImplSerializer<ID,K> implements Serializer<IdStorageContext<ID,K>> {
 
-    public static <ID, K> IdStorageContextSerializer<ID, K> createIdStorageContextSerializer(
+    public static <ID, K> IdStorageContextImplSerializer<ID, K> createIdStorageContextSerializer(
         Serializer<ID> idSerializer, Serializer<K> kSerializer) {
-      return new IdStorageContextSerializer<ID, K>(idSerializer, kSerializer);
+      return new IdStorageContextImplSerializer<ID, K>(idSerializer, kSerializer);
     }
 
     @NonNull private final Serializer<ID> idSerializer;
@@ -57,7 +58,7 @@ public class IdStorageContext<ID, K> {
     @Override public IdStorageContext<ID, K> deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
       val id = idSerializer.deserialize(dataInput2, i);
       val numObjects = dataInput2.unpackInt();
-      val out = IdStorageContext.<ID,K>createIdStorageContext(id);
+      val out = IdStorageContextImpl.<ID,K>createIdStorageContext(id);
       for (int j=0; j<numObjects; j++){
         val object = kSerializer.deserialize(dataInput2,i);
         out.add(object);

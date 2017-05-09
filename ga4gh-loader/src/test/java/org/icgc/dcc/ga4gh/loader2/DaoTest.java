@@ -15,7 +15,8 @@ import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant.EsVariantSerializer;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
-import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext.IdStorageContextSerializer;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.UIntIdStorageContext;
 import org.junit.Test;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
@@ -26,6 +27,8 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Integer.MIN_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.common.core.util.Formats.formatRate;
 import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.EsVariantCallPairSerializer.createEsVariantCallPairSerializer;
@@ -38,7 +41,7 @@ import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.cr
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory.newFileObjectRestorerFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
-import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext.IdStorageContextSerializer.createIdStorageContextSerializer;
+import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
 
 @Slf4j
 public class DaoTest {
@@ -46,7 +49,7 @@ public class DaoTest {
   private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY = newFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
   private static final EsVariantSerializer ES_VARIANT_SERIALIZER = new EsVariantSerializer();
   private static final EsCallSerializer ES_CALL_SERIALIZER = new EsCallSerializer();
-  private static final IdStorageContextSerializer<Long,EsCall> ID_STORAGE_CONTEXT_SERIALIZER = createIdStorageContextSerializer(
+  private static final IdStorageContextImplSerializer<Long,EsCall> ID_STORAGE_CONTEXT_SERIALIZER = createIdStorageContextSerializer(
       Serializer.LONG,ES_CALL_SERIALIZER);
 
   private int yoyo(int i){
@@ -432,6 +435,27 @@ public class DaoTest {
     return  (x & ~mask1) == f1 |
         (x & ~mask2) == f2 |
         (x == f3);
+  }
+
+  @Test
+  public void testUIntIdContext(){
+    val ic = UIntIdStorageContext.createUIntIdStorageContext(0);
+    assertThat(ic.getId()).isEqualTo(0).as("Zero Test");
+    val ic2 = UIntIdStorageContext.createUIntIdStorageContext(MAX_VALUE);
+    assertThat(ic2.getId()).isEqualTo(MAX_VALUE).as("Signed Integer Max value Test");
+    val ic3 = UIntIdStorageContext.createUIntIdStorageContext((long) MAX_VALUE - MIN_VALUE);
+    val iii = ic3.getId();
+    assertThat(ic3.getId()).isEqualTo((long) MAX_VALUE - MIN_VALUE).as("Unsigned Integer Max Value test");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testUIntIdContextLT0Error(){
+    val ic = UIntIdStorageContext.createUIntIdStorageContext(-1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testUIntIdContextGTMaxError(){
+    val ic = UIntIdStorageContext.createUIntIdStorageContext((long)MAX_VALUE - MIN_VALUE + 1L);
   }
 
 

@@ -24,9 +24,10 @@ import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader2.callconverter.CallConverterStrategyMux;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
 import org.icgc.dcc.ga4gh.loader2.storage.StorageFactory;
-import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl;
 import org.mapdb.Serializer;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -41,6 +42,7 @@ import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
+import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAP_DB_FILENAME;
 import static org.icgc.dcc.ga4gh.loader.factory.MainFactory.newDocumentWriter;
 import static org.icgc.dcc.ga4gh.loader2.CallSetDao.createCallSetDao;
@@ -48,12 +50,11 @@ import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader2.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory.newDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.IdStorageFactory.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
-import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
 import static org.icgc.dcc.ga4gh.loader2.utils.LongCounter2.createLongCounter2;
-import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext.IdStorageContextSerializer.createIdStorageContextSerializer;
+import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
 import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.VariantIdStorage.createVariantIdStorage;
 import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorageFactory.createMapStorageFactory;
 
@@ -76,12 +77,18 @@ public class SecondLoader {
 
   private static final EsVariant.EsVariantSerializer ES_VARIANT_SERIALIZER = new EsVariant.EsVariantSerializer();
   private static final EsCall.EsCallSerializer ES_CALL_SERIALIZER = new EsCall.EsCallSerializer();
-  private static final IdStorageContext.IdStorageContextSerializer<Long,EsCall> ID_STORAGE_CONTEXT_SERIALIZER = createIdStorageContextSerializer(
+  private static final IdStorageContextImpl.IdStorageContextImplSerializer<Long,EsCall> ID_STORAGE_CONTEXT_SERIALIZER = createIdStorageContextSerializer(
       Serializer.LONG,ES_CALL_SERIALIZER);
   private static final String TEST_INDEX_NAME = "dcc-variants-test";
 
+  private static boolean skipPortatMetadata(PortalMetadata portalMetadata){
+    val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
+    val out = workflowType == WorkflowTypes.CONSENSUS || portalMetadata.getFileSize() > 7000000 ;
+    return false;
+  }
 
-  public static void main(String[] args){
+
+  public static void main(String[] args) throws IOException {
     if (!INDEX_ONLY){
       val storage = StorageFactory.builder()
           .bypassMD5Check(false)
@@ -190,11 +197,6 @@ public class SecondLoader {
 
   }
 
-  private static boolean skipPortatMetadata(PortalMetadata portalMetadata){
-    val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
-    val out = workflowType == WorkflowTypes.CONSENSUS || portalMetadata.getFileSize() > 7000000 ;
-    return false;
-  }
 
   @RequiredArgsConstructor
   @ToString

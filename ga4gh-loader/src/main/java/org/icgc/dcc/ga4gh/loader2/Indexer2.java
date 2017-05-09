@@ -26,8 +26,8 @@ import org.icgc.dcc.ga4gh.loader.Config;
 import org.icgc.dcc.ga4gh.loader.indexing.IndexCreator;
 import org.icgc.dcc.ga4gh.loader.indexing.IndexCreatorContext;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
-import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext;
 
 import java.util.function.BiConsumer;
 

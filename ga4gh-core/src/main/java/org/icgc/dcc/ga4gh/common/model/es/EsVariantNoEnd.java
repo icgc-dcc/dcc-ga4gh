@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.
- *
+ * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.                             
+ *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * You should have received a copy of the GNU General Public License along with                                  
+ * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
+ *                                                                                                               
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.icgc.dcc.ga4gh.common.model.es;
@@ -44,7 +44,7 @@ import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.serializeArray;
 */
 @ToString
 @EqualsAndHashCode
-public final class EsVariant implements Serializable, EsModel {
+public final class EsVariantNoEnd implements Serializable, EsModel {
 
   private static final long serialVersionUID = 1485228376L;
   public static final String TYPE_NAME = "variant";
@@ -54,18 +54,15 @@ public final class EsVariant implements Serializable, EsModel {
   }
 
   private int start;
-  private int end;
   private String referenceName;
   private byte[] referenceBases;
   private byte[][] alternativeBases;
 
-  private EsVariant(final int start,
-      final int end,
+  private EsVariantNoEnd(final int start,
       final String referenceName,
       final byte[] referenceBases,
       final byte[][] alternativeBases) {
     this.start = start;
-    this.end = end;
     this.alternativeBases = alternativeBases;
     this.referenceName = referenceName;
     this.referenceBases = referenceBases;
@@ -89,7 +86,7 @@ public final class EsVariant implements Serializable, EsModel {
   }
 
   public int getEnd() {
-    return this.end;
+    return this.start + referenceBases.length - 1;
   }
 
   public String getReferenceName() {
@@ -114,18 +111,12 @@ public final class EsVariant implements Serializable, EsModel {
   public static class EsVariantBuilder {
 
     protected int start;
-    protected int end;
     protected String referenceName;
     protected byte[] referenceBases;
     protected ImmutableList.Builder<Byte[]> alternativeBases;
 
     public EsVariantBuilder start(final int start) {
       this.start = start;
-      return this;
-    }
-
-    public EsVariantBuilder end(final int end) {
-      this.end = end;
       return this;
     }
 
@@ -161,7 +152,7 @@ public final class EsVariant implements Serializable, EsModel {
       return this;
     }
 
-    public EsVariant build() {
+    public EsVariantNoEnd build() {
       byte[][] b = null;
       checkNotNull(this.alternativeBases, "AlternativeBases parameter should not be null");
       val altBases = this.alternativeBases.build();
@@ -169,7 +160,7 @@ public final class EsVariant implements Serializable, EsModel {
       for (int i = 0; i < altBases.size(); i++) {
         b[i] = AsciiConverters.unboxByteArray(altBases.get(i));
       }
-      return new EsVariant(start, end, referenceName, referenceBases, b);
+      return new EsVariantNoEnd(start, referenceName, referenceBases, b);
     }
 
     public EsVariantBuilder alternativeBaseAsBytes(final byte[] alternativeBase) {
@@ -198,12 +189,11 @@ public final class EsVariant implements Serializable, EsModel {
    * Serializer needed for MapDB. Note: if EsVariant member variables are added, removed or modified, this needs to be
    * updated
    */
-  public static class EsVariantSerializer implements Serializer<EsVariant>, Serializable {
+  public static class EsVariantSerializer implements Serializer<EsVariantNoEnd>, Serializable {
 
     @Override
-    public void serialize(DataOutput2 out, EsVariant value) throws IOException {
+    public void serialize(DataOutput2 out, EsVariantNoEnd value) throws IOException {
       out.packInt(value.getStart());
-      out.packInt(value.getEnd());
       out.writeUTF(value.getReferenceName());
       BYTE_ARRAY.serialize(out, value.getReferenceBasesAsByteArray());
       serializeArray(out, BYTE_ARRAY, value.getAlternativeBasesAsByteArrays());
@@ -211,15 +201,13 @@ public final class EsVariant implements Serializable, EsModel {
 
     @Override
     @SneakyThrows
-    public EsVariant deserialize(DataInput2 input, int available) throws IOException {
+    public EsVariantNoEnd deserialize(DataInput2 input, int available) throws IOException {
       val start = input.unpackInt();
-      val end = input.unpackInt();
       val referenceName = input.readUTF();
       val refBasesArray = BYTE_ARRAY.deserialize(input, available);
       val alternativeBasesDoubleArray = deserializeArray(input, available, BYTE_ARRAY);
-      return EsVariant.builder()
+      return EsVariantNoEnd.builder()
           .start(start)
-          .end(end)
           .referenceName(referenceName)
           .referenceBasesAsBytes(refBasesArray)
           .allAlternativeBasesAsBytes(alternativeBasesDoubleArray)

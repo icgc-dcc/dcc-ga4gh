@@ -15,8 +15,8 @@ import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader2.callconverter.CallConverterStrategy;
 import org.icgc.dcc.ga4gh.loader2.callconverter.CallConverterStrategyMux;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
-import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.IdStorageContext;
 
 import java.io.File;
 

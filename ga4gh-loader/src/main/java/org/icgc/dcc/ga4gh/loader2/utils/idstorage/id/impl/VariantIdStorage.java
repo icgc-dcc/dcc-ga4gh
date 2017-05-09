@@ -6,6 +6,8 @@ import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2;
 import org.icgc.dcc.ga4gh.loader2.utils.Counter2;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.IdStorageContext;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorage;
 
@@ -60,7 +62,7 @@ public class VariantIdStorage<N> implements IdStorage<EsVariantCallPair2, IdStor
     val esVariant = esVariantCallPair.getVariant();
     if (!containsObject(esVariantCallPair)){
       counter.incr();
-      val ctx = IdStorageContext.<N, EsCall>createIdStorageContext(counter.getCount());
+      val ctx = IdStorageContextImpl.<N, EsCall>createIdStorageContext(counter.getCount());
       ctx.addAll(esCalls);
       mapStorage.getMap().put(esVariant, ctx);
     } else {
