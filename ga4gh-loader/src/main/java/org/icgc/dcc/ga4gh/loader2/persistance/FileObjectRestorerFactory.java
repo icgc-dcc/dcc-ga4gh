@@ -21,11 +21,11 @@ public class FileObjectRestorerFactory {
 
   private static final String DEFAULT_EXT = "dat";
 
-  public static final FileObjectRestorerFactory newFileObjectRestorerFactory(Path outputDir){
+  public static final FileObjectRestorerFactory createFileObjectRestorerFactory(Path outputDir){
     return new FileObjectRestorerFactory(outputDir);
   }
-  public static final FileObjectRestorerFactory newFileObjectRestorerFactory(String outputDirname){
-    return newFileObjectRestorerFactory(Paths.get(outputDirname));
+  public static final FileObjectRestorerFactory createFileObjectRestorerFactory(String outputDirname){
+    return createFileObjectRestorerFactory(Paths.get(outputDirname));
   }
 
   @NonNull private final Path outputDir;

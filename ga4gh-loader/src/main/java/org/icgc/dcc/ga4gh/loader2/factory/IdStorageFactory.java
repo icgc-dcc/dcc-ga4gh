@@ -29,6 +29,11 @@ public interface IdStorageFactory<T> {
   IdStorage<EsVariantCallPair2, IdStorageContext<T, EsCall>> createVariantIdStorage(boolean useDisk);
   IdStorage<EsVariantSet, T> createVariantSetIdStorage(boolean useDisk);
   IdStorage<EsCallSet, T> createCallSetIdStorage(boolean useDisk);
+
+  IdStorage<EsVariantCallPair2, IdStorageContext<T, EsCall>> persistVariantIdStorage();
+  IdStorage<EsVariantSet, T> persistVariantSetIdStorage();
+  IdStorage<EsCallSet, T> persistCallSetIdStorage();
+
 //  IdStorage2<EsVcfHeader, T> createVcfHeaderIdStorage(boolean useDisk);
 
 }

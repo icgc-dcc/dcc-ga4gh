@@ -28,7 +28,7 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
   private final long allocation;
   private Map<K, V> map;
 
-  private static Path generateFilepath(String name, Path outputDir) {
+  public static Path generateFilepath(String name, Path outputDir) {
     return outputDir.resolve( name + ".db");
   }
 

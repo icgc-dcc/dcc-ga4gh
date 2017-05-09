@@ -54,5 +54,4 @@ public class PortalMetadataDao implements BasicDao<PortalMetadata, PortalMetadat
   }
 
 
-
 }

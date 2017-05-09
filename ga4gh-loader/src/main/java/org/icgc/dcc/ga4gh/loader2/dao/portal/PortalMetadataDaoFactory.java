@@ -19,15 +19,9 @@ import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDao.newPortalM
 @RequiredArgsConstructor
 public class PortalMetadataDaoFactory {
 
-  public static PortalMetadataDaoFactory newPortalMetadataDaoFactory(String persistanceName, Portal portal,
+  public static PortalMetadataDaoFactory createPortalMetadataDaoFactory(String persistanceName, Portal portal,
       FileObjectRestorerFactory fileObjectRestorerFactory) {
     return new PortalMetadataDaoFactory(persistanceName, portal, fileObjectRestorerFactory);
-  }
-  public static PortalMetadataDaoFactory newDefaultPortalMetadataDaoFactory(
-      FileObjectRestorerFactory fileObjectRestorerFactory, ObjectNodeConverter query) {
-    val portal = Portal.builder().jsonQueryGenerator(query).build();
-    val persistanceName = PortalMetadataDao.class.getSimpleName();
-    return newPortalMetadataDaoFactory(persistanceName, portal, fileObjectRestorerFactory);
   }
 
   @NonNull private final String persistanceName;

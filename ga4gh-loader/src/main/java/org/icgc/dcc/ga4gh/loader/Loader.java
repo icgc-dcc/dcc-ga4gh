@@ -54,7 +54,7 @@ public class Loader {
         // but pcwriter might still be open and have active requests.
         val pcWriter = MainFactory.newParentChildDocumentWriter(pcClient);
         val nestedWriter = MainFactory.newNestedDocumentWriter(nestedClient)) {
-      if (Config.LOADER_MODE == LoaderModes.PARENT_CHILD_ONLY || Config.LOADER_MODE == LoaderModes.PARENT_CHILD_THEN_NESTED) {
+      if (Config.OLD_LOADER_MODE == LoaderModes.PARENT_CHILD_ONLY || Config.OLD_LOADER_MODE == LoaderModes.PARENT_CHILD_THEN_NESTED) {
         idCacheFactory.build();
         val loader = MainFactory.newLoader(pcClient, pcWriter, idCacheFactory);
         val dataFetcher = MainFactory.newFileMetaDataFetcher();
@@ -69,7 +69,7 @@ public class Loader {
 
         log.info("LoadTime: {}", formatDuration(watch));
       }
-      if (Config.LOADER_MODE == LoaderModes.NESTED_ONLY || Config.LOADER_MODE == LoaderModes.PARENT_CHILD_THEN_NESTED) {
+      if (Config.OLD_LOADER_MODE == LoaderModes.NESTED_ONLY || Config.OLD_LOADER_MODE == LoaderModes.PARENT_CHILD_THEN_NESTED) {
         val pc2nestedConverter = MainFactory.newParentChild2NestedIndexConverter(nestedClient, nestedWriter);
         pc2nestedConverter.execute();
       }

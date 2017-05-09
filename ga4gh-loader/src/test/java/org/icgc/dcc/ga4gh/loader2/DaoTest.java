@@ -36,17 +36,17 @@ import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.createEsVari
 import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
-import static org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory.newDefaultPortalMetadataDaoFactory;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.buildDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
-import static org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory.newFileObjectRestorerFactory;
-import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.newPortalCollabVcfFileQueryCreator;
+import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.createPortalCollabVcfFileQueryCreator;
 import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
 
 @Slf4j
 public class DaoTest {
   private static final Path DEFAULT_PERSISTED_OUTPUT_DIR = Paths.get("test.persisted");
-  private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY = newFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
+  private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY = FileObjectRestorerFactory
+      .createFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
   private static final EsVariantSerializer ES_VARIANT_SERIALIZER = new EsVariantSerializer();
   private static final EsCallSerializer ES_CALL_SERIALIZER = new EsCallSerializer();
   private static final IdStorageContextImplSerializer<Long,EsCall> ID_STORAGE_CONTEXT_SERIALIZER = createIdStorageContextSerializer(
@@ -177,8 +177,8 @@ public class DaoTest {
     val variantSetIdPersistPath = Paths.get("variantSetIdStorage.dat");
     val callSetIdPersistPath = Paths.get("callSetIdStorage.dat");
 
-    val query = newPortalCollabVcfFileQueryCreator();
-    val portalMetadataDaoFactory = newDefaultPortalMetadataDaoFactory(FILE_OBJECT_RESTORER_FACTORY, query);
+    val query = createPortalCollabVcfFileQueryCreator();
+    val portalMetadataDaoFactory = buildDefaultPortalMetadataDaoFactory(FILE_OBJECT_RESTORER_FACTORY, query);
     val portalMetadataDao = portalMetadataDaoFactory.getPortalMetadataDao();
     val integerIdStorageFactory = createIntegerIdStorageFactory(PERSISTED_DIRPATH);
     val longIdStorageFactory = createLongIdStorageFactory(PERSISTED_DIRPATH);

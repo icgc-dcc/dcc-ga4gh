@@ -9,6 +9,9 @@ import org.mapdb.Serializer;
 
 import java.nio.file.Path;
 
+import static java.lang.Boolean.TRUE;
+import static org.icgc.dcc.ga4gh.loader2.utils.CheckPaths.checkFilePath;
+import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.impl.DiskMapStorage.generateFilepath;
 import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.impl.DiskMapStorage.newDiskMapStorage;
 import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.impl.RamMapStorage.newRamMapStorage;
 
@@ -28,6 +31,10 @@ public class MapStorageFactory<K, V> {
   private final long allocation;
   private final boolean persistFile;
 
+  public Path getPath(){
+    return generateFilepath(name, outputDir);
+  }
+
   @SneakyThrows
   public DiskMapStorage<K, V> createDiskMapStorage(){
     return newDiskMapStorage(name, keySerializer, valueSerializer,outputDir,allocation,persistFile);
@@ -39,6 +46,13 @@ public class MapStorageFactory<K, V> {
 
   public MapStorage<K,V> createMapStorage(boolean useDisk){
     return useDisk ? createDiskMapStorage() : createRamMapStorage();
+  }
+
+  public MapStorage<K,V> persistMapStorage(){
+    if (persistFile){
+      checkFilePath(getPath());
+    }
+    return createMapStorage(TRUE);
   }
 
 }

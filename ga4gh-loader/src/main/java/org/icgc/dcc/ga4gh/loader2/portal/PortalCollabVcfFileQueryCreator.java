@@ -14,7 +14,7 @@ import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 @Slf4j
 public class PortalCollabVcfFileQueryCreator implements ObjectNodeConverter {
 
-  public static PortalCollabVcfFileQueryCreator newPortalCollabVcfFileQueryCreator() {
+  public static PortalCollabVcfFileQueryCreator createPortalCollabVcfFileQueryCreator() {
     log.info("Creating PortalCollabVcfFileQueryCreator instance");
     return new PortalCollabVcfFileQueryCreator();
   }

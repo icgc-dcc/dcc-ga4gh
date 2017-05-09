@@ -1,51 +1,26 @@
 package org.icgc.dcc.ga4gh.loader;
 
-import lombok.val;
+import org.icgc.dcc.ga4gh.loader2.LoaderModes2;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.lang.System.getProperty;
 import static org.icgc.dcc.ga4gh.common.MiscNames.FALSE;
 import static org.icgc.dcc.ga4gh.common.MiscNames.TRUE;
-import static org.icgc.dcc.ga4gh.loader.LoaderModes.parseLoaderMode;
-
-enum LoaderModes {
-  NESTED_ONLY(1), PARENT_CHILD_ONLY(2), PARENT_CHILD_THEN_NESTED(3);
-
-  private int mode;
-
-  private LoaderModes(final int mode) {
-    this.mode = mode;
-  }
-
-  public static LoaderModes parseLoaderMode(final int inputMode) {
-    boolean found = false;
-    for (val loaderMode : values()) {
-      if (loaderMode.getModeId() == inputMode) {
-        found = true;
-        return loaderMode;
-      }
-    }
-    checkArgument(found, "The inputMode {} does not exist for LoaderModes", inputMode);
-    return LoaderModes.NESTED_ONLY; // Should never be reached
-  }
-
-  public int getModeId() {
-    return this.mode;
-  }
-
-}
+import static org.icgc.dcc.ga4gh.loader2.LoaderModes2.parseLoaderMode;
 
 public class Config {
 
-  public static final LoaderModes LOADER_MODE = parseLoaderMode(parseInt(getProperty("loader_mode", "1")));
+  public static final LoaderModes2 LOADER_MODE = parseLoaderMode(parseInt(getProperty("loader_mode", "3")));
+  public static final LoaderModes OLD_LOADER_MODE = LoaderModes.parseLoaderMode(parseInt(getProperty("old_loader_mode", "1")));
   public static final String PARENT_CHILD_INDEX_NAME = getProperty("parent_child_index_name", "dcc-variants-pc");
   public static final String NESTED_INDEX_NAME = getProperty("nested_index_name", "dcc-variants-nested");
+  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants");
   public static final int NESTED_SCROLL_SIZE = parseInt(getProperty("nested_scroll_size", "1000"));
   public static final String NODE_ADDRESS = getProperty("node_address", "localhost");
   public static final int NODE_PORT = parseInt(getProperty("node_port", "9300"));
@@ -68,10 +43,10 @@ public class Config {
   public static final long DATA_FETCHER_MAX_FILESIZE_BYTES = parseLong(getProperty("max_filesize_bytes", "0"));
   public static final int DATA_FETCHER_LIMIT = parseInt(getProperty("fetch_limit", "0"));
   public static final boolean INDEX_ONLY = parseBoolean(getProperty("index_only", FALSE));
-  public static final String VARIANT_MAP_DB_FILENAME = getProperty("variant_map_db_filename", "variant.db");
+  public static final Optional<String> VARIANT_MAP_DB_FILENAME = Optional.ofNullable(getProperty("variant_map_db_filename"));
 
   public static final Path PERSISTED_DIRPATH = Paths.get("persisted");
-  public static final boolean DEFAULT_PERSIST_MAPDB_FILE = true;
+  public static final boolean DEFAULT_PERSIST_MAPDB_FILE = false;
   public static final long DEFAULT_MAPDB_ALLOCATION = 2 * 1024 * 1024;
   public static final long VARIANT_MAPDB_ALLOCATION = 1024 * 1024 * 1024; //1GB
 
