@@ -23,28 +23,26 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.search.sort.SortOrder;
-import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.springframework.stereotype.Repository;
 
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.CALL_SET_ID;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.END;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.REFERENCE_NAME;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.START;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
-import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALLS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
-import static org.elasticsearch.index.query.QueryBuilders.idsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 
 /**
  * Perform queries against elasticsearch to find desired variants.
@@ -57,7 +55,7 @@ public class VariantRepository {
   private final Client client;
 
   private SearchRequestBuilder createSearchRequest(final int size) {
-    return client.prepareSearch(ServerConfig.INDEX_NAME)
+    return client.prepareSearch(INDEX_NAME)
         .setTypes(VARIANT)
         .addSort(START, SortOrder.ASC)
         .setSize(size);
@@ -73,22 +71,14 @@ public class VariantRepository {
         .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
         .must(rangeQuery(START).gte(request.getStart()))
         .must(rangeQuery(END).lt(request.getEnd()))
-        .must(hasChildQuery(CALL, constChildBoolQuery, ScoreMode.None).innerHit(new InnerHitBuilder()));
-
+        .must(nestedQuery(CALLS,constChildBoolQuery,ScoreMode.None));
     val constantScoreQuery = constantScoreQuery(boolQuery);
 
     return searchRequestBuilder.setQuery(constantScoreQuery).get();
   }
 
-  public SearchResponse findVariantById(@NonNull GetVariantRequest request) {
-    val searchRequestBuilder = createSearchRequest(1); // only want one variant
-    val childQuery = hasChildQuery(CALL, matchAllQuery(), ScoreMode.None)
-        .innerHit(new InnerHitBuilder());
-    val boolQuery = boolQuery()
-        .must(idsQuery().addIds(request.getVariantId()))
-        .must(childQuery);
-    val constantScoreQuery = constantScoreQuery(boolQuery);
-    return searchRequestBuilder.setQuery(constantScoreQuery).get();
+  public GetResponse findVariantById(@NonNull GetVariantRequest request) {
+    return client.prepareGet(INDEX_NAME, VARIANT, request.getVariantId()).get();
   }
 
 }

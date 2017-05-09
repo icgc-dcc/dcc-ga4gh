@@ -19,7 +19,6 @@ package org.icgc.dcc.ga4gh.common.model.converters;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.val;
-import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.PropertyNames;
 import org.icgc.dcc.ga4gh.common.SearchHits;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
@@ -32,8 +31,7 @@ import static org.icgc.dcc.ga4gh.common.model.es.EsVariantSet.createEsVariantSet
 
 public class EsVariantSetConverterJson
     implements JsonObjectNodeConverter<EsVariantSet>,
-    SearchHitConverter<EsVariantSet>,
-    SourceConverter<EsVariantSet>{
+    SearchHitConverter<EsVariantSet>{
 
   @Override
   public EsVariantSet convertFromSource(Map<String, Object> source) {
@@ -45,11 +43,6 @@ public class EsVariantSetConverterJson
         .dataSetId(dataSetId)
         .referenceSetId(referenceSetId)
         .build();
-  }
-
-  @Override
-  public EsVariantSet convertFromSearchHit(SearchHit hit) {
-    return convertFromSource(hit.getSource());
   }
 
   @Override

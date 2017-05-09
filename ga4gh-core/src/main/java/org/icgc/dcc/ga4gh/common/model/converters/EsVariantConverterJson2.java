@@ -5,7 +5,6 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant2Impl;
 
 import java.util.List;
@@ -29,8 +28,7 @@ import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToStringList;
 @RequiredArgsConstructor
 public class EsVariantConverterJson2
     implements JsonObjectNodeConverter<EsVariant2Impl>,
-    SearchHitConverter<EsVariant2Impl> ,
-  SourceConverter<EsVariant2Impl> {
+    SearchHitConverter<EsVariant2Impl> {
 
   private static final EsCallConverterJson ES_CALL_CONVERTER_JSON = new EsCallConverterJson();
 
@@ -50,11 +48,6 @@ public class EsVariantConverterJson2
         .setReferenceBases(referenceBases)
         .setAlternativeBases(alternateBases);
 
-  }
-
-  @Override
-  public EsVariant2Impl convertFromSearchHit(SearchHit hit) {
-    return convertFromSource(hit.getSource());
   }
 
   public EsVariant2Impl convertFromVariantContext(VariantContext variantContext) {

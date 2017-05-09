@@ -8,21 +8,19 @@ import lombok.val;
 import org.icgc.dcc.ga4gh.common.JsonNodeConverters;
 import org.icgc.dcc.ga4gh.common.PropertyNames;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
-import org.elasticsearch.search.SearchHit;
 
 import java.util.List;
 import java.util.Map;
 
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToInteger;
 import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToString;
 import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToStringList;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 @RequiredArgsConstructor
 public class EsVariantConverterJson
     implements JsonObjectNodeConverter<EsVariant>,
-    SearchHitConverter<EsVariant> ,
-  SourceConverter<EsVariant> {
+    SearchHitConverter<EsVariant> {
 
   @Override
   public EsVariant convertFromSource(Map<String, Object> source) {
@@ -39,11 +37,6 @@ public class EsVariantConverterJson
         .alternativeBases(alternateBases)
         .build();
 
-  }
-
-  @Override
-  public EsVariant convertFromSearchHit(SearchHit hit) {
-    return convertFromSource(hit.getSource());
   }
 
   public EsVariant convertFromVariantContext(VariantContext variantContext) {

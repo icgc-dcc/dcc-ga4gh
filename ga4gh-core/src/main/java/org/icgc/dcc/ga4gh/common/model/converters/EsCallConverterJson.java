@@ -6,7 +6,6 @@ import org.icgc.dcc.ga4gh.common.JsonNodeConverters;
 import org.icgc.dcc.ga4gh.common.PropertyNames;
 import org.icgc.dcc.ga4gh.common.SearchHits;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
-import org.elasticsearch.search.SearchHit;
 
 import java.util.Map;
 
@@ -14,8 +13,7 @@ import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 public class EsCallConverterJson
     implements JsonObjectNodeConverter<EsCall>,
-    SearchHitConverter<EsCall> ,
-    SourceConverter<EsCall> {
+    SearchHitConverter<EsCall> {
 
   @Override public EsCall convertFromSource(Map<String, Object> source) {
     val variantSetId = SearchHits.convertSourceToInteger(source, PropertyNames.VARIANT_SET_ID);
@@ -35,11 +33,6 @@ public class EsCallConverterJson
         .isGenotypePhased(isGenotypePhased)
         .nonReferenceAlleles(nonReferenceAlleles)
         .build();
-  }
-
-  @Override
-  public EsCall convertFromSearchHit(SearchHit hit) {
-    return convertFromSource(hit.getSource());
   }
 
   @Override

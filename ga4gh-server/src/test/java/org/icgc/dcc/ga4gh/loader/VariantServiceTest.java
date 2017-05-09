@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.server.config.ServerConfig;
@@ -65,9 +66,11 @@ public class VariantServiceTest {
       val esVariantSetConverter = new EsVariantSetConverterJson();
       val esCallSetConverter = new EsCallSetConverterJson();
       val esCallConverter = new EsCallConverterJson();
+      val esVariantCallPairConverter = new EsVariantCallPairConverterJson2(esVariantConverter
+      , esCallConverter, esVariantConverter, esCallConverter);
 
       variantService =
-          new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esCallConverter, esVariantConverter);
+          new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esVariantCallPairConverter);
     } catch (Exception e) {
       log.error("Message[{}] : {}\nStackTrace: {}", e.getClass().getName(), e.getMessage(), e);
     }
@@ -84,6 +87,7 @@ public class VariantServiceTest {
     val esVariantSetConverter = new EsVariantSetConverterJson();
     val esCallSetConverter = new EsCallSetConverterJson();
     val esCallConverter = new EsCallConverterJson();
+    val esVariantCallPairConverter = new EsVariantCallPairConverterJson2(esVariantConverter,esCallConverter,esVariantConverter, esCallConverter);
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
         .setStart(0)
         .setEnd(10000000)
@@ -129,7 +133,7 @@ public class VariantServiceTest {
     val callSetRepo = new CallSetRepository(client);
     val variantSetRepo = new VariantSetRepository(client);
 
-    val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esCallConverter, esVariantConverter);
+    val variantService = new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esVariantCallPairConverter);
 
     val variant = variantService.getVariant(getVariantRequest);
     val searchVariantResponse = variantService.searchVariants(searchVariantRequest);
@@ -154,6 +158,17 @@ public class VariantServiceTest {
         .build();
     val variant = variantService.getVariant(getVariantRequest);
     log.info("GetVariantResponse: {} ", variant);
+  }
+
+  @Test
+  public void testGetVariant2(){
+    val getVariantRequest = GetVariantRequest.newBuilder()
+        .setVariantId("1")
+        .build();
+    val variant = variantService.getVariant(getVariantRequest);
+    log.info("GetVariantResponse: {} ", variant);
+
+
   }
 
 }

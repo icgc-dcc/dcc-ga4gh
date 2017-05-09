@@ -36,13 +36,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
-import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
-import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
-import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
+import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.server.util.Protobufs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,11 +50,9 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.Map;
 
-import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
-import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
-import static org.icgc.dcc.ga4gh.server.util.Protobufs.createInfo;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
 
 @Slf4j
 @Service
@@ -88,28 +86,18 @@ public class VariantService {
   private final EsCallSetConverterJson esEsCallSetConverter;
 
   @NonNull
-  private final EsCallConverterJson esCallConverter;
-
-  @NonNull
-  private final EsVariantConverterJson esVariantConverter;
+  private final EsVariantCallPairConverterJson2 esVariantCallPairConverter;
 
   /*
    * Variant Processing
    */
   public Variant getVariant(@NonNull GetVariantRequest request) {
     log.info("VariantId to Get: {}", request.getVariantId());
-    SearchResponse response = variantRepository.findVariantById(request);
-    if (response.getHits().getTotalHits() == 1) {
-      val hit = response.getHits().getAt(FIRST_ELEMENT_POS);
-      return convertToVariant(hit)
-          .addAllCalls(
-              stream(
-                  hit.getInnerHits().get(CALL))
-                  .map(this::convertToCall)
-                  .collect(toImmutableList()))
-          .build();
-    } else {
+    GetResponse response = variantRepository.findVariantById(request);
+    if (response.isSourceEmpty()) {
       return EMPTY_VARIANT;
+    } else {
+      return convertToVariant(response.getId(), response.getSource());
     }
   }
 
@@ -128,11 +116,13 @@ public class VariantService {
     return buildSearchVariantResponse(response);
   }
 
-  private  Variant.Builder convertToVariant(@NonNull SearchHit hit) {
-    val esVariant = esVariantConverter.convertFromSearchHit(hit);
 
-    return Variant.newBuilder()
-        .setId(hit.getId())
+  private Variant convertToVariant(final String id, @NonNull Map<String, Object> source) {
+    val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source);
+    val esVariant = esVariantCallPair.getVariant();
+
+    val variantBuilder = Variant.newBuilder()
+        .setId(id)
         .setReferenceName(esVariant.getReferenceName())
         .setReferenceBases(esVariant.getReferenceBases())
         .addAllAlternateBases(esVariant.getAlternativeBases())
@@ -140,18 +130,20 @@ public class VariantService {
         .setEnd(esVariant.getEnd())
         .setCreated(DEFAULT_CREATED_VALUE)
         .setUpdated(DEFAULT_UPDATED_VALUE);
+
+    esVariantCallPair.getCalls()
+        .stream()
+        .map(this::convertToCall)
+        .forEach(variantBuilder::addCalls);
+    return variantBuilder.build();
   }
 
-  private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
-    val responseBuilder = SearchVariantsResponse.newBuilder();
-    for (val variantSearchHit : searchResponse.getHits()) {
-      val variantBuilder = convertToVariant(variantSearchHit);
-      for (val callInnerHit : variantSearchHit.getInnerHits().get(CALL)) {
-        variantBuilder.addCalls(convertToCall(callInnerHit));
-      }
-      responseBuilder.addVariants(variantBuilder.build());
+  private Variant convertToVariant(@NonNull SearchHit hit) {
+    if (hit.hasSource()) {
+      return convertToVariant(hit.getId(), hit.getSource());
+    } else {
+      return EMPTY_VARIANT;
     }
-    return responseBuilder.build();
   }
 
   /*
@@ -189,6 +181,17 @@ public class VariantService {
     } else {
       return EMPTY_VARIANT_SET;
     }
+  }
+
+  private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
+    return SearchVariantsResponse.newBuilder()
+        .setNextPageToken("N/A")
+        .addAllVariants(
+            stream(searchResponse.getHits())
+            .map(this::convertToVariant)
+            .collect(toImmutableList())
+        )
+        .build();
   }
 
   private SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
@@ -258,9 +261,9 @@ public class VariantService {
   /*
    * Call Processing
    */
+
   @SneakyThrows
-  private Call convertToCall(@NonNull SearchHit hit) {
-    val esCall = esCallConverter.convertFromSearchHit(hit);
+  private Call convertToCall(@NonNull EsCall esCall) {
     val variantSetId = esCall.getVariantSetId();
     val info = esCall.getInfo();
     info.put(VARIANT_SET_ID, variantSetId);

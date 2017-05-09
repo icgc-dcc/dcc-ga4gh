@@ -65,8 +65,7 @@ public class SecondLoader {
     return false;
   }
 
-  private static List<PortalMetadata> createAssortedVariantSets(PortalMetadataDao dao, int numSamplesPerWorkflow){
-    val maxFileSize = 5000000;
+  private static List<PortalMetadata> createAssortedVariantSets(PortalMetadataDao dao, int numSamplesPerWorkflow, long maxFileSize){
     val map = dao.groupBy(x -> x.getPortalFilename().getWorkflow());
     return map.keySet().stream()
         .flatMap(k -> map.get(k).stream()
@@ -74,6 +73,27 @@ public class SecondLoader {
             .limit(numSamplesPerWorkflow))
         .collect(toImmutableList());
   }
+
+//  @SneakyThrows
+//  private static long countLines(File f){
+//    val fr = new FileReader(f);
+//    val br = new BufferedReader(fr);
+//    val iterator = br.lines().iterator();
+//    boolean start = false;
+//    long count = 0;
+//    while(iterator.hasNext()){
+//      val line = iterator.next();
+//      if (line.startsWith("#CHROM") ){
+//        start = true;
+//      }
+//
+//      if (start){
+//        ++count;
+//      }
+//    }
+//    return count;
+//  }
+
 
   public static void main(String[] args) throws IOException {
     val storage = Factory2.buildStorageFactory().getStorage();
@@ -89,7 +109,6 @@ public class SecondLoader {
     IdStorage<EsVariantSet, Integer> variantSetIdStorage = null ;
     IdStorage<EsCallSet, Integer> callSetIdStorage = null ;
     IdStorage<EsVariantCallPair2, IdStorageContext<Long, EsCall>> variantIdStorage = null ;
-
     if (Config.LOADER_MODE == FULLY_LOAD || LOADER_MODE == AGGREGATE_ONLY) {
 
       variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(useMapDB);
@@ -102,8 +121,9 @@ public class SecondLoader {
       val callSetDao = createCallSetDao(callSetIdStorage);
 
       val variantCounterMonitor = CounterMonitor.newMonitor("variantCounterMonitor", 500000);
-//      val portalMetadatas =  portalMetadataDao.findAll();
-      val portalMetadatas = createAssortedVariantSets(portalMetadataDao, 5);
+      val portalMetadatas =  portalMetadataDao.findAll();
+
+//      val portalMetadatas = createAssortedVariantSets(portalMetadataDao, 20, 8000000); //rtisma This is a hack to just load a few files from each variantSet
 
       long numVariants = 0;
       int count = 0;

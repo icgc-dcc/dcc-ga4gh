@@ -21,11 +21,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.common.TypeNames;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
-import org.elasticsearch.search.SearchHit;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
+
+import java.util.Map;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
@@ -51,13 +52,10 @@ public class EsVariantCallPairConverterJson implements
   private final JsonObjectNodeConverter<EsCall> callJsonObjectNodeConverter;
 
   @Override
-  public EsVariantCallPair convertFromSearchHit(SearchHit hit) {
+  public EsVariantCallPair convertFromSource(Map<String, Object> source) {
     val pair = EsVariantCallPair.builder()
-        .variant(variantSearchHitConverter.convertFromSearchHit(hit));
+        .variant(variantSearchHitConverter.convertFromSource(source));
 
-    for (val innerHit : hit.getInnerHits().get(CHILD_TYPE)) {
-      pair.call(callSearchHitConverter.convertFromSearchHit(innerHit));
-    }
     return pair.build();
   }
 
