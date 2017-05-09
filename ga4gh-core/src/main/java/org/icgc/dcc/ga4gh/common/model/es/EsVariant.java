@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.common.core.util.Joiners.UNDERSCORE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.deserializeArray;
+import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.deserializeDoubleByteArray;
 import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.serializeArray;
 
 /**
@@ -216,7 +216,7 @@ public final class EsVariant implements Serializable, EsModel {
       val end = input.unpackInt();
       val referenceName = input.readUTF();
       val refBasesArray = BYTE_ARRAY.deserialize(input, available);
-      val alternativeBasesDoubleArray = deserializeArray(input, available, BYTE_ARRAY);
+      val alternativeBasesDoubleArray = deserializeDoubleByteArray(input, available, BYTE_ARRAY);
       return EsVariant.builder()
           .start(start)
           .end(end)

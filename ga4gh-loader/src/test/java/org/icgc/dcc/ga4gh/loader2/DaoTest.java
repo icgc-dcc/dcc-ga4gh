@@ -267,7 +267,7 @@ public class DaoTest {
   }
   @Test
   public void testK(){
-    val n = 999;
+    val n = 99999;
     char low = Character.MIN_VALUE;
     char high = Character.MAX_VALUE;
 
@@ -359,7 +359,7 @@ public class DaoTest {
 
   @Test
   public void testDecoderSpeed(){
-    val n = 999999999;
+    val n = 9999999;
     byte low = 0;
     char high = 4;
 

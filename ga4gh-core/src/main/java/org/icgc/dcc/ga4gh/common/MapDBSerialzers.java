@@ -33,12 +33,29 @@ public class MapDBSerialzers {
   }
 
   @SneakyThrows
-  public static <T> T[] deserializeArray(DataInput2 in, int available, Serializer<T> serializer){
-    val array = new Object[in.unpackInt()];
+  public static byte[][] deserializeDoubleByteArray(DataInput2 in, int available, Serializer<byte[]> serializer){
+    val array = new byte[in.unpackInt()][];
     for (int i=0;i<array.length;i++){
       array[i] = serializer.deserialize(in,available);
     }
-    return (T[])array;
+    return array;
+  }
+  @SneakyThrows
+  public static <T> T[] deserializeArray(DataInput2 in, int available, Serializer<T> serializer){
+    T[] array = (T[])new Object[in.unpackInt()];
+    for (int i=0;i<array.length;i++){
+      array[i] = serializer.deserialize(in,available);
+    }
+    return array;
+  }
+
+  @SneakyThrows
+  public static <T> T[][] deserializeDoubleArray(DataInput2 in, int available, Serializer<T[]> serializer){
+    T[][] array = (T[][])new Object[in.unpackInt()][];
+    for (int i=0;i<array.length;i++){
+      array[i] = serializer.deserialize(in,available);
+    }
+    return array;
   }
 
   @SneakyThrows
