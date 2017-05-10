@@ -8,6 +8,7 @@ import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.elasticsearch.client.Client;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
@@ -19,7 +20,6 @@ import org.icgc.dcc.ga4gh.server.variant.HeaderRepository;
 import org.icgc.dcc.ga4gh.server.variant.VariantRepository;
 import org.icgc.dcc.ga4gh.server.variant.VariantService;
 import org.icgc.dcc.ga4gh.server.variant.VariantSetRepository;
-import org.elasticsearch.client.Client;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -47,6 +47,7 @@ import static org.icgc.dcc.ga4gh.server.Factory.newClient;
  */
 
 @Slf4j
+@Ignore
 @RunWith(com.carrotsearch.randomizedtesting.RandomizedRunner.class)
 public class VariantServiceTest {
 
@@ -149,7 +150,6 @@ public class VariantServiceTest {
     log.info("GetCallSetResponse: {} ", callSet);
   }
 
-  @Ignore
   @Test
   public void testGetVariant() {
     val getVariantRequest = GetVariantRequest.newBuilder()
@@ -161,14 +161,72 @@ public class VariantServiceTest {
   }
 
   @Test
-  public void testGetVariant2(){
-    val getVariantRequest = GetVariantRequest.newBuilder()
-        .setVariantId("1")
+  public void testSearchVariants(){
+    val searchVariantRequest = SearchVariantsRequest.newBuilder()
+        .setVariantSetId("3")
+        .addCallSetIds("1734")
+        .setStart(0)
+        .setEnd(1000000)
+        .setPageSize(3)
+        .setReferenceName("1")
         .build();
-    val variant = variantService.getVariant(getVariantRequest);
-    log.info("GetVariantResponse: {} ", variant);
 
-
+    val searchVariantsResponse = variantService.searchVariants(searchVariantRequest);
+    int count = 0;
+    for (val variant : searchVariantsResponse.getVariantsList()){
+      log.info("SearchVariantResponse [{}]: {} ", ++count, variant);
+    }
   }
 
+  @Test
+  public void testSearchVariantSets() {
+    val searchVariantSetsRequest = SearchVariantSetsRequest.newBuilder()
+        .setDatasetId("SSM")
+        .setPageSize(100)
+        .build();
+
+    val searchVariantSetsResponse = variantService.searchVariantSets(searchVariantSetsRequest);
+    int count = 0;
+    for (val variantSet : searchVariantSetsResponse.getVariantSetsList()) {
+      log.info("SearchVariantSetsResponse [{}]: {} ", ++count, variantSet);
+    }
+    log.info("TotalCount: {}", searchVariantSetsResponse.getVariantSetsCount());
+  }
+
+  @Test
+  public void testGetVariantSet() {
+    val getVariantSetRequest = GetVariantSetRequest.newBuilder()
+        .setVariantSetId("3")
+        .build();
+
+    val variantSet = variantService.getVariantSet(getVariantSetRequest);
+    log.info("VariantSet: {} ", variantSet);
+  }
+
+  @Test
+  public void testGetCallSet() {
+    val getCallSetRequest = GetCallSetRequest.newBuilder()
+        .setCallSetId("3")
+        .build();
+
+    val callSet = variantService.getCallSet(getCallSetRequest);
+    log.info("CallSet: {} ", callSet);
+  }
+
+  @Test
+  public void testSearchCallSets() {
+    val searchCallSetsRequest = SearchCallSetsRequest.newBuilder()
+        .setName("SA528997")
+        .setBioSampleId("SA528997")
+        .setVariantSetId("5")
+        .setPageSize(100)
+        .build();
+
+    val searchCallSetsResponse = variantService.searchCallSets(searchCallSetsRequest);
+    int count = 0;
+    for (val callSet : searchCallSetsResponse.getCallSetsList()) {
+      log.info("SearchCallSetsResponse [{}]: {} ", ++count, callSet);
+    }
+    log.info("TotalCount: {}", searchCallSetsResponse.getCallSetsCount());
+  }
 }

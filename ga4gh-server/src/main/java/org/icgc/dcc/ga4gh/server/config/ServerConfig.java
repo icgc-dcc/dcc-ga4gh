@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.ga4gh.server.config;
 
+import lombok.val;
+import org.elasticsearch.client.Client;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.server.reference.ReferenceGenome;
-import org.elasticsearch.client.Client;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,11 +62,6 @@ public class ServerConfig {
   }
 
   @Bean
-  public EsVariantConverterJson esVariantConverter(){
-    return new EsVariantConverterJson();
-  }
-
-  @Bean
   public EsVariantSetConverterJson esVariantSetConverter(){
     return new EsVariantSetConverterJson();
   }
@@ -75,8 +72,10 @@ public class ServerConfig {
   }
 
   @Bean
-  public EsCallConverterJson esCallConverter(){
-    return new EsCallConverterJson();
+  public EsVariantCallPairConverterJson2 esVariantCallPairConverterJson() {
+    val varConv = new EsVariantConverterJson();
+    val callConv = new EsCallConverterJson();
+    return new EsVariantCallPairConverterJson2(varConv, callConv, varConv, callConv);
   }
 
 }

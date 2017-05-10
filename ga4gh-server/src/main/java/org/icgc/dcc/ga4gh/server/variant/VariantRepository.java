@@ -35,6 +35,7 @@ import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.icgc.dcc.common.core.util.Joiners.DOT;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.CALL_SET_ID;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.END;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.REFERENCE_NAME;
@@ -54,6 +55,7 @@ public class VariantRepository {
   @NonNull
   private final Client client;
 
+  private static final String NESTED_TYPE = CALLS;
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
         .setTypes(VARIANT)
@@ -61,17 +63,21 @@ public class VariantRepository {
         .setSize(size);
   }
 
+  private static String getNestedFieldName(String fieldName){
+    return DOT.join(NESTED_TYPE, fieldName);
+  }
+
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
     val searchRequestBuilder = createSearchRequest(request.getPageSize());
-    val childBoolQuery = boolQuery().must(matchQuery(VARIANT_SET_ID, request.getVariantSetId()));
-    request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(CALL_SET_ID, id)));
+    val childBoolQuery = boolQuery().must(matchQuery(getNestedFieldName(VARIANT_SET_ID), request.getVariantSetId()));
+    request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
     val constChildBoolQuery = constantScoreQuery(childBoolQuery);
 
     val boolQuery = boolQuery()
         .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
         .must(rangeQuery(START).gte(request.getStart()))
         .must(rangeQuery(END).lt(request.getEnd()))
-        .must(nestedQuery(CALLS,constChildBoolQuery,ScoreMode.None));
+        .must(nestedQuery(NESTED_TYPE,constChildBoolQuery,ScoreMode.None));
     val constantScoreQuery = constantScoreQuery(boolQuery);
 
     return searchRequestBuilder.setQuery(constantScoreQuery).get();
