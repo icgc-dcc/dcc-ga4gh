@@ -51,12 +51,12 @@ public class EsVariantCallPair2 {
   public static class EsVariantCallPairSerializer implements Serializer<EsVariantCallPair2>{
 
     public static EsVariantCallPairSerializer createEsVariantCallPairSerializer(
-        EsVariant.EsVariantSerializer variantSerializer,
+        Serializer<EsVariant> variantSerializer,
         EsCall.EsCallSerializer callSerializer) {
       return new EsVariantCallPairSerializer(variantSerializer, callSerializer);
     }
 
-    @NonNull private final EsVariant.EsVariantSerializer variantSerializer;
+    @NonNull private final Serializer<EsVariant> variantSerializer;
     @NonNull private final EsCall.EsCallSerializer callSerializer;
 
     @Override

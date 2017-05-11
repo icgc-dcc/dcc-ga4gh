@@ -228,4 +228,62 @@ public final class EsVariant implements Serializable, EsModel {
 
   }
 
+  public static class EsVariantOldSerializer implements Serializer<EsVariant>, Serializable {
+
+    @Override
+    public void serialize(DataOutput2 out, EsVariant value) throws IOException {
+      out.writeInt(value.getStart());
+      out.writeInt(value.getEnd());
+      out.writeUTF(value.getReferenceName());
+
+      out.writeInt(value.getReferenceBasesAsByteArray().length); // Length
+      out.write(value.getReferenceBasesAsByteArray());
+
+      val doubleArray = value.getAlternativeBasesAsByteArrays();
+      val numAltBases = doubleArray.length;
+      out.writeInt(numAltBases);
+      for (int i = 0; i < numAltBases; i++) {
+        byte[] b = doubleArray[i];
+        out.writeInt(b.length);
+        out.write(b);
+      }
+    }
+
+    @Override
+    @SneakyThrows
+    public EsVariant deserialize(DataInput2 input, int available) throws IOException {
+      val start = input.readInt();
+      val end = input.readInt();
+      val referenceName = input.readUTF();
+
+      // Deserialize ReferenceBases
+      val referenceBasesLength = input.readInt();
+      byte[] refBasesArray = new byte[referenceBasesLength];
+      for (int i = 0; i < referenceBasesLength; i++) {
+        refBasesArray[i] = input.readByte();
+      }
+
+      // Deserialize AlternateBases
+      val altBasesListLength = input.readInt();
+      byte[][] doubleArray = new byte[altBasesListLength][];
+      for (int i = 0; i < altBasesListLength; i++) {
+        val arrayLength = input.readInt();
+        byte[] array = new byte[arrayLength];
+        for (int j = 0; j < arrayLength; j++) {
+          array[j] = input.readByte();
+        }
+        doubleArray[i] = array;
+      }
+
+      return EsVariant.builder()
+          .start(start)
+          .end(end)
+          .referenceName(referenceName)
+          .referenceBasesAsBytes(refBasesArray)
+          .allAlternativeBasesAsBytes(doubleArray)
+          .build();
+    }
+
+  }
+
 }

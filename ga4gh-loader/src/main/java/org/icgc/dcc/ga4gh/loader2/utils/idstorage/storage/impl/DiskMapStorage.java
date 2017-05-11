@@ -77,8 +77,8 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
         .concurrencyDisable()
         .fileMmapEnable()
         .closeOnJvmShutdown()
-        .allocateIncrement(allocation)
-        .allocateStartSize(allocation)
+//        .allocateIncrement(allocation) //TODO: rtisma hackkkkkkk
+//        .allocateStartSize(allocation) //TODO: rtisma hackkkkkkk
         .make();
   }
 
