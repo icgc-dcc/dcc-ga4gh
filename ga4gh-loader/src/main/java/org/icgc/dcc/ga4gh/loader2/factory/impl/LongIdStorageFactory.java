@@ -21,6 +21,10 @@ import static java.lang.Boolean.TRUE;
 import static org.icgc.dcc.ga4gh.loader.Config.DEFAULT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader.Config.DEFAULT_PERSIST_MAPDB_FILE;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_CALL_SET_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_VARIANT_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_VARIANT_SET_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader2.utils.LongCounter2.createLongCounter2;
 import static org.mapdb.Serializer.LONG;
 

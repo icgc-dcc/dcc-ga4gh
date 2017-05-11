@@ -46,11 +46,11 @@ import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_CALL_SET_CONVERTER_
 import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_VARIANT_CALL_PAIR_CONVERTER_JSON_2;
 import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_VARIANT_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_VARIANT_SET_CONVERTER_JSON;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.buildDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.buildDocumentWriter;
 import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.buildIndexer2;
 import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.createDocumentWriter;
-import static org.icgc.dcc.ga4gh.loader2.factory.IdStorageFactory.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.createPortalCollabVcfFileQueryCreator;
 import static org.icgc.dcc.ga4gh.loader2.utils.LongCounter2.createLongCounter2;
 import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.VariantIdStorage.createVariantIdStorage;

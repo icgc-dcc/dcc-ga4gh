@@ -15,7 +15,10 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson2;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallSerializer;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant.EsVariantSerializer;
+import org.icgc.dcc.ga4gh.common.model.es.EsCallSet.EsCallSetSerializer;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.EsVariantCallPairSerializer;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet.EsVariantSetSerializer;
 import org.icgc.dcc.ga4gh.loader.indexing.IndexCreatorContext;
 import org.icgc.dcc.ga4gh.loader.indexing.Indexer;
 import org.icgc.dcc.ga4gh.loader2.Indexer2;
@@ -26,6 +29,7 @@ import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
 import org.icgc.dcc.ga4gh.loader2.portal.Portal;
 import org.icgc.dcc.ga4gh.loader2.storage.StorageFactory;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer;
+import org.mapdb.Serializer;
 
 import java.nio.file.Paths;
 
@@ -43,6 +47,7 @@ import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
+import static org.mapdb.Serializer.INTEGER;
 import static org.mapdb.Serializer.LONG;
 
 @NoArgsConstructor(access = PRIVATE)
@@ -61,10 +66,22 @@ public class Factory2 {
       .variantSearchHitConverter(ES_VARIANT_CONVERTER_JSON)
       .build();
 
-  public static final EsVariantSerializer ES_VARIANT_SERIALIZER = new EsVariantSerializer();
+  public static final EsCallSetSerializer ES_CALL_SET_SERIALIZER = new EsCallSetSerializer();
+  public static final EsVariantSetSerializer ES_VARIANT_SET_SERIALIZER = new EsVariantSetSerializer();
+
+  //TODO: rtisma HACKK should be EsVariantSerializer impl and not EsVariantOldSerializer.
+  // only using old so that can properly deserialize that giant 150GB mapdb file
+  public static final Serializer<EsVariant> ES_VARIANT_SERIALIZER = new EsVariant.EsVariantOldSerializer();
   public static final EsCallSerializer ES_CALL_SERIALIZER = new EsCallSerializer();
-  public static final IdStorageContextImplSerializer<Long,EsCall> ID_STORAGE_CONTEXT_SERIALIZER = createIdStorageContextSerializer(
-      LONG,ES_CALL_SERIALIZER);
+
+  public static final EsVariantCallPairSerializer ES_VARIANT_CALL_PAIR_SERIALIZER =
+      new EsVariantCallPairSerializer(ES_VARIANT_SERIALIZER, ES_CALL_SERIALIZER);
+
+  public static final IdStorageContextImplSerializer<Long,EsCall> ID_STORAGE_CONTEXT_LONG_SERIALIZER =
+      createIdStorageContextSerializer( LONG,ES_CALL_SERIALIZER);
+
+  public static final IdStorageContextImplSerializer<Integer, EsCall> ID_STORAGE_CONTEXT_INTEGER_SERIALIZER =
+      IdStorageContextImplSerializer.createIdStorageContextSerializer(INTEGER,ES_CALL_SERIALIZER);
 
 
   public static Indexer2 buildIndexer2(Client client, DocumentWriter writer, IndexCreatorContext ctx){
