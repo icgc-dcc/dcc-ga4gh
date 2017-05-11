@@ -158,7 +158,7 @@ public class SecondLoader {
     if (LOADER_MODE == INDEX_ONLY_BASIC || LOADER_MODE == FULLY_LOAD){
       callSetIdStorage = isNull(callSetIdStorage) ? integerIdStorageFactory.persistCallSetIdStorage() : callSetIdStorage;
       variantSetIdStorage = isNull(variantSetIdStorage) ? integerIdStorageFactory.persistVariantSetIdStorage() : variantSetIdStorage;
-      variantIdStorage = isNull(variantIdStorage) ? longIdStorageFactory.createVariantIdStorage(useMapDB) : variantIdStorage;
+      variantIdStorage = isNull(variantIdStorage) ? longIdStorageFactory.persistVariantIdStorage() : variantIdStorage;
 
       try ( val client = MainFactory.newClient();
           val writer = buildDocumentWriter(client)){

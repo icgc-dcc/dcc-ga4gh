@@ -45,7 +45,8 @@ public class Config {
   public static final boolean INDEX_ONLY = parseBoolean(getProperty("index_only", FALSE));
   public static final Optional<String> VARIANT_MAP_DB_FILENAME = Optional.ofNullable(getProperty("variant_map_db_filename"));
 
-  public static final Path PERSISTED_DIRPATH = Paths.get("persisted");
+  public static final String PERSISTED_DIRNAME = getProperty("persisted_dir", "persisted");
+  public static final Path PERSISTED_DIRPATH = Paths.get(PERSISTED_DIRNAME);
   public static final boolean DEFAULT_PERSIST_MAPDB_FILE = false;
   public static final long DEFAULT_MAPDB_ALLOCATION = 2 * 1024 * 1024;
   public static final long VARIANT_MAPDB_ALLOCATION = 1024 * 1024 * 1024; //1GB
