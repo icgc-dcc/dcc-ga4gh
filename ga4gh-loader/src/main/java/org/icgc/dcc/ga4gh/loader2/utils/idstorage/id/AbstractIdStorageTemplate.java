@@ -96,7 +96,7 @@ public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements
       try {
         this.objectCentricMapStorage.close();
       } catch (Throwable t){
-        log.error("Could not close MapStorage");
+        log.error("Could not close MapStorage [{}]", this.getClass().getName());
       }
     }
   }

@@ -1,6 +1,7 @@
 package org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
@@ -11,12 +12,14 @@ import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextI
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorage;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+@Slf4j
 public class VariantIdStorage<N> implements IdStorage<EsVariantCallPair2, IdStorageContext<N, EsCall>> {
 
   private static final long SINGLE_INCREMENT_AMOUNT = 1L;
@@ -107,6 +110,17 @@ public class VariantIdStorage<N> implements IdStorage<EsVariantCallPair2, IdStor
       }
 
     };
+
+  }
+
+  @Override public void close() throws IOException {
+    if (this.mapStorage != null){
+      try {
+        this.mapStorage.close();
+      } catch (Throwable t){
+        log.error("Could not close MapStorage [{}]", this.getClass().getName());
+      }
+    }
 
   }
 }
