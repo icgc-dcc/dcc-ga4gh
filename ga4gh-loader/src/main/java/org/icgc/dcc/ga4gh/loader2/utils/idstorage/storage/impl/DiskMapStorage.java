@@ -59,6 +59,7 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
   }
 
   private void init(Path filepath) throws IOException {
+    log.info("Initializing DiskMapStorage [{}] ", this.name);
     if (!persistFile) {
       Files.deleteIfExists(filepath);
     }
@@ -96,6 +97,7 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
   @Override
   public void close() throws IOException {
     db.close();
+    log.info("Closed [{}] DiskMapStorage", this.name);
   }
 
   @Override

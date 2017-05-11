@@ -213,7 +213,23 @@ public class SecondLoader {
         log.error("Exception running: ", e);
       }
     }
+
+    closeIdStorage(callSetIdStorage);
+    closeIdStorage(variantIdStorage);
+    closeIdStorage(variantSetIdStorage);
   }
+
+  private static <K,V> void closeIdStorage(IdStorage<K,V> idStorage){
+    if (!isNull(idStorage)){
+      try {
+        idStorage.close();
+      } catch (Throwable t) {
+        log.error("The IdStorage instance of the class [{}] could not be closed", idStorage.getClass().getName());
+      }
+    }
+
+  }
+
 
   @RequiredArgsConstructor
   @ToString

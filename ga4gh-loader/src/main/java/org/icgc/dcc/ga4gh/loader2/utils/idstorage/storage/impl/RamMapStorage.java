@@ -1,5 +1,6 @@
 package org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorage;
 
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.util.Map;
 
 import static com.google.common.collect.Maps.newHashMap;
 
+@Slf4j
 public class RamMapStorage<K, V> implements MapStorage<K, V> {
 
   private Map<K, V> map;
@@ -21,7 +23,7 @@ public class RamMapStorage<K, V> implements MapStorage<K, V> {
 
   @Override
   public void close() throws IOException {
-    // do nothing
+    log.info("Closed RamMapStorage (empty close() method)");
   }
 
   @Override
@@ -33,5 +35,6 @@ public class RamMapStorage<K, V> implements MapStorage<K, V> {
   public Map<K, V> getMap() {
     return map;
   }
+
 
 }

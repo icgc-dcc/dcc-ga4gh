@@ -21,14 +21,17 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorage;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements IdStorage<K, ID> {
 
   private Map<K, ID> objectCentricCache;
@@ -88,4 +91,13 @@ public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements
     return objectCentricCache.entrySet().stream();
   }
 
+  @Override public void close() throws IOException {
+    if (this.objectCentricMapStorage != null){
+      try {
+        this.objectCentricMapStorage.close();
+      } catch (Throwable t){
+        log.error("Could not close MapStorage");
+      }
+    }
+  }
 }

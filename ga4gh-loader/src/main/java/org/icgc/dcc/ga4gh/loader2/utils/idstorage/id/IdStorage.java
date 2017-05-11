@@ -19,10 +19,11 @@ package org.icgc.dcc.ga4gh.loader2.utils.idstorage.id;
 
 import org.icgc.dcc.ga4gh.loader2.utils.Purgeable;
 
+import java.io.Closeable;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public interface IdStorage<K, ID> extends Purgeable {
+public interface IdStorage<K, ID> extends Purgeable, Closeable {
 
   void add(K k);
 
