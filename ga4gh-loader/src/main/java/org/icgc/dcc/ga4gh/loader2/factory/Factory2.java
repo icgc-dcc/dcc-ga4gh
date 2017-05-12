@@ -78,7 +78,7 @@ public class Factory2 {
 
   //TODO: rtisma HACKK should be EsVariantSerializer impl and not EsVariantOldSerializer.
   // only using old so that can properly deserialize that giant 150GB mapdb file
-  public static final Serializer<EsVariant> ES_VARIANT_SERIALIZER = new EsVariant.EsVariantOldSerializer();
+  public static final Serializer<EsVariant> ES_VARIANT_SERIALIZER = new EsVariant.EsVariantOldSerializer(); //TODO: rtisma_20170511_hack
   public static final EsCallSerializer ES_CALL_SERIALIZER = new EsCallSerializer();
 
   public static final EsVariantCallPairSerializer ES_VARIANT_CALL_PAIR_SERIALIZER =
@@ -184,48 +184,5 @@ public class Factory2 {
   public static IdStorageFactory<Long> buildLongIdStorageFactory(){
     return createLongIdStorageFactory(VARIANT_LONG_MAP_STORAGE_FACTORY, VARIANT_SET_LONG_MAP_STORAGE_FACTORY, CALL_SET_LONG_MAP_STORAGE_FACTORY);
   }
-
-
-//  public static MapStorageFactory<EsVariant, IdStorageContext<Long, EsCall>> buildVariantLongMapStorageFactory(Path outputDir, boolean persist){
-//    return MapStorageFactory.<EsVariant, IdStorageContext<Long, EsCall>>createMapStorageFactory(
-//        generateMapStorageName("variant", Long.class),
-//        ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,outputDir, VARIANT_MAPDB_ALLOCATION,
-//        persist);
-//  }
-//
-//  public static MapStorageFactory<EsVariantSet, Long> buildVariantSetLongMapStorageFactory(Path outputDir, boolean persist){
-//    return MapStorageFactory.<EsVariantSet, Long>createMapStorageFactory(
-//        generateMapStorageName("variantSet",Long.class),
-//        ES_VARIANT_SET_SERIALIZER, LONG,outputDir, DEFAULT_MAPDB_ALLOCATION,
-//        persist);
-//  }
-//
-//  public static MapStorageFactory<EsCallSet, Long> buildCallSetLongMapStorageFactory(Path outputDir,boolean persist){
-//    return MapStorageFactory.<EsCallSet, Long>createMapStorageFactory(
-//        generateMapStorageName("callSet", Long.class),
-//        ES_CALL_SET_SERIALIZER, LONG,outputDir, DEFAULT_MAPDB_ALLOCATION,
-//        persist);
-//  }
-//
-//  public static MapStorageFactory<EsVariant, IdStorageContext<Integer, EsCall>> buildVariantIntegerMapStorageFactory(Path outputDir, boolean persist){
-//    return MapStorageFactory.<EsVariant, IdStorageContext<Integer, EsCall>>createMapStorageFactory(
-//        generateMapStorageName("variant", Integer.class),
-//        ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_INTEGER_SERIALIZER,outputDir, VARIANT_MAPDB_ALLOCATION,
-//        persist);
-//  }
-//
-//  public static MapStorageFactory<EsVariantSet, Integer> buildVariantSetIntegerMapStorageFactory(Path outputDir, boolean persist){
-//    return MapStorageFactory.<EsVariantSet, Integer>createMapStorageFactory(
-//        generateMapStorageName("variantSet",Integer.class),
-//        ES_VARIANT_SET_SERIALIZER, INTEGER,outputDir, DEFAULT_MAPDB_ALLOCATION,
-//        persist);
-//  }
-//
-//  public static MapStorageFactory<EsCallSet, Integer> buildCallSetMapIntegerStorageFactory(Path outputDir, boolean persist){
-//    return MapStorageFactory.<EsCallSet, Integer>createMapStorageFactory(generateMapStorageName("callSet", Integer.class),
-//        ES_CALL_SET_SERIALIZER, INTEGER,outputDir, DEFAULT_MAPDB_ALLOCATION,
-//        persist);
-//  }
-
 
 }

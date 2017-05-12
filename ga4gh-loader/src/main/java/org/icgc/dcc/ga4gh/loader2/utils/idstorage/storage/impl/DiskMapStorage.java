@@ -75,10 +75,10 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
     return DBMaker
         .fileDB(filepath.toFile())
         .concurrencyDisable()
-        .fileMmapEnable()
+//        .fileMmapEnable() //TODO: rtisma_20170511_hack
         .closeOnJvmShutdown()
-//        .allocateIncrement(allocation) //TODO: rtisma hackkkkkkk
-//        .allocateStartSize(allocation) //TODO: rtisma hackkkkkkk
+//        .allocateIncrement(allocation) //TODO: rtisma_20170511_hack
+//        .allocateStartSize(allocation) //TODO: rtisma_20170511_hack
         .make();
   }
 
