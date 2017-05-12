@@ -32,19 +32,19 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements IdStorage<K, ID> {
+public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements IdStorage<K, ID>, MapStorage<K, ID> {
 
   private Map<K, ID> objectCentricCache;
-  private MapStorage<K, ID> objectCentricMapStorage;
+  private MapStorage<K, ID> mapStorage;
 
   @Getter(AccessLevel.PROTECTED)
   @Setter(AccessLevel.PROTECTED)
   private ID count;
 
-  public AbstractIdStorageTemplate(@NonNull final MapStorage<K, ID> objectCentricMapStorage, final ID initCount) {
+  public AbstractIdStorageTemplate(@NonNull final MapStorage<K, ID> mapStorage, final ID initCount) {
     this.count = initCount;
-    this.objectCentricMapStorage = objectCentricMapStorage;
-    this.objectCentricCache = objectCentricMapStorage.getMap();
+    this.mapStorage = mapStorage;
+    this.objectCentricCache = mapStorage.getMap();
 
     this.checkIdLowerBound();
     this.checkIdUpperBound();
@@ -83,7 +83,7 @@ public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements
 
   @Override
   public void purge() {
-    objectCentricMapStorage.purge();
+    mapStorage.purge();
   }
 
   @Override
@@ -92,12 +92,16 @@ public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements
   }
 
   @Override public void close() throws IOException {
-    if (this.objectCentricMapStorage != null){
+    if (this.mapStorage != null){
       try {
-        this.objectCentricMapStorage.close();
+        this.mapStorage.close();
       } catch (Throwable t){
         log.error("Could not close MapStorage [{}]", this.getClass().getName());
       }
     }
+  }
+
+  @Override public Map<K, ID> getMap() {
+    return this.mapStorage.getMap();
   }
 }
