@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 @Slf4j
-public class VariantIdStorage<N> implements IdStorage<EsVariantCallPair2, IdStorageContext<N, EsCall>> {
+public class VariantIdStorage<N> implements IdStorage<EsVariantCallPair2, IdStorageContext<N, EsCall>>, MapStorage<EsVariant, IdStorageContext<N, EsCall>> {
 
   private static final long SINGLE_INCREMENT_AMOUNT = 1L;
 
@@ -121,6 +121,10 @@ public class VariantIdStorage<N> implements IdStorage<EsVariantCallPair2, IdStor
         log.error("Could not close MapStorage [{}]", this.getClass().getName());
       }
     }
-
   }
+
+  @Override public Map<EsVariant, IdStorageContext<N, EsCall>> getMap() {
+    return this.mapStorage.getMap();
+  }
+
 }

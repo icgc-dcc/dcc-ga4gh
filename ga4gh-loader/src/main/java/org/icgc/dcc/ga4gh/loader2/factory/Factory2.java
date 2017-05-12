@@ -15,9 +15,11 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson2;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallSerializer;
+import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet.EsCallSetSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.EsVariantCallPairSerializer;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet.EsVariantSetSerializer;
 import org.icgc.dcc.ga4gh.loader.indexing.IndexCreatorContext;
 import org.icgc.dcc.ga4gh.loader.indexing.Indexer;
@@ -28,7 +30,9 @@ import org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDaoFactory;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
 import org.icgc.dcc.ga4gh.loader2.portal.Portal;
 import org.icgc.dcc.ga4gh.loader2.storage.StorageFactory;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorageFactory;
 import org.mapdb.Serializer;
 
 import java.nio.file.Paths;
@@ -40,13 +44,16 @@ import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VCF_HEADER;
 import static org.icgc.dcc.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.icgc.dcc.ga4gh.loader.Config.BULK_SIZE_MB;
+import static org.icgc.dcc.ga4gh.loader.Config.DEFAULT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader.Config.INDEX_NAME;
 import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
+import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
+import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorageFactory.createMapStorageFactory;
 import static org.mapdb.Serializer.INTEGER;
 import static org.mapdb.Serializer.LONG;
 
@@ -86,6 +93,10 @@ public class Factory2 {
 
   public static Indexer2 buildIndexer2(Client client, DocumentWriter writer, IndexCreatorContext ctx){
     return new Indexer2(client,writer,ctx,ES_VARIANT_SET_CONVERTER_JSON, ES_CALL_SET_CONVERTER_JSON, ES_VARIANT_CALL_PAIR_CONVERTER_JSON_2);
+  }
+
+  private static final <ID> String generateMapStorageName(String prefix, Class<ID> type){
+    return prefix+type.getSimpleName()+"MapStorage";
   }
 
   public static DocumentWriter createDocumentWriter(final Client client, String indexName, int bulkSizeMb, int bulkNumThreads) {
@@ -136,11 +147,85 @@ public class Factory2 {
         .build();
   }
 
+  public static final MapStorageFactory<EsVariant, IdStorageContext<Long, EsCall>> VARIANT_LONG_MAP_STORAGE_FACTORY= createMapStorageFactory(
+      "variantLongMapStorage",
+      ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,
+      PERSISTED_DIRPATH, VARIANT_MAPDB_ALLOCATION);
+
+  public static final MapStorageFactory<EsCallSet, Long> CALL_SET_LONG_MAP_STORAGE_FACTORY = createMapStorageFactory(
+      "callSetLongMapStorage",
+      ES_CALL_SET_SERIALIZER, LONG,
+      PERSISTED_DIRPATH, DEFAULT_MAPDB_ALLOCATION);
+
+  public static final MapStorageFactory<EsVariantSet, Long> VARIANT_SET_LONG_MAP_STORAGE_FACTORY = createMapStorageFactory(
+      "variantSetLongMapStorage",
+      ES_VARIANT_SET_SERIALIZER, LONG,
+      PERSISTED_DIRPATH, DEFAULT_MAPDB_ALLOCATION);
+
+  public static final MapStorageFactory<EsVariant, IdStorageContext<Integer, EsCall>> VARIANT_INTEGER_MAP_STORAGE_FACTORY= createMapStorageFactory(
+      "variantIntegerMapStorage",
+      ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_INTEGER_SERIALIZER,
+      PERSISTED_DIRPATH, VARIANT_MAPDB_ALLOCATION);
+
+  public static final MapStorageFactory<EsCallSet, Integer> CALL_SET_INTEGER_MAP_STORAGE_FACTORY = createMapStorageFactory(
+      "callSetIntegerMapStorage",
+      ES_CALL_SET_SERIALIZER, INTEGER,
+      PERSISTED_DIRPATH, DEFAULT_MAPDB_ALLOCATION);
+
+  public static final MapStorageFactory<EsVariantSet, Integer> VARIANT_SET_INTEGER_MAP_STORAGE_FACTORY = createMapStorageFactory(
+      "variantSetIntegerMapStorage",
+      ES_VARIANT_SET_SERIALIZER, INTEGER,
+      PERSISTED_DIRPATH, DEFAULT_MAPDB_ALLOCATION);
+
   public static IdStorageFactory<Integer> buildIntegerIdStorageFactory(){
-    return createIntegerIdStorageFactory(PERSISTED_DIRPATH);
+    return createIntegerIdStorageFactory(VARIANT_INTEGER_MAP_STORAGE_FACTORY, VARIANT_SET_INTEGER_MAP_STORAGE_FACTORY, CALL_SET_INTEGER_MAP_STORAGE_FACTORY);
   }
 
   public static IdStorageFactory<Long> buildLongIdStorageFactory(){
-    return createLongIdStorageFactory(PERSISTED_DIRPATH);
+    return createLongIdStorageFactory(VARIANT_LONG_MAP_STORAGE_FACTORY, VARIANT_SET_LONG_MAP_STORAGE_FACTORY, CALL_SET_LONG_MAP_STORAGE_FACTORY);
   }
+
+
+//  public static MapStorageFactory<EsVariant, IdStorageContext<Long, EsCall>> buildVariantLongMapStorageFactory(Path outputDir, boolean persist){
+//    return MapStorageFactory.<EsVariant, IdStorageContext<Long, EsCall>>createMapStorageFactory(
+//        generateMapStorageName("variant", Long.class),
+//        ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,outputDir, VARIANT_MAPDB_ALLOCATION,
+//        persist);
+//  }
+//
+//  public static MapStorageFactory<EsVariantSet, Long> buildVariantSetLongMapStorageFactory(Path outputDir, boolean persist){
+//    return MapStorageFactory.<EsVariantSet, Long>createMapStorageFactory(
+//        generateMapStorageName("variantSet",Long.class),
+//        ES_VARIANT_SET_SERIALIZER, LONG,outputDir, DEFAULT_MAPDB_ALLOCATION,
+//        persist);
+//  }
+//
+//  public static MapStorageFactory<EsCallSet, Long> buildCallSetLongMapStorageFactory(Path outputDir,boolean persist){
+//    return MapStorageFactory.<EsCallSet, Long>createMapStorageFactory(
+//        generateMapStorageName("callSet", Long.class),
+//        ES_CALL_SET_SERIALIZER, LONG,outputDir, DEFAULT_MAPDB_ALLOCATION,
+//        persist);
+//  }
+//
+//  public static MapStorageFactory<EsVariant, IdStorageContext<Integer, EsCall>> buildVariantIntegerMapStorageFactory(Path outputDir, boolean persist){
+//    return MapStorageFactory.<EsVariant, IdStorageContext<Integer, EsCall>>createMapStorageFactory(
+//        generateMapStorageName("variant", Integer.class),
+//        ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_INTEGER_SERIALIZER,outputDir, VARIANT_MAPDB_ALLOCATION,
+//        persist);
+//  }
+//
+//  public static MapStorageFactory<EsVariantSet, Integer> buildVariantSetIntegerMapStorageFactory(Path outputDir, boolean persist){
+//    return MapStorageFactory.<EsVariantSet, Integer>createMapStorageFactory(
+//        generateMapStorageName("variantSet",Integer.class),
+//        ES_VARIANT_SET_SERIALIZER, INTEGER,outputDir, DEFAULT_MAPDB_ALLOCATION,
+//        persist);
+//  }
+//
+//  public static MapStorageFactory<EsCallSet, Integer> buildCallSetMapIntegerStorageFactory(Path outputDir, boolean persist){
+//    return MapStorageFactory.<EsCallSet, Integer>createMapStorageFactory(generateMapStorageName("callSet", Integer.class),
+//        ES_CALL_SET_SERIALIZER, INTEGER,outputDir, DEFAULT_MAPDB_ALLOCATION,
+//        persist);
+//  }
+
+
 }

@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 import org.icgc.dcc.ga4gh.common.types.WorkflowTypes;
@@ -18,7 +18,10 @@ import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader2.dao.portal.PortalMetadataDao;
 import org.icgc.dcc.ga4gh.loader2.factory.Factory2;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.IdStorageContext;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.AbstractIdStorageTemplate;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.IdStorage;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.id.impl.VariantIdStorage;
+import org.icgc.dcc.ga4gh.loader2.utils.idstorage.storage.MapStorage;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -106,9 +110,11 @@ public class SecondLoader {
     val longIdStorageFactory = Factory2.buildLongIdStorageFactory();
 
     val useMapDB = USE_MAP_DB;
-    IdStorage<EsVariantSet, Integer> variantSetIdStorage = null ;
-    IdStorage<EsCallSet, Integer> callSetIdStorage = null ;
-    IdStorage<EsVariantCallPair2, IdStorageContext<Long, EsCall>> variantIdStorage = null ;
+    AbstractIdStorageTemplate<EsVariantSet, Integer> variantSetIdStorage = null ;
+    AbstractIdStorageTemplate<EsCallSet, Integer> callSetIdStorage = null ;
+    VariantIdStorage<Long> variantIdStorage = null ;
+    MapStorage<EsVariant, IdStorageContext<Long, EsCall>> variantMapStorage = null;
+
     if (Config.LOADER_MODE == FULLY_LOAD || LOADER_MODE == AGGREGATE_ONLY) {
 
       variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(useMapDB);
@@ -201,9 +207,9 @@ public class SecondLoader {
         val persistFile = true;
         log.info("Resurrecting map db file [{}] ", mapDbPath);
         val factory = createMapStorageFactory(name, ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,mapDbPath.getParent(),
-            VARIANT_MAPDB_ALLOCATION,persistFile);
+            VARIANT_MAPDB_ALLOCATION);
 
-        val mapStorage = factory.createDiskMapStorage();
+        val mapStorage = factory.createDiskMapStorage(TRUE);
         log.info("Creating VariantIdStorage object...");
         val idStorage = createVariantIdStorage(createLongCounter2(0L),mapStorage);
 
