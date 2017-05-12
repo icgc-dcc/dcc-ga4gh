@@ -13,14 +13,12 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant.EsVariantSerializer;
+import org.icgc.dcc.ga4gh.loader2.factory.Factory2;
 import org.icgc.dcc.ga4gh.loader2.persistance.FileObjectRestorerFactory;
-import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer;
 import org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.UIntIdStorageContext;
 import org.junit.Test;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
-import org.mapdb.Serializer;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,26 +29,21 @@ import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.MIN_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.common.core.util.Formats.formatRate;
-import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.EsVariantCallPairSerializer.createEsVariantCallPairSerializer;
 import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair2.createEsVariantCallPair2;
-import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader2.PreProcessor.createPreProcessor;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_CALL_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.ES_VARIANT_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.buildDefaultPortalMetadataDaoFactory;
-import static org.icgc.dcc.ga4gh.loader2.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
-import static org.icgc.dcc.ga4gh.loader2.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.buildIntegerIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader2.factory.Factory2.buildLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader2.portal.PortalCollabVcfFileQueryCreator.createPortalCollabVcfFileQueryCreator;
-import static org.icgc.dcc.ga4gh.loader2.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
 
 @Slf4j
 public class DaoTest {
   private static final Path DEFAULT_PERSISTED_OUTPUT_DIR = Paths.get("test.persisted");
   private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY = FileObjectRestorerFactory
       .createFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
-  private static final EsVariantSerializer ES_VARIANT_SERIALIZER = new EsVariantSerializer();
-  private static final EsCallSerializer ES_CALL_SERIALIZER = new EsCallSerializer();
-  private static final IdStorageContextImplSerializer<Long,EsCall> ID_STORAGE_CONTEXT_SERIALIZER = createIdStorageContextSerializer(
-      Serializer.LONG,ES_CALL_SERIALIZER);
 
   private int yoyo(int i){
     return i += 4;
@@ -73,7 +66,7 @@ public class DaoTest {
         .referenceName("referenceName")
         .build();
 
-    val variantSerializer = new EsVariantSerializer();
+    val variantSerializer = ES_VARIANT_SERIALIZER;
     val dataOutput2 = new DataOutput2();
     variantSerializer.serialize(dataOutput2, iVar);
 
@@ -158,9 +151,9 @@ public class DaoTest {
 
     val iVariantCallPair = createEsVariantCallPair2(iVar, newArrayList(iCall1,iCall2));
 
-    val variantSerializer = new EsVariantSerializer();
-    val callSerializer = new EsCallSerializer();
-    val variantCallSerializer = createEsVariantCallPairSerializer(variantSerializer,callSerializer);
+    val variantSerializer = ES_VARIANT_SERIALIZER;
+    val callSerializer = ES_CALL_SERIALIZER;
+    val variantCallSerializer = Factory2.ES_VARIANT_CALL_PAIR_SERIALIZER;
     val dataOutput2 = new DataOutput2();
     variantCallSerializer.serialize(dataOutput2, iVariantCallPair);
 
@@ -180,8 +173,8 @@ public class DaoTest {
     val query = createPortalCollabVcfFileQueryCreator();
     val portalMetadataDaoFactory = buildDefaultPortalMetadataDaoFactory(FILE_OBJECT_RESTORER_FACTORY, query);
     val portalMetadataDao = portalMetadataDaoFactory.getPortalMetadataDao();
-    val integerIdStorageFactory = createIntegerIdStorageFactory(PERSISTED_DIRPATH);
-    val longIdStorageFactory = createLongIdStorageFactory(PERSISTED_DIRPATH);
+    val integerIdStorageFactory = buildIntegerIdStorageFactory();
+    val longIdStorageFactory = buildLongIdStorageFactory();
 
     val variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(USE_MAP_DB);
     val callSetIdStorage = integerIdStorageFactory.createCallSetIdStorage(USE_MAP_DB);
@@ -457,6 +450,5 @@ public class DaoTest {
   public void testUIntIdContextGTMaxError(){
     val ic = UIntIdStorageContext.createUIntIdStorageContext((long)MAX_VALUE - MIN_VALUE + 1L);
   }
-
 
 }
