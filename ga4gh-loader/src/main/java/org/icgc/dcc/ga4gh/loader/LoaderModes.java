@@ -4,11 +4,8 @@ import lombok.val;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-/**
- * Created by rtisma on 2017-05-09.
- */
 public enum LoaderModes {
-  NESTED_ONLY(1), PARENT_CHILD_ONLY(2), PARENT_CHILD_THEN_NESTED(3);
+  AGGREGATE_ONLY(1), INDEX_ONLY_BASIC(2), FULLY_LOAD(3), INDEX_ONLY_SPECIAL(4);
 
   private int mode;
 
@@ -24,8 +21,8 @@ public enum LoaderModes {
         return loaderMode;
       }
     }
-    checkArgument(found, "The inputMode {} does not exist for LoaderModes2", inputMode);
-    return LoaderModes.NESTED_ONLY; // Should never be reached
+    checkArgument(found, "The inputMode {} does not exist for LoaderModes", inputMode);
+    return LoaderModes.FULLY_LOAD; // Should never be reached
   }
 
   public int getModeId() {

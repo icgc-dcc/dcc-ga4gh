@@ -3,53 +3,42 @@ package org.icgc.dcc.ga4gh.loader.indexing;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableSet;
-import htsjdk.tribble.TribbleException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.rest.RestStatus;
+import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
+import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
+import org.icgc.dcc.dcc.common.es.json.JacksonFactory;
+import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
-import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
-import org.icgc.dcc.ga4gh.loader.model.metadata.FileMetaData;
-import org.icgc.dcc.ga4gh.loader.model.metadata.FileMetaDataContext;
-import org.icgc.dcc.ga4gh.loader.utils.CounterMonitor;
-import org.icgc.dcc.ga4gh.loader.utils.cache.id.IdCache;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.rest.RestStatus;
-import org.icgc.dcc.common.core.util.stream.Collectors;
-import org.icgc.dcc.common.core.util.stream.Streams;
-import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
-import org.icgc.dcc.dcc.common.es.impl.IndexDocumentType;
-import org.icgc.dcc.dcc.common.es.json.JacksonFactory;
-import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 import org.icgc.dcc.ga4gh.loader.Config;
+import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorage;
 
-import java.io.IOException;
-import java.util.Set;
-import java.util.stream.Stream;
+import java.util.function.BiConsumer;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
+import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VCF_HEADER;
-import static org.icgc.dcc.ga4gh.loader.utils.CounterMonitor.newMonitor;
-import static org.elasticsearch.common.xcontent.XContentType.SMILE;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
-
 
 @Slf4j
 @RequiredArgsConstructor
@@ -84,36 +73,17 @@ public class Indexer {
    * State
    */
   // Keys are strings NAMES, since those should never collide
-  @NonNull
-  private final IdCache<EsVariant, Long> variantIdCache;
+  @NonNull private final EsVariantSetConverterJson variantSetConverter;
+  @NonNull private final EsCallSetConverterJson esCallSetConverter;
+  @NonNull private final EsVariantCallPairConverterJson variantCallPairConverter;
 
-  @NonNull
-  private final IdCache<String, Integer> variantSetIdCache;
-
-  @NonNull
-  private final IdCache<String, Integer> callSetIdCache;
-
-  @NonNull
-  private final EsVariantSetConverterJson variantSetConverter;
-
-  @NonNull
-  private final EsCallSetConverterJson esCallSetConverter;
-
-  @NonNull
-  private final EsVariantConverterJson variantConverter;
-
-  @NonNull
-  private final EsCallConverterJson callConverter;
-
-  private int callId = 0;
 
   @NonFinal
   private IndexCreator indexCreator = null;
 
 
-  private final CounterMonitor variantMonitor = newMonitor("VariantIndexing", Config.MONITOR_INTERVAL_COUNT);
-  private final CounterMonitor callMonitor = newMonitor("CallIndexing", Config.MONITOR_INTERVAL_COUNT);
-  private final CounterMonitor vcfHeaderMonitor = newMonitor("VCFHeaderIndexing", Config.MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor variantMonitor = CounterMonitor.createCounterMonitor("VariantIndexing", Config.MONITOR_INTERVAL_COUNT);
+  private final CounterMonitor vcfHeaderMonitor = CounterMonitor.createCounterMonitor("VCFHeaderIndexing", Config.MONITOR_INTERVAL_COUNT);
 
   @SneakyThrows
   public void prepareIndex() {
@@ -153,143 +123,47 @@ public class Indexer {
     log.info("Finished force merge on all indices");
   }
 
-  private void writeVariantSet(final String variantSetId, @NonNull final EsVariantSet variantSet) throws IOException {
-    writer.write(new IndexDocument(variantSetId, variantSetConverter.convertToObjectNode(variantSet),
-        new VariantSetDocumentType()));
-  }
 
-  public IdCache<String, Integer> getVariantSetIdCache() {
-    return variantSetIdCache;
-  }
-
-  public IdCache<String, Integer> getCallSetIdCache() {
-    return callSetIdCache;
-  }
-
-  public void indexFileMetaDataContext(@NonNull final FileMetaDataContext fileMetaDataContext) {
-    log.info("Converting VariantSets from FileMetaDataContext...");
-    val variantSets = convertToSetOfEsVariantSets(fileMetaDataContext);
-
-    log.info("Indexing VariantSets ...");
-    variantSets.forEach(this::indexVariantSet);
-
-    log.info("Converting CallSets from FileMetaDataContext...");
-    val callSets = convertToSetOfEsCallSets(fileMetaDataContext, variantSetIdCache);
-
-    log.info("Indexing CallSets ...");
-    callSets.forEach(this::indexCallSet);
-  }
-
-  private EsVariantSet convertToEsVariantSet(FileMetaData fileMetaData) {
-    return EsVariantSet.builder()
-        .name(fileMetaData.getVcfFilenameParser().getCallerId())
-        .dataSetId(fileMetaData.getDataType())
-        .referenceSetId(fileMetaData.getReferenceName())
-        .build();
-  }
-
-  private Set<EsVariantSet> convertToSetOfEsVariantSets(FileMetaDataContext fileMetaDataContext) {
-    return Streams.stream(fileMetaDataContext)
-        .map(this::convertToEsVariantSet)
-        .collect(Collectors.toImmutableSet());
-  }
-
-  private Set<EsCallSet> convertToSetOfEsCallSets(FileMetaDataContext fileMetaDataContext,
-      IdCache<String, Integer> variantSetIdCache) {
-    val groupedBySampleMap = fileMetaDataContext.groupFileMetaDataBySample();
-    val setBuilder = ImmutableSet.<EsCallSet> builder();
-    val converter = new EsVariantSetConverterJson();
-    for (val entry : groupedBySampleMap.entrySet()) {
-      val sampleName = entry.getKey();
-      val fileMetaDataContextForSample = entry.getValue();
-      val variantSetIds = convertToSetOfEsVariantSets(fileMetaDataContextForSample).stream()
-          .map(vs -> variantSetIdCache.getId(vs.getName()))
-          .collect(toImmutableSet());
-      setBuilder.add(
-          EsCallSet.builder()
-              .name(sampleName)
-              .variantSetIds(variantSetIds)
-              .bioSampleId(sampleName) // bio_sample_id == call_set_name
-              .build());
-    }
-    return setBuilder.build();
+  private <K, ID> void indexMapStorage(MapStorage<K, ID> mapStorage, BiConsumer<K, ID> consumer){
+    mapStorage.getMap().forEach(consumer);
   }
 
   @SneakyThrows
-  private void indexVariantSet(@NonNull final EsVariantSet variantSet) {
-    val variantSetName = variantSet.getName();
-    val isNewVariantSetId = !variantSetIdCache.contains(variantSetName);
-    if (isNewVariantSetId) {
-      variantSetIdCache.add(variantSetName);
-      val variantSetId = variantSetIdCache.getIdAsString(variantSetName);
-      writeVariantSet(variantSetId, variantSet);
-    }
-  }
-
-  @SneakyThrows
-  private void indexCallSet(@NonNull final EsCallSet callSet) {
-    val callSetName = callSet.getName();
-    val isNewCallSetId = !callSetIdCache.contains(callSetName);
-    if (isNewCallSetId) {
-      callSetIdCache.add(callSetName);
-      val callSetId = callSetIdCache.getIdAsString(callSetName);
-      writeCallSet(callSetId, callSet);
-    }
-  }
-
-  @SneakyThrows
-  private void processEsCall(final EsVariant parentVariant, final EsCall call) {
-    val callName = call.getName();
-    val doesVariantNameAlreadyExist = variantIdCache.contains(parentVariant);
-    checkState(doesVariantNameAlreadyExist,
-        "The variant Name: %s doesnt not exist for this call: %s. Make sure variant indexed BEFORE call index",
-        parentVariant, callName);
-    val parentVariantId = variantIdCache.getIdAsString(parentVariant);
-    writeCall(parentVariantId, nextCallId(), call);
-  }
-
-  private String nextCallId() {
-    return Integer.toString(++callId);
-  }
-
-  @SneakyThrows
-  public void indexVariantsAndCalls(@NonNull final Stream<EsVariantCallPair> pair) {
+  public void indexVariants(@NonNull MapStorage<EsVariant, IdStorageContext<Long, EsCall>> variantMapStorage){
     variantMonitor.start();
-    callMonitor.start();
-    try {
-      pair.forEach(v -> indexSingleVariantAndCall(v));
-    } catch (TribbleException te) {
-      log.error("CORRUPTED VCF due to Variant -- Message [{}]: {}",
-          te.getClass().getName(),
-          te.getMessage());
-    } finally {
-      variantMonitor.stop();
-      callMonitor.stop();
-
-      variantMonitor.displaySummary();
-      callMonitor.displaySummary();
-
-      variantMonitor.reset();
-      callMonitor.reset();
-    }
-
+    indexMapStorage(variantMapStorage, this::writeVariant);
+    variantMonitor.stop();
   }
 
   @SneakyThrows
-  private void indexSingleVariantAndCall(@NonNull final EsVariantCallPair pair) {
-    val calls = pair.getCalls();
-    val variant = pair.getVariant();
-    val isNewVariantId = !variantIdCache.contains(variant);
-    if (isNewVariantId) {
-      variantIdCache.add(variant);
-      val variantId = variantIdCache.getIdAsString(variant);
-      writeVariant(variantId, variant);
-      variantMonitor.incr();
-    }
-    for (val call : calls) {
-      processEsCall(variant, call);
-      callMonitor.incr();
-    }
+  public void indexVariantSets(@NonNull MapStorage<EsVariantSet, Integer> variantSetMapStorage) {
+    indexMapStorage(variantSetMapStorage, this::writeVariantSet);
+  }
+
+  @SneakyThrows
+  public void indexCallSets(@NonNull MapStorage<EsCallSet, Integer> callSetMapStorage) {
+    indexMapStorage(callSetMapStorage, this::writeCallSet);
+  }
+
+  @SneakyThrows
+  private void writeVariant(@NonNull EsVariant variant, @NonNull IdStorageContext<Long, EsCall> idStorageContext){
+    val variantId = idStorageContext.getId();
+    val esVariantCallPair = EsVariantCallPair.builder().variant(variant).calls(idStorageContext.getObjects()).build();
+    val data = variantCallPairConverter.convertToObjectNode(esVariantCallPair);
+    writer.write(new IndexDocument(variantId.toString(), data, new VariantDocumentType()));
+    variantMonitor.incr();
+  }
+
+  @SneakyThrows
+  private void writeCallSet(@NonNull EsCallSet callSet, @NonNull Integer callSetId) {
+    val data = esCallSetConverter.convertToObjectNode(callSet);
+    writer.write( new IndexDocument(callSetId.toString(),data, new CallSetDocumentType()));
+  }
+
+  @SneakyThrows
+  private void writeVariantSet(@NonNull EsVariantSet variantSet, @NonNull Integer variantSetId) {
+    val data = variantSetConverter.convertToObjectNode(variantSet);
+    writer.write(new IndexDocument(variantSetId.toString(), data, new VariantSetDocumentType()));
   }
 
   private static byte[] createSource(@NonNull final Object document) {
@@ -298,13 +172,6 @@ public class Indexer {
     } catch (JsonProcessingException e) {
       throw propagate(e);
     }
-  }
-
-  private void writeCall(final String parentVariantId, final String callId, @NonNull final EsCall call)
-      throws IOException {
-    writer.write(new IndexDocument(callId, callConverter.convertToObjectNode(call), new CallDocumentType(),
-        parentVariantId));
-
   }
 
   // TODO: [rtisma] rethink how will organize this dao
@@ -320,18 +187,6 @@ public class Indexer {
             .get().status().equals(RestStatus.CREATED));
   }
 
-  // Need builder so can finalize POJO with variantSetIds, which are only known after VariantSetIndexing is complete. So
-  // doing it now
-  private void writeCallSet(final String callSetId, @NonNull final EsCallSet callSet)
-      throws IOException {
-    writer.write(
-        new IndexDocument(callSetId, esCallSetConverter.convertToObjectNode(callSet), new CallSetDocumentType()));
-  }
-
-  private void writeVariant(final String variantId, @NonNull final EsVariant variant) throws IOException {
-    writer
-        .write(new IndexDocument(variantId, variantConverter.convertToObjectNode(variant), new VariantDocumentType()));
-  }
 
   private static class VariantDocumentType implements IndexDocumentType {
 

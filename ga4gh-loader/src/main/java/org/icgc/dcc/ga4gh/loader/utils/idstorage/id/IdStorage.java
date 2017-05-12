@@ -15,60 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.ga4gh.loader.indexing;
+package org.icgc.dcc.ga4gh.loader.utils.idstorage.id;
 
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Singular;
-import lombok.Value;
-import org.elasticsearch.client.Client;
+import org.icgc.dcc.ga4gh.loader.utils.Purgeable;
 
-import java.util.List;
+import java.io.Closeable;
+import java.util.Map;
+import java.util.stream.Stream;
 
-@Builder
-@Value
-public class IndexCreatorContext {
+public interface IdStorage<K, ID> extends Purgeable, Closeable {
 
-  /*
-   * Es Client handle
-   */
-  @NonNull
-  private final Client client;
+  void add(K k);
 
-  /*
-   * Name of index
-   */
-  @NonNull
-  private final String indexName;
+  boolean containsObject(K k);
 
-  /*
-   * Directory name where mapping files is stored
-   */
-  @NonNull
-  private final String mappingDirname;
+  default String getIdAsString(K k){
+    return k.toString();
+  }
 
-  /*
-   * Extension that is appended to the end of the generated mapping file filename
-   */
-  @NonNull
-  private final String mappingFilenameExtension;
+  ID getId(K k);
 
-  /*
-   * Filename where index setting file is stored, relative to MappingDirname
-   */
-  @NonNull
-  private final String indexSettingsFilename;
-
-  /*
-   * Enable bit, used to enable or disable indexing
-   */
-  private final boolean indexingEnabled;
-
-  /*
-   * MiscNames of the different types in this index
-   */
-  @NonNull
-  @Singular
-  private final List<String> typeNames;
+  Stream<Map.Entry<K, ID>> streamEntries();
 
 }

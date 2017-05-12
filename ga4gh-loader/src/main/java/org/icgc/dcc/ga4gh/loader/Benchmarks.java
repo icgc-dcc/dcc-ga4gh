@@ -1,16 +1,10 @@
 package org.icgc.dcc.ga4gh.loader;
 
-import static com.google.common.base.Stopwatch.createStarted;
-import static org.icgc.dcc.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
-import static org.icgc.dcc.ga4gh.loader.factory.MainFactory.newClient;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.function.Consumer;
-
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
@@ -23,11 +17,16 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.function.Consumer;
+
+import static com.google.common.base.Stopwatch.createStarted;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.icgc.dcc.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
+import static org.icgc.dcc.ga4gh.loader.factory.Factory.newClient;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -125,4 +124,6 @@ public class Benchmarks {
     writer.write(message);
     writer.close();
   }
+
+
 }

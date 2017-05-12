@@ -1,7 +1,5 @@
 package org.icgc.dcc.ga4gh.loader;
 
-import org.icgc.dcc.ga4gh.loader2.LoaderModes2;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -12,12 +10,11 @@ import static java.lang.Long.parseLong;
 import static java.lang.System.getProperty;
 import static org.icgc.dcc.ga4gh.common.MiscNames.FALSE;
 import static org.icgc.dcc.ga4gh.common.MiscNames.TRUE;
-import static org.icgc.dcc.ga4gh.loader2.LoaderModes2.parseLoaderMode;
+import static org.icgc.dcc.ga4gh.loader.LoaderModes.parseLoaderMode;
 
 public class Config {
 
-  public static final LoaderModes2 LOADER_MODE = parseLoaderMode(parseInt(getProperty("loader_mode", "3")));
-  public static final LoaderModes OLD_LOADER_MODE = LoaderModes.parseLoaderMode(parseInt(getProperty("old_loader_mode", "1")));
+  public static final LoaderModes LOADER_MODE = parseLoaderMode(parseInt(getProperty("loader_mode", "3")));
   public static final String PARENT_CHILD_INDEX_NAME = getProperty("parent_child_index_name", "dcc-variants-pc");
   public static final String NESTED_INDEX_NAME = getProperty("nested_index_name", "dcc-variants-nested");
   public static final String INDEX_NAME = getProperty("index_name", "dcc-variants");
@@ -50,6 +47,14 @@ public class Config {
   public static final boolean DEFAULT_PERSIST_MAPDB_FILE = false;
   public static final long DEFAULT_MAPDB_ALLOCATION = 2 * 1024 * 1024;
   public static final long VARIANT_MAPDB_ALLOCATION = 1024 * 1024 * 1024; //1GB
+
+
+  public static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
+  public static final String DEFAULT_MAPPINGS_DIRNAME = "org/icgc/dcc/ga4gh/resources/mappings";
+  public static final String DEFAULT_MAPPING_JSON_EXTENSION = ".mapping.json";
+
+  private static final int MAX_NUM_SEGMENTS = 1;
+
 
   public static String toConfigString() {
     return String.format("PARENT_CHILD_INDEX_NAME: %s"

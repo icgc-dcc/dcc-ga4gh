@@ -40,7 +40,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
-import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson2;
+import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.server.util.Protobufs;
@@ -86,7 +86,7 @@ public class VariantService {
   private final EsCallSetConverterJson esEsCallSetConverter;
 
   @NonNull
-  private final EsVariantCallPairConverterJson2 esVariantCallPairConverter;
+  private final EsVariantCallPairConverterJson esVariantCallPairConverter;
 
   /*
    * Variant Processing

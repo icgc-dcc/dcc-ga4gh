@@ -20,8 +20,9 @@ package org.icgc.dcc.ga4gh.common.model.converters;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.TypeNames;
+import org.icgc.dcc.ga4gh.common.SearchHits;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
@@ -30,13 +31,15 @@ import java.util.Map;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALLS;
 
 @Builder
+@RequiredArgsConstructor
 public class EsVariantCallPairConverterJson implements
     JsonObjectNodeConverter<EsVariantCallPair>,
     SearchHitConverter<EsVariantCallPair> {
 
-    private static final String CHILD_TYPE = TypeNames.CALL;
+    private static final String NESTED_TYPE = CALLS;
 
 
   @NonNull
@@ -53,8 +56,14 @@ public class EsVariantCallPairConverterJson implements
 
   @Override
   public EsVariantCallPair convertFromSource(Map<String, Object> source) {
+    val calls = SearchHits.convertSourceToObjectList(source, CALLS);
+
     val pair = EsVariantCallPair.builder()
         .variant(variantSearchHitConverter.convertFromSource(source));
+    calls.stream()
+        .map(x -> (Map<String, Object>)x)
+        .map(callSearchHitConverter::convertFromSource)
+        .forEach(pair::call);
 
     return pair.build();
   }
@@ -67,7 +76,7 @@ public class EsVariantCallPairConverterJson implements
     }
     return object()
         .with(variantJsonObjectNodeConverter.convertToObjectNode(t.getVariant()))
-        .with(CHILD_TYPE, array)
+        .with(NESTED_TYPE, array)
         .end();
   }
 

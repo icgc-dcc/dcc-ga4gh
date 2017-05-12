@@ -18,16 +18,60 @@
 package org.icgc.dcc.ga4gh.common.model.es;
 
 import lombok.Builder;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.Value;
+import lombok.val;
+import org.jetbrains.annotations.NotNull;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.Serializer;
+
+import java.io.IOException;
+import java.util.List;
+
+import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.deserializeList;
+import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.serializeList;
 
 @Builder
 @Value
 public class EsVariantCallPair {
 
+  public static EsVariantCallPair createEsVariantCallPair2(EsVariant variant, List<EsCall> calls) {
+    return new EsVariantCallPair(variant, calls);
+  }
+
   private EsVariant variant;
 
   @Singular
-  private Iterable<EsCall> calls;
+  private List<EsCall> calls;
+
+  @RequiredArgsConstructor
+  public static class EsVariantCallPairSerializer implements Serializer<EsVariantCallPair>{
+
+    public static EsVariantCallPairSerializer createEsVariantCallPairSerializer(
+        Serializer<EsVariant> variantSerializer,
+        EsCall.EsCallSerializer callSerializer) {
+      return new EsVariantCallPairSerializer(variantSerializer, callSerializer);
+    }
+
+    @NonNull private final Serializer<EsVariant> variantSerializer;
+    @NonNull private final EsCall.EsCallSerializer callSerializer;
+
+    @Override
+    public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull EsVariantCallPair esVariantCallPair) throws IOException {
+      variantSerializer.serialize(dataOutput2, esVariantCallPair.getVariant());
+      serializeList(dataOutput2, callSerializer, esVariantCallPair.getCalls());
+    }
+
+    @Override
+    public EsVariantCallPair deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
+      val esVariant = variantSerializer.deserialize(dataInput2,i);
+      val esCalls = deserializeList(dataInput2,i,callSerializer);
+      return createEsVariantCallPair2(esVariant, esCalls);
+    }
+
+  }
 
 }
