@@ -12,10 +12,17 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallSerializer;
+import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.loader.factory.Factory;
 import org.icgc.dcc.ga4gh.loader.persistance.FileObjectRestorerFactory;
+import org.icgc.dcc.ga4gh.loader.portal.PortalCollabVcfFileQueryCreator;
+import org.icgc.dcc.ga4gh.loader.utils.SetLogic;
+import org.icgc.dcc.ga4gh.loader.utils.counting.LongCounter;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.impl.UIntIdStorageContext;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IntegerIdStorage;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
@@ -30,22 +37,30 @@ import static java.lang.Integer.MIN_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.common.core.util.Formats.formatRate;
 import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVariantCallPair2;
+import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.PreProcessor.createPreProcessor;
+import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_SET_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SET_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildLongIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader.persistance.FileObjectRestorerFactory.createFileObjectRestorerFactory;
 import static org.icgc.dcc.ga4gh.loader.portal.PortalCollabVcfFileQueryCreator.createPortalCollabVcfFileQueryCreator;
+import static org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor.createCounterMonitor;
+import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantIdStorage.createVariantIdStorage;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory.createMapStorageFactory;
+import static org.mapdb.Serializer.INTEGER;
 
 @Slf4j
 public class DaoTest {
   private static final Path DEFAULT_PERSISTED_OUTPUT_DIR = Paths.get("test.persisted");
-  private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY = FileObjectRestorerFactory
-      .createFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
+  private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY =
+      createFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
 
   private int yoyo(int i){
     return i += 4;
@@ -470,6 +485,101 @@ public class DaoTest {
 //      log.info("IdStorageContext: {}", e.getValue());
 //
 //    }
+
+  }
+
+  @Test
+  @SneakyThrows
+  @Ignore("This is just to quickly verify that adding the same vcf twice will will result in all variants have 2 identical call objects")
+  public void testMap(){
+    val vcfPath = Paths.get("/Users/rtisma/Documents/workspace/ga4gh/storageDirrr/fe96d91c-3686-4125-af71-b8703a011ad4.consensus.20161006.somatic.indel.vcf.gz");
+
+    val fileObjectRestorerFactory = createFileObjectRestorerFactory("/Users/rtisma/Documents/workspace/ga4gh/persisted");
+    val query = PortalCollabVcfFileQueryCreator.createPortalCollabVcfFileQueryCreator();
+    val factory = Factory.buildDefaultPortalMetadataDaoFactory(fileObjectRestorerFactory, query);
+    val portalMetadataDao = factory.getPortalMetadataDao();
+
+    val portalMetadataOpt =  portalMetadataDao.findAll().stream()
+        .filter(x -> x.getPortalFilename().getFilename().equals(vcfPath.getFileName().toString()))
+        .findFirst();
+    assertThat(portalMetadataOpt.isPresent());
+    val portalMetadata = portalMetadataOpt.get();
+
+    val vcfFile = vcfPath.toFile();
+
+    val singleMapStorageFactory = createMapStorageFactory("singleTest", ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,PERSISTED_DIRPATH,0);
+    val singleMapStorage = singleMapStorageFactory.createRamMapStorage();
+    val singleCounter = LongCounter.createLongCounter(0);
+    val singleIdStorage = createVariantIdStorage(singleCounter,singleMapStorage);
+
+    val doubleMapStorageFactory = createMapStorageFactory("doubleTest", ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,PERSISTED_DIRPATH,0);
+    val doubleMapStorage = doubleMapStorageFactory.createRamMapStorage();
+    val doubleCounter = LongCounter.createLongCounter(0);
+    val doubleIdStorage = createVariantIdStorage(doubleCounter,doubleMapStorage);
+
+    val variantSetMapStorageFactory = createMapStorageFactory("variantSetIdTest", ES_VARIANT_SET_SERIALIZER,
+        INTEGER,PERSISTED_DIRPATH,0);
+    val variantSetMapStorage = variantSetMapStorageFactory.createRamMapStorage();
+    val variantSetIdStorage = IntegerIdStorage.createIntegerIdStorage(variantSetMapStorage,0);
+    val esVariantSet  = EsVariantSet.builder()
+        .dataSetId("SSM")
+        .referenceSetId("hs37d5")
+        .name("consensus")
+        .build();
+    variantSetIdStorage.add(esVariantSet);
+
+
+    val callSetMapStorageFactory = createMapStorageFactory("callSetIdTest", ES_CALL_SET_SERIALIZER,
+        INTEGER,PERSISTED_DIRPATH,0);
+    val callSetMapStorage = callSetMapStorageFactory.createRamMapStorage();
+    val callSetIdStorage = IntegerIdStorage.createIntegerIdStorage(callSetMapStorage,0);
+    val esCallSet = EsCallSet.builder()
+        .variantSetId(0)
+        .bioSampleId("SA520318")
+        .name("SA520318")
+        .build();
+    callSetIdStorage.add(esCallSet);
+
+    val callSetDao = CallSetDao.createCallSetDao(callSetIdStorage);
+    val singleVcfProcessor = createVcfProcessor(singleIdStorage,variantSetIdStorage,callSetIdStorage,callSetDao,
+        createCounterMonitor("singleCounterMonitor", 1000));
+    val doubleVcfProcessor = createVcfProcessor(doubleIdStorage,variantSetIdStorage,callSetIdStorage,callSetDao,
+        createCounterMonitor("doubleCounterMonitor", 1000));
+
+    for (int i =0 ; i <2; i++){
+      if (i == 0){
+        singleVcfProcessor.process(portalMetadata,vcfFile);
+      }
+      doubleVcfProcessor.process(portalMetadata, vcfFile);
+    }
+
+    val singleVariants = singleMapStorage.getMap().keySet();
+    val doubleVariants = doubleMapStorage.getMap().keySet();
+    val extraVariants = SetLogic.extraInActual(doubleVariants, singleVariants);
+    val missingVariants = SetLogic.missingFromActual(doubleVariants, singleVariants);
+    assertThat(extraVariants).hasSize(0);
+    assertThat(missingVariants).hasSize(0);
+
+    // asserted they are subsets of each other
+    for (val esVariant : singleVariants){
+      val singleCtx = singleMapStorage.getMap().get(esVariant);
+      val doubleCtx = doubleMapStorage.getMap().get(esVariant);
+
+      val singleCallList = singleCtx.getObjects();
+      val singleId = singleCtx.getId();
+
+      val doubleCallList = doubleCtx.getObjects();
+      val doubleId = doubleCtx.getId();
+      assertThat(singleId).isEqualTo(doubleId);
+      assertThat(singleCallList).hasSize(1);
+      assertThat(doubleCallList).hasSize(2);
+      assertThat(doubleCallList.get(0)).isEqualTo(singleCallList.get(0));
+      assertThat(doubleCallList.get(1)).isEqualTo(singleCallList.get(0));
+    }
+
+
+    assertThat(doubleMapStorage.getMap().keySet().size()).isEqualTo(singleMapStorage.getMap().keySet().size());
+    assertThat(doubleMapStorage.getMap().values().stream().flatMap(x -> x.getObjects().stream()).count()).isEqualTo(singleMapStorage.getMap().values().stream().flatMap(x -> x.getObjects().stream()).count()*2);
 
   }
 
