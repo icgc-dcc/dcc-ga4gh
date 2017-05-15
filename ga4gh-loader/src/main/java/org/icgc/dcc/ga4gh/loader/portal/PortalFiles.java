@@ -26,7 +26,7 @@ import org.icgc.dcc.ga4gh.common.model.portal.PortalFilename;
 import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.ga4gh.common.model.portal.PortalFilename.newPortalFilename;
+import static org.icgc.dcc.ga4gh.common.model.portal.PortalFilename.createPortalFilename;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class PortalFiles {
@@ -141,7 +141,7 @@ public final class PortalFiles {
   }
 
   public static PortalFilename getPortalFilename(@NonNull ObjectNode file) {
-    return newPortalFilename(getFileName(file));
+    return createPortalFilename(getFileName(file));
   }
 
   public static PortalMetadata convertToPortalMetadata(@NonNull final ObjectNode objectNode){

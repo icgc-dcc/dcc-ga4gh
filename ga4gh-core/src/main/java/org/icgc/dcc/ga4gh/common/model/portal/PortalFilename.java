@@ -38,7 +38,7 @@ import static org.icgc.dcc.common.core.util.Joiners.DOT;
 @ToString
 public class PortalFilename implements Serializable {
 
-  public static final PortalFilename newPortalFilename(String filename){
+  public static final PortalFilename createPortalFilename(String filename){
     return new PortalFilename(filename);
   }
 

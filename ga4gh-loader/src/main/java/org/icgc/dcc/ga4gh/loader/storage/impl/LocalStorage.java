@@ -50,7 +50,7 @@ public class LocalStorage implements Storage {
     @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
       val filename = file.getFileName().toString();
       try{
-        val portalFilename = PortalFilename.newPortalFilename(filename);
+        val portalFilename = PortalFilename.createPortalFilename(filename);
         map.put(portalFilename, file);
       } catch (Exception e){
         log.error("Error parsing Portal VCF Filename: {}", file.getFileName());
