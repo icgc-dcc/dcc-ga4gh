@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 
-import static org.icgc.dcc.ga4gh.loader.storage.impl.PortalStorage.newPortalStorage;
+import static org.icgc.dcc.ga4gh.loader.storage.impl.PortalStorage.createPortalStorage;
 
 @RequiredArgsConstructor
 @Builder
@@ -18,7 +18,7 @@ public class StorageFactory {
   private final boolean persistVcfDownloads;
 
   public Storage getStorage(){
-      return newPortalStorage(persistVcfDownloads, outputVcfDir, bypassMD5Check, token);
+      return createPortalStorage(persistVcfDownloads, outputVcfDir, bypassMD5Check, token);
   }
 
 

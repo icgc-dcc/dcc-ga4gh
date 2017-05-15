@@ -66,7 +66,7 @@ public class PortalStorage implements Storage {
     return path;
   }
 
-  public static PortalStorage newPortalStorage(final boolean persist, Path outputDir, final boolean bypassMD5Check, String token){
+  public static PortalStorage createPortalStorage(final boolean persist, Path outputDir, final boolean bypassMD5Check, String token){
     return new PortalStorage(persist, outputDir, bypassMD5Check, token);
   }
 
