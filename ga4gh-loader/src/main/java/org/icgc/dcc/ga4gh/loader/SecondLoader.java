@@ -12,10 +12,10 @@ import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 import org.icgc.dcc.ga4gh.common.types.WorkflowTypes;
-import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.dao.portal.PortalMetadataDao;
 import org.icgc.dcc.ga4gh.loader.factory.Factory;
 import org.icgc.dcc.ga4gh.loader.indexing.Indexer;
+import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.AbstractIdStorageTemplate;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.IdStorage;
@@ -32,13 +32,12 @@ import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.ga4gh.loader.CallSetDao.createCallSetDao;
 import static org.icgc.dcc.ga4gh.loader.Config.INDEX_NAME;
 import static org.icgc.dcc.ga4gh.loader.Config.LOADER_MODE;
-import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAP_DB_FILENAME;
-import static org.icgc.dcc.ga4gh.loader.CallSetDao.createCallSetDao;
 import static org.icgc.dcc.ga4gh.loader.LoaderModes.AGGREGATE_ONLY;
 import static org.icgc.dcc.ga4gh.loader.LoaderModes.FULLY_LOAD;
 import static org.icgc.dcc.ga4gh.loader.LoaderModes.INDEX_ONLY_BASIC;
@@ -50,6 +49,7 @@ import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_CALL_PAIR_CON
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SET_CONVERTER_JSON;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader.factory.Factory.RESOURCE_PERSISTED_PATH;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDocumentWriter;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildIndexer2;
@@ -188,7 +188,8 @@ public class SecondLoader {
       }
 
     } else if (LOADER_MODE == INDEX_ONLY_SPECIAL) {
-      Path mapDbPath = PERSISTED_DIRPATH.resolve("variantLongMapStorage.db");
+      val persistedPath = RESOURCE_PERSISTED_PATH;
+      Path mapDbPath = persistedPath.resolve("variantLongMapStorage.db");
       if (VARIANT_MAP_DB_FILENAME.isPresent()){
         mapDbPath = Paths.get(VARIANT_MAP_DB_FILENAME.get());
       }

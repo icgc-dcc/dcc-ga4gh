@@ -40,6 +40,7 @@ import org.mapdb.Serializer;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
@@ -146,7 +147,8 @@ public class Factory {
   }
 
   public static FileObjectRestorerFactory buildFileObjectRestorerFactory(){
-    return FileObjectRestorerFactory.createFileObjectRestorerFactory(PERSISTED_DIRPATH);
+    val persistedPath = RESOURCE_PERSISTED_PATH;
+    return FileObjectRestorerFactory.createFileObjectRestorerFactory(persistedPath);
   }
 
   public static StorageFactory buildStorageFactory(){
@@ -158,35 +160,37 @@ public class Factory {
         .build();
   }
 
+  public static final Path RESOURCE_PERSISTED_PATH = PERSISTED_DIRPATH;
+
   public static final MapStorageFactory<EsVariant, IdStorageContext<Long, EsCall>> VARIANT_LONG_MAP_STORAGE_FACTORY= createMapStorageFactory(
       "variantLongMapStorage",
       ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,
-      PERSISTED_DIRPATH, VARIANT_MAPDB_ALLOCATION);
+      RESOURCE_PERSISTED_PATH, VARIANT_MAPDB_ALLOCATION);
 
   public static final MapStorageFactory<EsCallSet, Long> CALL_SET_LONG_MAP_STORAGE_FACTORY = createMapStorageFactory(
       "callSetLongMapStorage",
       ES_CALL_SET_SERIALIZER, LONG,
-      PERSISTED_DIRPATH, DEFAULT_MAPDB_ALLOCATION);
+      RESOURCE_PERSISTED_PATH, DEFAULT_MAPDB_ALLOCATION);
 
   public static final MapStorageFactory<EsVariantSet, Long> VARIANT_SET_LONG_MAP_STORAGE_FACTORY = createMapStorageFactory(
       "variantSetLongMapStorage",
       ES_VARIANT_SET_SERIALIZER, LONG,
-      PERSISTED_DIRPATH, DEFAULT_MAPDB_ALLOCATION);
+      RESOURCE_PERSISTED_PATH, DEFAULT_MAPDB_ALLOCATION);
 
   public static final MapStorageFactory<EsVariant, IdStorageContext<Integer, EsCall>> VARIANT_INTEGER_MAP_STORAGE_FACTORY= createMapStorageFactory(
       "variantIntegerMapStorage",
       ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_INTEGER_SERIALIZER,
-      PERSISTED_DIRPATH, VARIANT_MAPDB_ALLOCATION);
+      RESOURCE_PERSISTED_PATH, VARIANT_MAPDB_ALLOCATION);
 
   public static final MapStorageFactory<EsCallSet, Integer> CALL_SET_INTEGER_MAP_STORAGE_FACTORY = createMapStorageFactory(
       "callSetIntegerMapStorage",
       ES_CALL_SET_SERIALIZER, INTEGER,
-      PERSISTED_DIRPATH, DEFAULT_MAPDB_ALLOCATION);
+      RESOURCE_PERSISTED_PATH, DEFAULT_MAPDB_ALLOCATION);
 
   public static final MapStorageFactory<EsVariantSet, Integer> VARIANT_SET_INTEGER_MAP_STORAGE_FACTORY = createMapStorageFactory(
       "variantSetIntegerMapStorage",
       ES_VARIANT_SET_SERIALIZER, INTEGER,
-      PERSISTED_DIRPATH, DEFAULT_MAPDB_ALLOCATION);
+      RESOURCE_PERSISTED_PATH, DEFAULT_MAPDB_ALLOCATION);
 
   public static IdStorageFactory<Integer> buildIntegerIdStorageFactory(){
     return createIntegerIdStorageFactory(VARIANT_INTEGER_MAP_STORAGE_FACTORY, VARIANT_SET_INTEGER_MAP_STORAGE_FACTORY, CALL_SET_INTEGER_MAP_STORAGE_FACTORY);
