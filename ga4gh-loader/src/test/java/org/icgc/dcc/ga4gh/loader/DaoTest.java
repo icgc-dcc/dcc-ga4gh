@@ -20,6 +20,7 @@ import org.icgc.dcc.ga4gh.common.model.portal.PortalFilename;
 import org.icgc.dcc.ga4gh.loader.dao.portal.PortalMetadataRequest;
 import org.icgc.dcc.ga4gh.loader.factory.Factory;
 import org.icgc.dcc.ga4gh.loader.persistance.FileObjectRestorerFactory;
+import org.icgc.dcc.ga4gh.loader.storage.impl.LocalStorage;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.counting.LongCounter;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
@@ -47,24 +48,20 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVariantCallPair2;
 import static org.icgc.dcc.ga4gh.common.model.portal.PortalFilename.createPortalFilename;
 import static org.icgc.dcc.ga4gh.loader.CallSetDao.createCallSetDao;
-import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader.dao.portal.PortalMetadataRequest.createPortalMetadataRequest;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SERIALIZER;
-import static org.icgc.dcc.ga4gh.loader.factory.Factory.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.RESOURCE_PERSISTED_PATH;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader.persistance.FileObjectRestorerFactory.createFileObjectRestorerFactory;
 import static org.icgc.dcc.ga4gh.loader.portal.PortalCollabVcfFileQueryCreator.createPortalCollabVcfFileQueryCreator;
-import static org.icgc.dcc.ga4gh.loader.storage.impl.PortalStorage.createPortalStorage;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IntegerIdStorage.createIntegerIdStorage;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantIdStorage.createVariantIdStorage;
-import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory.createMapStorageFactory;
 
 @Slf4j
 public class DaoTest {
@@ -72,17 +69,10 @@ public class DaoTest {
   private static final Path DEFAULT_PERSISTED_OUTPUT_DIR = Paths.get("test.persisted");
   private static final FileObjectRestorerFactory FILE_OBJECT_RESTORER_FACTORY =
       createFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
+  private static final Path TEST_RESOURCES_DIRPATH = Paths.get("src/test/resources");
+  private static final Path TEST_FIXTURES_DIRPATH= TEST_RESOURCES_DIRPATH.resolve("fixtures");
+  private static final Path TEST_VCF_FILES_DIRPATH= TEST_FIXTURES_DIRPATH.resolve("testVcfFiles");
 
-  private int yoyo(int i) {
-    return i += 4;
-
-  }
-
-  @Test
-  public void testMe() {
-    int i = 0;
-    assertThat(yoyo(i)).isEqualTo(4);
-  }
 
   @Test
   @SneakyThrows
@@ -475,28 +465,6 @@ public class DaoTest {
   }
 
   @Test
-  public void testMe2() {
-    val path = Paths.get("/Users/rtisma/Documents/oicr/ga4gh/persisted_ga4ghloader3_2680million_20170510");
-    val variantMapStorage =
-        createMapStorageFactory("variantLongMapStorage", ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,
-            path, 0).persistMapStorage();
-
-    log.info("NumVariants: {}", variantMapStorage.getMap().size());
-    //    val optional = variantMapStorage.getMap().entrySet().stream()
-    //        .filter(x -> x.getValue().getObjects().size() > 1)
-    //        .findFirst();
-    //
-    //    log.info("Exists: {}", optional.isPresent());
-    //    if (optional.isPresent()){
-    //      val e = optional.get();
-    //      log.info("Variant: {}", e.getKey());
-    //      log.info("IdStorageContext: {}", e.getValue());
-    //
-    //    }
-
-  }
-
-  @Test
   @SneakyThrows
   public void testIdStorageSerialization() {
     val ser = new IdStorageContextImpl.IdStorageContextImplSerializer<Long, EsCall>(Serializer.LONG,
@@ -660,21 +628,19 @@ public class DaoTest {
     runIdStorageContextTest(variantMapStorage);
   }
 
+  @SneakyThrows
   private void runIdStorageContextTest(MapStorage<EsVariant, IdStorageContext<Long, EsCall>> variantMapStorage){
     val portalFilenames = Lists.<PortalFilename>newArrayList();
     portalFilenames.add(createPortalFilename("120f01d1-8884-4aca-a1cb-36b207b2aa3a.dkfz-snvCalling_1-0-132-1.20150903.somatic.snv_mnv.vcf.gz"));
     portalFilenames.add(createPortalFilename("145f2b89-8878-4390-b0f6-f09b02fb138a.svcp_1-0-5.20150807.somatic.snv_mnv.vcf.gz"));
     portalFilenames.add(createPortalFilename("32d8c373-b5c8-420b-9808-8812b5501649.dkfz-snvCalling_1-0-132-1.20150820.somatic.snv_mnv.vcf.gz"));
 
-
-
-    val persistedPath = RESOURCE_PERSISTED_PATH;
-    val fileObjectRestorerFactory = createFileObjectRestorerFactory(persistedPath);
-    val vcfStorageDirpath = Paths.get(Config.STORAGE_OUTPUT_VCF_STORAGE_DIR);
+    val fileObjectRestorerFactory = createFileObjectRestorerFactory(RESOURCE_PERSISTED_PATH);
     val portalMetadataDaoFactory = buildDefaultPortalMetadataDaoFactory(fileObjectRestorerFactory, createPortalCollabVcfFileQueryCreator());
     val portalMetadataDao = portalMetadataDaoFactory.getPortalMetadataDao();
 
-    val storage = createPortalStorage(true, vcfStorageDirpath,false,TOKEN);
+//    val storage = createPortalStorage(true, vcfStorageDirpath,false,TOKEN);
+    val storage = LocalStorage.newLocalStorage(TEST_VCF_FILES_DIRPATH, true);
     val vcfFiles = portalFilenames.stream()
         .map(PortalMetadataRequest::createPortalMetadataRequest)
         .map(portalMetadataDao::find)
@@ -714,7 +680,7 @@ public class DaoTest {
     }
 
     //Search for below variant, there should be 3 calls for this variant given the 3 files above
-    //16    83593179        .       GAA     G       .       LOWSUPPORT;NORMALPANEL
+    //1    755904 .       G     A       .       LOWSUPPORT;NORMALPANEL
     val esVariant = EsVariant.builder()
         .start(755904)
         .referenceName("1")
@@ -726,20 +692,11 @@ public class DaoTest {
 
     val ctx = variantMapStorage.getMap().get(esVariant);
 
-
     log.info("Variant: {}", esVariant);
     log.info("IdStorageContext: {}", ctx);
 
     val set = ctx.getObjects().stream().collect(toImmutableSet());
     assertThat(set).hasSize(3);
-
-
-    log.info("done");
-
-
-
-
-
   }
 
 
