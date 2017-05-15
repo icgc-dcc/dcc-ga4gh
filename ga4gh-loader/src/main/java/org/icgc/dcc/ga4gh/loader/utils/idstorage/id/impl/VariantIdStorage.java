@@ -56,6 +56,7 @@ public class VariantIdStorage<N> implements IdStorage<EsVariantCallPair, IdStora
     } else {
       val ctx = mapStorage.getMap().get(esVariant);
       ctx.addAll(esCalls);
+      map.put(esVariant, ctx); //rtisma refer to JIRA ticket [https://jira.oicr.on.ca/browse/DCC-5587] -- [GA4GH] DiskMapStorage disk commit issue
     }
   }
 
