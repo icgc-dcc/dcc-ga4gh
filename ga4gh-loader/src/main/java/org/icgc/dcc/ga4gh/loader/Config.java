@@ -17,7 +17,7 @@ public class Config {
   public static final LoaderModes LOADER_MODE = parseLoaderMode(parseInt(getProperty("loader_mode", "3")));
   public static final String PARENT_CHILD_INDEX_NAME = getProperty("parent_child_index_name", "dcc-variants-pc");
   public static final String NESTED_INDEX_NAME = getProperty("nested_index_name", "dcc-variants-nested");
-  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants");
+  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants2");
   public static final int NESTED_SCROLL_SIZE = parseInt(getProperty("nested_scroll_size", "1000"));
   public static final String NODE_ADDRESS = getProperty("node_address", "localhost");
   public static final int NODE_PORT = parseInt(getProperty("node_port", "9300"));

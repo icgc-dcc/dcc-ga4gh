@@ -18,16 +18,17 @@ import org.icgc.dcc.ga4gh.loader.indexing.Indexer;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.AbstractIdStorageTemplate;
-import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.IdStorage;
-import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantIdStorage;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorage;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
@@ -44,19 +45,19 @@ import static org.icgc.dcc.ga4gh.loader.LoaderModes.INDEX_ONLY_BASIC;
 import static org.icgc.dcc.ga4gh.loader.LoaderModes.INDEX_ONLY_SPECIAL;
 import static org.icgc.dcc.ga4gh.loader.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
+import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_LIST_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_SET_CONVERTER_JSON;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_CALL_PAIR_CONVERTER_JSON_2;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SET_CONVERTER_JSON;
-import static org.icgc.dcc.ga4gh.loader.factory.Factory.ID_STORAGE_CONTEXT_LONG_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.RESOURCE_PERSISTED_PATH;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDocumentWriter;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildIndexer2;
+import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildVariantAggregator;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.createDocumentWriter;
 import static org.icgc.dcc.ga4gh.loader.portal.PortalCollabVcfFileQueryCreator.createPortalCollabVcfFileQueryCreator;
-import static org.icgc.dcc.ga4gh.loader.utils.counting.LongCounter.createLongCounter;
-import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantIdStorage.createVariantIdStorage;
+import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator.createVariantAggregator;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory.createMapStorageFactory;
 
 @Slf4j
@@ -111,14 +112,14 @@ public class SecondLoader {
     val useMapDB = USE_MAP_DB;
     AbstractIdStorageTemplate<EsVariantSet, Integer> variantSetIdStorage = null ;
     AbstractIdStorageTemplate<EsCallSet, Integer> callSetIdStorage = null ;
-    VariantIdStorage<Long> variantIdStorage = null ;
+    VariantAggregator variantAggregator = null ;
     MapStorage<EsVariant, IdStorageContext<Long, EsCall>> variantMapStorage = null;
 
     if (Config.LOADER_MODE == FULLY_LOAD || LOADER_MODE == AGGREGATE_ONLY) {
 
       variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(useMapDB);
       callSetIdStorage = integerIdStorageFactory.createCallSetIdStorage(useMapDB);
-      variantIdStorage = longIdStorageFactory.createVariantIdStorage(useMapDB);
+      variantAggregator = buildVariantAggregator(useMapDB,FALSE);
 
       val preProcessor = createPreProcessor(portalMetadataDao, callSetIdStorage, variantSetIdStorage);
       preProcessor.init();
@@ -143,7 +144,7 @@ public class SecondLoader {
 
           log.info("Downloading [{}/{}]: {}", ++count, total, portalMetadata.getPortalFilename().getFilename());
           val vcfFile = storage.getFile(portalMetadata);
-          val vcfProcessor = createVcfProcessor(variantIdStorage, variantSetIdStorage, callSetIdStorage,
+          val vcfProcessor = createVcfProcessor(variantAggregator, variantSetIdStorage, callSetIdStorage,
               callSetDao, variantCounterMonitor);
           variantCounterMonitor.start();
           vcfProcessor.process(portalMetadata, vcfFile);
@@ -163,7 +164,8 @@ public class SecondLoader {
     if (LOADER_MODE == INDEX_ONLY_BASIC || LOADER_MODE == FULLY_LOAD){
       callSetIdStorage = isNull(callSetIdStorage) ? integerIdStorageFactory.persistCallSetIdStorage() : callSetIdStorage;
       variantSetIdStorage = isNull(variantSetIdStorage) ? integerIdStorageFactory.persistVariantSetIdStorage() : variantSetIdStorage;
-      variantIdStorage = isNull(variantIdStorage) ? longIdStorageFactory.persistVariantIdStorage() : variantIdStorage;
+      variantAggregator = isNull(
+          variantAggregator) ? buildVariantAggregator(TRUE, TRUE) : variantAggregator;
 
       try ( val client = Factory.newClient();
           val writer = buildDocumentWriter(client)){
@@ -179,7 +181,8 @@ public class SecondLoader {
         indexer2.indexCallSets(callSetIdStorage);
 
         log.info("Indexing Variants and Calls...");
-        indexer2.indexVariants(variantIdStorage);
+        val variantIdContextStream = variantAggregator.streamVariantIdContext();
+        indexer2.indexVariants(variantIdContextStream);
 
         log.info("Indexing COMPLETE");
 
@@ -206,31 +209,31 @@ public class SecondLoader {
         indexer2.prepareIndex();
         val persistFile = true;
         log.info("Resurrecting map db file [{}] ", mapDbPath);
-        val factory = createMapStorageFactory(name, ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,mapDbPath.getParent(),
+        val factory = createMapStorageFactory(name, ES_VARIANT_SERIALIZER, ES_CALL_LIST_SERIALIZER,mapDbPath.getParent(),
             VARIANT_MAPDB_ALLOCATION);
 
         val mapStorage = factory.createDiskMapStorage(TRUE);
-        log.info("Creating VariantIdStorage object...");
-        val idStorage = createVariantIdStorage(createLongCounter(0L),mapStorage);
+        log.info("Creating VariantAggregator object...");
+        val variantAggregator2 = createVariantAggregator(mapStorage);
 
-        log.info("Starting indexing of variantIdStorage...");
-        indexer2.indexVariants(idStorage);
+        log.info("Starting indexing of variantAggregator...");
+        indexer2.indexVariants(variantAggregator2.streamVariantIdContext());
       } catch (Exception e) {
         log.error("Exception running: ", e);
       }
     }
 
-    closeIdStorage(callSetIdStorage);
-    closeIdStorage(variantIdStorage);
-    closeIdStorage(variantSetIdStorage);
+    closeInstance(callSetIdStorage);
+    closeInstance(variantSetIdStorage);
+    closeInstance(variantAggregator);
   }
 
-  private static <K,V> void closeIdStorage(IdStorage<K,V> idStorage){
-    if (!isNull(idStorage)){
+  private static void closeInstance(Closeable closeable){
+    if (!isNull(closeable)){
       try {
-        idStorage.close();
+        closeable.close();
       } catch (Throwable t) {
-        log.error("The IdStorage instance of the class [{}] could not be closed", idStorage.getClass().getName());
+        log.error("The instance of the class [{}] could not be closed", closeable.getClass().getName());
       }
     }
 

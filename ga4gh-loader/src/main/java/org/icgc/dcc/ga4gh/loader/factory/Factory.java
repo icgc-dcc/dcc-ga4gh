@@ -17,6 +17,7 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallListSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet.EsCallSetSerializer;
@@ -35,6 +36,7 @@ import org.icgc.dcc.ga4gh.loader.portal.Portal;
 import org.icgc.dcc.ga4gh.loader.storage.StorageFactory;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory;
 import org.mapdb.Serializer;
 
@@ -42,6 +44,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
 
 import static com.google.common.io.Resources.getResource;
@@ -64,6 +67,7 @@ import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
+import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator.createVariantAggregator;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory.createMapStorageFactory;
 import static org.mapdb.Serializer.INTEGER;
 import static org.mapdb.Serializer.LONG;
@@ -98,6 +102,7 @@ public class Factory {
   public static final IdStorageContextImplSerializer<Long,EsCall> ID_STORAGE_CONTEXT_LONG_SERIALIZER =
       createIdStorageContextSerializer( LONG,ES_CALL_SERIALIZER);
 
+  public static final EsCallListSerializer ES_CALL_LIST_SERIALIZER = new EsCallListSerializer(ES_CALL_SERIALIZER);
   public static final IdStorageContextImplSerializer<Integer, EsCall> ID_STORAGE_CONTEXT_INTEGER_SERIALIZER =
       IdStorageContextImplSerializer.createIdStorageContextSerializer(INTEGER,ES_CALL_SERIALIZER);
   private static final String TRANSPORT_SETTINGS_FILENAME =
@@ -162,6 +167,10 @@ public class Factory {
 
   public static final Path RESOURCE_PERSISTED_PATH = PERSISTED_DIRPATH;
 
+  public static final MapStorageFactory<EsVariant, List<EsCall>> VARIANT_AGGREGATOR_MAP_STORAGE_FACTORY= createMapStorageFactory("variantCallListMapStorage",
+      ES_VARIANT_SERIALIZER, ES_CALL_LIST_SERIALIZER,
+      RESOURCE_PERSISTED_PATH, VARIANT_MAPDB_ALLOCATION );
+
   public static final MapStorageFactory<EsVariant, IdStorageContext<Long, EsCall>> VARIANT_LONG_MAP_STORAGE_FACTORY= createMapStorageFactory(
       "variantLongMapStorage",
       ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,
@@ -223,5 +232,10 @@ public class Factory {
     return Settings.builder()
         .put(settingsProp)
         .build();
+  }
+
+  public static VariantAggregator buildVariantAggregator(boolean useDisk, boolean persist) {
+    val mapStorage = VARIANT_AGGREGATOR_MAP_STORAGE_FACTORY.createMapStorage(useDisk, persist);
+    return createVariantAggregator(mapStorage);
   }
 }

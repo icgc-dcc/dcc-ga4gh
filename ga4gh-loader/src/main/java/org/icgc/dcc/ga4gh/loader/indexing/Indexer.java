@@ -18,17 +18,15 @@ import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.loader.Config;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
-import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantIdContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorage;
 
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
@@ -129,9 +127,9 @@ public class Indexer {
   }
 
   @SneakyThrows
-  public void indexVariants(@NonNull MapStorage<EsVariant, IdStorageContext<Long, EsCall>> variantMapStorage){
+  public void indexVariants(@NonNull Stream<VariantIdContext<Long>> stream){
     variantMonitor.start();
-    indexMapStorage(variantMapStorage, this::writeVariant);
+    stream.forEach(this::writeVariant);
     variantMonitor.stop();
   }
 
@@ -146,12 +144,12 @@ public class Indexer {
   }
 
   @SneakyThrows
-  private void writeVariant(@NonNull EsVariant variant, @NonNull IdStorageContext<Long, EsCall> idStorageContext){
-    val variantId = idStorageContext.getId();
-    val esVariantCallPair = EsVariantCallPair.builder().variant(variant).calls(idStorageContext.getObjects()).build();
+  private void writeVariant(VariantIdContext<Long> variantIdContext){
+    val variantId = variantIdContext.getId();
+    val esVariantCallPair = variantIdContext.getEsVariantCallPair();
     val data = variantCallPairConverter.convertToObjectNode(esVariantCallPair);
     writer.write(new IndexDocument(variantId.toString(), data, new VariantDocumentType()));
-    variantMonitor.incr();
+    variantMonitor.preIncr();
   }
 
   @SneakyThrows

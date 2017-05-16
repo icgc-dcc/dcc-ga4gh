@@ -1,5 +1,7 @@
 package org.icgc.dcc.ga4gh.loader.utils.counting;
 
+import lombok.val;
+
 public class LongCounter implements Counter<Long> {
 
   public static LongCounter createLongCounter(long init) {
@@ -15,21 +17,36 @@ public class LongCounter implements Counter<Long> {
     this.count = init;
   }
 
-  public Long incr() {
+  @Override
+  public Long preIncr() {
     return ++count;
   }
 
-  public Long incr(Long amount) {
+  @Override
+  public Long preIncr(Long amount) {
     count += amount;
     return count;
   }
 
+  @Override
   public void reset() {
     count = init;
   }
 
+  @Override
   public Long getCount() {
     return count;
   }
 
+  @Override
+  public Long postIncr() {
+    return count++;
+  }
+
+  @Override
+  public Long postIncr(Long amount) {
+    val post = count;
+    count += amount;
+    return post;
+  }
 }

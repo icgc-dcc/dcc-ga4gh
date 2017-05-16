@@ -11,10 +11,7 @@ import org.icgc.dcc.ga4gh.loader.factory.IdStorageFactory;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.AbstractIdStorageTemplate;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.LongIdStorage;
-import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantIdStorage;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory;
-
-import static org.icgc.dcc.ga4gh.loader.utils.counting.LongCounter.createLongCounter;
 
 @RequiredArgsConstructor
 public class LongIdStorageFactory implements IdStorageFactory<Long> {
@@ -32,12 +29,6 @@ public class LongIdStorageFactory implements IdStorageFactory<Long> {
   @NonNull private final MapStorageFactory<EsVariantSet, Long>     variantSetLongMapStorageFactory;
   @NonNull private final MapStorageFactory<EsCallSet, Long>     callSetLongMapStorageFactory;
 
-  @Override public VariantIdStorage<Long> createVariantIdStorage(boolean useDisk) {
-    val mapStorage = variantLongMapStorageFactory.createNewMapStorage(useDisk);
-    val counter = createLongCounter(0);
-    return VariantIdStorage.<Long>createVariantIdStorage(counter,mapStorage);
-  }
-
   @Override public AbstractIdStorageTemplate<EsVariantSet, Long> createVariantSetIdStorage(boolean useDisk) {
     val mapStorage = variantSetLongMapStorageFactory.createNewMapStorage(useDisk);
     return LongIdStorage.<EsVariantSet>createLongIdStorage(mapStorage, 0L);
@@ -46,12 +37,6 @@ public class LongIdStorageFactory implements IdStorageFactory<Long> {
   @Override public AbstractIdStorageTemplate<EsCallSet, Long> createCallSetIdStorage(boolean useDisk) {
     val mapStorage = callSetLongMapStorageFactory.createNewMapStorage(useDisk);
     return LongIdStorage.<EsCallSet>createLongIdStorage(mapStorage, 0L);
-  }
-
-  @Override public VariantIdStorage<Long> persistVariantIdStorage() {
-    val mapStorage = variantLongMapStorageFactory.persistMapStorage();
-    val counter = createLongCounter(0);
-    return VariantIdStorage.<Long>createVariantIdStorage(counter,mapStorage);
   }
 
   @Override public AbstractIdStorageTemplate<EsVariantSet, Long> persistVariantSetIdStorage() {

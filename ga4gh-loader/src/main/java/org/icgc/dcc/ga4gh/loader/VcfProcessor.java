@@ -9,20 +9,18 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallBuilder;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
-import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.callconverter.CallConverterStrategy;
 import org.icgc.dcc.ga4gh.loader.callconverter.CallConverterStrategyMux;
-import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
+import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.IdStorage;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator;
 
 import java.io.File;
 
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson.convertFromPortalMetadata;
-import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVariantCallPair2;
 import static org.icgc.dcc.ga4gh.loader.utils.VCF.newDefaultVCFFileReader;
 
 /**
@@ -36,16 +34,16 @@ public class VcfProcessor {
   private static final CallConverterStrategyMux CALL_CONVERTER_STRATEGY_MUX = new CallConverterStrategyMux();
   private static final EsVariantConverterJson ES_VARIANT_CONVERTER_JSON = new EsVariantConverterJson();
 
-  public static VcfProcessor createVcfProcessor(IdStorage<EsVariantCallPair, IdStorageContext<Long, EsCall>> variantIdStorage,
+  public static VcfProcessor createVcfProcessor(VariantAggregator variantAggregator,
       IdStorage<EsVariantSet, Integer> variantSetIdStorage,
       IdStorage<EsCallSet, Integer> callSetIdStorage,
       CallSetDao callSetDao,
       CounterMonitor callCounterMonitor){
-    return new VcfProcessor(variantIdStorage, variantSetIdStorage, callSetIdStorage, callSetDao, callCounterMonitor);
+    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetIdStorage, callSetDao, callCounterMonitor);
 
   }
 
-  @NonNull private final IdStorage<EsVariantCallPair, IdStorageContext<Long, EsCall>> variantIdStorage;
+  @NonNull private final VariantAggregator variantAggregator;
   @NonNull private final IdStorage<EsVariantSet, Integer> variantSetIdStorage;
   @NonNull private final IdStorage<EsCallSet, Integer> callSetIdStorage;
   @NonNull private final CallSetDao callSetDao;
@@ -83,9 +81,8 @@ public class VcfProcessor {
   private void processVariant(CallConverterStrategy callConverterStrategy, EsCallBuilder esCallBuilder, VariantContext variantContext){
     val esCalls = callConverterStrategy.convert(esCallBuilder, variantContext);
     val esVariant = ES_VARIANT_CONVERTER_JSON.convertFromVariantContext(variantContext);
-    val esVariantCallPair = createEsVariantCallPair2(esVariant, esCalls);
-    variantIdStorage.add(esVariantCallPair);
-    callCounterMonitor.incr();
+    variantAggregator.add(esVariant, esCalls);
+    callCounterMonitor.preIncr();
   }
 
 }

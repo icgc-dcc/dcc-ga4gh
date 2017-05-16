@@ -37,6 +37,7 @@ import org.mapdb.Serializer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -44,14 +45,16 @@ import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.MIN_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.common.core.util.Formats.formatRate;
+import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
-import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVariantCallPair2;
+import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVariantCallPair;
 import static org.icgc.dcc.ga4gh.common.model.portal.PortalFilename.createPortalFilename;
 import static org.icgc.dcc.ga4gh.loader.CallSetDao.createCallSetDao;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader.dao.portal.PortalMetadataRequest.createPortalMetadataRequest;
+import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_LIST_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.RESOURCE_PERSISTED_PATH;
@@ -61,7 +64,7 @@ import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildLongIdStorageFactor
 import static org.icgc.dcc.ga4gh.loader.persistance.FileObjectRestorerFactory.createFileObjectRestorerFactory;
 import static org.icgc.dcc.ga4gh.loader.portal.PortalCollabVcfFileQueryCreator.createPortalCollabVcfFileQueryCreator;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IntegerIdStorage.createIntegerIdStorage;
-import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantIdStorage.createVariantIdStorage;
+import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator.createVariantAggregator;
 
 @Slf4j
 public class DaoTest {
@@ -168,7 +171,7 @@ public class DaoTest {
         .referenceName("referenceName")
         .build();
 
-    val iVariantCallPair = createEsVariantCallPair2(iVar, newArrayList(iCall1, iCall2));
+    val iVariantCallPair = createEsVariantCallPair(iVar, newArrayList(iCall1, iCall2));
 
     val variantSerializer = ES_VARIANT_SERIALIZER;
     val callSerializer = ES_CALL_SERIALIZER;
@@ -197,7 +200,6 @@ public class DaoTest {
 
     val variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(USE_MAP_DB);
     val callSetIdStorage = integerIdStorageFactory.createCallSetIdStorage(USE_MAP_DB);
-    val variantIdStorage = longIdStorageFactory.createVariantIdStorage(USE_MAP_DB);
 
     val preProcessor = createPreProcessor(portalMetadataDao, callSetIdStorage, variantSetIdStorage);
     preProcessor.init();
@@ -248,7 +250,7 @@ public class DaoTest {
         .variantSetId(9393)
         .build();
 
-    val variantCallPair = createEsVariantCallPair2(variant, newArrayList(iCall1, iCall2));
+    val variantCallPair = createEsVariantCallPair(variant, newArrayList(iCall1, iCall2));
     val variantConverter = new EsVariantConverterJson();
     val callConverter = new EsCallConverterJson();
     val converter =
@@ -615,7 +617,7 @@ public class DaoTest {
   @Test
   @SneakyThrows
   public void testRamIdStorageContext(){
-    val variantMapStorage = RamMapStorage.<EsVariant, IdStorageContext<Long, EsCall>>newRamMapStorage();
+    val variantMapStorage = RamMapStorage.<EsVariant, List<EsCall>>newRamMapStorage();
     runIdStorageContextTest(variantMapStorage);
   }
 
@@ -624,12 +626,12 @@ public class DaoTest {
   public void testDiskIdStorageContext(){
     val persistedPath = RESOURCE_PERSISTED_PATH;
     val idStorageContextSeriliazer = new IdStorageContextImpl.IdStorageContextImplSerializer<Long, EsCall>(Serializer.LONG, new EsCall.EsCallSerializer());
-    val variantMapStorage = DiskMapStorage.<EsVariant, IdStorageContext<Long, EsCall>>newDiskMapStorage("testVariantMapStorage", new EsVariant.EsVariantSerializer(), idStorageContextSeriliazer,persistedPath,0,false );
+    val variantMapStorage = DiskMapStorage.<EsVariant, List<EsCall>>newDiskMapStorage("testVariantMapStorage", ES_VARIANT_SERIALIZER, ES_CALL_LIST_SERIALIZER,persistedPath,0,false );
     runIdStorageContextTest(variantMapStorage);
   }
 
   @SneakyThrows
-  private void runIdStorageContextTest(MapStorage<EsVariant, IdStorageContext<Long, EsCall>> variantMapStorage){
+  private void runIdStorageContextTest(MapStorage<EsVariant,List<EsCall>> variantMapStorage){
     val portalFilenames = Lists.<PortalFilename>newArrayList();
     portalFilenames.add(createPortalFilename("120f01d1-8884-4aca-a1cb-36b207b2aa3a.dkfz-snvCalling_1-0-132-1.20150903.somatic.snv_mnv.vcf.gz"));
     portalFilenames.add(createPortalFilename("145f2b89-8878-4390-b0f6-f09b02fb138a.svcp_1-0-5.20150807.somatic.snv_mnv.vcf.gz"));
@@ -649,7 +651,7 @@ public class DaoTest {
         .collect(toImmutableSet());
 
     val variantCounter = LongCounter.createLongCounter(0L);
-    val variantIdStorage = createVariantIdStorage(variantCounter,variantMapStorage);
+    val variantIdStorage = createVariantAggregator(variantMapStorage);
 
     val variantSetMapStorage = RamMapStorage.<EsVariantSet, Integer>newRamMapStorage();
     val variantSetIdStorage = createIntegerIdStorage(variantSetMapStorage, 0);
@@ -690,12 +692,12 @@ public class DaoTest {
         .build();
 
 
-    val ctx = variantMapStorage.getMap().get(esVariant);
+    val esCalls = variantMapStorage.getMap().get(esVariant);
 
     log.info("Variant: {}", esVariant);
-    log.info("IdStorageContext: {}", ctx);
+    log.info("EsCalls: {}", NEWLINE.join(esCalls));
 
-    val set = ctx.getObjects().stream().collect(toImmutableSet());
+    val set = esCalls.stream().collect(toImmutableSet());
     assertThat(set).hasSize(3);
   }
 
@@ -716,6 +718,17 @@ public class DaoTest {
     assertThat(map.get(1L)).isEqualTo("first");
     assertThat(map.get(2L)).isEqualTo("second");
     assertThat(map.get(3L)).isEqualTo("third");
+
+  }
+
+  @Test
+  @SneakyThrows
+  public void testThat(){
+
+    val path = Paths.get("/Users/rtisma/Documents/workspace/ga4gh/persisted/variantCallListMapStorage.db");
+    val parent = path.getParent();
+    val map = DiskMapStorage.newDiskMapStorage(path.getFileName().toString().replaceAll("\\.db",""),Factory.ES_VARIANT_SERIALIZER, Factory.ES_CALL_LIST_SERIALIZER, parent, Config.VARIANT_MAPDB_ALLOCATION,true );
+    log.info("sdfsdf");
 
   }
 }

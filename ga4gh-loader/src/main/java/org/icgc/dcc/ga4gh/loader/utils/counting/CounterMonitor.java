@@ -142,15 +142,15 @@ public class CounterMonitor implements Counter<Long> {
   }
 
   @Override
-  public Long incr() {
-    counter.incr();
+  public Long preIncr() {
+    counter.preIncr();
     monitor();
     return counter.getCount();
   }
 
   @Override
-  public Long incr(Long amount) {
-    counter.incr(amount);
+  public Long preIncr(Long amount) {
+    counter.preIncr(amount);
     monitor();
     return counter.getCount();
   }
@@ -178,5 +178,19 @@ public class CounterMonitor implements Counter<Long> {
         intervalElapsedTime,
         instRate,
         avgRate);
+  }
+
+  @Override
+  public Long postIncr() {
+    val post = counter.getCount();
+    counter.preIncr();
+    return post;
+  }
+
+  @Override
+  public Long postIncr(Long amount) {
+    val post = counter.getCount();
+    counter.postIncr(amount);
+    return post;
   }
 }

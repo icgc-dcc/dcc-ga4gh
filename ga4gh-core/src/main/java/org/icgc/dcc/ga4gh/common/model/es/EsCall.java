@@ -20,10 +20,12 @@ package org.icgc.dcc.ga4gh.common.model.es;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.val;
+import org.icgc.dcc.ga4gh.common.MapDBSerialzers;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
@@ -136,6 +138,24 @@ public class EsCall implements EsModel, Serializable {
       val bais = new ByteArrayInputStream(byteArray);
       val ois = new ObjectInputStream(bais);
       return ois.readObject();
+    }
+
+  }
+
+  @RequiredArgsConstructor
+  public static class EsCallListSerializer implements Serializer<List<EsCall>> {
+
+    @NonNull private final EsCallSerializer esCallSerializer;
+
+    @Override
+    public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull List<EsCall> esCalls)
+        throws IOException {
+      MapDBSerialzers.serializeList(dataOutput2, esCallSerializer, esCalls);
+    }
+
+    @Override
+    public List<EsCall> deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
+      return MapDBSerialzers.deserializeList(dataInput2, i, esCallSerializer);
     }
 
   }

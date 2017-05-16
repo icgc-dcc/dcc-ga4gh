@@ -38,7 +38,7 @@ import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.serializeList;
 @Value
 public class EsVariantCallPair {
 
-  public static EsVariantCallPair createEsVariantCallPair2(EsVariant variant, List<EsCall> calls) {
+  public static EsVariantCallPair createEsVariantCallPair(EsVariant variant, List<EsCall> calls) {
     return new EsVariantCallPair(variant, calls);
   }
 
@@ -69,7 +69,7 @@ public class EsVariantCallPair {
     public EsVariantCallPair deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
       val esVariant = variantSerializer.deserialize(dataInput2,i);
       val esCalls = deserializeList(dataInput2,i,callSerializer);
-      return createEsVariantCallPair2(esVariant, esCalls);
+      return createEsVariantCallPair(esVariant, esCalls);
     }
 
   }
