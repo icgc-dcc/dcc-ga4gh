@@ -26,9 +26,11 @@ import org.icgc.dcc.ga4gh.loader.utils.counting.LongCounter;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.impl.IdStorageContextImpl;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.impl.UIntIdStorageContext;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorage;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.DiskMapStorage;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.RamMapStorage;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
@@ -39,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.Integer.MAX_VALUE;
@@ -723,6 +726,7 @@ public class DaoTest {
 
   @Test
   @SneakyThrows
+  @Ignore
   public void testThat(){
 
     val path = Paths.get("/Users/rtisma/Documents/workspace/ga4gh/persisted/variantCallListMapStorage.db");
@@ -730,5 +734,11 @@ public class DaoTest {
     val map = DiskMapStorage.newDiskMapStorage(path.getFileName().toString().replaceAll("\\.db",""),Factory.ES_VARIANT_SERIALIZER, Factory.ES_CALL_LIST_SERIALIZER, parent, Config.VARIANT_MAPDB_ALLOCATION,true );
     log.info("sdfsdf");
 
+    val variantAggregator = VariantAggregator.createVariantAggregator(map);
+    val d = variantAggregator.streamVariantIdContext()
+        .filter(x -> x.getEsVariantCallPair().getCalls().size()>2)
+        .limit(100)
+        .collect(Collectors.toList());
+    log.info("sdfsdf");
   }
 }

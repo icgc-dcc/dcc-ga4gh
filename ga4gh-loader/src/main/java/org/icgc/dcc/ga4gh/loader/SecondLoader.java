@@ -129,7 +129,7 @@ public class SecondLoader {
       val variantCounterMonitor = CounterMonitor.createCounterMonitor("variantCounterMonitor", 500000);
       val portalMetadatas =  portalMetadataDao.findAll();
 
-//      val portalMetadatas = createAssortedVariantSets(portalMetadataDao, 20, 8000000); //rtisma This is a hack to just load a few files from each variantSet
+//      val portalMetadatas = createAssortedVariantSets(portalMetadataDao, 2, 80000); //rtisma This is a hack to just load a few files from each variantSet
 
       long numVariants = 0;
       int count = 0;
