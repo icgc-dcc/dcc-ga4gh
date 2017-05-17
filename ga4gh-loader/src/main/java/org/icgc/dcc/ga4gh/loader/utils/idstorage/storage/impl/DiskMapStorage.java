@@ -71,15 +71,29 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
     this.map = newEntityMap(db, name, keySerializer, idSerializer);
   }
 
+  private static DB createDirectMemoryDB(Path filepath, final long allocation) {
+    val dbMaker = DBMaker
+        .memoryDirectDB()
+        .closeOnJvmShutdown();
+    if (allocation > -1){
+      dbMaker.allocateStartSize(allocation)
+          .allocateIncrement(allocation);
+    }
+    return dbMaker.make();
+  }
+
+
   private static DB createEntityDB(Path filepath, final long allocation) {
     return DBMaker
+//        .memoryShardedHashMap(8)
         .fileDB(filepath.toFile())
-        .concurrencyDisable()
 //        .fileMmapEnable() //TODO: rtisma_20170511_hack
+        .concurrencyDisable()
         .closeOnJvmShutdown()
-//        .allocateIncrement(allocation) //TODO: rtisma_20170511_hack
-//        .allocateStartSize(allocation) //TODO: rtisma_20170511_hack
+        .allocateIncrement(allocation) //TODO: rtisma_20170511_hack
+        .allocateStartSize(allocation) //TODO: rtisma_20170511_hack
         .make();
+
   }
 
   private static <K, V> Map<K, V> newEntityMap(DB db, String name, Serializer<K> keySerializer,

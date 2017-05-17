@@ -18,6 +18,7 @@ import org.icgc.dcc.ga4gh.loader.indexing.Indexer;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.AbstractIdStorageTemplate;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IdStorageFactory2;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorage;
 
@@ -28,7 +29,6 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
@@ -117,9 +117,12 @@ public class SecondLoader {
 
     if (Config.LOADER_MODE == FULLY_LOAD || LOADER_MODE == AGGREGATE_ONLY) {
 
-      variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(useMapDB);
-      callSetIdStorage = integerIdStorageFactory.createCallSetIdStorage(useMapDB);
-      variantAggregator = buildVariantAggregator(useMapDB,FALSE);
+//      variantSetIdStorage = integerIdStorageFactory.createVariantSetIdStorage(useMapDB);
+//      callSetIdStorage = integerIdStorageFactory.createCallSetIdStorage(useMapDB);
+//      variantAggregator = buildVariantAggregator(useMapDB,FALSE);
+      variantSetIdStorage = IdStorageFactory2.buildVariantSetIdStorage();
+      callSetIdStorage = IdStorageFactory2.buildCallSetIdStorage();
+      variantAggregator = IdStorageFactory2.buildVariantAggregator();
 
       val preProcessor = createPreProcessor(portalMetadataDao, callSetIdStorage, variantSetIdStorage);
       preProcessor.init();

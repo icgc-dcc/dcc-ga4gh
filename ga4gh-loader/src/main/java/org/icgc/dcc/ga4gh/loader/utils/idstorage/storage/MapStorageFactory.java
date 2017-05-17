@@ -3,6 +3,8 @@ package org.icgc.dcc.ga4gh.loader.utils.idstorage.storage;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.val;
+import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.DirectMemoryMapStorage;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.DiskMapStorage;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.RamMapStorage;
 import org.mapdb.Serializer;
@@ -33,6 +35,12 @@ public class MapStorageFactory<K, V> {
 
   public Path getPath(){
     return generateFilepath(name, outputDir);
+  }
+
+  @SneakyThrows
+  public DirectMemoryMapStorage<K,V> createDirectMemoryMapStorage(boolean persistFile){
+    val dms = createDiskMapStorage(persistFile);
+    return DirectMemoryMapStorage.createDirectMemoryMapStorage(name, keySerializer,valueSerializer,dms);
   }
 
   @SneakyThrows
