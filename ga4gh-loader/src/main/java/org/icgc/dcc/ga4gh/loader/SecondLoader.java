@@ -34,6 +34,7 @@ import static java.util.Objects.isNull;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.ga4gh.loader.CallSetDao.createCallSetDao;
+import static org.icgc.dcc.ga4gh.loader.Config.FILTER_VARIANTS;
 import static org.icgc.dcc.ga4gh.loader.Config.INDEX_NAME;
 import static org.icgc.dcc.ga4gh.loader.Config.LOADER_MODE;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
@@ -148,7 +149,7 @@ public class SecondLoader {
           log.info("Downloading [{}/{}]: {}", ++count, total, portalMetadata.getPortalFilename().getFilename());
           val vcfFile = storage.getFile(portalMetadata);
           val vcfProcessor = createVcfProcessor(variantAggregator, variantSetIdStorage, callSetIdStorage,
-              callSetDao, variantCounterMonitor);
+              callSetDao, variantCounterMonitor, FILTER_VARIANTS);
           variantCounterMonitor.start();
           vcfProcessor.process(portalMetadata, vcfFile);
 

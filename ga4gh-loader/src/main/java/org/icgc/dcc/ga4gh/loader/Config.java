@@ -2,6 +2,8 @@ package org.icgc.dcc.ga4gh.loader;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Optional;
 
 import static java.lang.Boolean.parseBoolean;
@@ -14,10 +16,11 @@ import static org.icgc.dcc.ga4gh.loader.LoaderModes.parseLoaderMode;
 
 public class Config {
 
+  public static final String CURRENT_TIMESTAMP = (new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date());
   public static final LoaderModes LOADER_MODE = parseLoaderMode(parseInt(getProperty("loader_mode", "3")));
   public static final String PARENT_CHILD_INDEX_NAME = getProperty("parent_child_index_name", "dcc-variants-pc");
   public static final String NESTED_INDEX_NAME = getProperty("nested_index_name", "dcc-variants-nested");
-  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants2");
+  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants-"+CURRENT_TIMESTAMP);
   public static final int NESTED_SCROLL_SIZE = parseInt(getProperty("nested_scroll_size", "1000"));
   public static final String NODE_ADDRESS = getProperty("node_address", "localhost");
   public static final int NODE_PORT = parseInt(getProperty("node_port", "9300"));
@@ -34,6 +37,7 @@ public class Config {
   public static final boolean USE_MAP_DB = parseBoolean(getProperty("use_map_db", FALSE));
   public static final int MONITOR_INTERVAL_COUNT = 500000;
   public static final boolean STORAGE_BYPASS_MD5_CHECK = parseBoolean(getProperty("bypass_md5_check", FALSE));
+  public static final boolean FILTER_VARIANTS = true;
 
   public static final boolean SORT_MODE = parseBoolean(getProperty("sort_mode", TRUE));
   public static final boolean ASCENDING_MODE = parseBoolean(getProperty("ascending_mode", FALSE));

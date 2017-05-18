@@ -4,6 +4,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCall;
@@ -29,6 +30,7 @@ import static org.icgc.dcc.ga4gh.loader.utils.VCF.newDefaultVCFFileReader;
  */
 @RequiredArgsConstructor
 @Value
+@Slf4j
 public class VcfProcessor {
 
   private static final CallConverterStrategyMux CALL_CONVERTER_STRATEGY_MUX = new CallConverterStrategyMux();
@@ -38,8 +40,8 @@ public class VcfProcessor {
       IdStorage<EsVariantSet, Integer> variantSetIdStorage,
       IdStorage<EsCallSet, Integer> callSetIdStorage,
       CallSetDao callSetDao,
-      CounterMonitor callCounterMonitor){
-    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetIdStorage, callSetDao, callCounterMonitor);
+      CounterMonitor callCounterMonitor, boolean filterVariants){
+    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetIdStorage, callSetDao, callCounterMonitor, filterVariants);
 
   }
 
@@ -48,13 +50,21 @@ public class VcfProcessor {
   @NonNull private final IdStorage<EsCallSet, Integer> callSetIdStorage;
   @NonNull private final CallSetDao callSetDao;
   @NonNull private final CounterMonitor callCounterMonitor;
+  private final boolean filterVariants;
 
   public void process(PortalMetadata portalMetadata, File vcfFile){
     val vcfFileReader = newDefaultVCFFileReader(vcfFile);
     val callConverter = CALL_CONVERTER_STRATEGY_MUX.select(portalMetadata);
     val esCallBuilder = createEsCallBuilder(portalMetadata);
 
-    stream(vcfFileReader).forEach(v -> processVariant(callConverter, esCallBuilder, v));
+    stream(vcfFileReader)
+        .filter(this::allowVariant)
+        .forEach(v -> processVariant(callConverter, esCallBuilder, v));
+    log.info("done");
+  }
+
+  private boolean allowVariant(VariantContext variantContext){
+    return !filterVariants || variantContext.isNotFiltered();
   }
 
   /**

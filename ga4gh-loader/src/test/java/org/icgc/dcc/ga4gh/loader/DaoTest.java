@@ -53,6 +53,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVariantCallPair;
 import static org.icgc.dcc.ga4gh.common.model.portal.PortalFilename.createPortalFilename;
 import static org.icgc.dcc.ga4gh.loader.CallSetDao.createCallSetDao;
+import static org.icgc.dcc.ga4gh.loader.Config.FILTER_VARIANTS;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
@@ -670,7 +671,7 @@ public class DaoTest {
     preProcessor.init();
     val callSetDao = createCallSetDao(callSetIdStorage);
 
-    val vcfProcessor = createVcfProcessor(variantIdStorage,variantSetIdStorage,callSetIdStorage,callSetDao, variantCounterMonitor);
+    val vcfProcessor = createVcfProcessor(variantIdStorage,variantSetIdStorage,callSetIdStorage,callSetDao, variantCounterMonitor, FILTER_VARIANTS);
 
 
     for (val vcfFile : vcfFiles){
@@ -741,4 +742,25 @@ public class DaoTest {
         .collect(Collectors.toList());
     log.info("sdfsdf");
   }
+
+  @Test
+  public void testCounter(){
+    val counter = LongCounter.createLongCounter(0L);
+    val v1 = counter.preIncr(5L);
+    assertThat(v1).isEqualTo(5L);
+    assertThat(counter.getCount()).isEqualTo(5L);
+
+    val v2 = counter.preIncr();
+    assertThat(v2).isEqualTo(6L);
+    assertThat(counter.getCount()).isEqualTo(6L);
+
+    val v3 = counter.postIncr();
+    assertThat(v3).isEqualTo(6L);
+    assertThat(counter.getCount()).isEqualTo(7L);
+
+    val v4 = counter.postIncr(3L);
+    assertThat(v4).isEqualTo(7L);
+    assertThat(counter.getCount()).isEqualTo(10L);
+  }
+
 }
