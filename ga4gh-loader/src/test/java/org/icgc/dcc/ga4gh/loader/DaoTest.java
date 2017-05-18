@@ -17,6 +17,7 @@ import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.common.model.portal.PortalFilename;
+import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 import org.icgc.dcc.ga4gh.loader.dao.portal.PortalMetadataRequest;
 import org.icgc.dcc.ga4gh.loader.factory.Factory;
 import org.icgc.dcc.ga4gh.loader.persistance.FileObjectRestorerFactory;
@@ -53,7 +54,6 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVariantCallPair;
 import static org.icgc.dcc.ga4gh.common.model.portal.PortalFilename.createPortalFilename;
 import static org.icgc.dcc.ga4gh.loader.CallSetDao.createCallSetDao;
-import static org.icgc.dcc.ga4gh.loader.Config.FILTER_VARIANTS;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.PreProcessor.createPreProcessor;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
@@ -671,7 +671,8 @@ public class DaoTest {
     preProcessor.init();
     val callSetDao = createCallSetDao(callSetIdStorage);
 
-    val vcfProcessor = createVcfProcessor(variantIdStorage,variantSetIdStorage,callSetIdStorage,callSetDao, variantCounterMonitor, FILTER_VARIANTS);
+    val filterVariants = false;
+    val vcfProcessor = createVcfProcessor(variantIdStorage,variantSetIdStorage,callSetIdStorage,callSetDao, variantCounterMonitor, filterVariants);
 
 
     for (val vcfFile : vcfFiles){
