@@ -8,9 +8,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class UniConstrainedRandomIntegerGenerator implements RandomGenerator<Integer> {
 
-  public static UniConstrainedRandomIntegerGenerator createUniConstrainedRandomIntegerGenerator(int max,
-      int min) {
-    return new UniConstrainedRandomIntegerGenerator(max, min);
+  public static UniConstrainedRandomIntegerGenerator createUniConstrainedRandomIntegerGenerator(int min,
+      int max) {
+    return new UniConstrainedRandomIntegerGenerator(min, max);
   }
 
   private final int min;

@@ -104,13 +104,13 @@ public class VariantService {
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
     // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
 
-    log.info("pageToken: {}", request.getPageToken());
-    log.info("pageSize: {}", request.getPageSize());
-    log.info("referenceName: {}", request.getReferenceName());
-    log.info("variantSetId: {}", request.getVariantSetId());
-    log.info("callSetIdsList: {}", request.getCallSetIdsList());
-    log.info("start: {}", request.getStart());
-    log.info("end: {}", request.getEnd());
+    // log.info("pageToken: {}", request.getPageToken());
+    // log.info("pageSize: {}", request.getPageSize());
+    // log.info("referenceName: {}", request.getReferenceName());
+    // log.info("variantSetId: {}", request.getVariantSetId());
+    // log.info("callSetIdsList: {}", request.getCallSetIdsList());
+    // log.info("start: {}", request.getStart());
+    // log.info("end: {}", request.getEnd());
 
     val response = variantRepository.findVariants(request);
     return buildSearchVariantResponse(response);
