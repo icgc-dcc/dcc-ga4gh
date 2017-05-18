@@ -41,7 +41,6 @@ public class SearchVariantsRequestGenerator implements RandomGenerator<SearchVar
     }
     val start = startGenerator.nextRandom(random);
     return SearchVariantsRequest.newBuilder()
-        .addAllCallSetIds(callSetIds)
         .setReferenceName(referenceNameGenerator.nextRandom(random))
         .setStart(start)
         .setEnd(start + variantLength)
