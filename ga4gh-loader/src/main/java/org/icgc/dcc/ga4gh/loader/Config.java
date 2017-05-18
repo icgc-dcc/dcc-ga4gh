@@ -37,7 +37,7 @@ public class Config {
   public static final boolean USE_MAP_DB = parseBoolean(getProperty("use_map_db", FALSE));
   public static final int MONITOR_INTERVAL_COUNT = 500000;
   public static final boolean STORAGE_BYPASS_MD5_CHECK = parseBoolean(getProperty("bypass_md5_check", FALSE));
-  public static final boolean FILTER_VARIANTS = true;
+  public static final boolean FILTER_VARIANTS = false;
 
   public static final boolean SORT_MODE = parseBoolean(getProperty("sort_mode", TRUE));
   public static final boolean ASCENDING_MODE = parseBoolean(getProperty("ascending_mode", FALSE));
