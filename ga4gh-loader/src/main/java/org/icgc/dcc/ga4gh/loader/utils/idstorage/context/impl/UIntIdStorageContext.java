@@ -25,7 +25,7 @@ public class UIntIdStorageContext<T> implements IdStorageContext<Long,T> {
 
   public UIntIdStorageContext(long id, List<T> objects) {
     checkArgument(id <= MAX_UINT && id >= MIN_UINT,  "The input ID [%s] must be uint, or between %s and %s", id, MIN_UINT, MAX_UINT);
-    this.uintId = (int)(id + Integer.MIN_VALUE); // convert to uint integer
+    this.uintId = (int)(id + Integer.MIN_VALUE); // convertBasic to uint integer
     this.objects = objects;
   }
 
@@ -42,7 +42,7 @@ public class UIntIdStorageContext<T> implements IdStorageContext<Long,T> {
   }
 
   @Override public Long getId() {
-    return (long)uintId - Integer.MIN_VALUE ; // convert back to long
+    return (long)uintId - Integer.MIN_VALUE ; // convertBasic back to long
   }
 
   @Override public List<T> getObjects() {

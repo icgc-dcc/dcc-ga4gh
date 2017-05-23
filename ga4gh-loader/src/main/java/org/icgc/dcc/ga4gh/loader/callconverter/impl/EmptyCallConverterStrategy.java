@@ -3,7 +3,8 @@ package org.icgc.dcc.ga4gh.loader.callconverter.impl;
 import com.google.common.collect.ImmutableList;
 import htsjdk.variant.variantcontext.VariantContext;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsBasicCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsBasicCall.EsBasicCallBuilder;
 import org.icgc.dcc.ga4gh.loader.callconverter.CallConverterStrategy;
 
 import java.util.List;
@@ -18,13 +19,13 @@ public class EmptyCallConverterStrategy implements CallConverterStrategy {
   private static final List<Integer> DEFAULT_DUMMY_NON_REFERENCE_ALLELES = ImmutableList.of(-1);
 
   @Override
-  public List<EsCall> convert(EsCall.EsCallBuilder callBuilder, VariantContext variantContext) {
+  public List<EsBasicCall> convertBasic(EsBasicCallBuilder callBuilder, VariantContext variantContext) {
     val actualNumCalls = variantContext.getGenotypes().size();
     checkNumCalls(actualNumCalls, EXPECTED_NUMBER_OF_CALLS);
     return buildDummyCall(callBuilder, variantContext);
   }
 
-  private static List<EsCall>  buildDummyCall(EsCall.EsCallBuilder callBuilder, VariantContext variantContext){
+  private static List<EsBasicCall>  buildDummyCall(EsBasicCallBuilder callBuilder, VariantContext variantContext){
     val commonInfoMap = variantContext.getCommonInfo().getAttributes();
     return ImmutableList.of(callBuilder
         .info(commonInfoMap)

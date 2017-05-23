@@ -8,7 +8,7 @@ import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.AbstractIdStorageTemplate;
 
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
-import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_LIST_SERIALIZER;
+import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CONSENSUS_CALL_LIST_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_CALL_SET_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SERIALIZER;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.ES_VARIANT_SET_SERIALIZER;
@@ -40,7 +40,7 @@ public class IdStorageFactory2 {
 
   public static VariantAggregator  buildVariantAggregator(){
     val mapStorageFactory = createMapStorageFactory("variantLongMapStorage",
-        ES_VARIANT_SERIALIZER, ES_CALL_LIST_SERIALIZER,
+        ES_VARIANT_SERIALIZER, ES_CONSENSUS_CALL_LIST_SERIALIZER,
         RESOURCE_PERSISTED_PATH, VARIANT_MAPDB_ALLOCATION);
     val mapStorage = mapStorageFactory.createDirectMemoryMapStorage(true);
     return createVariantAggregator(mapStorage);

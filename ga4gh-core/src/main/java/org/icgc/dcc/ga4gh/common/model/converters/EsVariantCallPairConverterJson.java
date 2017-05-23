@@ -23,7 +23,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.SearchHits;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 
@@ -46,20 +46,21 @@ public class EsVariantCallPairConverterJson implements
   private final SearchHitConverter<EsVariant> variantSearchHitConverter;
 
   @NonNull
-  private final SearchHitConverter<EsCall> callSearchHitConverter;
+  private final SearchHitConverter<EsConsensusCall> callSearchHitConverter;
 
   @NonNull
   private final JsonObjectNodeConverter<EsVariant> variantJsonObjectNodeConverter;
 
   @NonNull
-  private final JsonObjectNodeConverter<EsCall> callJsonObjectNodeConverter;
+  private final JsonObjectNodeConverter<EsConsensusCall> callJsonObjectNodeConverter;
 
   @Override
   public EsVariantCallPair convertFromSource(Map<String, Object> source) {
-    val calls = SearchHits.convertSourceToObjectList(source, CALLS);
+    val calls = SearchHits.convertSourceToObjectList(source, NESTED_TYPE);
 
     val pair = EsVariantCallPair.builder()
         .variant(variantSearchHitConverter.convertFromSource(source));
+
     calls.stream()
         .map(x -> (Map<String, Object>)x)
         .map(callSearchHitConverter::convertFromSource)

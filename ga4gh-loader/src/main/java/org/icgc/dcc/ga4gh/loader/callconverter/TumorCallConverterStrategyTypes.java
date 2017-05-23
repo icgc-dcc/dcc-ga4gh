@@ -3,7 +3,8 @@ package org.icgc.dcc.ga4gh.loader.callconverter;
 import htsjdk.variant.variantcontext.VariantContext;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsBasicCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsBasicCall.EsBasicCallBuilder;
 import org.icgc.dcc.ga4gh.loader.callconverter.impl.DualCallConverterStrategy;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public enum TumorCallConverterStrategyTypes implements CallConverterStrategy {
     this.dualCallConverterStrategy = createDualCallConverterStrategy(tumorClassifier, isTumorPos0);
   }
 
-  @Override public List<EsCall> convert(EsCall.EsCallBuilder callBuilder, VariantContext variantContext) {
-    return dualCallConverterStrategy.convert(callBuilder,variantContext);
+  @Override public List<EsBasicCall> convertBasic(EsBasicCallBuilder callBuilder, VariantContext variantContext) {
+    return dualCallConverterStrategy.convertBasic(callBuilder,variantContext);
   }
 }

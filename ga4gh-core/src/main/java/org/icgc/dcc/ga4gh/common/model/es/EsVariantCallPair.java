@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.Value;
 import lombok.val;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall.EsConsensusCallSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
@@ -38,26 +39,26 @@ import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.serializeList;
 @Value
 public class EsVariantCallPair {
 
-  public static EsVariantCallPair createEsVariantCallPair(EsVariant variant, List<EsCall> calls) {
+  public static EsVariantCallPair createEsVariantCallPair(EsVariant variant, List<EsConsensusCall> calls) {
     return new EsVariantCallPair(variant, calls);
   }
 
   private EsVariant variant;
 
   @Singular
-  private List<EsCall> calls;
+  private List<EsConsensusCall> calls;
 
   @RequiredArgsConstructor
   public static class EsVariantCallPairSerializer implements Serializer<EsVariantCallPair>{
 
     public static EsVariantCallPairSerializer createEsVariantCallPairSerializer(
         Serializer<EsVariant> variantSerializer,
-        EsCall.EsCallSerializer callSerializer) {
+        EsConsensusCallSerializer callSerializer) {
       return new EsVariantCallPairSerializer(variantSerializer, callSerializer);
     }
 
     @NonNull private final Serializer<EsVariant> variantSerializer;
-    @NonNull private final EsCall.EsCallSerializer callSerializer;
+    @NonNull private final EsConsensusCallSerializer callSerializer;
 
     @Override
     public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull EsVariantCallPair esVariantCallPair) throws IOException {

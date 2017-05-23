@@ -143,6 +143,7 @@ public class Indexer {
     indexMapStorage(callSetMapStorage, this::writeCallSet);
   }
 
+
   @SneakyThrows
   private void writeVariant(VariantIdContext<Long> variantIdContext){
     val variantId = variantIdContext.getId();

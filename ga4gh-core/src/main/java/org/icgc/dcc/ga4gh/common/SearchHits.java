@@ -4,9 +4,11 @@ import org.elasticsearch.search.SearchHit;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 
 public class SearchHits {
 
@@ -52,6 +54,12 @@ public class SearchHits {
     return convertSourceToObjectList(source, field).stream()
         .map(o -> Integer.parseInt(o.toString()))
         .collect(toImmutableList());
+  }
+
+  public static Set<Integer> convertSourceToIntegerSet(final Map<String, Object> source, String field) {
+    return convertSourceToObjectList(source, field).stream()
+        .map(o -> Integer.parseInt(o.toString()))
+        .collect(toImmutableSet());
   }
 
   @SuppressWarnings("unchecked")

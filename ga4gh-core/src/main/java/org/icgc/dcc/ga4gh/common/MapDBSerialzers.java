@@ -1,14 +1,25 @@
 package org.icgc.dcc.ga4gh.common;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -67,6 +78,66 @@ public class MapDBSerialzers {
       list.add(object);
     }
     return list;
+  }
+
+  @RequiredArgsConstructor
+  public static class StringObjectMapSerializer implements Serializer<Map<String, Object>>, Serializable {
+
+    private static final ObjectSerializer OBJECT_SERIALIZER = new ObjectSerializer();
+
+    @Override
+    public void serialize(@NonNull DataOutput2 out, @NonNull Map<String, Object> value)
+        throws IOException {
+      val numKeys = value.keySet().size();
+      //Write number of keys
+      out.packInt(numKeys);
+      for (val key : value.keySet()){
+        //Write key
+        out.writeUTF(key);
+        OBJECT_SERIALIZER.serialize(out, value.get(key));
+      }
+    }
+
+    @Override
+    @SneakyThrows
+    public Map<String, Object> deserialize(@NotNull DataInput2 input, int x) throws IOException {
+      val map = Maps.<String, Object>newHashMap();
+      //Read number of keys
+      val numKeys = input.unpackInt();
+      for (int i =0; i< numKeys; i++){
+        //Read key
+        val key = input.readUTF();
+
+        val object = OBJECT_SERIALIZER.deserialize(input, x);
+
+        //Put object into map
+        map.put(key, object);
+      }
+      return map;
+    }
+  }
+
+  public static class ObjectSerializer  implements Serializer<Object>, Serializable{
+
+    @Override
+    public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull Object o) throws IOException {
+      val baos = new ByteArrayOutputStream();
+      val oos = new ObjectOutputStream(baos);
+      oos.writeObject(o);
+      oos.flush();
+      val byteArray = baos.toByteArray();
+      BYTE_ARRAY.serialize(dataOutput2, byteArray);
+    }
+
+    @Override
+    @SneakyThrows
+    public Object deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
+      val byteArray = BYTE_ARRAY.deserialize(dataInput2, i);
+      val bais = new ByteArrayInputStream(byteArray);
+      val ois = new ObjectInputStream(bais);
+      return ois.readObject();
+    }
+
   }
 
 }

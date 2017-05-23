@@ -56,6 +56,11 @@ public abstract class AbstractIdStorageTemplate<K, ID extends Number> implements
 
   protected abstract ID incr();
 
+  /**
+   * Adds a key
+   * @param k is the key
+   * @return returns the key contained inside
+   */
   @Override
   public void add(final K k) {
     checkIdUpperBound(); // Assume always increasing ids, and passed checkIdLowerBound in constructor

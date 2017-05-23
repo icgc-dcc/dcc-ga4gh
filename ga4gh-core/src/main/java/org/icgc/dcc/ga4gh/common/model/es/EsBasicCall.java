@@ -18,7 +18,6 @@
 package org.icgc.dcc.ga4gh.common.model.es;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -26,16 +25,13 @@ import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.MapDBSerialzers;
+import org.icgc.dcc.ga4gh.common.MapDBSerialzers.StringObjectMapSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +43,7 @@ import static org.icgc.dcc.common.core.util.Joiners.COLON;
  */
 @Builder
 @Value
-public class EsCall implements EsModel, Serializable {
+public class EsBasicCall implements EsModel, Serializable {
 
   private static final long serialVersionUID = 1493648275L;
 
@@ -68,103 +64,30 @@ public class EsCall implements EsModel, Serializable {
         variantSetId, callSetName);
   }
 
-  @RequiredArgsConstructor
-  public static class StringObjectMapSerializer implements Serializer<Map<String, Object>>, Serializable{
-
-    @Override
-    public void serialize(@NotNull DataOutput2 out, @NotNull Map<String, Object> value)
-        throws IOException {
-      val numKeys = value.keySet().size();
-      //Write number of keys
-      out.packInt(numKeys);
-      for (val key : value.keySet()){
-        //Serialize object
-        val object = value.get(key);
-        val baos = new ByteArrayOutputStream();
-        val oos = new ObjectOutputStream(baos);
-        oos.writeObject(object);
-        oos.flush();
-
-        //Write key
-        out.writeUTF(key);
-
-        //Write value as byte array
-        val byteArray = baos.toByteArray();
-        BYTE_ARRAY.serialize(out, byteArray);
-      }
-    }
-
-    @Override
-    @SneakyThrows
-    public Map<String, Object> deserialize(@NotNull DataInput2 input, int x) throws IOException {
-      val map = Maps.<String, Object>newHashMap();
-      //Read number of keys
-      val numKeys = input.unpackInt();
-      for (int i =0; i< numKeys; i++){
-        //Read key
-        val key = input.readUTF();
-
-        //Read value byte array
-        val byteArray = BYTE_ARRAY.deserialize(input, x);
-
-        //Convert byteArray to object
-        val bais = new ByteArrayInputStream(byteArray);
-        val ois = new ObjectInputStream(bais);
-        val object = ois.readObject();
-
-        //Put object into map
-        map.put(key, object);
-      }
-      return map;
-    }
-  }
-
-  public static class ObjectSerializer  implements Serializer<Object>, Serializable{
-
-    @Override
-    public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull Object o) throws IOException {
-      val baos = new ByteArrayOutputStream();
-      val oos = new ObjectOutputStream(baos);
-      oos.writeObject(o);
-      oos.flush();
-      val byteArray = baos.toByteArray();
-      BYTE_ARRAY.serialize(dataOutput2, byteArray);
-    }
-
-    @Override
-    @SneakyThrows
-    public Object deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
-      val byteArray = BYTE_ARRAY.deserialize(dataInput2, i);
-      val bais = new ByteArrayInputStream(byteArray);
-      val ois = new ObjectInputStream(bais);
-      return ois.readObject();
-    }
-
-  }
 
   @RequiredArgsConstructor
-  public static class EsCallListSerializer implements Serializer<List<EsCall>> {
+  public static class EsBasicCallListSerializer implements Serializer<List<EsBasicCall>> {
 
-    @NonNull private final EsCallSerializer esCallSerializer;
+    @NonNull private final EsBasicCallSerializer esBasicCallSerializer;
 
     @Override
-    public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull List<EsCall> esCalls)
+    public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull List<EsBasicCall> esBasicCalls)
         throws IOException {
-      MapDBSerialzers.serializeList(dataOutput2, esCallSerializer, esCalls);
+      MapDBSerialzers.serializeList(dataOutput2, esBasicCallSerializer, esBasicCalls);
     }
 
     @Override
-    public List<EsCall> deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
-      return MapDBSerialzers.deserializeList(dataInput2, i, esCallSerializer);
+    public List<EsBasicCall> deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
+      return MapDBSerialzers.deserializeList(dataInput2, i, esBasicCallSerializer);
     }
 
   }
 
-  public static class EsCallSerializer implements Serializer<EsCall>, Serializable {
+  public static class EsBasicCallSerializer implements Serializer<EsBasicCall>, Serializable {
     private static final StringObjectMapSerializer STRING_OBJECT_MAP_SERIALIZER = new StringObjectMapSerializer();
 
     @Override
-    public void serialize(DataOutput2 out, EsCall value) throws IOException {
+    public void serialize(DataOutput2 out, EsBasicCall value) throws IOException {
       out.packInt(value.getVariantSetId());
       out.packInt(value.getCallSetId());
       out.writeUTF(value.getCallSetName());
@@ -181,7 +104,7 @@ public class EsCall implements EsModel, Serializable {
 
     @Override
     @SneakyThrows
-    public EsCall deserialize(DataInput2 input, int available) throws IOException {
+    public EsBasicCall deserialize(DataInput2 input, int available) throws IOException {
       val variantSetId = input.unpackInt();
       val callSetId = input.unpackInt();
       val callSetName = input.readUTF();
@@ -193,7 +116,7 @@ public class EsCall implements EsModel, Serializable {
       for (val i : nonReferenceAllelesArray){
         list.add(i);
       }
-      return EsCall.builder()
+      return EsBasicCall.builder()
           .callSetId(callSetId)
           .callSetName(callSetName)
           .genotypeLikelihood(genotypeLiklihood)

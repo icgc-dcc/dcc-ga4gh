@@ -4,95 +4,124 @@ import htsjdk.variant.variantcontext.VariantContext;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallBuilder;
-import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall.EsConsensusCallBuilder;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
-import org.icgc.dcc.ga4gh.loader.callconverter.CallConverterStrategy;
-import org.icgc.dcc.ga4gh.loader.callconverter.CallConverterStrategyMux;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.IdStorage;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator;
 
 import java.io.File;
+import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkState;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson.convertFromPortalMetadata;
+import static org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson.extractCallSetName;
+import static org.icgc.dcc.ga4gh.common.model.es.EsVariantSet.createEsVariantSet;
 import static org.icgc.dcc.ga4gh.loader.utils.VCF.newDefaultVCFFileReader;
 
-/**
- * Processes a vcf file by creating EsVariant objects using the selected CallConverterStrategy, and populates the
- * variantIdStorage object with all the streamed variants
- */
 @RequiredArgsConstructor
 @Value
 @Slf4j
 public class VcfProcessor {
 
-  private static final CallConverterStrategyMux CALL_CONVERTER_STRATEGY_MUX = new CallConverterStrategyMux();
   private static final EsVariantConverterJson ES_VARIANT_CONVERTER_JSON = new EsVariantConverterJson();
+  private static final String NUM_CALLERS = "NumCallers";
+  private static final String CALLERS = "Callers";
 
   public static VcfProcessor createVcfProcessor(VariantAggregator variantAggregator,
       IdStorage<EsVariantSet, Integer> variantSetIdStorage,
-      IdStorage<EsCallSet, Integer> callSetIdStorage,
-      CallSetDao callSetDao,
-      CounterMonitor callCounterMonitor, boolean filterVariants){
-    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetIdStorage, callSetDao, callCounterMonitor, filterVariants);
-
+      CallSetAccumulator callSetAccumulator, CounterMonitor callCounterMonitor, boolean filterVariants) {
+    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetAccumulator, callCounterMonitor,
+        filterVariants);
   }
 
   @NonNull private final VariantAggregator variantAggregator;
   @NonNull private final IdStorage<EsVariantSet, Integer> variantSetIdStorage;
-  @NonNull private final IdStorage<EsCallSet, Integer> callSetIdStorage;
-  @NonNull private final CallSetDao callSetDao;
+  @NonNull private CallSetAccumulator callSetAccumulator;
   @NonNull private final CounterMonitor callCounterMonitor;
   private final boolean filterVariants;
 
-  public void process(PortalMetadata portalMetadata, File vcfFile){
-    val vcfFileReader = newDefaultVCFFileReader(vcfFile);
-    val callConverter = CALL_CONVERTER_STRATEGY_MUX.select(portalMetadata);
-    val esCallBuilder = createEsCallBuilder(portalMetadata);
+  /**
+   * State
+   */
+  @NonFinal private int callSetId = 0;
 
+  private EsConsensusCallBuilder createEsConsensusCallBuilder(PortalMetadata portalMetadata, int callSetId){
+    return EsConsensusCall.builder()
+        .callSetId(callSetId)
+        .callSetName(portalMetadata.getSampleId());
+  }
+
+  public void process(PortalMetadata portalMetadata, File vcfFile){
+    //Open file, and process each variant, to create variantSets and Calls
+    val vcfFileReader = newDefaultVCFFileReader(vcfFile);
+    val esConsensusCallBuilder = createEsConsensusCallBuilder(portalMetadata, callSetId);
     stream(vcfFileReader)
         .filter(this::allowVariant)
-        .forEach(v -> processVariant(callConverter, esCallBuilder, v));
-    log.info("done");
+        .forEach(v -> processVariant(portalMetadata, esConsensusCallBuilder, v));
   }
 
   private boolean allowVariant(VariantContext variantContext){
     return !filterVariants || variantContext.isNotFiltered();
   }
 
-  /**
-   * Creates a prefilled EsCallBuilder so that can be used as efficiently as possible
-   * when creating many EsCall objects. Since there can be millions of EsCall objects generated
-   * per file, the only EsCall information that does not change in the scope of a vcf file
-   * are the callSetName, callSetId and variantSetId, hence why this method exists. Uses PortalMetadata
-   * objects to query the CallSetDao
-   */
-  private EsCallBuilder createEsCallBuilder(PortalMetadata portalMetadata){
-    val variantSet = convertFromPortalMetadata(portalMetadata);
-    val variantSetId = variantSetIdStorage.getId(variantSet);
-
-    val callSet = callSetDao.find(portalMetadata).get();
-    val callSetName = callSet.getName();
-    val callSetId = callSetIdStorage.getId(callSet);
-
-    return EsCall.builder()
-        .callSetName(callSetName)
-        .callSetId(callSetId)
-        .variantSetId(variantSetId);
+  private void processVariant(PortalMetadata portalMetadata, EsConsensusCallBuilder esCallBuilder, VariantContext variantContext){
+    val esCall = convertConsensus(portalMetadata, esCallBuilder,variantContext);
+    val esVariant = ES_VARIANT_CONVERTER_JSON.convertFromVariantContext(variantContext);
+    variantAggregator.add(esVariant, esCall);
+    callCounterMonitor.preIncr();
   }
 
-  private void processVariant(CallConverterStrategy callConverterStrategy, EsCallBuilder esCallBuilder, VariantContext variantContext){
-    val esCalls = callConverterStrategy.convert(esCallBuilder, variantContext);
-    val esVariant = ES_VARIANT_CONVERTER_JSON.convertFromVariantContext(variantContext);
-    variantAggregator.add(esVariant, esCalls);
-    callCounterMonitor.preIncr();
+
+  private EsConsensusCall convertConsensus(PortalMetadata portalMetadata, EsConsensusCallBuilder esConsensusCallBuilder,VariantContext variantContext){
+    val callSetName = extractCallSetName(portalMetadata);
+    //Extract callers from Info attribute
+    val info = variantContext.getCommonInfo();
+    checkState(info.hasAttribute(CALLERS), "[%s] attribute not found in consensus call", CALLERS);
+    val callers = info.getAttributeAsList(CALLERS).stream().map(Object::toString).collect(toImmutableSet());
+
+    // Remove info attribute as not needed anymore
+    info.removeAttribute(CALLERS);
+    if (info.hasAttribute(NUM_CALLERS)){
+      info.removeAttribute(NUM_CALLERS);
+    }
+
+    //Build variantSets
+    val variantSets = buildConsensusEsVariantSet(portalMetadata, callers);
+
+    //Add variantSets so that any nonexisting variantSets are added to the idStorage so they are assigned an ID
+    variantSets.forEach(variantSetIdStorage::add);
+
+    //Create list of variantSetIds (integers)
+    val variantSetIdList =  variantSets.stream().map(variantSetIdStorage::getId).collect(toImmutableList());
+
+    // Add collect variantSetIds from all variants in this file, which will later be used for callSet generation
+    callSetAccumulator.addVariantSetIds(callSetName,variantSetIdList);
+    val callSetId = callSetAccumulator.getId(callSetName);
+
+    // Build ConsensusCall
+    return esConsensusCallBuilder
+        .info(info.getAttributes())
+        .variantSetIds(variantSetIdList)
+        .callSetId(callSetId)
+        .build();
+  }
+
+
+  private Set<EsVariantSet> buildConsensusEsVariantSet(PortalMetadata portalMetadata, Set<String> callers){
+    val dataSetId = portalMetadata.getDataType();
+    val referenceName = portalMetadata.getReferenceName();
+    return callers.stream()
+        .map(x ->  createEsVariantSet(x, dataSetId, referenceName))
+        .collect(toImmutableSet());
   }
 
 }

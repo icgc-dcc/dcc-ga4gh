@@ -17,9 +17,8 @@
  */
 package org.icgc.dcc.ga4gh.common.model.es;
 
-import com.google.common.collect.Iterables;
 import lombok.Builder;
-import lombok.Singular;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.val;
@@ -29,17 +28,25 @@ import org.mapdb.Serializer;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Set;
 
-// ObjectNode is a bit heavy, this is just to minimize memory usage
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
+import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.deserializeList;
+import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.serializeList;
+
 @Builder
 @Value
 public final class EsCallSet implements EsModel {
 
-  private String name;
-  private String bioSampleId;
+  public static EsCallSet createEsCallSet(String name, String bioSampleId, Set<Integer> variantSetIds){
+    return new EsCallSet(name, bioSampleId, variantSetIds);
+  }
 
-  @Singular
-  private Iterable<Integer> variantSetIds;
+  @NonNull private final String name;
+  @NonNull private final String bioSampleId;
+  @NonNull private final Set<Integer> variantSetIds;
+
 
   /*
    * Serializer needed for MapDB. Note: if EsCallSet member variables are added, removed or modified, this needs to be
@@ -51,11 +58,7 @@ public final class EsCallSet implements EsModel {
     public void serialize(DataOutput2 out, EsCallSet value) throws IOException {
       out.writeUTF(value.getName());
       out.writeUTF(value.getBioSampleId());
-      val size = Iterables.size(value.getVariantSetIds());
-      out.writeInt(size);
-      for (val variantSetId : value.getVariantSetIds()) {
-        out.writeInt(variantSetId);
-      }
+      serializeList(out, INTEGER, newArrayList(value.getVariantSetIds()));
     }
 
     @Override
@@ -63,14 +66,8 @@ public final class EsCallSet implements EsModel {
     public EsCallSet deserialize(DataInput2 input, int available) throws IOException {
       val name = input.readUTF();
       val bioSampleId = input.readUTF();
-      val size = input.readInt();
-      val callSetBuilder = EsCallSet.builder()
-          .name(name)
-          .bioSampleId(bioSampleId);
-      for (int i = 0; i < size; i++) {
-        callSetBuilder.variantSetId(input.readInt());
-      }
-      return callSetBuilder.build();
+      val variantSetIdList = deserializeList(input, available, INTEGER);
+      return EsCallSet.createEsCallSet(name, bioSampleId, newHashSet(variantSetIdList));
     }
 
   }

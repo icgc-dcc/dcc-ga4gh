@@ -3,9 +3,8 @@ package org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.loader.utils.Purgeable;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorage;
 
@@ -21,15 +20,15 @@ import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVaria
 @Slf4j
 public class VariantAggregator implements Purgeable, Closeable {
 
-  public static VariantAggregator createVariantAggregator(MapStorage<EsVariant, List<EsCall>> mapStorage) {
+  public static VariantAggregator createVariantAggregator(MapStorage<EsVariant, List<EsConsensusCall>> mapStorage) {
     return new VariantAggregator(mapStorage);
   }
 
-  @NonNull private final MapStorage<EsVariant, List< EsCall>> mapStorage;
-  private Map<EsVariant, List<EsCall>> map;
+  @NonNull private final MapStorage<EsVariant, List< EsConsensusCall>> mapStorage;
+  private Map<EsVariant, List<EsConsensusCall>> map;
   private long count = 0;
 
-  public VariantAggregator( MapStorage<EsVariant, List<EsCall>> mapStorage) {
+  public VariantAggregator( MapStorage<EsVariant, List<EsConsensusCall>> mapStorage) {
     this.mapStorage = mapStorage;
     this.map = mapStorage.getMap();
   }
@@ -38,15 +37,11 @@ public class VariantAggregator implements Purgeable, Closeable {
     mapStorage.purge();
   }
 
-  public void add(EsVariantCallPair esVariantCallPair) {
-    add(esVariantCallPair.getVariant(), esVariantCallPair.getCalls());
-  }
-
-  public void add(EsVariant esVariant, List<EsCall> esCalls) {
+  public void add(EsVariant esVariant, List<EsConsensusCall> esCalls) {
     esCalls.forEach(x -> add(esVariant, x  ));
   }
 
-  public void add(EsVariant esVariant, EsCall esCall) {
+  public void add(EsVariant esVariant, EsConsensusCall esCall) {
     if (!map.containsKey(esVariant)){
       val callList = newArrayList(esCall);
       map.put(esVariant, callList);
@@ -65,7 +60,7 @@ public class VariantAggregator implements Purgeable, Closeable {
     return count++;
   }
 
-  private VariantIdContext<Long> procEntry(Map.Entry<EsVariant, List<EsCall>> entry){
+  private VariantIdContext<Long> procEntry(Map.Entry<EsVariant, List<EsConsensusCall>> entry){
     val esVariantCallPair = createEsVariantCallPair(entry.getKey(), entry.getValue());
     return VariantIdContext.<Long>createVariantIdContext(incrCount(),esVariantCallPair);
   }

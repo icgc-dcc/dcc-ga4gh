@@ -42,7 +42,7 @@ import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsBasicCall;
 import org.icgc.dcc.ga4gh.server.util.Protobufs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -263,17 +263,17 @@ public class VariantService {
    */
 
   @SneakyThrows
-  private Call convertToCall(@NonNull EsCall esCall) {
-    val variantSetId = esCall.getVariantSetId();
-    val info = esCall.getInfo();
+  private Call convertToCall(@NonNull EsBasicCall esBasicCall) {
+    val variantSetId = esBasicCall.getVariantSetId();
+    val info = esBasicCall.getInfo();
     info.put(VARIANT_SET_ID, variantSetId);
     return Call.newBuilder()
-        .setCallSetId(Integer.toString(esCall.getCallSetId()))
-        .setCallSetName(esCall.getCallSetName())
-        .addAllGenotype(esCall.getNonReferenceAlleles())
-        .addGenotypeLikelihood(esCall.getGenotypeLikelihood())
+        .setCallSetId(Integer.toString(esBasicCall.getCallSetId()))
+        .setCallSetName(esBasicCall.getCallSetName())
+        .addAllGenotype(esBasicCall.getNonReferenceAlleles())
+        .addGenotypeLikelihood(esBasicCall.getGenotypeLikelihood())
         .putAllInfo(Protobufs.createInfo(info))
-        .setPhaseset(Boolean.toString(esCall.isGenotypePhased()))
+        .setPhaseset(Boolean.toString(esBasicCall.isGenotypePhased()))
         .build();
   }
 

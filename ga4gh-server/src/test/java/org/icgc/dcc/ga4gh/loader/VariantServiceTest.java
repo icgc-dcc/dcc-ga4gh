@@ -9,7 +9,7 @@ import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.elasticsearch.client.Client;
-import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsBasicCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
@@ -66,7 +66,7 @@ public class VariantServiceTest {
       val esVariantConverter = new EsVariantConverterJson();
       val esVariantSetConverter = new EsVariantSetConverterJson();
       val esCallSetConverter = new EsCallSetConverterJson();
-      val esCallConverter = new EsCallConverterJson();
+      val esCallConverter = new EsBasicCallConverterJson();
       val esVariantCallPairConverter = new EsVariantCallPairConverterJson(esVariantConverter
       , esCallConverter, esVariantConverter, esCallConverter);
 
@@ -87,7 +87,7 @@ public class VariantServiceTest {
     val esVariantConverter = new EsVariantConverterJson();
     val esVariantSetConverter = new EsVariantSetConverterJson();
     val esCallSetConverter = new EsCallSetConverterJson();
-    val esCallConverter = new EsCallConverterJson();
+    val esCallConverter = new EsBasicCallConverterJson();
     val esVariantCallPairConverter = new EsVariantCallPairConverterJson(esVariantConverter,esCallConverter,esVariantConverter, esCallConverter);
     val searchVariantRequest = SearchVariantsRequest.newBuilder()
         .setStart(0)

@@ -3,12 +3,9 @@ package org.icgc.dcc.ga4gh.loader.factory.impl;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
-import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.loader.factory.IdStorageFactory;
-import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.AbstractIdStorageTemplate;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IntegerIdStorage;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory;
@@ -17,15 +14,12 @@ import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory;
 public class IntegerIdStorageFactory implements IdStorageFactory<Integer> {
 
   public static IntegerIdStorageFactory createIntegerIdStorageFactory(
-      MapStorageFactory<EsVariant, IdStorageContext<Integer, EsCall>> variantIntegerMapStorageFactory,
       MapStorageFactory<EsVariantSet, Integer> variantSetIntegerMapStorageFactory,
       MapStorageFactory<EsCallSet, Integer> callSetIntegerMapStorageFactory) {
-    return new IntegerIdStorageFactory(variantIntegerMapStorageFactory,
-        variantSetIntegerMapStorageFactory,
+    return new IntegerIdStorageFactory( variantSetIntegerMapStorageFactory,
         callSetIntegerMapStorageFactory);
   }
 
-  @NonNull private final MapStorageFactory<EsVariant, IdStorageContext<Integer, EsCall>>  variantIntegerMapStorageFactory;
   @NonNull private final MapStorageFactory<EsVariantSet, Integer>  variantSetIntegerMapStorageFactory;
   @NonNull private final MapStorageFactory<EsCallSet, Integer>  callSetIntegerMapStorageFactory;
 

@@ -11,16 +11,16 @@ import org.icgc.dcc.dcc.common.es.DocumentWriterConfiguration;
 import org.icgc.dcc.dcc.common.es.DocumentWriterFactory;
 import org.icgc.dcc.dcc.common.es.core.DocumentWriter;
 import org.icgc.dcc.ga4gh.common.ObjectNodeConverter;
-import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsConsensusCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallListSerializer;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall.EsCallSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet.EsCallSetSerializer;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall.EsConsensusCallListSerializer;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall.EsConsensusCallSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.EsVariantCallPairSerializer;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
@@ -34,7 +34,6 @@ import org.icgc.dcc.ga4gh.loader.indexing.Indexer;
 import org.icgc.dcc.ga4gh.loader.persistance.FileObjectRestorerFactory;
 import org.icgc.dcc.ga4gh.loader.portal.Portal;
 import org.icgc.dcc.ga4gh.loader.storage.StorageFactory;
-import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.IdStorageContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory;
@@ -78,12 +77,12 @@ public class Factory {
 
   public static final EsVariantSetConverterJson ES_VARIANT_SET_CONVERTER_JSON = new EsVariantSetConverterJson();
   public static final EsCallSetConverterJson ES_CALL_SET_CONVERTER_JSON= new EsCallSetConverterJson();
-  public static final EsCallConverterJson ES_CALL_CONVERTER_JSON = new EsCallConverterJson();
+  public static final EsConsensusCallConverterJson ES_CONSENSUS_CALL_CONVERTER_JSON = new EsConsensusCallConverterJson();
   public static final EsVariantConverterJson ES_VARIANT_CONVERTER_JSON = new EsVariantConverterJson();
   public static final EsVariantCallPairConverterJson ES_VARIANT_CALL_PAIR_CONVERTER_JSON_2 = EsVariantCallPairConverterJson
       .builder()
-      .callJsonObjectNodeConverter(ES_CALL_CONVERTER_JSON)
-      .callSearchHitConverter(ES_CALL_CONVERTER_JSON)
+      .callJsonObjectNodeConverter(ES_CONSENSUS_CALL_CONVERTER_JSON)
+      .callSearchHitConverter(ES_CONSENSUS_CALL_CONVERTER_JSON)
       .variantJsonObjectNodeConverter(ES_VARIANT_CONVERTER_JSON)
       .variantSearchHitConverter(ES_VARIANT_CONVERTER_JSON)
       .build();
@@ -94,17 +93,18 @@ public class Factory {
   //TODO: rtisma HACKK should be EsVariantSerializer impl and not EsVariantOldSerializer.
   // only using old so that can properly deserialize that giant 150GB mapdb file
   public static final Serializer<EsVariant> ES_VARIANT_SERIALIZER = new EsVariant.EsVariantOldSerializer(); //TODO: rtisma_20170511_hack
-  public static final EsCallSerializer ES_CALL_SERIALIZER = new EsCallSerializer();
+  public static final EsConsensusCallSerializer ES_CONSENSUS_CALL_SERIALIZER = new EsConsensusCallSerializer();
 
   public static final EsVariantCallPairSerializer ES_VARIANT_CALL_PAIR_SERIALIZER =
-      new EsVariantCallPairSerializer(ES_VARIANT_SERIALIZER, ES_CALL_SERIALIZER);
+      new EsVariantCallPairSerializer(ES_VARIANT_SERIALIZER, ES_CONSENSUS_CALL_SERIALIZER);
 
-  public static final IdStorageContextImplSerializer<Long,EsCall> ID_STORAGE_CONTEXT_LONG_SERIALIZER =
-      createIdStorageContextSerializer( LONG,ES_CALL_SERIALIZER);
+  public static final IdStorageContextImplSerializer<Long,EsConsensusCall> ID_STORAGE_CONTEXT_LONG_SERIALIZER =
+      createIdStorageContextSerializer( LONG, ES_CONSENSUS_CALL_SERIALIZER);
 
-  public static final EsCallListSerializer ES_CALL_LIST_SERIALIZER = new EsCallListSerializer(ES_CALL_SERIALIZER);
-  public static final IdStorageContextImplSerializer<Integer, EsCall> ID_STORAGE_CONTEXT_INTEGER_SERIALIZER =
-      IdStorageContextImplSerializer.createIdStorageContextSerializer(INTEGER,ES_CALL_SERIALIZER);
+  public static final EsConsensusCallListSerializer ES_CONSENSUS_CALL_LIST_SERIALIZER = new EsConsensusCallListSerializer(
+      ES_CONSENSUS_CALL_SERIALIZER);
+  public static final IdStorageContextImplSerializer<Integer, EsConsensusCall> ID_STORAGE_CONTEXT_INTEGER_SERIALIZER =
+      IdStorageContextImplSerializer.createIdStorageContextSerializer(INTEGER, ES_CONSENSUS_CALL_SERIALIZER);
   private static final String TRANSPORT_SETTINGS_FILENAME =
       "org/icgc/dcc/ga4gh/resources/settings/transport.properties";
 
@@ -167,14 +167,9 @@ public class Factory {
 
   public static final Path RESOURCE_PERSISTED_PATH = PERSISTED_DIRPATH;
 
-  public static final MapStorageFactory<EsVariant, List<EsCall>> VARIANT_AGGREGATOR_MAP_STORAGE_FACTORY= createMapStorageFactory("variantCallListMapStorage",
-      ES_VARIANT_SERIALIZER, ES_CALL_LIST_SERIALIZER,
-      RESOURCE_PERSISTED_PATH, VARIANT_MAPDB_ALLOCATION );
-
-  public static final MapStorageFactory<EsVariant, IdStorageContext<Long, EsCall>> VARIANT_LONG_MAP_STORAGE_FACTORY= createMapStorageFactory(
-      "variantLongMapStorage",
-      ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_LONG_SERIALIZER,
-      RESOURCE_PERSISTED_PATH, VARIANT_MAPDB_ALLOCATION);
+  public static final MapStorageFactory<EsVariant, List<EsConsensusCall>> VARIANT_AGGREGATOR_MAP_STORAGE_FACTORY= createMapStorageFactory("variantCallListMapStorage",
+            ES_VARIANT_SERIALIZER, ES_CONSENSUS_CALL_LIST_SERIALIZER,
+            RESOURCE_PERSISTED_PATH, VARIANT_MAPDB_ALLOCATION );
 
   public static final MapStorageFactory<EsCallSet, Long> CALL_SET_LONG_MAP_STORAGE_FACTORY = createMapStorageFactory(
       "callSetLongMapStorage",
@@ -185,11 +180,6 @@ public class Factory {
       "variantSetLongMapStorage",
       ES_VARIANT_SET_SERIALIZER, LONG,
       RESOURCE_PERSISTED_PATH, DEFAULT_MAPDB_ALLOCATION);
-
-  public static final MapStorageFactory<EsVariant, IdStorageContext<Integer, EsCall>> VARIANT_INTEGER_MAP_STORAGE_FACTORY= createMapStorageFactory(
-      "variantIntegerMapStorage",
-      ES_VARIANT_SERIALIZER, ID_STORAGE_CONTEXT_INTEGER_SERIALIZER,
-      RESOURCE_PERSISTED_PATH, VARIANT_MAPDB_ALLOCATION);
 
   public static final MapStorageFactory<EsCallSet, Integer> CALL_SET_INTEGER_MAP_STORAGE_FACTORY = createMapStorageFactory(
       "callSetIntegerMapStorage",
@@ -202,11 +192,11 @@ public class Factory {
       RESOURCE_PERSISTED_PATH, DEFAULT_MAPDB_ALLOCATION);
 
   public static IdStorageFactory<Integer> buildIntegerIdStorageFactory(){
-    return createIntegerIdStorageFactory(VARIANT_INTEGER_MAP_STORAGE_FACTORY, VARIANT_SET_INTEGER_MAP_STORAGE_FACTORY, CALL_SET_INTEGER_MAP_STORAGE_FACTORY);
+    return createIntegerIdStorageFactory(VARIANT_SET_INTEGER_MAP_STORAGE_FACTORY, CALL_SET_INTEGER_MAP_STORAGE_FACTORY);
   }
 
   public static IdStorageFactory<Long> buildLongIdStorageFactory(){
-    return createLongIdStorageFactory(VARIANT_LONG_MAP_STORAGE_FACTORY, VARIANT_SET_LONG_MAP_STORAGE_FACTORY, CALL_SET_LONG_MAP_STORAGE_FACTORY);
+    return createLongIdStorageFactory(VARIANT_SET_LONG_MAP_STORAGE_FACTORY, CALL_SET_LONG_MAP_STORAGE_FACTORY);
   }
 
   @SuppressWarnings("resource")

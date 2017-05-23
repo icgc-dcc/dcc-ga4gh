@@ -8,7 +8,7 @@
   ],
   "calls": [
     {
-      "variant_set_id": 4949,
+      "variant_set_ids": [4949],
       "call_set_id": 94949,
       "call_set_name": "sdfsdf",
       "info": {
@@ -19,19 +19,10 @@
           "there"
         ],
         "integer": "9"
-      },
-      "genotype_likelihood": "1.444",
-      "genotype_phaseset": true,
-      "non_reference_alleles": [
-        1,
-        4,
-        2,
-        5,
-        6
-      ]
+      }
     },
     {
-      "variant_set_id": 9393,
+      "variant_set_ids": [9393],
       "call_set_id": 9494444,
       "call_set_name": "sdfsdfe234j",
       "info": {
@@ -53,15 +44,7 @@
           "290"
         ],
         "integer": "9292"
-      },
-      "genotype_likelihood": "1.747474",
-      "genotype_phaseset": false,
-      "non_reference_alleles": [
-        39,
-        482,
-        99,
-        33
-      ]
+      }
     }
   ]
 }

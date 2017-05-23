@@ -5,12 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.PropertyNames;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
+import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 
 import java.util.Map;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.ga4gh.common.JsonNodeConverters.convertIntegers;
-import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToIntegerList;
+import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToIntegerSet;
 import static org.icgc.dcc.ga4gh.common.SearchHits.convertSourceToString;
 
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class EsCallSetConverterJson
   public EsCallSet convertFromSource(Map<String, Object> source) {
     val name = convertSourceToString(source, PropertyNames.NAME);
     val bioSampleId = convertSourceToString(source, PropertyNames.BIO_SAMPLE_ID);
-    val variantSetIds = convertSourceToIntegerList(source, PropertyNames.VARIANT_SET_IDS);
+    val variantSetIds = convertSourceToIntegerSet(source, PropertyNames.VARIANT_SET_IDS);
     return EsCallSet.builder()
         .name(name)
         .bioSampleId(bioSampleId)
@@ -37,6 +38,14 @@ public class EsCallSetConverterJson
         .with(PropertyNames.BIO_SAMPLE_ID, callSet.getBioSampleId())
         .with(PropertyNames.VARIANT_SET_IDS, convertIntegers(callSet.getVariantSetIds()))
         .end();
+  }
+
+  public static String extractCallSetName(PortalMetadata portalMetadata){
+    return portalMetadata.getSampleId();
+  }
+
+  public static String extractBioSampleId(PortalMetadata portalMetadata){
+    return portalMetadata.getSampleId();
   }
 
 

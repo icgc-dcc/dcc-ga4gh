@@ -19,7 +19,7 @@ package org.icgc.dcc.ga4gh.server.config;
 
 import lombok.val;
 import org.elasticsearch.client.Client;
-import org.icgc.dcc.ga4gh.common.model.converters.EsCallConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsBasicCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
@@ -74,7 +74,7 @@ public class ServerConfig {
   @Bean
   public EsVariantCallPairConverterJson esVariantCallPairConverterJson() {
     val varConv = new EsVariantConverterJson();
-    val callConv = new EsCallConverterJson();
+    val callConv = new EsBasicCallConverterJson();
     return new EsVariantCallPairConverterJson(varConv, callConv, varConv, callConv);
   }
 

@@ -5,7 +5,8 @@ import com.google.common.collect.Maps;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import lombok.val;
-import org.icgc.dcc.ga4gh.common.model.es.EsCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsBasicCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsBasicCall.EsBasicCallBuilder;
 
 import java.util.List;
 
@@ -60,7 +61,7 @@ public interface CallConverterStrategy {
     return alleles;
   }
 
-  static List<EsCall>  buildTumorCall(EsCall.EsCallBuilder callBuilder, VariantContext variantContext, int tumorPos){
+  static List<EsBasicCall>  buildTumorCall(EsBasicCallBuilder callBuilder, VariantContext variantContext, int tumorPos){
     val genotypes = variantContext.getGenotypes();
     val commonInfoMap = variantContext.getCommonInfo().getAttributes();
     val altAlleles = variantContext.getAlternateAlleles();
@@ -78,15 +79,16 @@ public interface CallConverterStrategy {
         .build());
   }
 
-  default List<EsCall> convert(final int variantSetId, final int callSetId, String callSetName, VariantContext variantContext){
-    val esCallBuilder = EsCall.builder()
+  default List<EsBasicCall> convertBasic(final int variantSetId, final int callSetId, String callSetName, VariantContext variantContext){
+    val esCallBuilder = EsBasicCall.builder()
         .variantSetId(variantSetId)
         .callSetId(callSetId)
         .callSetName(callSetName);
-    return convert(esCallBuilder, variantContext);
+    return convertBasic(esCallBuilder, variantContext);
   }
 
-  List<EsCall> convert(EsCall.EsCallBuilder callBuilder, VariantContext variantContext);
+  List<EsBasicCall> convertBasic(EsBasicCallBuilder callBuilder, VariantContext variantContext);
+
 
 
 }
