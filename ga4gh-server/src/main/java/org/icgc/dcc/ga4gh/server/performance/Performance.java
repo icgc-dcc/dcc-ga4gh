@@ -21,8 +21,8 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
-import org.icgc.dcc.ga4gh.common.model.converters.EsBasicCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsConsensusCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
@@ -110,7 +110,7 @@ public class Performance implements Runnable {
       val esVariantConverter = new EsVariantConverterJson();
       val esVariantSetConverter = new EsVariantSetConverterJson();
       val esCallSetConverter = new EsCallSetConverterJson();
-      val esCallConverter = new EsBasicCallConverterJson();
+      val esCallConverter = new EsConsensusCallConverterJson();
       val esVariantCallPairConverter = new EsVariantCallPairConverterJson(esVariantConverter
           , esCallConverter, esVariantConverter, esCallConverter);
 

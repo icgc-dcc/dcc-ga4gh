@@ -22,12 +22,14 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.icgc.dcc.ga4gh.common.PropertyNames;
 import org.icgc.dcc.ga4gh.common.SearchHits;
 import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariant;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 
 import java.util.Map;
+import java.util.Set;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
@@ -68,6 +70,31 @@ public class EsVariantCallPairConverterJson implements
 
     return pair.build();
   }
+
+  public EsVariantCallPair convertFromSource(Map<String, Object> source, Set<String> allowedCallsetIds) {
+    val calls = SearchHits.convertSourceToObjectList(source, NESTED_TYPE);
+
+    val pair = EsVariantCallPair.builder()
+        .variant(variantSearchHitConverter.convertFromSource(source));
+
+    calls.stream()
+        .map(x -> (Map<String, Object>)x)
+        .filter(x -> sourceHasCallSet(x, allowedCallsetIds)) //Filtering on server side
+        .map(callSearchHitConverter::convertFromSource)
+        .forEach(pair::call);
+
+    return pair.build();
+  }
+
+  private static boolean sourceHasCallSet(Map<String, Object> source, Set<String> allowedCallsetIds){
+    if (allowedCallsetIds.isEmpty()){
+      return false;
+    }
+
+    val callSetId = SearchHits.convertSourceToString(source, PropertyNames.CALL_SET_ID);
+    return allowedCallsetIds.contains(callSetId);
+  }
+
 
   @Override
   public ObjectNode convertToObjectNode(EsVariantCallPair t) {

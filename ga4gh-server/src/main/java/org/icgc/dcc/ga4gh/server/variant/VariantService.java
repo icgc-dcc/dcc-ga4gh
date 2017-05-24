@@ -18,6 +18,7 @@
 package org.icgc.dcc.ga4gh.server.variant;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.UnmodifiableLazyStringList;
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
@@ -42,23 +43,28 @@ import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
-import org.icgc.dcc.ga4gh.common.model.es.EsBasicCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
 import org.icgc.dcc.ga4gh.server.util.Protobufs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class VariantService {
 
+  private static final Set<String> EMPTY_STRING_SET = newHashSet();
   private static final Variant EMPTY_VARIANT = Variant.newBuilder().build();
   private static final VariantSet EMPTY_VARIANT_SET = VariantSet.newBuilder().build();
   private static final CallSet EMPTY_CALL_SET = CallSet.newBuilder().build();
@@ -66,6 +72,10 @@ public class VariantService {
   private final static long DEFAULT_CREATED_VALUE = 0;
   private final static long DEFAULT_UPDATED_VALUE = 0;
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final List<Integer> DEFAULT_CONSENSUS_NON_REF_ALLELES = newArrayList(-1);
+  private static final double DEFAULT_CONSENSUS_GENOTYPE_LIKELIHOOD = -1.0;
+  private static final boolean DEFAULT_CONSENSUS_GENOTYPE_PHASED = false;
+
 
   @NonNull
   private final VariantRepository variantRepository;
@@ -113,12 +123,21 @@ public class VariantService {
     // log.info("end: {}", request.getEnd());
 
     val response = variantRepository.findVariants(request);
-    return buildSearchVariantResponse(response);
+    if (request.getCallSetIdsCount() > 0){
+      val callsetIds = newHashSet(((UnmodifiableLazyStringList) request.getCallSetIdsList()).getUnmodifiableView());
+      return buildSearchVariantResponse(response, callsetIds);
+    } else {
+      return buildSearchVariantResponse(response, EMPTY_STRING_SET);
+    }
   }
 
 
   private Variant convertToVariant(final String id, @NonNull Map<String, Object> source) {
-    val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source);
+    return convertToVariant(id, source, EMPTY_STRING_SET);
+  }
+
+  private Variant convertToVariant(final String id, @NonNull Map<String, Object> source, Set<String> allowedCallSetIds) {
+    val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source, allowedCallSetIds);
     val esVariant = esVariantCallPair.getVariant();
 
     val variantBuilder = Variant.newBuilder()
@@ -131,6 +150,7 @@ public class VariantService {
         .setCreated(DEFAULT_CREATED_VALUE)
         .setUpdated(DEFAULT_UPDATED_VALUE);
 
+
     esVariantCallPair.getCalls()
         .stream()
         .map(this::convertToCall)
@@ -138,12 +158,16 @@ public class VariantService {
     return variantBuilder.build();
   }
 
-  private Variant convertToVariant(@NonNull SearchHit hit) {
+  private Variant convertToVariant(@NonNull SearchHit hit, Set<String> allowedCallSetIds) {
     if (hit.hasSource()) {
-      return convertToVariant(hit.getId(), hit.getSource());
+      return convertToVariant(hit.getId(), hit.getSource(), allowedCallSetIds);
     } else {
       return EMPTY_VARIANT;
     }
+  }
+
+  private Variant convertToVariant(@NonNull SearchHit hit) {
+    return convertToVariant(hit, EMPTY_STRING_SET);
   }
 
   /*
@@ -183,12 +207,13 @@ public class VariantService {
     }
   }
 
-  private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse) {
+  private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse, Set<String> allowedCallSetIds) {
+//    val callsetIds = searchResponse.
     return SearchVariantsResponse.newBuilder()
         .setNextPageToken("N/A")
         .addAllVariants(
             stream(searchResponse.getHits())
-            .map(this::convertToVariant)
+            .map(x -> convertToVariant(x, allowedCallSetIds))
             .collect(toImmutableList())
         )
         .build();
@@ -263,17 +288,17 @@ public class VariantService {
    */
 
   @SneakyThrows
-  private Call convertToCall(@NonNull EsBasicCall esBasicCall) {
-    val variantSetId = esBasicCall.getVariantSetId();
+  private Call convertToCall(@NonNull EsConsensusCall esBasicCall) {
+    val variantSetIds = esBasicCall.getVariantSetIds();
     val info = esBasicCall.getInfo();
-    info.put(VARIANT_SET_ID, variantSetId);
+    info.put(VARIANT_SET_IDS, variantSetIds);
     return Call.newBuilder()
         .setCallSetId(Integer.toString(esBasicCall.getCallSetId()))
         .setCallSetName(esBasicCall.getCallSetName())
-        .addAllGenotype(esBasicCall.getNonReferenceAlleles())
-        .addGenotypeLikelihood(esBasicCall.getGenotypeLikelihood())
+        .addAllGenotype(DEFAULT_CONSENSUS_NON_REF_ALLELES)
+        .addGenotypeLikelihood(DEFAULT_CONSENSUS_GENOTYPE_LIKELIHOOD)
         .putAllInfo(Protobufs.createInfo(info))
-        .setPhaseset(Boolean.toString(esBasicCall.isGenotypePhased()))
+        .setPhaseset(Boolean.toString(DEFAULT_CONSENSUS_GENOTYPE_PHASED))
         .build();
   }
 

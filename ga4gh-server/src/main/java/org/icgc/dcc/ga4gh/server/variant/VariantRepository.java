@@ -40,7 +40,7 @@ import static org.icgc.dcc.ga4gh.common.PropertyNames.CALL_SET_ID;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.END;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.REFERENCE_NAME;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.START;
-import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_ID;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALLS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
@@ -69,7 +69,7 @@ public class VariantRepository {
 
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
     val searchRequestBuilder = createSearchRequest(request.getPageSize());
-    val childBoolQuery = boolQuery().must(matchQuery(getNestedFieldName(VARIANT_SET_ID), request.getVariantSetId()));
+    val childBoolQuery = boolQuery().must(matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
     request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
     val constChildBoolQuery = constantScoreQuery(childBoolQuery);
 
