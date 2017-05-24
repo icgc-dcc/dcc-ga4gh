@@ -56,6 +56,9 @@ public class EsVariantCallPairConverterJson implements
   @NonNull
   private final JsonObjectNodeConverter<EsConsensusCall> callJsonObjectNodeConverter;
 
+  /**
+   * Converts ALL calls from the source to a EsVariantCallPair
+   */
   @Override
   public EsVariantCallPair convertFromSource(Map<String, Object> source) {
     val calls = SearchHits.convertSourceToObjectList(source, NESTED_TYPE);
@@ -71,6 +74,9 @@ public class EsVariantCallPairConverterJson implements
     return pair.build();
   }
 
+  /**
+   * Only converts calls that have the specified allowedCallSetIds, and constructs a EsVariantCallPair
+   */
   public EsVariantCallPair convertFromSource(Map<String, Object> source, Set<String> allowedCallsetIds) {
     val calls = SearchHits.convertSourceToObjectList(source, NESTED_TYPE);
 

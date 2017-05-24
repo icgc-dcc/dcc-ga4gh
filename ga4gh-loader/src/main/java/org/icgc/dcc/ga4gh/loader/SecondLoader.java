@@ -26,6 +26,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.ga4gh.loader.CallSetAccumulator.createCallSetAccumulator;
 import static org.icgc.dcc.ga4gh.loader.Config.FILTER_VARIANTS;
 import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
+import static org.icgc.dcc.ga4gh.loader.VariantFilter.createVariantFilter;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDefaultPortalMetadataDaoFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDocumentWriter;
@@ -73,6 +74,7 @@ public class SecondLoader {
 
 
   public static void main(String[] args) throws IOException {
+    val variantFilter = createVariantFilter(!FILTER_VARIANTS);
     val storage = Factory.buildStorageFactory().getStorage();
     val localFileRestorerFactory = Factory.buildFileObjectRestorerFactory();
     val query = createPortalConsensusCollabVcfFileQueryCreator(); //createPortalAllCollabVcfFileQueryCreator();
@@ -104,7 +106,7 @@ public class SecondLoader {
         log.info("Downloading [{}/{}]: {}", ++count, total, portalMetadata.getPortalFilename().getFilename());
         val vcfFile = storage.getFile(portalMetadata);
         val vcfProcessor = createVcfProcessor(variantAggregator, variantSetIdStorage, callSetAccumulator,
-             variantCounterMonitor, FILTER_VARIANTS);
+             variantCounterMonitor, variantFilter);
         variantCounterMonitor.start();
         vcfProcessor.process(portalMetadata, vcfFile);
 

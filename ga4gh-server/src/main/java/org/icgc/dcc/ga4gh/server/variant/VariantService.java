@@ -44,6 +44,7 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
+import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 import org.icgc.dcc.ga4gh.server.util.Protobufs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -132,12 +133,18 @@ public class VariantService {
   }
 
 
-  private Variant convertToVariant(final String id, @NonNull Map<String, Object> source) {
-    return convertToVariant(id, source, EMPTY_STRING_SET);
-  }
 
   private Variant convertToVariant(final String id, @NonNull Map<String, Object> source, Set<String> allowedCallSetIds) {
     val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source, allowedCallSetIds);
+    return convertToVariant(id, esVariantCallPair);
+  }
+
+  private Variant convertToVariant(final String id, @NonNull Map<String, Object> source) {
+    val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source);
+    return convertToVariant(id, esVariantCallPair);
+  }
+
+  private Variant convertToVariant(String id, EsVariantCallPair esVariantCallPair) {
     val esVariant = esVariantCallPair.getVariant();
 
     val variantBuilder = Variant.newBuilder()
@@ -158,6 +165,14 @@ public class VariantService {
     return variantBuilder.build();
   }
 
+  private Variant convertToVariant(@NonNull SearchHit hit) {
+    if (hit.hasSource()) {
+      return convertToVariant(hit.getId(), hit.getSource());
+    } else {
+      return EMPTY_VARIANT;
+    }
+  }
+
   private Variant convertToVariant(@NonNull SearchHit hit, Set<String> allowedCallSetIds) {
     if (hit.hasSource()) {
       return convertToVariant(hit.getId(), hit.getSource(), allowedCallSetIds);
@@ -166,9 +181,6 @@ public class VariantService {
     }
   }
 
-  private Variant convertToVariant(@NonNull SearchHit hit) {
-    return convertToVariant(hit, EMPTY_STRING_SET);
-  }
 
   /*
    * VariantSet Processing
@@ -288,13 +300,13 @@ public class VariantService {
    */
 
   @SneakyThrows
-  private Call convertToCall(@NonNull EsConsensusCall esBasicCall) {
-    val variantSetIds = esBasicCall.getVariantSetIds();
-    val info = esBasicCall.getInfo();
+  private Call convertToCall(@NonNull EsConsensusCall esConsensusCall) {
+    val variantSetIds = esConsensusCall.getVariantSetIds();
+    val info = esConsensusCall.getInfo();
     info.put(VARIANT_SET_IDS, variantSetIds);
     return Call.newBuilder()
-        .setCallSetId(Integer.toString(esBasicCall.getCallSetId()))
-        .setCallSetName(esBasicCall.getCallSetName())
+        .setCallSetId(Integer.toString(esConsensusCall.getCallSetId()))
+        .setCallSetName(esConsensusCall.getCallSetName())
         .addAllGenotype(DEFAULT_CONSENSUS_NON_REF_ALLELES)
         .addGenotypeLikelihood(DEFAULT_CONSENSUS_GENOTYPE_LIKELIHOOD)
         .putAllInfo(Protobufs.createInfo(info))

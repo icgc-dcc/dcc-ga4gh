@@ -23,7 +23,7 @@ public class PortalConsensusCollabVcfFileQueryCreator implements ObjectNodeConve
     return new PortalConsensusCollabVcfFileQueryCreator();
   }
 
-  private static final Set<String> SOFTWARE_NAMES = newHashSet( "PCAWG SNV-MNV callers", "PCAWG InDel callers");
+  private static final Set<String> CONSENSUS_SOFTWARE_NAMES = newHashSet( "PCAWG SNV-MNV callers", "PCAWG InDel callers");
 
   @Override
   public ObjectNode toObjectNode(){
@@ -35,7 +35,7 @@ public class PortalConsensusCollabVcfFileQueryCreator implements ObjectNodeConve
                 .with("study", createIs("PCAWG"))
                 .with("experimentalStrategy", createIs("WGS"))
                 .with("fileFormat", createIs("VCF"))
-                .with("software", createIs(toStringArray(SOFTWARE_NAMES)))
+                .with("software", createIs(toStringArray(CONSENSUS_SOFTWARE_NAMES)))
         )
         .end();
   }

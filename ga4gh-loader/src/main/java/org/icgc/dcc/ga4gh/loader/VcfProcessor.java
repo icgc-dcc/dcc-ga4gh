@@ -38,16 +38,17 @@ public class VcfProcessor {
 
   public static VcfProcessor createVcfProcessor(VariantAggregator variantAggregator,
       IdStorage<EsVariantSet, Integer> variantSetIdStorage,
-      CallSetAccumulator callSetAccumulator, CounterMonitor callCounterMonitor, boolean filterVariants) {
+      CallSetAccumulator callSetAccumulator, CounterMonitor callCounterMonitor,
+      VariantFilter variantFilter) {
     return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetAccumulator, callCounterMonitor,
-        filterVariants);
+        variantFilter);
   }
 
   @NonNull private final VariantAggregator variantAggregator;
   @NonNull private final IdStorage<EsVariantSet, Integer> variantSetIdStorage;
   @NonNull private CallSetAccumulator callSetAccumulator;
   @NonNull private final CounterMonitor callCounterMonitor;
-  private final boolean filterVariants;
+  @NonNull private final VariantFilter variantFilter;
 
   /**
    * State
@@ -65,13 +66,10 @@ public class VcfProcessor {
     val vcfFileReader = newDefaultVCFFileReader(vcfFile);
     val esConsensusCallBuilder = createEsConsensusCallBuilder(portalMetadata, callSetId);
     stream(vcfFileReader)
-        .filter(this::allowVariant)
+        .filter(variantFilter::passedFilter)
         .forEach(v -> processVariant(portalMetadata, esConsensusCallBuilder, v));
   }
 
-  private boolean allowVariant(VariantContext variantContext){
-    return !filterVariants || variantContext.isNotFiltered();
-  }
 
   private void processVariant(PortalMetadata portalMetadata, EsConsensusCallBuilder esCallBuilder, VariantContext variantContext){
     val esCall = convertConsensus(portalMetadata, esCallBuilder,variantContext);

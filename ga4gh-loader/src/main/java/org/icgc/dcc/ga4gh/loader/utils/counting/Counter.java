@@ -8,4 +8,15 @@ public interface Counter<N> {
   N postIncr(N amount);
   void reset();
   N getCount();
+
+  default <T> T passThruIncr(T t){
+    preIncr();
+    return t;
+  }
+
+  default <T> T passThruIncr(T t, N amount){
+    preIncr(amount);
+    return t;
+  }
+
 }

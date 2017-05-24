@@ -4,6 +4,10 @@ import lombok.val;
 
 public class LongCounter implements Counter<Long> {
 
+  public static LongCounter createLongCounter0() {
+    return createLongCounter(0L);
+  }
+
   public static LongCounter createLongCounter(long init) {
     return new LongCounter(init);
   }
