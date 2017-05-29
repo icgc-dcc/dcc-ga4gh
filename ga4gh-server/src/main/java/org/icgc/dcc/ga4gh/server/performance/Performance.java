@@ -172,7 +172,7 @@ public class Performance implements Runnable {
       for (val searchVariantsRequest : searchVariantRequestGenerator.nextRandomList(random,numSamples)){
         try{
           watch.start();
-          searchVariantsResponse= variantService.searchVariants(searchVariantsRequest);
+          searchVariantsResponse = variantService.searchVariants(searchVariantsRequest);
         } catch (Throwable t){
           log.error("Error runnig variantSearch [{}] -- Message: {}\nStackTrace: {}",
               t.getClass().getName(),t.getMessage(), NEWLINE.join(t.getStackTrace()) );

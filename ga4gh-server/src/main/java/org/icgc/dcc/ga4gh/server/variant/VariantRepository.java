@@ -27,6 +27,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
 
@@ -52,6 +53,9 @@ import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 @RequiredArgsConstructor
 public class VariantRepository {
 
+  private static final int DEFAULT_SCROLL_KEEP_ALIVE_MINUTES = 5;
+  private static final TimeValue DEFAULT_SCROLL_TIMEVALUE = TimeValue.timeValueMinutes(DEFAULT_SCROLL_KEEP_ALIVE_MINUTES);
+
   @NonNull
   private final Client client;
 
@@ -63,25 +67,44 @@ public class VariantRepository {
         .setSize(size);
   }
 
+  private SearchRequestBuilder createScrollSearchRequest(final int size, TimeValue timeValue){
+    return createSearchRequest(size)
+        .setScroll(timeValue);
+  }
+
+
   private static String getNestedFieldName(String fieldName){
     return DOT.join(NESTED_TYPE, fieldName);
   }
 
-  public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
-    val searchRequestBuilder = createSearchRequest(request.getPageSize());
-    val childBoolQuery = boolQuery().must(matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
-    request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
-    val constChildBoolQuery = constantScoreQuery(childBoolQuery);
-
-    val boolQuery = boolQuery()
-        .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
-        .must(rangeQuery(START).gte(request.getStart()))
-        .must(rangeQuery(END).lt(request.getEnd()))
-        .must(nestedQuery(NESTED_TYPE,constChildBoolQuery,ScoreMode.None));
-    val constantScoreQuery = constantScoreQuery(boolQuery);
-
-    return searchRequestBuilder.setQuery(constantScoreQuery).get();
+  private static boolean isNewRequest(SearchVariantsRequest searchVariantsRequest){
+    return "".equals(searchVariantsRequest.getPageToken());
   }
+
+  //TODO: [DCC-5607] Research scrolling methodology
+  //TODO:    need to handle case, where pageToken doesnt exist anymore...have to throw GAException
+  //TODO: need to pass the scroll id back up to calling function, to include it in the SearchVariantResponse object
+  //TODO: need to know when is the last scroll id (resp.getHits().getHits().length ==0 means the end of the scroll
+  //TODO: what does ES return as scroll id when done?
+  public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
+    if (isNewRequest(request)){
+      val searchRequestBuilder = createScrollSearchRequest(request.getPageSize(), DEFAULT_SCROLL_TIMEVALUE);
+      val childBoolQuery = boolQuery().must(matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
+      request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
+      val constChildBoolQuery = constantScoreQuery(childBoolQuery);
+      val boolQuery = boolQuery()
+          .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
+          .must(rangeQuery(START).gte(request.getStart()))
+          .must(rangeQuery(END).lt(request.getEnd()))
+          .must(nestedQuery(NESTED_TYPE,constChildBoolQuery,ScoreMode.None));
+      val constantScoreQuery = constantScoreQuery(boolQuery);
+      return searchRequestBuilder.setQuery(constantScoreQuery).get();
+    } else {
+      return client.prepareSearchScroll(request.getPageToken()).setScroll(DEFAULT_SCROLL_TIMEVALUE).get();
+    }
+  }
+
+
 
   public GetResponse findVariantById(@NonNull GetVariantRequest request) {
     return client.prepareGet(INDEX_NAME, VARIANT, request.getVariantId()).get();

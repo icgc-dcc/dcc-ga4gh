@@ -115,21 +115,13 @@ public class VariantService {
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
     // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
 
-    // log.info("pageToken: {}", request.getPageToken());
-    // log.info("pageSize: {}", request.getPageSize());
-    // log.info("referenceName: {}", request.getReferenceName());
-    // log.info("variantSetId: {}", request.getVariantSetId());
-    // log.info("callSetIdsList: {}", request.getCallSetIdsList());
-    // log.info("start: {}", request.getStart());
-    // log.info("end: {}", request.getEnd());
-
-    val response = variantRepository.findVariants(request);
-    if (request.getCallSetIdsCount() > 0){
-      val callsetIds = newHashSet(((UnmodifiableLazyStringList) request.getCallSetIdsList()).getUnmodifiableView());
-      return buildSearchVariantResponse(response, callsetIds);
-    } else {
-      return buildSearchVariantResponse(response, EMPTY_STRING_SET);
-    }
+      val response = variantRepository.findVariants(request);
+      if (request.getCallSetIdsCount() > 0){
+        val callsetIds = newHashSet(((UnmodifiableLazyStringList) request.getCallSetIdsList()).getUnmodifiableView());
+        return buildSearchVariantResponse(response, callsetIds);
+      } else {
+        return buildSearchVariantResponse(response, EMPTY_STRING_SET);
+      }
   }
 
 
@@ -217,12 +209,15 @@ public class VariantService {
     } else {
       return EMPTY_VARIANT_SET;
     }
+
   }
 
   private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse, Set<String> allowedCallSetIds) {
-//    val callsetIds = searchResponse.
+//    val hasHits = searchResponse.getHits().getHits().length>0;
+//    checkState(hasHits, "Scrolling already finished and cannot scroll further");
+    val pageToken = searchResponse.getScrollId();
     return SearchVariantsResponse.newBuilder()
-        .setNextPageToken("N/A")
+        .setNextPageToken(pageToken)
         .addAllVariants(
             stream(searchResponse.getHits())
             .map(x -> convertToVariant(x, allowedCallSetIds))
