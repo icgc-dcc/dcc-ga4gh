@@ -228,7 +228,7 @@ public class VariantService {
 
   private SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
     return SearchVariantSetsResponse.newBuilder()
-        .setNextPageToken("N/A")
+        .setNextPageToken(response.getScrollId())
         .addAllVariantSets(
             Arrays.stream(response.getHits().getHits())
                 .map(this::convertToVariantSet)

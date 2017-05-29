@@ -44,6 +44,7 @@ import static org.icgc.dcc.ga4gh.common.PropertyNames.START;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALLS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
+import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_SCROLL_TIMEOUT;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 
 /**
@@ -52,9 +53,6 @@ import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 @Repository
 @RequiredArgsConstructor
 public class VariantRepository {
-
-  private static final int DEFAULT_SCROLL_KEEP_ALIVE_MINUTES = 5;
-  private static final TimeValue DEFAULT_SCROLL_TIMEVALUE = TimeValue.timeValueMinutes(DEFAULT_SCROLL_KEEP_ALIVE_MINUTES);
 
   @NonNull
   private final Client client;
@@ -88,7 +86,7 @@ public class VariantRepository {
   //TODO: what does ES return as scroll id when done?
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
     if (isNewRequest(request)){
-      val searchRequestBuilder = createScrollSearchRequest(request.getPageSize(), DEFAULT_SCROLL_TIMEVALUE);
+      val searchRequestBuilder = createScrollSearchRequest(request.getPageSize(), DEFAULT_SCROLL_TIMEOUT);
       val childBoolQuery = boolQuery().must(matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
       request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
       val constChildBoolQuery = constantScoreQuery(childBoolQuery);
@@ -100,7 +98,7 @@ public class VariantRepository {
       val constantScoreQuery = constantScoreQuery(boolQuery);
       return searchRequestBuilder.setQuery(constantScoreQuery).get();
     } else {
-      return client.prepareSearchScroll(request.getPageToken()).setScroll(DEFAULT_SCROLL_TIMEVALUE).get();
+      return client.prepareSearchScroll(request.getPageToken()).setScroll(DEFAULT_SCROLL_TIMEOUT).get();
     }
   }
 
