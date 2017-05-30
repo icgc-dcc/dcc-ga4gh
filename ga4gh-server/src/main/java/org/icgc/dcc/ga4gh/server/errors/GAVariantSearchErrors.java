@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum GAVariantSearchErrors implements GAServerError {
-  START_LESS_THAN_END("start.less.than.end", 404),
+  START_GREATER_THAN_END("start.greater.than.end", 400),
   PAGE_TOKEN_DNE("page.token.dne", 404),
   UNKNOWN("unknown", 400) ;
 
