@@ -7,7 +7,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
@@ -100,7 +99,7 @@ public class MapDBSerialzers {
 
     @Override
     @SneakyThrows
-    public Map<String, Object> deserialize(@NotNull DataInput2 input, int x) throws IOException {
+    public Map<String, Object> deserialize(@NonNull DataInput2 input, int x) throws IOException {
       val map = Maps.<String, Object>newHashMap();
       //Read number of keys
       val numKeys = input.unpackInt();
@@ -120,7 +119,7 @@ public class MapDBSerialzers {
   public static class ObjectSerializer  implements Serializer<Object>, Serializable{
 
     @Override
-    public void serialize(@NotNull DataOutput2 dataOutput2, @NotNull Object o) throws IOException {
+    public void serialize(@NonNull DataOutput2 dataOutput2, @NonNull Object o) throws IOException {
       val baos = new ByteArrayOutputStream();
       val oos = new ObjectOutputStream(baos);
       oos.writeObject(o);
@@ -131,7 +130,7 @@ public class MapDBSerialzers {
 
     @Override
     @SneakyThrows
-    public Object deserialize(@NotNull DataInput2 dataInput2, int i) throws IOException {
+    public Object deserialize(@NonNull DataInput2 dataInput2, int i) throws IOException {
       val byteArray = BYTE_ARRAY.deserialize(dataInput2, i);
       val bais = new ByteArrayInputStream(byteArray);
       val ois = new ObjectInputStream(bais);
