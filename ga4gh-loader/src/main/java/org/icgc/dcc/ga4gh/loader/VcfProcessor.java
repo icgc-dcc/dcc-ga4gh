@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package org.icgc.dcc.ga4gh.loader;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -5,7 +23,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
@@ -29,20 +46,11 @@ import static org.icgc.dcc.ga4gh.loader.utils.VCF.newDefaultVCFFileReader;
 
 @RequiredArgsConstructor
 @Value
-@Slf4j
 public class VcfProcessor {
 
   private static final EsVariantConverterJson ES_VARIANT_CONVERTER_JSON = new EsVariantConverterJson();
   private static final String NUM_CALLERS = "NumCallers";
   private static final String CALLERS = "Callers";
-
-  public static VcfProcessor createVcfProcessor(VariantAggregator variantAggregator,
-      IdStorage<EsVariantSet, Integer> variantSetIdStorage,
-      CallSetAccumulator callSetAccumulator, CounterMonitor callCounterMonitor,
-      VariantFilter variantFilter) {
-    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetAccumulator, callCounterMonitor,
-        variantFilter);
-  }
 
   @NonNull private final VariantAggregator variantAggregator;
   @NonNull private final IdStorage<EsVariantSet, Integer> variantSetIdStorage;
@@ -60,16 +68,6 @@ public class VcfProcessor {
         .callSetId(callSetId)
         .callSetName(portalMetadata.getSampleId());
   }
-
-  public void process(PortalMetadata portalMetadata, File vcfFile){
-    //Open file, and process each variant, to create variantSets and Calls
-    val vcfFileReader = newDefaultVCFFileReader(vcfFile);
-    val esConsensusCallBuilder = createEsConsensusCallBuilder(portalMetadata, callSetId);
-    stream(vcfFileReader)
-        .filter(variantFilter::passedFilter)
-        .forEach(v -> processVariant(portalMetadata, esConsensusCallBuilder, v));
-  }
-
 
   private void processVariant(PortalMetadata portalMetadata, EsConsensusCallBuilder esCallBuilder, VariantContext variantContext){
     val esCall = convertConsensus(portalMetadata, esCallBuilder,variantContext);
@@ -113,13 +111,31 @@ public class VcfProcessor {
         .build();
   }
 
-
   private Set<EsVariantSet> buildConsensusEsVariantSet(PortalMetadata portalMetadata, Set<String> callers){
     val dataSetId = portalMetadata.getDataType();
     val referenceName = portalMetadata.getReferenceName();
     return callers.stream()
         .map(x ->  createEsVariantSet(x, dataSetId, referenceName))
         .collect(toImmutableSet());
+  }
+
+  public void process(PortalMetadata portalMetadata, File vcfFile){
+    //Open file, and process each variant, to create variantSets and Calls
+    val vcfFileReader = newDefaultVCFFileReader(vcfFile);
+    val esConsensusCallBuilder = createEsConsensusCallBuilder(portalMetadata, callSetId);
+    stream(vcfFileReader)
+        .filter(variantFilter::passedFilter)
+        .forEach(v -> processVariant(portalMetadata, esConsensusCallBuilder, v));
+  }
+
+
+
+  public static VcfProcessor createVcfProcessor(VariantAggregator variantAggregator,
+      IdStorage<EsVariantSet, Integer> variantSetIdStorage,
+      CallSetAccumulator callSetAccumulator, CounterMonitor callCounterMonitor,
+      VariantFilter variantFilter) {
+    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetAccumulator, callCounterMonitor,
+        variantFilter);
   }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -38,10 +38,6 @@ import static org.icgc.dcc.common.core.util.Joiners.DOT;
 @ToString
 public class PortalFilename implements Serializable {
 
-  public static final PortalFilename createPortalFilename(String filename){
-    return new PortalFilename(filename);
-  }
-
   private static final long serialVersionUID = 1484172857L;
 
   private static final int MIN_NUM_FIELDS = 6;
@@ -62,6 +58,21 @@ public class PortalFilename implements Serializable {
         .split(filename), String.class);
     checkArgument(elements.length >= MIN_NUM_FIELDS,
         "The filename [%s] has %d fields, but a minimum of %d is expected", filename, elements.length, MIN_NUM_FIELDS);
+  }
+
+  private static WorkflowTypes parseWorkflowType(final String workflow) {
+    boolean found = false;
+    WorkflowTypes foundWorkflowType = null;
+    for (WorkflowTypes workflowType : WorkflowTypes.values()) {
+      if (workflowType.isAtBeginningOf(workflow)) {
+        foundWorkflowType = workflowType;
+        found = true;
+        break;
+      }
+    }
+    checkState(found, "The workflow [%s] does not contain any of the available workflow types: [%s]",
+        workflow, WorkflowTypes.values());
+    return foundWorkflowType;
   }
 
   public String getAliquotId() {
@@ -92,21 +103,8 @@ public class PortalFilename implements Serializable {
     return DOT.join(elements);
   }
 
-  private static WorkflowTypes parseWorkflowType(final String workflow) {
-    boolean found = false;
-    WorkflowTypes foundWorkflowType = null;
-    for (WorkflowTypes workflowType : WorkflowTypes.values()) {
-      if (workflowType.isAtBeginningOf(workflow)) {
-        foundWorkflowType = workflowType;
-        found = true;
-        break;
-      }
-    }
-    checkState(found, "The workflow [%s] does not contain any of the available workflow types: [%s]",
-        workflow, WorkflowTypes.values());
-    return foundWorkflowType;
+  public static final PortalFilename createPortalFilename(String filename){
+    return new PortalFilename(filename);
   }
-
-
 
 }

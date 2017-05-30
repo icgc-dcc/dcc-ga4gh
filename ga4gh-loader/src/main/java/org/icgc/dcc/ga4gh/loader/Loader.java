@@ -1,15 +1,28 @@
+/*
+ * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package org.icgc.dcc.ga4gh.loader;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 import org.icgc.dcc.ga4gh.common.types.WorkflowTypes;
-import org.icgc.dcc.ga4gh.loader.dao.portal.PortalMetadataDao;
 import org.icgc.dcc.ga4gh.loader.factory.Factory;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IdStorageFactory2;
@@ -17,15 +30,12 @@ import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IntegerIdStorage;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.List;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Objects.isNull;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.ga4gh.loader.CallSetAccumulator.createCallSetAccumulator;
 import static org.icgc.dcc.ga4gh.loader.Config.FILTER_VARIANTS;
-import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.VariantFilter.createVariantFilter;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDefaultPortalMetadataDaoFactory;
@@ -35,43 +45,13 @@ import static org.icgc.dcc.ga4gh.loader.portal.PortalConsensusCollabVcfFileQuery
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.RamMapStorage.newRamMapStorage;
 
 @Slf4j
-public class SecondLoader {
+public class Loader {
 
   private static boolean skipPortatMetadata(PortalMetadata portalMetadata){
     val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
     val out = workflowType == WorkflowTypes.CONSENSUS || portalMetadata.getFileSize() > 7000000 ;
     return false;
   }
-
-  private static List<PortalMetadata> createAssortedVariantSets(PortalMetadataDao dao, int numSamplesPerWorkflow, long maxFileSize){
-    val map = dao.groupBy(x -> x.getPortalFilename().getWorkflow());
-    return map.keySet().stream()
-        .flatMap(k -> map.get(k).stream()
-            .filter(x -> x.getFileSize() < maxFileSize )
-            .limit(numSamplesPerWorkflow))
-        .collect(toImmutableList());
-  }
-
-//  @SneakyThrows
-//  private static long countLines(File f){
-//    val fr = new FileReader(f);
-//    val br = new BufferedReader(fr);
-//    val iterator = br.lines().iterator();
-//    boolean start = false;
-//    long count = 0;
-//    while(iterator.hasNext()){
-//      val line = iterator.next();
-//      if (line.startsWith("#CHROM") ){
-//        start = true;
-//      }
-//
-//      if (start){
-//        ++count;
-//      }
-//    }
-//    return count;
-//  }
-
 
   public static void main(String[] args) throws IOException {
     val variantFilter = createVariantFilter(!FILTER_VARIANTS);
@@ -84,13 +64,10 @@ public class SecondLoader {
     val callSetAccumulator = createCallSetAccumulator(newHashMap(), newHashMap());
     val variantSetIdStorage = IntegerIdStorage.<EsVariantSet>createIntegerIdStorage(newRamMapStorage(),0);
 
-    val useMapDB = USE_MAP_DB;
     val variantAggregator = IdStorageFactory2.buildVariantAggregator();
 
     val variantCounterMonitor = CounterMonitor.createCounterMonitor("variantCounterMonitor", 500000);
     val portalMetadatas =  portalMetadataDao.findAll();
-
-//      val portalMetadatas = createAssortedVariantSets(portalMetadataDao, 2, 80000); //rtisma This is a hack to just load a few files from each variantSet
 
     long numVariants = 0;
     int count = 0;
@@ -160,22 +137,5 @@ public class SecondLoader {
     }
 
   }
-
-
-  @RequiredArgsConstructor
-  @ToString
-  public static class Stat{
-    @NonNull private final String name;
-    @Getter private int min = Integer.MAX_VALUE;
-    @Getter private int max = Integer.MIN_VALUE;
-
-    public void process(int value){
-      min = Math.min(min, value);
-      max = Math.max(max, value);
-    }
-
-  }
-
-
 
 }

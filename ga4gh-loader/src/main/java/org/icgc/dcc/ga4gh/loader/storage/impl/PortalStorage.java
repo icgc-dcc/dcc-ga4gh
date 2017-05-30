@@ -59,17 +59,6 @@ public class PortalStorage implements Storage {
 
   private final String token;
 
-  private static Path createTempFile(Path outputDir){
-    val filename = "tmp." + System.currentTimeMillis() + ".vcf.gz";
-    val path = outputDir.resolve(filename);
-    path.toFile().deleteOnExit();
-    return path;
-  }
-
-  public static PortalStorage createPortalStorage(final boolean persist, Path outputDir, final boolean bypassMD5Check, String token){
-    return new PortalStorage(persist, outputDir, bypassMD5Check, token);
-  }
-
   private PortalStorage(final boolean persist, @NonNull final Path outputDir, final boolean bypassMD5Check, String token) {
     this.bypassMD5Check = bypassMD5Check;
     this.persist = persist;
@@ -78,14 +67,6 @@ public class PortalStorage implements Storage {
     initDir(outputDir);
     this.currentTime = System.currentTimeMillis();
     this.tempFile = createTempFile(outputDir);
-  }
-
-  @SneakyThrows
-  public static void initDir(@NonNull final Path dir) {
-    val dirDoesNotExist = !Files.exists(dir);
-    if (dirDoesNotExist) {
-      Files.createDirectories(dir);
-    }
   }
 
   private void checkForParentDir(@NonNull Path file) {
@@ -98,29 +79,11 @@ public class PortalStorage implements Storage {
         absoluteFile, outputDir);
   }
 
-  // Used for subdirectories inside outputDir
-  public static void initParentDir(@NonNull Path file) {
-    val parentDir = file.getParent();
-    initDir(parentDir);
-  }
-
   // Download file regardless of persist mode
   @SneakyThrows
   private File downloadFileByObjectId(@NonNull final String objectId, @NonNull final String filename) {
     val objectUrl = getObjectUrl(STORAGE_API,objectId);
     val output = Paths.get(filename);
-
-    @Cleanup
-    val input = objectUrl.openStream();
-    copy(input, output, REPLACE_EXISTING);
-
-    return output.toFile();
-  }
-
-  @SneakyThrows
-  public static File downloadFileByURL(@NonNull final String urlString, @NonNull final String outputFilename) {
-    val objectUrl = new URL(urlString);
-    val output = Paths.get(outputFilename);
 
     @Cleanup
     val input = objectUrl.openStream();
@@ -171,6 +134,43 @@ public class PortalStorage implements Storage {
   @SneakyThrows
   private static JsonNode readObject(@NonNull final HttpURLConnection connection) {
     return DEFAULT.readTree(connection.getInputStream());
+  }
+
+  private static Path createTempFile(Path outputDir){
+    val filename = "tmp." + System.currentTimeMillis() + ".vcf.gz";
+    val path = outputDir.resolve(filename);
+    path.toFile().deleteOnExit();
+    return path;
+  }
+
+  public static PortalStorage createPortalStorage(final boolean persist, Path outputDir, final boolean bypassMD5Check, String token){
+    return new PortalStorage(persist, outputDir, bypassMD5Check, token);
+  }
+
+  @SneakyThrows
+  public static File downloadFileByURL(@NonNull final String urlString, @NonNull final String outputFilename) {
+    val objectUrl = new URL(urlString);
+    val output = Paths.get(outputFilename);
+
+    @Cleanup
+    val input = objectUrl.openStream();
+    copy(input, output, REPLACE_EXISTING);
+
+    return output.toFile();
+  }
+
+  // Used for subdirectories inside outputDir
+  public static void initParentDir(@NonNull Path file) {
+    val parentDir = file.getParent();
+    initDir(parentDir);
+  }
+
+  @SneakyThrows
+  public static void initDir(@NonNull final Path dir) {
+    val dirDoesNotExist = !Files.exists(dir);
+    if (dirDoesNotExist) {
+      Files.createDirectories(dir);
+    }
   }
 
 }

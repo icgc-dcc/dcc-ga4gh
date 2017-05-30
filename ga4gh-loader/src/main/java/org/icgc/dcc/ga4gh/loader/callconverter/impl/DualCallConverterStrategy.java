@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package org.icgc.dcc.ga4gh.loader.callconverter.impl;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -19,11 +37,6 @@ public class DualCallConverterStrategy implements CallConverterStrategy {
 
   private static final int EXPECTED_NUM_CALLS = 2;
 
-  public static DualCallConverterStrategy createDualCallConverterStrategy(
-      TumorGenotypeClassifier tumorGenotypeClassifier, boolean isTumorPos0) {
-    return new DualCallConverterStrategy(tumorGenotypeClassifier, isTumorPos0);
-  }
-
   private final TumorGenotypeClassifier tumorGenotypeClassifier;
   private final int candidateTumorPos;
   private final int candidateNormalPos;
@@ -40,12 +53,12 @@ public class DualCallConverterStrategy implements CallConverterStrategy {
     checkNumCalls(actualNumCalls, expectedNumCalls);
 
     val tumorGenotype = genotypes.get(candidateTumorPos);
-    String tumorSampleName = tumorGenotype.getSampleName();
+    val tumorSampleName = tumorGenotype.getSampleName();
     if (tumorGenotypeClassifier.classify(tumorGenotype)){ //Try first guess for tumorPosition
       return candidateTumorPos;
     } else { // Otherwise try the other position
       val normalGenotype = genotypes.get(candidateNormalPos);
-      String normalSampleName = normalGenotype.getSampleName();
+      val normalSampleName = normalGenotype.getSampleName();
 
       checkState(tumorGenotypeClassifier.classify(normalGenotype),
           "The tumorGenotype [%s] was negatively classified by the [%s], and similarly for normalGenotype [%s]",
@@ -61,5 +74,11 @@ public class DualCallConverterStrategy implements CallConverterStrategy {
     val tumorPos = calcTumorPos(variantContext, EXPECTED_NUM_CALLS);
     return buildTumorCall(callBuilder, variantContext, tumorPos);
   }
+
+  public static DualCallConverterStrategy createDualCallConverterStrategy(
+      TumorGenotypeClassifier tumorGenotypeClassifier, boolean isTumorPos0) {
+    return new DualCallConverterStrategy(tumorGenotypeClassifier, isTumorPos0);
+  }
+
 
 }
