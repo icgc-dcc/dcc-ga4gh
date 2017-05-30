@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.ga4gh.server.variant;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.UnmodifiableLazyStringList;
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
@@ -69,10 +68,8 @@ public class VariantService {
   private static final Variant EMPTY_VARIANT = Variant.newBuilder().build();
   private static final VariantSet EMPTY_VARIANT_SET = VariantSet.newBuilder().build();
   private static final CallSet EMPTY_CALL_SET = CallSet.newBuilder().build();
-  private static final int FIRST_ELEMENT_POS = 0;
   private final static long DEFAULT_CREATED_VALUE = 0;
   private final static long DEFAULT_UPDATED_VALUE = 0;
-  private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final List<Integer> DEFAULT_CONSENSUS_NON_REF_ALLELES = newArrayList(-1);
   private static final double DEFAULT_CONSENSUS_GENOTYPE_LIKELIHOOD = -1.0;
   private static final boolean DEFAULT_CONSENSUS_GENOTYPE_PHASED = false;
@@ -209,8 +206,6 @@ public class VariantService {
   }
 
   private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse, Set<String> allowedCallSetIds) {
-//    val hasHits = searchResponse.getHits().getHits().length>0;
-//    checkState(hasHits, "Scrolling already finished and cannot scroll further");
     val pageToken = searchResponse.getScrollId();
     return SearchVariantsResponse.newBuilder()
         .setNextPageToken(pageToken)

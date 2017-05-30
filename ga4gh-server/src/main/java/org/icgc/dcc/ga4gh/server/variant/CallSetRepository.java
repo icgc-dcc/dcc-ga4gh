@@ -32,7 +32,6 @@ import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.springframework.stereotype.Repository;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.BIO_SAMPLE_ID;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.NAME;
@@ -67,13 +66,13 @@ public class CallSetRepository {
   public SearchResponse findCallSets(@NonNull SearchCallSetsRequest request) {
     if(isNewRequest(request)){
       val searchRequestBuilder = createScrollSearchRequest(request.getPageSize(), DEFAULT_SCROLL_TIMEOUT);
-      val constBoolQuery =
-          constantScoreQuery(
+      val query = boolQuery()
+          .filter(
               boolQuery()
                   .must(matchQuery(VARIANT_SET_IDS, request.getVariantSetId()))
                   .must(matchQuery(NAME, request.getName()))
                   .must(matchQuery(BIO_SAMPLE_ID, request.getBioSampleId())));
-      return searchRequestBuilder.setQuery(constBoolQuery).get();
+      return searchRequestBuilder.setQuery(query).get();
     } else {
       return client.prepareSearchScroll(request.getPageToken()).setScroll(DEFAULT_SCROLL_TIMEOUT).get();
     }
