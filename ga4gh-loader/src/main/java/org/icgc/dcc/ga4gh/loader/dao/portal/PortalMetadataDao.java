@@ -21,10 +21,6 @@ public class PortalMetadataDao implements BasicDao<PortalMetadata, PortalMetadat
 
   public static final long serialVersionUID = 1492088726L;
 
-  public static final PortalMetadataDao newPortalMetadataDao(List<PortalMetadata> data){
-    return new PortalMetadataDao(data);
-  }
-
   @NonNull private final List<PortalMetadata> data;
 
   private Stream<PortalMetadata> getStream(PortalMetadataRequest request){
@@ -53,5 +49,8 @@ public class PortalMetadataDao implements BasicDao<PortalMetadata, PortalMetadat
         .collect(groupingBy(functor));
   }
 
+  public static final PortalMetadataDao newPortalMetadataDao(List<PortalMetadata> data){
+    return new PortalMetadataDao(data);
+  }
 
 }

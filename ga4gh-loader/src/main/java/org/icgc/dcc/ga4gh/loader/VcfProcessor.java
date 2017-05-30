@@ -36,14 +36,6 @@ public class VcfProcessor {
   private static final String NUM_CALLERS = "NumCallers";
   private static final String CALLERS = "Callers";
 
-  public static VcfProcessor createVcfProcessor(VariantAggregator variantAggregator,
-      IdStorage<EsVariantSet, Integer> variantSetIdStorage,
-      CallSetAccumulator callSetAccumulator, CounterMonitor callCounterMonitor,
-      VariantFilter variantFilter) {
-    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetAccumulator, callCounterMonitor,
-        variantFilter);
-  }
-
   @NonNull private final VariantAggregator variantAggregator;
   @NonNull private final IdStorage<EsVariantSet, Integer> variantSetIdStorage;
   @NonNull private CallSetAccumulator callSetAccumulator;
@@ -60,16 +52,6 @@ public class VcfProcessor {
         .callSetId(callSetId)
         .callSetName(portalMetadata.getSampleId());
   }
-
-  public void process(PortalMetadata portalMetadata, File vcfFile){
-    //Open file, and process each variant, to create variantSets and Calls
-    val vcfFileReader = newDefaultVCFFileReader(vcfFile);
-    val esConsensusCallBuilder = createEsConsensusCallBuilder(portalMetadata, callSetId);
-    stream(vcfFileReader)
-        .filter(variantFilter::passedFilter)
-        .forEach(v -> processVariant(portalMetadata, esConsensusCallBuilder, v));
-  }
-
 
   private void processVariant(PortalMetadata portalMetadata, EsConsensusCallBuilder esCallBuilder, VariantContext variantContext){
     val esCall = convertConsensus(portalMetadata, esCallBuilder,variantContext);
@@ -113,13 +95,31 @@ public class VcfProcessor {
         .build();
   }
 
-
   private Set<EsVariantSet> buildConsensusEsVariantSet(PortalMetadata portalMetadata, Set<String> callers){
     val dataSetId = portalMetadata.getDataType();
     val referenceName = portalMetadata.getReferenceName();
     return callers.stream()
         .map(x ->  createEsVariantSet(x, dataSetId, referenceName))
         .collect(toImmutableSet());
+  }
+
+  public void process(PortalMetadata portalMetadata, File vcfFile){
+    //Open file, and process each variant, to create variantSets and Calls
+    val vcfFileReader = newDefaultVCFFileReader(vcfFile);
+    val esConsensusCallBuilder = createEsConsensusCallBuilder(portalMetadata, callSetId);
+    stream(vcfFileReader)
+        .filter(variantFilter::passedFilter)
+        .forEach(v -> processVariant(portalMetadata, esConsensusCallBuilder, v));
+  }
+
+
+
+  public static VcfProcessor createVcfProcessor(VariantAggregator variantAggregator,
+      IdStorage<EsVariantSet, Integer> variantSetIdStorage,
+      CallSetAccumulator callSetAccumulator, CounterMonitor callCounterMonitor,
+      VariantFilter variantFilter) {
+    return new VcfProcessor(variantAggregator, variantSetIdStorage, callSetAccumulator, callCounterMonitor,
+        variantFilter);
   }
 
 }

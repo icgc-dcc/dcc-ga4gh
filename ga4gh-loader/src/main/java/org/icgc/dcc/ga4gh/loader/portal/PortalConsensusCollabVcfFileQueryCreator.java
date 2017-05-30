@@ -18,11 +18,6 @@ import static org.icgc.dcc.ga4gh.loader.utils.Strings.toStringArray;
 @Slf4j
 public class PortalConsensusCollabVcfFileQueryCreator implements ObjectNodeConverter {
 
-  public static PortalConsensusCollabVcfFileQueryCreator createPortalConsensusCollabVcfFileQueryCreator() {
-    log.info("Creating PortalAllCollabVcfFileQueryCreator instance");
-    return new PortalConsensusCollabVcfFileQueryCreator();
-  }
-
   private static final Set<String> CONSENSUS_SOFTWARE_NAMES = newHashSet( "PCAWG SNV-MNV callers", "PCAWG InDel callers");
 
   @Override
@@ -38,6 +33,11 @@ public class PortalConsensusCollabVcfFileQueryCreator implements ObjectNodeConve
                 .with("software", createIs(toStringArray(CONSENSUS_SOFTWARE_NAMES)))
         )
         .end();
+  }
+
+  public static PortalConsensusCollabVcfFileQueryCreator createPortalConsensusCollabVcfFileQueryCreator() {
+    log.info("Creating PortalAllCollabVcfFileQueryCreator instance");
+    return new PortalConsensusCollabVcfFileQueryCreator();
   }
 
 }

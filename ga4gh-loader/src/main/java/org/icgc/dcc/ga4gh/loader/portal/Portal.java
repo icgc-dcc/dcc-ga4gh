@@ -44,10 +44,6 @@ public class Portal {
     return new URL(endpoint + "?" + urlEnding);
   }
 
-  private static JsonNode getHits(JsonNode result) {
-    return result.get(HITS);
-  }
-
   public List<ObjectNode> getFileMetas() {
     val fileMetas = ImmutableList.<ObjectNode> builder();
     val size = PORTAL_FETCH_SIZE;
@@ -75,6 +71,10 @@ public class Portal {
   @SneakyThrows
   private static JsonNode read(URL url) {
     return DEFAULT_MAPPER.readTree(url);
+  }
+
+  private static JsonNode getHits(JsonNode result) {
+    return result.get(HITS);
   }
 
 

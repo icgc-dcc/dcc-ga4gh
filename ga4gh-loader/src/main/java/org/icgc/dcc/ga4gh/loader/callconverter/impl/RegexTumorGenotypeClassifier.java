@@ -11,15 +11,15 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class RegexTumorGenotypeClassifier implements TumorGenotypeClassifier {
 
-  public static RegexTumorGenotypeClassifier createRegexTumorGenotypeClassifier(Pattern tumorPattern) {
-    return new RegexTumorGenotypeClassifier(tumorPattern);
-  }
-
   @NonNull private final Pattern tumorPattern;
 
   @Override public boolean classify(Genotype genotype) {
     val tumorSampleName = genotype.getSampleName();
     return tumorPattern.matcher(tumorSampleName).matches();
+  }
+
+  public static RegexTumorGenotypeClassifier createRegexTumorGenotypeClassifier(Pattern tumorPattern) {
+    return new RegexTumorGenotypeClassifier(tumorPattern);
   }
 
 }

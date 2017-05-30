@@ -14,10 +14,6 @@ import static lombok.AccessLevel.PRIVATE;
 @RequiredArgsConstructor(access =  PRIVATE)
 public class FileObjectRestorer<T extends Serializable> implements ObjectRestorer<Path, T> {
 
-  public static <T extends Serializable> FileObjectRestorer<T> newFileObjectRestorer(Path persistedPath){
-    return new FileObjectRestorer<T>(persistedPath);
-  }
-
   @NonNull
   @Getter
   private final Path persistedPath;
@@ -41,6 +37,10 @@ public class FileObjectRestorer<T extends Serializable> implements ObjectRestore
 
   @Override public boolean isPersisted(){
     return Files.exists(getPersistedPath());
+  }
+
+  public static <T extends Serializable> FileObjectRestorer<T> newFileObjectRestorer(Path persistedPath){
+    return new FileObjectRestorer<T>(persistedPath);
   }
 
 }

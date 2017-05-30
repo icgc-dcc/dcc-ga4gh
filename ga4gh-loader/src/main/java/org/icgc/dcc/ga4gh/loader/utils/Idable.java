@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 
 public interface Idable<N> {
 
+  N getId();
+  void setId(N value);
+
   @AllArgsConstructor
   static class LongId implements Idable<Long>{
 
@@ -40,8 +43,5 @@ public interface Idable<N> {
       this.value = value;
     }
   }
-
-  N getId();
-  void setId(N value);
 
 }

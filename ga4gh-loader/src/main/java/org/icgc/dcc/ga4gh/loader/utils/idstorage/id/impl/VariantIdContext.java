@@ -7,11 +7,11 @@ import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
 @Value
 public class VariantIdContext<ID> {
 
+  @NonNull private final ID id;
+  @NonNull private final EsVariantCallPair esVariantCallPair;
+
   public static <ID> VariantIdContext<ID> createVariantIdContext(ID id, EsVariantCallPair esVariantCallPair) {
     return new VariantIdContext<ID>(id, esVariantCallPair);
   }
-
-  @NonNull private final ID id;
-  @NonNull private final EsVariantCallPair esVariantCallPair;
 
 }

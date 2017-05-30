@@ -14,6 +14,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 public interface Storage {
 
+  File getFile(@NonNull PortalMetadata portalMetadata);
+
   static String calcMd5Sum(@NonNull Path file) throws IOException {
     checkState(file.toFile().isFile(), "The input path [%s] is not a file", file);
     val bytes = Files.readAllBytes(file);
@@ -23,7 +25,5 @@ public interface Storage {
         .hash()
         .toString();
   }
-
-  File getFile(@NonNull PortalMetadata portalMetadata);
 
 }

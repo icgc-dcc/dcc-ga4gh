@@ -20,11 +20,6 @@ import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IntegerIdStorage
 @RequiredArgsConstructor
 public class CallSetAccumulator {
 
-  public static CallSetAccumulator createCallSetAccumulator(Map<String, Set<Integer>> variantSetIdsMap,
-      Map<String, Integer> callSetIdMap) {
-    return new CallSetAccumulator(variantSetIdsMap, callSetIdMap);
-  }
-
   private final Map<String,Set<Integer>> variantSetIdsMap;
   private final Map<String, Integer> callSetIdMap;
 
@@ -73,13 +68,10 @@ public class CallSetAccumulator {
         .map(this::buildEsCallSet);
   }
 
-
-
-
-
-
-
-
+  public static CallSetAccumulator createCallSetAccumulator(Map<String, Set<Integer>> variantSetIdsMap,
+      Map<String, Integer> callSetIdMap) {
+    return new CallSetAccumulator(variantSetIdsMap, callSetIdMap);
+  }
 
 
 }

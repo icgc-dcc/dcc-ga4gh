@@ -39,14 +39,14 @@ import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.serializeList;
 @Value
 public class EsVariantCallPair {
 
-  public static EsVariantCallPair createEsVariantCallPair(EsVariant variant, List<EsConsensusCall> calls) {
-    return new EsVariantCallPair(variant, calls);
-  }
-
   private EsVariant variant;
 
   @Singular
   private List<EsConsensusCall> calls;
+
+  public static EsVariantCallPair createEsVariantCallPair(EsVariant variant, List<EsConsensusCall> calls) {
+    return new EsVariantCallPair(variant, calls);
+  }
 
   @RequiredArgsConstructor
   public static class EsVariantCallPairSerializer implements Serializer<EsVariantCallPair>{

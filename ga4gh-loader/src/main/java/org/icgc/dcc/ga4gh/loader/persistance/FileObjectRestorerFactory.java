@@ -21,13 +21,6 @@ public class FileObjectRestorerFactory {
 
   private static final String DEFAULT_EXT = "dat";
 
-  public static final FileObjectRestorerFactory createFileObjectRestorerFactory(Path outputDir){
-    return new FileObjectRestorerFactory(outputDir);
-  }
-  public static final FileObjectRestorerFactory createFileObjectRestorerFactory(String outputDirname){
-    return createFileObjectRestorerFactory(Paths.get(outputDirname));
-  }
-
   @NonNull private final Path outputDir;
 
   private Set<FileObjectRestorer<? extends Object>> fileObjectRestorers;
@@ -37,12 +30,6 @@ public class FileObjectRestorerFactory {
     this.outputDir = outputDir;
     initDir(outputDir);
     fileObjectRestorers = Sets.newHashSet();
-  }
-
-  private static void initDir(Path outputDir) throws IOException {
-    if (!outputDir.toFile().exists()){
-      Files.createDirectories(outputDir);
-    }
   }
 
   public <T extends Serializable> ObjectRestorer<Path, T> createFileRestorer(String filename){
@@ -62,10 +49,6 @@ public class FileObjectRestorerFactory {
         .collect(toImmutableSet());
   }
 
-  private static String getObjectName(Path filepath){
-    return filepath.getFileName().toString().replaceAll("."+DEFAULT_EXT+"$", "");
-  }
-
   public void clean(String persistanceName ){
     fileObjectRestorers.stream()
         .filter(x -> getObjectName(x.getPersistedPath()).equals(persistanceName))
@@ -77,11 +60,6 @@ public class FileObjectRestorerFactory {
   }
 
 
-  @SneakyThrows
-  private static <A, B extends Serializable> void cleanFileRestorer(ObjectRestorer<A,B> fr){
-    fr.clean();
-  }
-
   public <T extends Serializable> T persistObject(String persistanceName, Supplier<T> objectCreationSupplier) throws IOException, ClassNotFoundException {
     val restorer = this.<T>createFileRestorerByName(persistanceName);
     T object = null;
@@ -92,6 +70,29 @@ public class FileObjectRestorerFactory {
       restorer.store(object);
     }
     return object;
+  }
+
+  @SneakyThrows
+  private static <A, B extends Serializable> void cleanFileRestorer(ObjectRestorer<A,B> fr){
+    fr.clean();
+  }
+
+  private static void initDir(Path outputDir) throws IOException {
+    if (!outputDir.toFile().exists()){
+      Files.createDirectories(outputDir);
+    }
+  }
+
+  private static String getObjectName(Path filepath){
+    return filepath.getFileName().toString().replaceAll("."+DEFAULT_EXT+"$", "");
+  }
+
+  public static final FileObjectRestorerFactory createFileObjectRestorerFactory(Path outputDir){
+    return new FileObjectRestorerFactory(outputDir);
+  }
+
+  public static final FileObjectRestorerFactory createFileObjectRestorerFactory(String outputDirname){
+    return createFileObjectRestorerFactory(Paths.get(outputDirname));
   }
 
 }

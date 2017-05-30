@@ -32,23 +32,6 @@ public class CounterMonitor implements Counter<Long> {
   private long previousCount;
   private float previousTime;
 
-  public static CounterMonitor createCounterMonitor(String name, Logger logger, long intervalCount, long initCount) {
-    return new CounterMonitor(name, createLongCounter(initCount), Stopwatch.createUnstarted(), logger,
-        intervalCount);
-  }
-
-  public static CounterMonitor createCounterMonitor(String name, Logger logger, int intervalCount) {
-    return createCounterMonitor(name, logger, intervalCount, DEFAULT_INITAL_COUNT);
-  }
-
-  public static CounterMonitor createCounterMonitor(String name, long intervalCount, long initCount) {
-    return createCounterMonitor(name, log, intervalCount, initCount);
-  }
-
-  public static CounterMonitor createCounterMonitor(String name, int intervalCount) {
-    return createCounterMonitor(name, log, intervalCount, DEFAULT_INITAL_COUNT);
-  }
-
   public CounterMonitor(String name, Counter<Long> counter, Stopwatch watch, Logger logger, long countInterval) {
     this.name = name;
     this.counter = counter;
@@ -193,4 +176,22 @@ public class CounterMonitor implements Counter<Long> {
     counter.postIncr(amount);
     return post;
   }
+
+  public static CounterMonitor createCounterMonitor(String name, Logger logger, long intervalCount, long initCount) {
+    return new CounterMonitor(name, createLongCounter(initCount), Stopwatch.createUnstarted(), logger,
+        intervalCount);
+  }
+
+  public static CounterMonitor createCounterMonitor(String name, Logger logger, int intervalCount) {
+    return createCounterMonitor(name, logger, intervalCount, DEFAULT_INITAL_COUNT);
+  }
+
+  public static CounterMonitor createCounterMonitor(String name, long intervalCount, long initCount) {
+    return createCounterMonitor(name, log, intervalCount, initCount);
+  }
+
+  public static CounterMonitor createCounterMonitor(String name, int intervalCount) {
+    return createCounterMonitor(name, log, intervalCount, DEFAULT_INITAL_COUNT);
+  }
+
 }

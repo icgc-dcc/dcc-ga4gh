@@ -13,12 +13,6 @@ import java.util.Map;
 @Slf4j
 public class DirectMemoryMapStorage<K,V> implements MapStorage<K,V>{
 
-  public static <K, V> DirectMemoryMapStorage<K, V> createDirectMemoryMapStorage(String name,
-      Serializer<K> keySerializer, Serializer<V> valueSerializer,
-      MapStorage<K, V> diskMapStorage) {
-    return new DirectMemoryMapStorage<K, V>(name, keySerializer, valueSerializer, diskMapStorage);
-  }
-
   @NonNull private final String name;
   @NonNull private final MapStorage<K,V> diskMapStorage;
 
@@ -69,6 +63,12 @@ public class DirectMemoryMapStorage<K,V> implements MapStorage<K,V>{
     } catch (IOException e) {
       log.error("Was not able to purge MapStorage: name: {}",name );
     }
+  }
+
+  public static <K, V> DirectMemoryMapStorage<K, V> createDirectMemoryMapStorage(String name,
+      Serializer<K> keySerializer, Serializer<V> valueSerializer,
+      MapStorage<K, V> diskMapStorage) {
+    return new DirectMemoryMapStorage<K, V>(name, keySerializer, valueSerializer, diskMapStorage);
   }
 
 }

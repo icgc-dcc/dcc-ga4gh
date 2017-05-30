@@ -49,10 +49,6 @@ public final class EsVariantNoEnd implements Serializable, EsModel {
   private static final long serialVersionUID = 1485228376L;
   public static final String TYPE_NAME = "variant";
 
-  public static EsVariantBuilder builder() {
-    return new EsVariantBuilder();
-  }
-
   private int start;
   private String referenceName;
   private byte[] referenceBases;
@@ -101,6 +97,10 @@ public final class EsVariantNoEnd implements Serializable, EsModel {
     return Streams.stream(alternativeBases)
         .map(x -> AsciiConverters.convertToString(x))
         .collect(toImmutableList());
+  }
+
+  public static EsVariantBuilder builder() {
+    return new EsVariantBuilder();
   }
 
   /*

@@ -12,6 +12,4 @@ public interface IdStorageFactory<T extends Number> {
   AbstractIdStorageTemplate<EsVariantSet, T> persistVariantSetIdStorage();
   AbstractIdStorageTemplate<EsCallSet, T> persistCallSetIdStorage();
 
-//  IdStorage2<EsVcfHeader, T> createVcfHeaderIdStorage(boolean useDisk);
-
 }

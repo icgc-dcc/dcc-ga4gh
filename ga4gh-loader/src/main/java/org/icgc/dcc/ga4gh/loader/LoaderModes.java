@@ -13,13 +13,13 @@ public enum LoaderModes {
     this.mode = mode;
   }
 
+  public int getModeId() {
+    return this.mode;
+  }
+
   public static LoaderModes parseLoaderMode(final int inputMode) {
     val mode = stream(values()).filter(l -> l.getModeId()==inputMode).findFirst();
     return mode.orElseThrow(() -> new IllegalArgumentException(String.format("The inputMode {} does not exist for LoaderModes", inputMode)));
-  }
-
-  public int getModeId() {
-    return this.mode;
   }
 
 }

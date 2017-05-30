@@ -16,13 +16,6 @@ import static org.icgc.dcc.ga4gh.loader.utils.CheckPaths.checkDirPath;
 @RequiredArgsConstructor(access = PRIVATE)
 public class MapFactory<K,V> {
 
-  public static <K, V> MapFactory<K, V> createMapDBFactory(String name, Path dirname, Serializer<K> keySerializer,
-      Serializer<V> valueSerializer,
-      long allocation) {
-    checkDirPath(dirname);
-    return new MapFactory<K, V>(name, dirname, keySerializer, valueSerializer, allocation);
-  }
-
   @NonNull private final String name;
   @NonNull private final Path dirname;
   @NonNull private final Serializer<K> keySerializer;
@@ -59,6 +52,13 @@ public class MapFactory<K,V> {
           .make()
         .hashMap(name, keySerializer, valueSerializer)
         .createOrOpen();
+  }
+
+  public static <K, V> MapFactory<K, V> createMapDBFactory(String name, Path dirname, Serializer<K> keySerializer,
+      Serializer<V> valueSerializer,
+      long allocation) {
+    checkDirPath(dirname);
+    return new MapFactory<K, V>(name, dirname, keySerializer, valueSerializer, allocation);
   }
 
 }

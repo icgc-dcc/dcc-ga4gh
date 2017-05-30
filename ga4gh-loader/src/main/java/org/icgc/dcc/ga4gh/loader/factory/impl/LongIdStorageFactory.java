@@ -13,13 +13,6 @@ import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory;
 @RequiredArgsConstructor
 public class LongIdStorageFactory implements IdStorageFactory<Long> {
 
-  public static LongIdStorageFactory createLongIdStorageFactory(
-      MapStorageFactory<EsVariantSet, Long> variantSetLongMapStorageFactory,
-      MapStorageFactory<EsCallSet, Long> callSetLongMapStorageFactory) {
-    return new LongIdStorageFactory( variantSetLongMapStorageFactory,
-        callSetLongMapStorageFactory);
-  }
-
   @NonNull private final MapStorageFactory<EsVariantSet, Long>     variantSetLongMapStorageFactory;
   @NonNull private final MapStorageFactory<EsCallSet, Long>     callSetLongMapStorageFactory;
 
@@ -41,6 +34,13 @@ public class LongIdStorageFactory implements IdStorageFactory<Long> {
   @Override public AbstractIdStorageTemplate<EsCallSet, Long> persistCallSetIdStorage() {
     val mapStorage = callSetLongMapStorageFactory.persistMapStorage();
     return LongIdStorage.<EsCallSet>createLongIdStorage(mapStorage, 0L);
+  }
+
+  public static LongIdStorageFactory createLongIdStorageFactory(
+      MapStorageFactory<EsVariantSet, Long> variantSetLongMapStorageFactory,
+      MapStorageFactory<EsCallSet, Long> callSetLongMapStorageFactory) {
+    return new LongIdStorageFactory( variantSetLongMapStorageFactory,
+        callSetLongMapStorageFactory);
   }
 
 }

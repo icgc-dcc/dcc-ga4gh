@@ -165,14 +165,6 @@ public class Indexer {
     writer.write(new IndexDocument(variantSetId.toString(), data, new VariantSetDocumentType()));
   }
 
-  private static byte[] createSource(@NonNull final Object document) {
-    try {
-      return BINARY_WRITER.writeValueAsBytes(document);
-    } catch (JsonProcessingException e) {
-      throw propagate(e);
-    }
-  }
-
   // TODO: [rtisma] rethink how will organize this dao
   @SneakyThrows
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
@@ -184,6 +176,14 @@ public class Indexer {
             .setParent(parent_variant_set_id)
             .setRouting(VARIANT)
             .get().status().equals(RestStatus.CREATED));
+  }
+
+  private static byte[] createSource(@NonNull final Object document) {
+    try {
+      return BINARY_WRITER.writeValueAsBytes(document);
+    } catch (JsonProcessingException e) {
+      throw propagate(e);
+    }
   }
 
 

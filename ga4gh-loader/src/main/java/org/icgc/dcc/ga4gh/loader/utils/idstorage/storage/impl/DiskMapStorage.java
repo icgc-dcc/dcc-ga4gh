@@ -28,19 +28,6 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
   private final long allocation;
   private Map<K, V> map;
 
-  public static Path generateFilepath(String name, Path outputDir) {
-    return outputDir.resolve( name + ".db");
-  }
-
-  public static <K, V> DiskMapStorage<K, V> newDiskMapStorage(final String name,
-      final Serializer<K> keySerializer,
-      final Serializer<V> idSerializer,
-      final Path outputDir,
-      final long allocation,
-      final boolean persistFile) throws IOException {
-    return new DiskMapStorage<K, V>(name, keySerializer, idSerializer, outputDir, allocation, persistFile);
-  }
-
   public DiskMapStorage(@NonNull final String name,
       @NonNull final Serializer<K> keySerializer,
       @NonNull final Serializer<V> idSerializer,
@@ -124,4 +111,18 @@ public class DiskMapStorage<K, V> implements MapStorage<K, V> {
       log.error("Was not able to purge IdDiskCache: filename: {}", filepath.toString());
     }
   }
+
+  public static Path generateFilepath(String name, Path outputDir) {
+    return outputDir.resolve( name + ".db");
+  }
+
+  public static <K, V> DiskMapStorage<K, V> newDiskMapStorage(final String name,
+      final Serializer<K> keySerializer,
+      final Serializer<V> idSerializer,
+      final Path outputDir,
+      final long allocation,
+      final boolean persistFile) throws IOException {
+    return new DiskMapStorage<K, V>(name, keySerializer, idSerializer, outputDir, allocation, persistFile);
+  }
+
 }

@@ -13,10 +13,6 @@ public class RamMapStorage<K, V> implements MapStorage<K, V> {
 
   private Map<K, V> map;
 
-  public static <K, V> RamMapStorage<K, V> newRamMapStorage() {
-    return new RamMapStorage<K, V>();
-  }
-
   public RamMapStorage() {
     this.map = newHashMap();
   }
@@ -36,5 +32,8 @@ public class RamMapStorage<K, V> implements MapStorage<K, V> {
     return map;
   }
 
+  public static <K, V> RamMapStorage<K, V> newRamMapStorage() {
+    return new RamMapStorage<K, V>();
+  }
 
 }

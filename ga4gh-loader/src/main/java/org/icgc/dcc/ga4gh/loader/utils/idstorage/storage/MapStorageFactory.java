@@ -21,12 +21,6 @@ import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.RamMapStora
 @RequiredArgsConstructor
 public class MapStorageFactory<K, V> {
 
-  public static <K, V> MapStorageFactory<K, V> createMapStorageFactory(String name, Serializer<K> keySerializer,
-      Serializer<V> valueSerializer,
-      Path outputDir, final long allocation) {
-    return new MapStorageFactory<K, V>(name, keySerializer, valueSerializer, outputDir, allocation);
-  }
-
   @NonNull  private final String name;
   @NonNull private final Serializer<K> keySerializer;
   @NonNull private final Serializer<V> valueSerializer;
@@ -67,6 +61,10 @@ public class MapStorageFactory<K, V> {
     return createMapStorage(TRUE, TRUE);
   }
 
-
+  public static <K, V> MapStorageFactory<K, V> createMapStorageFactory(String name, Serializer<K> keySerializer,
+      Serializer<V> valueSerializer,
+      Path outputDir, final long allocation) {
+    return new MapStorageFactory<K, V>(name, keySerializer, valueSerializer, outputDir, allocation);
+  }
 
 }

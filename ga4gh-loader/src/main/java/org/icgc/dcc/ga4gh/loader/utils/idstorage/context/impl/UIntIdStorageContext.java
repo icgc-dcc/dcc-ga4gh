@@ -12,14 +12,6 @@ public class UIntIdStorageContext<T> implements IdStorageContext<Long,T> {
   private static final long MAX_UINT = (1L << 32) - 1;
   private static final long MIN_UINT = 0L;
 
-  public static <T> UIntIdStorageContext<T> createUIntIdStorageContext(long id ){
-    return new UIntIdStorageContext<T>(id);
-  }
-
-  public static <T> UIntIdStorageContext<T> createUIntIdStorageContext(long id, List<T> objects ){
-    return new UIntIdStorageContext<T>(id, objects);
-  }
-
   private final int uintId;
   private final List<T> objects;
 
@@ -47,6 +39,14 @@ public class UIntIdStorageContext<T> implements IdStorageContext<Long,T> {
 
   @Override public List<T> getObjects() {
     return objects;
+  }
+
+  public static <T> UIntIdStorageContext<T> createUIntIdStorageContext(long id ){
+    return new UIntIdStorageContext<T>(id);
+  }
+
+  public static <T> UIntIdStorageContext<T> createUIntIdStorageContext(long id, List<T> objects ){
+    return new UIntIdStorageContext<T>(id, objects);
   }
 
 }

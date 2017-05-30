@@ -18,10 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class IdStorageContextImpl<ID, K> implements IdStorageContext<ID, K> {
 
-  public static <ID, K> IdStorageContextImpl<ID, K> createIdStorageContext(ID id) {
-    return new IdStorageContextImpl<ID, K>(id);
-  }
-
   @NonNull private final ID id;
   private List<K> objects = Lists.newArrayList();
 
@@ -31,6 +27,10 @@ public class IdStorageContextImpl<ID, K> implements IdStorageContext<ID, K> {
 
   @Override public void addAll(List<K> objects){
     this.objects.addAll(objects);
+  }
+
+  public static <ID, K> IdStorageContextImpl<ID, K> createIdStorageContext(ID id) {
+    return new IdStorageContextImpl<ID, K>(id);
   }
 
   @RequiredArgsConstructor

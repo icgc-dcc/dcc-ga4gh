@@ -4,14 +4,6 @@ import lombok.val;
 
 public class LongCounter implements Counter<Long> {
 
-  public static LongCounter createLongCounter0() {
-    return createLongCounter(0L);
-  }
-
-  public static LongCounter createLongCounter(long init) {
-    return new LongCounter(init);
-  }
-
   private final long init;
 
   private long count;
@@ -53,4 +45,13 @@ public class LongCounter implements Counter<Long> {
     count += amount;
     return post;
   }
+
+  public static LongCounter createLongCounter0() {
+    return createLongCounter(0L);
+  }
+
+  public static LongCounter createLongCounter(long init) {
+    return new LongCounter(init);
+  }
+
 }

@@ -41,6 +41,15 @@ public enum DataTypes {
   @Getter
   private final String name;
 
+  private static DataTypes parse(String name, Predicate<DataTypes> predicate){
+    for (val v : values()){
+      if (predicate.test(v)){
+        return v;
+      }
+    }
+    return DataTypes.UNKNOWN;
+  }
+
   public boolean equals(@NonNull final String name) {
     return this.getName().equals(name);
   }
@@ -53,13 +62,13 @@ public enum DataTypes {
     return name.contains(this.getName());
   }
 
-  private static DataTypes parse(String name, Predicate<DataTypes> predicate){
-    for (val v : values()){
-      if (predicate.test(v)){
-        return v;
-      }
-    }
-    return DataTypes.UNKNOWN;
+  @Override
+  public String toString() {
+    return getName();
+  }
+
+  public CompareState compareState(DataTypes other){
+    return CompareState.getState(this, other);
   }
 
   public static DataTypes parseStartsWith(String name, boolean check){
@@ -87,15 +96,6 @@ public enum DataTypes {
           "The name [%s] does exist in any of the dataTypes in %s", name, CLASS_NAME);
     }
     return dataType;
-  }
-
-  @Override
-  public String toString() {
-    return getName();
-  }
-
-  public CompareState compareState(DataTypes other){
-    return CompareState.getState(this, other);
   }
 
 }

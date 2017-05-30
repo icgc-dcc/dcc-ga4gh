@@ -58,9 +58,7 @@ public enum WorkflowTypes {
 
 
   private static final boolean DEFAULT_NO_ERRORS_FLAG = false;
-  private static Set<String> set(String ... strings){
-    return stream(strings).collect(toImmutableSet());
-  }
+  private static final WorkflowTypes[] WORKFLOW_TYPES = values();
 
   @NonNull
   private final String name;
@@ -77,7 +75,18 @@ public enum WorkflowTypes {
     return name.contains(this.getName());
   }
 
-  private static final WorkflowTypes[] WORKFLOW_TYPES = values();
+  @Override
+  public String toString() {
+    return this.getName();
+  }
+
+  public CompareState compareState(WorkflowTypes other){
+    return CompareState.getState(this, other);
+  }
+
+  private static Set<String> set(String ... strings){
+    return stream(strings).collect(toImmutableSet());
+  }
 
   private static WorkflowTypes parse(String name, Predicate<WorkflowTypes> predicate){
     for (val v : WORKFLOW_TYPES){
@@ -113,16 +122,5 @@ public enum WorkflowTypes {
     }
     return workflowType;
   }
-
-  @Override
-  public String toString() {
-    return this.getName();
-  }
-
-  public CompareState compareState(WorkflowTypes other){
-    return CompareState.getState(this, other);
-  }
-
-
 
 }

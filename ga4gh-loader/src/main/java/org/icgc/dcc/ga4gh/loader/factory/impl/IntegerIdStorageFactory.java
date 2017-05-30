@@ -13,13 +13,6 @@ import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory;
 @RequiredArgsConstructor
 public class IntegerIdStorageFactory implements IdStorageFactory<Integer> {
 
-  public static IntegerIdStorageFactory createIntegerIdStorageFactory(
-      MapStorageFactory<EsVariantSet, Integer> variantSetIntegerMapStorageFactory,
-      MapStorageFactory<EsCallSet, Integer> callSetIntegerMapStorageFactory) {
-    return new IntegerIdStorageFactory( variantSetIntegerMapStorageFactory,
-        callSetIntegerMapStorageFactory);
-  }
-
   @NonNull private final MapStorageFactory<EsVariantSet, Integer>  variantSetIntegerMapStorageFactory;
   @NonNull private final MapStorageFactory<EsCallSet, Integer>  callSetIntegerMapStorageFactory;
 
@@ -42,6 +35,13 @@ public class IntegerIdStorageFactory implements IdStorageFactory<Integer> {
   @Override public AbstractIdStorageTemplate<EsCallSet, Integer> persistCallSetIdStorage() {
     val mapStorage = callSetIntegerMapStorageFactory.persistMapStorage();
     return IntegerIdStorage.<EsCallSet>createIntegerIdStorage(mapStorage, 0);
+  }
+
+  public static IntegerIdStorageFactory createIntegerIdStorageFactory(
+      MapStorageFactory<EsVariantSet, Integer> variantSetIntegerMapStorageFactory,
+      MapStorageFactory<EsCallSet, Integer> callSetIntegerMapStorageFactory) {
+    return new IntegerIdStorageFactory( variantSetIntegerMapStorageFactory,
+        callSetIntegerMapStorageFactory);
   }
 
 }

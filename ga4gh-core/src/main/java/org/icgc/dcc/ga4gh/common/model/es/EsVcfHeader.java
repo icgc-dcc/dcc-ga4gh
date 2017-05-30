@@ -12,11 +12,11 @@ public class EsVcfHeader implements Serializable{
 
   private static final long serialVersionUID = 1493648238L;
 
+  @NonNull private final PortalMetadata portalMetadata;
+  @NonNull private final VCFHeader vcfHeader;
+
   public static EsVcfHeader createEsVcfHeader(PortalMetadata portalMetadata, VCFHeader vcfHeader) {
     return new EsVcfHeader(portalMetadata, vcfHeader);
   }
-
-  @NonNull private final PortalMetadata portalMetadata;
-  @NonNull private final VCFHeader vcfHeader;
 
 }

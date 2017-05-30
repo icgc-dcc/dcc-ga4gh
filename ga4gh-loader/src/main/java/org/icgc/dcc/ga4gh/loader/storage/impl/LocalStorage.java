@@ -30,52 +30,6 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 public class LocalStorage implements Storage {
 
-  public static LocalStorage newLocalStorage(Path inputDir, final boolean bypassMd5Check){
-    return new LocalStorage(createFileMap(inputDir), bypassMd5Check);
-  }
-
-  @Slf4j
-  @RequiredArgsConstructor
-  public static class CurrentDirectoryVcfFileVisitor extends SimpleFileVisitor<Path>{
-
-
-    @NonNull private final Path inputDir;
-    private final ImmutableMap.Builder<PortalFilename, Path> map = ImmutableMap.<PortalFilename, Path>builder();
-
-    // Only analyze files in current directory, becuase want unique file names
-    @Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-      return dir.compareTo(inputDir) == 0 ? CONTINUE : SKIP_SUBTREE;
-    }
-
-    @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-      val filename = file.getFileName().toString();
-      try{
-        val portalFilename = PortalFilename.createPortalFilename(filename);
-        map.put(portalFilename, file);
-      } catch (Exception e){
-        log.error("Error parsing Portal VCF Filename: {}", file.getFileName());
-      }
-      return CONTINUE;
-    }
-
-//    @Override public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-//      return dir.compareTo(inputDir) == 0 ? CONTINUE : SKIP_SUBTREE;
-//    }
-
-    public Map<PortalFilename, Path> getPathMap(){
-      return map.build();
-    }
-
-  }
-
-  @SneakyThrows
-  private static Map<PortalFilename, Path> createFileMap(Path dirpath){
-    checkArgument(dirpath.toFile().exists(), "Directory [%s] DNE", dirpath.toString());
-    val visitor = new CurrentDirectoryVcfFileVisitor(dirpath);
-    Files.walkFileTree(dirpath , visitor);
-    return visitor.getPathMap();
-  }
-
   @NonNull private final Map<PortalFilename, Path> fileMap;
 
   private final boolean bypassMd5Check;
@@ -101,5 +55,48 @@ public class LocalStorage implements Storage {
       throw new LocalStorageFileNotFoundException(message, portalMetadata);
     }
   }
+
+  @SneakyThrows
+  private static Map<PortalFilename, Path> createFileMap(Path dirpath){
+    checkArgument(dirpath.toFile().exists(), "Directory [%s] DNE", dirpath.toString());
+    val visitor = new CurrentDirectoryVcfFileVisitor(dirpath);
+    Files.walkFileTree(dirpath , visitor);
+    return visitor.getPathMap();
+  }
+
+  public static LocalStorage newLocalStorage(Path inputDir, final boolean bypassMd5Check){
+    return new LocalStorage(createFileMap(inputDir), bypassMd5Check);
+  }
+
+  @Slf4j
+  @RequiredArgsConstructor
+  public static class CurrentDirectoryVcfFileVisitor extends SimpleFileVisitor<Path> {
+
+
+    @NonNull private final Path inputDir;
+    private final ImmutableMap.Builder<PortalFilename, Path> map = ImmutableMap.<PortalFilename, Path>builder();
+
+    // Only analyze files in current directory, becuase want unique file names
+    @Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+      return dir.compareTo(inputDir) == 0 ? CONTINUE : SKIP_SUBTREE;
+    }
+
+    @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+      val filename = file.getFileName().toString();
+      try{
+        val portalFilename = PortalFilename.createPortalFilename(filename);
+        map.put(portalFilename, file);
+      } catch (Exception e){
+        log.error("Error parsing Portal VCF Filename: {}", file.getFileName());
+      }
+      return CONTINUE;
+    }
+
+    public Map<PortalFilename, Path> getPathMap(){
+      return map.build();
+    }
+
+  }
+
 }
 

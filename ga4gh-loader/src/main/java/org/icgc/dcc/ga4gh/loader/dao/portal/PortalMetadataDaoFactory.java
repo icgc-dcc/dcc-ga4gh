@@ -18,11 +18,6 @@ import static org.icgc.dcc.ga4gh.loader.dao.portal.PortalMetadataDao.newPortalMe
 @RequiredArgsConstructor
 public class PortalMetadataDaoFactory {
 
-  public static PortalMetadataDaoFactory createPortalMetadataDaoFactory(String persistanceName, Portal portal,
-      FileObjectRestorerFactory fileObjectRestorerFactory) {
-    return new PortalMetadataDaoFactory(persistanceName, portal, fileObjectRestorerFactory);
-  }
-
   @NonNull private final String persistanceName;
   @NonNull private final Portal portal;
   @NonNull private final FileObjectRestorerFactory fileObjectRestorerFactory;
@@ -38,6 +33,11 @@ public class PortalMetadataDaoFactory {
         .stream()
         .map(PortalFiles::convertToPortalMetadata)
         .collect(toList()));
+  }
+
+  public static PortalMetadataDaoFactory createPortalMetadataDaoFactory(String persistanceName, Portal portal,
+      FileObjectRestorerFactory fileObjectRestorerFactory) {
+    return new PortalMetadataDaoFactory(persistanceName, portal, fileObjectRestorerFactory);
   }
 
 }

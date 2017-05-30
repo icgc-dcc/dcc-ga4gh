@@ -14,11 +14,6 @@ import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 @Slf4j
 public class PortalAllCollabVcfFileQueryCreator implements ObjectNodeConverter {
 
-  public static PortalAllCollabVcfFileQueryCreator createPortalAllCollabVcfFileQueryCreator() {
-    log.info("Creating PortalAllCollabVcfFileQueryCreator instance");
-    return new PortalAllCollabVcfFileQueryCreator();
-  }
-
   @Override
   public ObjectNode toObjectNode(){
     return object()
@@ -31,6 +26,11 @@ public class PortalAllCollabVcfFileQueryCreator implements ObjectNodeConverter {
                 .with("fileFormat", createIs("VCF"))
         )
         .end();
+  }
+
+  public static PortalAllCollabVcfFileQueryCreator createPortalAllCollabVcfFileQueryCreator() {
+    log.info("Creating PortalAllCollabVcfFileQueryCreator instance");
+    return new PortalAllCollabVcfFileQueryCreator();
   }
 
 }

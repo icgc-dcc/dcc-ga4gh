@@ -20,10 +20,6 @@ import static org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair.createEsVaria
 @Slf4j
 public class VariantAggregator implements Purgeable, Closeable {
 
-  public static VariantAggregator createVariantAggregator(MapStorage<EsVariant, List<EsConsensusCall>> mapStorage) {
-    return new VariantAggregator(mapStorage);
-  }
-
   @NonNull private final MapStorage<EsVariant, List< EsConsensusCall>> mapStorage;
   private Map<EsVariant, List<EsConsensusCall>> map;
   private long count = 0;
@@ -31,6 +27,19 @@ public class VariantAggregator implements Purgeable, Closeable {
   public VariantAggregator( MapStorage<EsVariant, List<EsConsensusCall>> mapStorage) {
     this.mapStorage = mapStorage;
     this.map = mapStorage.getMap();
+  }
+
+  private VariantIdContext<Long> procEntry(Map.Entry<EsVariant, List<EsConsensusCall>> entry){
+    val esVariantCallPair = createEsVariantCallPair(entry.getKey(), entry.getValue());
+    return VariantIdContext.<Long>createVariantIdContext(incrCount(),esVariantCallPair);
+  }
+
+  private void resetCount(){
+    this.count = 0;
+  }
+
+  private long incrCount(){
+    return count++;
   }
 
   @Override public void purge() {
@@ -52,20 +61,6 @@ public class VariantAggregator implements Purgeable, Closeable {
     }
   }
 
-  private void resetCount(){
-    this.count = 0;
-  }
-
-  private long incrCount(){
-    return count++;
-  }
-
-  private VariantIdContext<Long> procEntry(Map.Entry<EsVariant, List<EsConsensusCall>> entry){
-    val esVariantCallPair = createEsVariantCallPair(entry.getKey(), entry.getValue());
-    return VariantIdContext.<Long>createVariantIdContext(incrCount(),esVariantCallPair);
-  }
-
-
   public Stream<VariantIdContext<Long>> streamVariantIdContext() {
     resetCount();
     return map.entrySet().stream()
@@ -81,6 +76,10 @@ public class VariantAggregator implements Purgeable, Closeable {
         log.error("Could not close MapStorage [{}]", this.getClass().getName());
       }
     }
+  }
+
+  public static VariantAggregator createVariantAggregator(MapStorage<EsVariant, List<EsConsensusCall>> mapStorage) {
+    return new VariantAggregator(mapStorage);
   }
 
 }

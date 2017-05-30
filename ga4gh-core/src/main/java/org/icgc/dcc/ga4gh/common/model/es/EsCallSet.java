@@ -39,14 +39,13 @@ import static org.icgc.dcc.ga4gh.common.MapDBSerialzers.serializeList;
 @Value
 public final class EsCallSet implements EsModel {
 
-  public static EsCallSet createEsCallSet(String name, String bioSampleId, Set<Integer> variantSetIds){
-    return new EsCallSet(name, bioSampleId, variantSetIds);
-  }
-
   @NonNull private final String name;
   @NonNull private final String bioSampleId;
   @NonNull private final Set<Integer> variantSetIds;
 
+  public static EsCallSet createEsCallSet(String name, String bioSampleId, Set<Integer> variantSetIds){
+    return new EsCallSet(name, bioSampleId, variantSetIds);
+  }
 
   /*
    * Serializer needed for MapDB. Note: if EsCallSet member variables are added, removed or modified, this needs to be
@@ -71,4 +70,5 @@ public final class EsCallSet implements EsModel {
     }
 
   }
+
 }

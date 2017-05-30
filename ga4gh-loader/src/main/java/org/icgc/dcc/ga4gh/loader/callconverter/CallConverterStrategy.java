@@ -20,6 +20,16 @@ public interface CallConverterStrategy {
   int UNKNOWN_ALLELE_INDEX = -1;
   String UNKNOWN_ALLELE_STRING = ".";
 
+  List<EsBasicCall> convertBasic(EsBasicCallBuilder callBuilder, VariantContext variantContext);
+
+  default List<EsBasicCall> convertBasic(final int variantSetId, final int callSetId, String callSetName, VariantContext variantContext){
+    val esCallBuilder = EsBasicCall.builder()
+        .variantSetId(variantSetId)
+        .callSetId(callSetId)
+        .callSetName(callSetName);
+    return convertBasic(esCallBuilder, variantContext);
+  }
+
   static void checkNumCalls(int actualNumCalls, int expectedNumCalls){
     checkState(actualNumCalls == expectedNumCalls, "[CALL_CONVERTER_ERROR] -- Expected NumCalls: %s, Actual NumCalls: %s", expectedNumCalls, actualNumCalls);
 
@@ -79,15 +89,6 @@ public interface CallConverterStrategy {
         .build());
   }
 
-  default List<EsBasicCall> convertBasic(final int variantSetId, final int callSetId, String callSetName, VariantContext variantContext){
-    val esCallBuilder = EsBasicCall.builder()
-        .variantSetId(variantSetId)
-        .callSetId(callSetId)
-        .callSetName(callSetName);
-    return convertBasic(esCallBuilder, variantContext);
-  }
-
-  List<EsBasicCall> convertBasic(EsBasicCallBuilder callBuilder, VariantContext variantContext);
 
 
 

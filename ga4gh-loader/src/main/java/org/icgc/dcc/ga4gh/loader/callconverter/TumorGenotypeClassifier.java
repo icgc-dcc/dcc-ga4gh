@@ -6,5 +6,4 @@ public interface TumorGenotypeClassifier {
 
   boolean classify(Genotype genotype);
 
-
 }
