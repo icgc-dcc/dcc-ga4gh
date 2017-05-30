@@ -1,15 +1,10 @@
 package org.icgc.dcc.ga4gh.loader;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
 import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 import org.icgc.dcc.ga4gh.common.types.WorkflowTypes;
-import org.icgc.dcc.ga4gh.loader.dao.portal.PortalMetadataDao;
 import org.icgc.dcc.ga4gh.loader.factory.Factory;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IdStorageFactory2;
@@ -17,15 +12,12 @@ import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IntegerIdStorage;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.List;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Objects.isNull;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.ga4gh.loader.CallSetAccumulator.createCallSetAccumulator;
 import static org.icgc.dcc.ga4gh.loader.Config.FILTER_VARIANTS;
-import static org.icgc.dcc.ga4gh.loader.Config.USE_MAP_DB;
 import static org.icgc.dcc.ga4gh.loader.VariantFilter.createVariantFilter;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDefaultPortalMetadataDaoFactory;
@@ -43,36 +35,6 @@ public class Loader {
     return false;
   }
 
-  private static List<PortalMetadata> createAssortedVariantSets(PortalMetadataDao dao, int numSamplesPerWorkflow, long maxFileSize){
-    val map = dao.groupBy(x -> x.getPortalFilename().getWorkflow());
-    return map.keySet().stream()
-        .flatMap(k -> map.get(k).stream()
-            .filter(x -> x.getFileSize() < maxFileSize )
-            .limit(numSamplesPerWorkflow))
-        .collect(toImmutableList());
-  }
-
-//  @SneakyThrows
-//  private static long countLines(File f){
-//    val fr = new FileReader(f);
-//    val br = new BufferedReader(fr);
-//    val iterator = br.lines().iterator();
-//    boolean start = false;
-//    long count = 0;
-//    while(iterator.hasNext()){
-//      val line = iterator.next();
-//      if (line.startsWith("#CHROM") ){
-//        start = true;
-//      }
-//
-//      if (start){
-//        ++count;
-//      }
-//    }
-//    return count;
-//  }
-
-
   public static void main(String[] args) throws IOException {
     val variantFilter = createVariantFilter(!FILTER_VARIANTS);
     val storage = Factory.buildStorageFactory().getStorage();
@@ -84,13 +46,10 @@ public class Loader {
     val callSetAccumulator = createCallSetAccumulator(newHashMap(), newHashMap());
     val variantSetIdStorage = IntegerIdStorage.<EsVariantSet>createIntegerIdStorage(newRamMapStorage(),0);
 
-    val useMapDB = USE_MAP_DB;
     val variantAggregator = IdStorageFactory2.buildVariantAggregator();
 
     val variantCounterMonitor = CounterMonitor.createCounterMonitor("variantCounterMonitor", 500000);
     val portalMetadatas =  portalMetadataDao.findAll();
-
-//      val portalMetadatas = createAssortedVariantSets(portalMetadataDao, 2, 80000); //rtisma This is a hack to just load a few files from each variantSet
 
     long numVariants = 0;
     int count = 0;
@@ -160,22 +119,5 @@ public class Loader {
     }
 
   }
-
-
-  @RequiredArgsConstructor
-  @ToString
-  public static class Stat{
-    @NonNull private final String name;
-    @Getter private int min = Integer.MAX_VALUE;
-    @Getter private int max = Integer.MIN_VALUE;
-
-    public void process(int value){
-      min = Math.min(min, value);
-      max = Math.max(max, value);
-    }
-
-  }
-
-
 
 }
