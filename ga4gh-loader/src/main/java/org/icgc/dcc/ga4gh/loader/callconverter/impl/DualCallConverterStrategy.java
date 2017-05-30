@@ -19,11 +19,6 @@ public class DualCallConverterStrategy implements CallConverterStrategy {
 
   private static final int EXPECTED_NUM_CALLS = 2;
 
-  public static DualCallConverterStrategy createDualCallConverterStrategy(
-      TumorGenotypeClassifier tumorGenotypeClassifier, boolean isTumorPos0) {
-    return new DualCallConverterStrategy(tumorGenotypeClassifier, isTumorPos0);
-  }
-
   private final TumorGenotypeClassifier tumorGenotypeClassifier;
   private final int candidateTumorPos;
   private final int candidateNormalPos;
@@ -40,12 +35,12 @@ public class DualCallConverterStrategy implements CallConverterStrategy {
     checkNumCalls(actualNumCalls, expectedNumCalls);
 
     val tumorGenotype = genotypes.get(candidateTumorPos);
-    String tumorSampleName = tumorGenotype.getSampleName();
+    val tumorSampleName = tumorGenotype.getSampleName();
     if (tumorGenotypeClassifier.classify(tumorGenotype)){ //Try first guess for tumorPosition
       return candidateTumorPos;
     } else { // Otherwise try the other position
       val normalGenotype = genotypes.get(candidateNormalPos);
-      String normalSampleName = normalGenotype.getSampleName();
+      val normalSampleName = normalGenotype.getSampleName();
 
       checkState(tumorGenotypeClassifier.classify(normalGenotype),
           "The tumorGenotype [%s] was negatively classified by the [%s], and similarly for normalGenotype [%s]",
@@ -61,5 +56,11 @@ public class DualCallConverterStrategy implements CallConverterStrategy {
     val tumorPos = calcTumorPos(variantContext, EXPECTED_NUM_CALLS);
     return buildTumorCall(callBuilder, variantContext, tumorPos);
   }
+
+  public static DualCallConverterStrategy createDualCallConverterStrategy(
+      TumorGenotypeClassifier tumorGenotypeClassifier, boolean isTumorPos0) {
+    return new DualCallConverterStrategy(tumorGenotypeClassifier, isTumorPos0);
+  }
+
 
 }
