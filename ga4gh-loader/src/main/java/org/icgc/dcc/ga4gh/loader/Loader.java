@@ -35,7 +35,7 @@ import static org.icgc.dcc.ga4gh.loader.portal.PortalConsensusCollabVcfFileQuery
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.RamMapStorage.newRamMapStorage;
 
 @Slf4j
-public class SecondLoader {
+public class Loader {
 
   private static boolean skipPortatMetadata(PortalMetadata portalMetadata){
     val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
