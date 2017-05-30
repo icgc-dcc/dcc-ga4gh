@@ -26,10 +26,10 @@ import static lombok.AccessLevel.PRIVATE;
 public class MapDBSerialzers {
 
   @SneakyThrows
-  public static <T> void serializeArray(DataOutput2 out, Serializer<T> serializer, Object[] objects){
+  public static <T> void serializeArray(DataOutput2 out, Serializer<T> serializer, T[] objects){
     out.packInt(objects.length);
     for (val object : objects){
-      serializer.serialize(out, (T)object);
+      serializer.serialize(out, object);
     }
   }
 
