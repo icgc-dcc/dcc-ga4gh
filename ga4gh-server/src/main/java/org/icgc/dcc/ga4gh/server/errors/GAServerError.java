@@ -1,5 +1,7 @@
 package org.icgc.dcc.ga4gh.server.errors;
 
+import static java.lang.String.format;
+
 /**
  * The sumo API error interface for an extensible enum pattern.
 */
@@ -21,7 +23,7 @@ public interface GAServerError {
   int getHttpStatus();
 
   default String createPrefixedMessage(String message, Object ... args){
-    return String.format("["+getId()+"]: "+message, args);
+    return format("["+getId()+"]: "+message, args);
   }
 
 }
