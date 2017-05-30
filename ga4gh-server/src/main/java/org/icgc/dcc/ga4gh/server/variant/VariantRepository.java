@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.ga4gh.server.variant;
 
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.NonNull;
@@ -31,6 +32,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
 
+import static ga4gh.VariantServiceOuterClass.SearchVariantsRequest.PAGE_SIZE_FIELD_NUMBER;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
@@ -44,6 +46,7 @@ import static org.icgc.dcc.ga4gh.common.PropertyNames.START;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALLS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
+import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_PAGE_SIZE;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_SCROLL_TIMEOUT;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 
@@ -53,6 +56,10 @@ import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 @Repository
 @RequiredArgsConstructor
 public class VariantRepository {
+
+  private static FieldDescriptor PAGE_SIZE_FIELD_DESCRIPTOR = SearchVariantsRequest.getDescriptor().findFieldByNumber(
+      PAGE_SIZE_FIELD_NUMBER);
+
 
   @NonNull
   private final Client client;
@@ -71,13 +78,6 @@ public class VariantRepository {
   }
 
 
-  private static String getNestedFieldName(String fieldName){
-    return DOT.join(NESTED_TYPE, fieldName);
-  }
-
-  private static boolean isNewRequest(SearchVariantsRequest searchVariantsRequest){
-    return "".equals(searchVariantsRequest.getPageToken());
-  }
 
   //TODO: [DCC-5607] Research scrolling methodology
   //TODO:    need to handle case, where pageToken doesnt exist anymore...have to throw GAException
@@ -85,8 +85,9 @@ public class VariantRepository {
   //TODO: need to know when is the last scroll id (resp.getHits().getHits().length ==0 means the end of the scroll
   //TODO: what does ES return as scroll id when done?
   public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
+    val size = resolvePageSize(request);
     if (isNewRequest(request)){
-      val searchRequestBuilder = createScrollSearchRequest(request.getPageSize(), DEFAULT_SCROLL_TIMEOUT);
+      val searchRequestBuilder = createScrollSearchRequest(size, DEFAULT_SCROLL_TIMEOUT);
       val childBoolQuery = boolQuery().must(matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
       request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
       val constChildBoolQuery = constantScoreQuery(childBoolQuery);
@@ -106,6 +107,18 @@ public class VariantRepository {
 
   public GetResponse findVariantById(@NonNull GetVariantRequest request) {
     return client.prepareGet(INDEX_NAME, VARIANT, request.getVariantId()).get();
+  }
+
+  private static String getNestedFieldName(String fieldName){
+    return DOT.join(NESTED_TYPE, fieldName);
+  }
+
+  private static boolean isNewRequest(SearchVariantsRequest searchVariantsRequest){
+    return "".equals(searchVariantsRequest.getPageToken());
+  }
+
+  private static int resolvePageSize(SearchVariantsRequest request){
+    return request.hasField(PAGE_SIZE_FIELD_DESCRIPTOR) ? request.getPageSize() : DEFAULT_PAGE_SIZE;
   }
 
 }

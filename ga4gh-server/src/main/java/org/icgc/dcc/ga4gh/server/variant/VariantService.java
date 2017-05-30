@@ -113,8 +113,6 @@ public class VariantService {
   }
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
-    // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
-
       val response = variantRepository.findVariants(request);
       if (request.getCallSetIdsCount() > 0){
         val callsetIds = newHashSet(((UnmodifiableLazyStringList) request.getCallSetIdsList()).getUnmodifiableView());
@@ -123,8 +121,6 @@ public class VariantService {
         return buildSearchVariantResponse(response, EMPTY_STRING_SET);
       }
   }
-
-
 
   private Variant convertToVariant(final String id, @NonNull Map<String, Object> source, Set<String> allowedCallSetIds) {
     val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source, allowedCallSetIds);
@@ -282,7 +278,7 @@ public class VariantService {
 
   private SearchCallSetsResponse buildSearchCallSetsResponse(@NonNull SearchResponse response) {
     return SearchCallSetsResponse.newBuilder()
-        .setNextPageToken("N/A")
+        .setNextPageToken(response.getScrollId())
         .addAllCallSets(
             Arrays.stream(response.getHits().getHits())
                 .map(this::convertToCallSet)

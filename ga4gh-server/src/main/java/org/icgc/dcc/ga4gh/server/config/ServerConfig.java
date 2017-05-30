@@ -42,6 +42,7 @@ public class ServerConfig {
   public static final int NODE_PORT = parseInt(getProperty("node_port", "9300"));
   public static final String FASTA_FILE_LOC = "target/GRCh37.fasta";
   public static final TimeValue DEFAULT_SCROLL_TIMEOUT = TimeValue.timeValueMinutes(5);
+  public static final int DEFAULT_PAGE_SIZE  = 10;
 
   public static String toConfigString() {
     return String.format(
