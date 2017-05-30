@@ -229,4 +229,6 @@ public class VariantServiceTest {
     }
     log.info("TotalCount: {}", searchCallSetsResponse.getCallSetsCount());
   }
+
+  //TODO: test initial value of SearchVariantRequest pageToken
 }
