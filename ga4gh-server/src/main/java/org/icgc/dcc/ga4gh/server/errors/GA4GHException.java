@@ -16,4 +16,5 @@ public class GA4GHException extends RuntimeException{
   public GA4GHException(String message, Throwable cause) {
     super(message, cause);
   }
+
 }
