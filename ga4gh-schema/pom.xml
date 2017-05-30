@@ -19,7 +19,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.collaboratory</groupId>
+		<groupId>org.icgc.dcc</groupId>
 		<artifactId>ga4gh</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
@@ -73,7 +73,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 				<version>${protobuf-maven-plugin.version}</version>
 				<configuration>
 					<protocArtifact>com.google.protobuf:protoc:${proto.version}:exe:${os.detected.classifier}</protocArtifact>
-					<protoSourceRoot>${project.build.directory}/schemas-${ga4gh-schema.version}/src/main/proto</protoSourceRoot>
+					<protoSourceRoot>${project.build.directory}/ga4gh-schemas-${ga4gh-schema.version}/src/main/proto</protoSourceRoot>
 					<outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
 				</configuration>
 				<executions>
@@ -86,7 +86,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<!-- Compile -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -148,10 +148,10 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 	<properties>
 		<!-- Versions - GA4GH -->
 		<ga4gh-schema.version>0.6.0a7</ga4gh-schema.version>
-		
+
 		<!-- Versions - Protobuf -->
 		<proto.version>3.0.0-beta-3</proto.version>
-		
+
 		<!-- Versions - Plugins -->
 		<os-maven-plugin.version>1.5.0.Final</os-maven-plugin.version>
 		<protobuf-maven-plugin.version>0.5.0</protobuf-maven-plugin.version>
