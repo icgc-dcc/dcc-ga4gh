@@ -54,7 +54,7 @@ public class DaoTest {
       createFileObjectRestorerFactory(DEFAULT_PERSISTED_OUTPUT_DIR);
   private static final Path TEST_RESOURCES_DIRPATH = Paths.get("src/test/resources");
   private static final Path TEST_FIXTURES_DIRPATH= TEST_RESOURCES_DIRPATH.resolve("fixtures");
-  private static final Path TEST_VCF_FILES_DIRPATH= TEST_FIXTURES_DIRPATH.resolve("testVcfFiles");
+  private static final Path TEST_VCF_FILES_DIRPATH= TEST_FIXTURES_DIRPATH.resolve("dummyVCFFiles");
 
 
   @Test
