@@ -26,17 +26,18 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.sort.SortOrder;
 import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.springframework.stereotype.Repository;
 
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.BIO_SAMPLE_ID;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.NAME;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_SCROLL_TIMEOUT;
 
 /**
  * Perform queries against elasticsearch to find desired variants.
@@ -54,16 +55,27 @@ public class CallSetRepository {
         .addSort(NAME, SortOrder.ASC)
         .setSize(size);
   }
+  private SearchRequestBuilder createScrollSearchRequest(final int size, TimeValue timeValue) {
+    return createSearchRequest(size).setScroll(timeValue);
+  }
+
+  private static boolean isNewRequest(SearchCallSetsRequest request){
+    return "".equals(request.getPageToken());
+  }
 
   public SearchResponse findCallSets(@NonNull SearchCallSetsRequest request) {
-    val searchRequestBuilder = createSearchRequest(request.getPageSize());
-    val constBoolQuery =
-        constantScoreQuery(
-            boolQuery()
-                .must(matchQuery(VARIANT_SET_IDS, request.getVariantSetId()))
-                .must(matchQuery(NAME, request.getName()))
-                .must(matchQuery(BIO_SAMPLE_ID, request.getBioSampleId())));
-    return searchRequestBuilder.setQuery(constBoolQuery).get();
+    if(isNewRequest(request)){
+      val searchRequestBuilder = createScrollSearchRequest(request.getPageSize(), DEFAULT_SCROLL_TIMEOUT);
+      val query = boolQuery()
+          .filter(
+              boolQuery()
+                  .must(matchQuery(VARIANT_SET_IDS, request.getVariantSetId()))
+                  .must(matchQuery(NAME, request.getName()))
+                  .must(matchQuery(BIO_SAMPLE_ID, request.getBioSampleId())));
+      return searchRequestBuilder.setQuery(query).get();
+    } else {
+      return client.prepareSearchScroll(request.getPageToken()).setScroll(DEFAULT_SCROLL_TIMEOUT).get();
+    }
   }
 
   public GetResponse findCallSetById(@NonNull GetCallSetRequest request) {

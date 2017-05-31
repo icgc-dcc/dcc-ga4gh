@@ -40,7 +40,7 @@ public class MetadataService {
   private final VariantSetRepository variantSetRepository;
 
   public SearchDatasetsResponse searchDatasets(@NonNull SearchDatasetsRequest request) {
-    val response = variantSetRepository.searchAllDataSets(request);
+    val response = variantSetRepository.findAllDataSets(request);
     return buildSearchDatasetsResponse(response);
   }
 

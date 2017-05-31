@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.ga4gh.server.variant;
 
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.NonNull;
@@ -27,11 +28,12 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
 
+import static ga4gh.VariantServiceOuterClass.SearchVariantsRequest.PAGE_SIZE_FIELD_NUMBER;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
@@ -43,6 +45,8 @@ import static org.icgc.dcc.ga4gh.common.PropertyNames.START;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALLS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
+import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_PAGE_SIZE;
+import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_SCROLL_TIMEOUT;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 
 /**
@@ -52,10 +56,40 @@ import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 @RequiredArgsConstructor
 public class VariantRepository {
 
-  @NonNull
-  private final Client client;
-
   private static final String NESTED_TYPE = CALLS;
+  private static FieldDescriptor PAGE_SIZE_FIELD_DESCRIPTOR = SearchVariantsRequest.getDescriptor().findFieldByNumber(
+      PAGE_SIZE_FIELD_NUMBER);
+
+  @NonNull private final Client client;
+
+  public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
+    val size = resolvePageSize(request);
+    if (isNewRequest(request)){
+      val searchRequestBuilder = createScrollSearchRequest(size, DEFAULT_SCROLL_TIMEOUT);
+      val childBoolQuery = boolQuery()
+                  .must(
+                      matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
+      request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
+      val filteredChildBoolQuery = boolQuery().filter(childBoolQuery);
+
+      val boolQuery = boolQuery()
+          .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
+          .must(rangeQuery(START).gte(request.getStart()))
+          .must(rangeQuery(END).lt(request.getEnd()))
+          .must(nestedQuery(NESTED_TYPE,filteredChildBoolQuery,ScoreMode.None));
+
+      val filteredParentBoolQuery = boolQuery().filter(boolQuery);
+
+      return searchRequestBuilder.setQuery(filteredParentBoolQuery).get();
+    } else {
+      return client.prepareSearchScroll(request.getPageToken()).setScroll(DEFAULT_SCROLL_TIMEOUT).get();
+    }
+  }
+
+  public GetResponse findVariantById(@NonNull GetVariantRequest request) {
+    return client.prepareGet(INDEX_NAME, VARIANT, request.getVariantId()).get();
+  }
+
   private SearchRequestBuilder createSearchRequest(final int size) {
     return client.prepareSearch(INDEX_NAME)
         .setTypes(VARIANT)
@@ -63,28 +97,22 @@ public class VariantRepository {
         .setSize(size);
   }
 
+  private SearchRequestBuilder createScrollSearchRequest(final int size, TimeValue timeValue){
+    return createSearchRequest(size)
+        .setScroll(timeValue);
+  }
+
+
   private static String getNestedFieldName(String fieldName){
     return DOT.join(NESTED_TYPE, fieldName);
   }
 
-  public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
-    val searchRequestBuilder = createSearchRequest(request.getPageSize());
-    val childBoolQuery = boolQuery().must(matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
-    request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
-    val constChildBoolQuery = constantScoreQuery(childBoolQuery);
-
-    val boolQuery = boolQuery()
-        .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
-        .must(rangeQuery(START).gte(request.getStart()))
-        .must(rangeQuery(END).lt(request.getEnd()))
-        .must(nestedQuery(NESTED_TYPE,constChildBoolQuery,ScoreMode.None));
-    val constantScoreQuery = constantScoreQuery(boolQuery);
-
-    return searchRequestBuilder.setQuery(constantScoreQuery).get();
+  private static boolean isNewRequest(SearchVariantsRequest searchVariantsRequest){
+    return "".equals(searchVariantsRequest.getPageToken());
   }
 
-  public GetResponse findVariantById(@NonNull GetVariantRequest request) {
-    return client.prepareGet(INDEX_NAME, VARIANT, request.getVariantId()).get();
+  private static int resolvePageSize(SearchVariantsRequest request){
+    return request.hasField(PAGE_SIZE_FIELD_DESCRIPTOR) ? request.getPageSize() : DEFAULT_PAGE_SIZE;
   }
 
 }

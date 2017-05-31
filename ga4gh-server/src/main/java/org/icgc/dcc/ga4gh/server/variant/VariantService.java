@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.ga4gh.server.variant;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.UnmodifiableLazyStringList;
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantRequest;
@@ -69,10 +68,8 @@ public class VariantService {
   private static final Variant EMPTY_VARIANT = Variant.newBuilder().build();
   private static final VariantSet EMPTY_VARIANT_SET = VariantSet.newBuilder().build();
   private static final CallSet EMPTY_CALL_SET = CallSet.newBuilder().build();
-  private static final int FIRST_ELEMENT_POS = 0;
   private final static long DEFAULT_CREATED_VALUE = 0;
   private final static long DEFAULT_UPDATED_VALUE = 0;
-  private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final List<Integer> DEFAULT_CONSENSUS_NON_REF_ALLELES = newArrayList(-1);
   private static final double DEFAULT_CONSENSUS_GENOTYPE_LIKELIHOOD = -1.0;
   private static final boolean DEFAULT_CONSENSUS_GENOTYPE_PHASED = false;
@@ -113,26 +110,14 @@ public class VariantService {
   }
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
-    // TODO: This is to explore the request and response fields and is, obviously, not the final implementation
-
-    // log.info("pageToken: {}", request.getPageToken());
-    // log.info("pageSize: {}", request.getPageSize());
-    // log.info("referenceName: {}", request.getReferenceName());
-    // log.info("variantSetId: {}", request.getVariantSetId());
-    // log.info("callSetIdsList: {}", request.getCallSetIdsList());
-    // log.info("start: {}", request.getStart());
-    // log.info("end: {}", request.getEnd());
-
-    val response = variantRepository.findVariants(request);
-    if (request.getCallSetIdsCount() > 0){
-      val callsetIds = newHashSet(((UnmodifiableLazyStringList) request.getCallSetIdsList()).getUnmodifiableView());
-      return buildSearchVariantResponse(response, callsetIds);
-    } else {
-      return buildSearchVariantResponse(response, EMPTY_STRING_SET);
-    }
+      val response = variantRepository.findVariants(request);
+      if (request.getCallSetIdsCount() > 0){
+        val callsetIds = newHashSet(((UnmodifiableLazyStringList) request.getCallSetIdsList()).getUnmodifiableView());
+        return buildSearchVariantResponse(response, callsetIds);
+      } else {
+        return buildSearchVariantResponse(response, EMPTY_STRING_SET);
+      }
   }
-
-
 
   private Variant convertToVariant(final String id, @NonNull Map<String, Object> source, Set<String> allowedCallSetIds) {
     val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source, allowedCallSetIds);
@@ -217,12 +202,13 @@ public class VariantService {
     } else {
       return EMPTY_VARIANT_SET;
     }
+
   }
 
   private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse, Set<String> allowedCallSetIds) {
-//    val callsetIds = searchResponse.
+    val pageToken = searchResponse.getScrollId();
     return SearchVariantsResponse.newBuilder()
-        .setNextPageToken("N/A")
+        .setNextPageToken(pageToken)
         .addAllVariants(
             stream(searchResponse.getHits())
             .map(x -> convertToVariant(x, allowedCallSetIds))
@@ -233,7 +219,7 @@ public class VariantService {
 
   private SearchVariantSetsResponse buildSearchVariantSetsResponse(@NonNull SearchResponse response) {
     return SearchVariantSetsResponse.newBuilder()
-        .setNextPageToken("N/A")
+        .setNextPageToken(response.getScrollId())
         .addAllVariantSets(
             Arrays.stream(response.getHits().getHits())
                 .map(this::convertToVariantSet)
@@ -287,7 +273,7 @@ public class VariantService {
 
   private SearchCallSetsResponse buildSearchCallSetsResponse(@NonNull SearchResponse response) {
     return SearchCallSetsResponse.newBuilder()
-        .setNextPageToken("N/A")
+        .setNextPageToken(response.getScrollId())
         .addAllCallSets(
             Arrays.stream(response.getHits().getHits())
                 .map(this::convertToCallSet)
