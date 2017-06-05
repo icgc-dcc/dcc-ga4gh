@@ -43,7 +43,7 @@ public class JvmArgParser {
         .filter(x -> x.startsWith(key))
         .map(x -> x.replaceAll("^"+key, ""))
         .findFirst();
-    return opt.orElseThrow(() -> new IllegalStateException(format("There is not jvm argument that starts with the key [%s] ", key)));
+    return opt.orElseThrow(() -> new IllegalStateException(format("There is no jvm argument that starts with the key [%s] ", key)));
   }
 
   private int parseIntSwitch(String prefix){

@@ -38,6 +38,7 @@ import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.ga4gh.common.Configs.createPublicFinalStaticFieldsDescription;
 import static org.icgc.dcc.ga4gh.loader.CallSetAccumulator.createCallSetAccumulator;
 import static org.icgc.dcc.ga4gh.loader.Config.FILTER_VARIANTS;
+import static org.icgc.dcc.ga4gh.loader.JvmArgParser.createJvmArgParser;
 import static org.icgc.dcc.ga4gh.loader.VariantFilter.createVariantFilter;
 import static org.icgc.dcc.ga4gh.loader.VcfProcessor.createVcfProcessor;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.buildDefaultPortalMetadataDaoFactory;
@@ -56,9 +57,8 @@ public class Loader {
   }
 
   public static void main(String[] args) throws IOException {
-    val jvmParser = JvmArgParser.createJvmArgParser();
+    val jvmParser = createJvmArgParser();
     log.info("JvmArgs: {}",jvmParser.parse());
-
     log.info("Config:\n"+ createPublicFinalStaticFieldsDescription(Config.class));
     val variantFilter = createVariantFilter(!FILTER_VARIANTS);
     val storage = Factory.buildStorageFactory().getStorage();
