@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.ga4gh.common.ObjectNodeConverter;
 
@@ -36,6 +37,7 @@ import java.util.List;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.ga4gh.loader.Config.PORTAL_API;
 
+@Slf4j
 @Builder
 public class Portal {
 
@@ -66,6 +68,7 @@ public class Portal {
     val fileMetas = ImmutableList.<ObjectNode> builder();
     val size = PORTAL_FETCH_SIZE;
     int from = 1;
+    int count = 0;
 
     while (true) {
       val url = getUrl(size, from);
@@ -76,7 +79,7 @@ public class Portal {
         val fileMeta = (ObjectNode) hit;
         fileMetas.add(fileMeta);
       }
-
+      log.info("Page: {}", ++count);
       if (hits.size() < size) {
         break;
       }
