@@ -55,6 +55,7 @@ public class SVRRandomGenerator implements RandomGenerator<SearchVariantsRequest
         .setEnd(start + variantLength)
         .setVariantSetId(variantSetIdGenerator.nextRandom(random).toString())
         .setPageSize(pageSize)
+        .addAllCallSetIds(callSetIds)
         .setPageToken("")
         .build();
   }
