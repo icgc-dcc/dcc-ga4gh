@@ -16,32 +16,28 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.icgc.dcc.ga4gh.server.performance;
+package org.icgc.dcc.ga4gh.server.performance.random;
 
-import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
+import java.util.List;
 import java.util.Random;
 
-import static com.google.common.base.Preconditions.checkArgument;
+@RequiredArgsConstructor
+public class UniConstrainedRandomStringGenerator implements RandomGenerator<String> {
 
-public class UniConstrainedRandomIntegerGenerator implements RandomGenerator<Integer> {
-
-  public static UniConstrainedRandomIntegerGenerator createUniConstrainedRandomIntegerGenerator(int min,
-      int max) {
-    return new UniConstrainedRandomIntegerGenerator(min, max);
+  public static UniConstrainedRandomStringGenerator createUniConstrainedRandomStringGenerator(List<String> strings) {
+    return new UniConstrainedRandomStringGenerator(strings);
   }
 
-  private final int min;
-  @Getter private final int range;
+  @NonNull private final List<String> strings;
 
-  private UniConstrainedRandomIntegerGenerator(int min, int max) {
-    checkArgument(min <= max && min >= 0, "The min must be <= max, and min must be >= 0");
-    this.min = min; // inclusive
-    this.range = max - min;
-  }
-
-  public Integer nextRandom(Random random) {
-    return min + random.nextInt(range);
+  @Override
+  public String nextRandom(Random random) {
+    val idx = random.nextInt(strings.size());
+    return strings.get(idx);
   }
 
 }

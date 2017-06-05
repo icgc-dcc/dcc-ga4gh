@@ -16,22 +16,18 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.icgc.dcc.ga4gh.server.performance;
+package org.icgc.dcc.ga4gh.server.performance.sweep;
 
 import ga4gh.VariantServiceOuterClass;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 
 import java.util.Iterator;
 
-public class SubSearchVariantRequestIterator
+@Getter
+public class SVRSweeper
     implements Iterator<VariantServiceOuterClass.SearchVariantsRequest.Builder> {
-
-  public static SubSearchVariantRequestIterator createSubSearchVariantRequestIterator(
-      String referenceName, int minStart, int maxEnd, int variantLength) {
-    return new SubSearchVariantRequestIterator(referenceName, minStart, maxEnd,
-        variantLength);
-  }
 
   @NonNull private final String referenceName;
   private final int minStart;
@@ -41,7 +37,7 @@ public class SubSearchVariantRequestIterator
 
   private int currentStart;
 
-  public SubSearchVariantRequestIterator(String referenceName, int minStart, int maxEnd, int variantLength) {
+  private SVRSweeper(String referenceName, int minStart, int maxEnd, int variantLength) {
     this.referenceName = referenceName;
     this.minStart = minStart;
     this.maxEnd = maxEnd;
@@ -67,4 +63,8 @@ public class SubSearchVariantRequestIterator
     return builder;
   }
 
+  public static SVRSweeper createSVRSweeper(String referenceName,
+      int minStart, int maxEnd, int variantLength) {
+    return new SVRSweeper(referenceName, minStart, maxEnd, variantLength);
+  }
 }

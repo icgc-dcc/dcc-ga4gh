@@ -16,7 +16,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.icgc.dcc.ga4gh.server.performance;
+package org.icgc.dcc.ga4gh.server.performance.random;
 
 import com.google.common.collect.Sets;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
@@ -29,17 +29,8 @@ import java.util.Random;
 
 @Slf4j
 @RequiredArgsConstructor
-public class SearchVariantsRequestGenerator implements RandomGenerator<SearchVariantsRequest> {
+public class SVRRandomGenerator implements RandomGenerator<SearchVariantsRequest> {
 
-  public static SearchVariantsRequestGenerator createSearchVariantsRequestGenerator(
-      RandomGenerator<Integer> startGenerator,
-      RandomGenerator<Integer> variantSetIdGenerator,
-      RandomGenerator<Integer> callSetIdGenerator,
-      RandomGenerator<String> referenceNameGenerator,
-      int pageSize, int variantLength) {
-    return new SearchVariantsRequestGenerator(startGenerator, variantSetIdGenerator,
-        callSetIdGenerator, referenceNameGenerator, pageSize, variantLength);
-  }
 
   private final RandomGenerator<Integer> startGenerator;
   private final RandomGenerator<Integer> variantSetIdGenerator;
@@ -66,6 +57,14 @@ public class SearchVariantsRequestGenerator implements RandomGenerator<SearchVar
         .setPageSize(pageSize)
         .setPageToken("")
         .build();
+  }
+
+  public static SVRRandomGenerator createSVRRandomGenerator(RandomGenerator<Integer> startGenerator,
+      RandomGenerator<Integer> variantSetIdGenerator,
+      RandomGenerator<Integer> callSetIdGenerator,
+      RandomGenerator<String> referenceNameGenerator, int variantLength, int pageSize) {
+    return new SVRRandomGenerator(startGenerator, variantSetIdGenerator, callSetIdGenerator, referenceNameGenerator,
+        variantLength, pageSize);
   }
 
 }

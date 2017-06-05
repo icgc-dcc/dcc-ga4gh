@@ -19,7 +19,6 @@
 package org.icgc.dcc.ga4gh.server.performance;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import com.opencsv.bean.StatefulBeanToCsv;
@@ -36,7 +35,8 @@ import lombok.val;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.global.InternalGlobal;
+import org.elasticsearch.search.aggregations.bucket.nested.InternalNested;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
@@ -45,6 +45,7 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.server.config.ServerConfig;
+import org.icgc.dcc.ga4gh.server.performance.random.SVRRandomGenerator;
 import org.icgc.dcc.ga4gh.server.variant.CallSetRepository;
 import org.icgc.dcc.ga4gh.server.variant.HeaderRepository;
 import org.icgc.dcc.ga4gh.server.variant.VariantRepository;
@@ -56,18 +57,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.common.core.util.Joiners.SEMICOLON;
 import static org.icgc.dcc.ga4gh.server.Factory.newClient;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
-import static org.icgc.dcc.ga4gh.server.performance.SearchRequestSweepIterator.createSearchRequestSweepIterator;
-import static org.icgc.dcc.ga4gh.server.performance.SearchVariantsRequestGenerator.createSearchVariantsRequestGenerator;
-import static org.icgc.dcc.ga4gh.server.performance.SubSearchVariantRequestIterator.createSubSearchVariantRequestIterator;
-import static org.icgc.dcc.ga4gh.server.performance.UniConstrainedRandomIntegerGenerator.createUniConstrainedRandomIntegerGenerator;
-import static org.icgc.dcc.ga4gh.server.performance.UniConstrainedRandomStringGenerator.createUniConstrainedRandomStringGenerator;
+import static org.icgc.dcc.ga4gh.server.performance.Performance.MinMax.createMinMax;
 
 @Builder
 @RequiredArgsConstructor
@@ -75,7 +71,8 @@ import static org.icgc.dcc.ga4gh.server.performance.UniConstrainedRandomStringGe
 public class Performance implements Runnable {
   private final static char CSV_DELIMITER = ',';
 
-  public static List<SubSearchVariantRequestIterator> createList(Client client, int variantLength){
+  /*
+  public static List<EsResult> createEsResultList(Client client){
     val query = QueryBuilders.matchAllQuery();
     val aggs = AggregationBuilders.terms("byReferenceName").field("reference_name")
         .subAggregation(AggregationBuilders.max("maxEnd").field("end"))
@@ -83,7 +80,7 @@ public class Performance implements Runnable {
     val aggregations = client.prepareSearch(INDEX_NAME).setQuery(query).addAggregation(aggs).execute().actionGet().getAggregations();
     val terms = (Terms)aggregations.get("byReferenceName");
 
-    val list = ImmutableList.<SubSearchVariantRequestIterator>builder();
+    val map = ImmutableMap.<String, SVRSweeper>builder();
     for (Terms.Bucket bucket : terms.getBuckets()){
       val referenceName = bucket.getKeyAsString();
       val minStartTerm = (Min)bucket.getAggregations().get("minStart");
@@ -91,64 +88,118 @@ public class Performance implements Runnable {
 
       val maxEndTerm = (Max)bucket.getAggregations().get("maxEnd");
       val maxEnd = (int)maxEndTerm.getValue();
-      val it = createSubSearchVariantRequestIterator(referenceName,minStart,maxEnd,variantLength);
-      list.add(it);
+      val it = createSVRSweeper(referenceName,minStart,maxEnd,variantLength);
+      map.put(referenceName, it);
     }
-    return list.build();
+  }
+  */
+
+  @Value
+  public static class EsResult {
+    private final long minStart;
+    private final long maxEnd;
+    private final int callSetId;
+    private final int variantSetId;
+    private final String referenceName;
+
+    public static EsResult createEsResult(long minStart, long maxEnd, int callSetId, int variantSetId,
+        String referenceName) {
+      return new EsResult(minStart, maxEnd, callSetId, variantSetId, referenceName);
+    }
+
+  }
+
+
+
+
+  public static MinMax getMinMax(Client client){
+    val query = QueryBuilders.matchAllQuery();
+    val aggs = AggregationBuilders.global("minMaxAgg")
+        .subAggregation(AggregationBuilders.max("maxEnd").field("end"))
+        .subAggregation(AggregationBuilders.min("minStart").field("start"));
+    val aggregations = client.prepareSearch(INDEX_NAME).setQuery(query).addAggregation(aggs).execute().actionGet().getAggregations();
+    val internalAggregations = ((InternalGlobal)aggregations.get("minMaxAgg")).getAggregations();
+    val minStartTerm = (Min)internalAggregations.get("minStart");
+    val maxEndTerm = (Max)internalAggregations.get("maxEnd");
+    val minStart = (int)minStartTerm.getValue();
+    val maxEnd = (int)maxEndTerm.getValue();
+    return createMinMax(minStart, maxEnd);
+  }
+
+  public static List<Integer> createCallSetIdList(Client client){
+    val query = QueryBuilders.matchAllQuery();
+    val aggs = AggregationBuilders.nested("byCalls", "calls")
+        .subAggregation(AggregationBuilders.terms("byCallSetId").field("calls.call_set_id"));
+    val aggregations = client.prepareSearch(INDEX_NAME).setQuery(query).addAggregation(aggs).execute().actionGet().getAggregations();
+    val terms = (InternalNested)aggregations.get("byCalls");
+    return null;
+  }
+
+  public static List<Integer> createVariantSetIdList(Client client){
+    val query = QueryBuilders.matchAllQuery();
+    val aggs = AggregationBuilders.nested("byCalls", "calls")
+        .subAggregation(AggregationBuilders.terms("byVariantSetId").field("calls.variant_set_id"));
+    val aggregations = client.prepareSearch(INDEX_NAME).setQuery(query).addAggregation(aggs).execute().actionGet().getAggregations();
+    return null;
+  }
+
+  private static VariantService buildVariantService(Client client){
+    val variantRepo = new VariantRepository(client);
+    val headerRepo = new HeaderRepository(client);
+    val callSetRepo = new CallSetRepository(client);
+    val variantSetRepo = new VariantSetRepository(client);
+    val esVariantConverter = new EsVariantConverterJson();
+    val esVariantSetConverter = new EsVariantSetConverterJson();
+    val esCallSetConverter = new EsCallSetConverterJson();
+    val esCallConverter = new EsConsensusCallConverterJson();
+    val esVariantCallPairConverter = new EsVariantCallPairConverterJson(esVariantConverter,
+        esCallConverter, esVariantConverter, esCallConverter);
+
+    return new VariantService(variantRepo, headerRepo,
+        callSetRepo, variantSetRepo, esVariantSetConverter,
+        esCallSetConverter, esVariantCallPairConverter);
   }
 
   public static void main(String[] args){
     val sampleNum = parseInt(getProperty("num_samples", "100"));
     val variantLength = parseInt(getProperty("variant_length", "10"));
 
-    val subSearchVariantReqIterator1 = createSubSearchVariantRequestIterator("1", 0, 100000, 10);
-    val subSearchVariantReqIterator2 = createSubSearchVariantRequestIterator("2", 0, 100000, 10);
-    val searchRequestSweepIterator = createSearchRequestSweepIterator(
-        newArrayList(subSearchVariantReqIterator1,subSearchVariantReqIterator2));
 
-    int countt = 0;
-    while(searchRequestSweepIterator.hasNext()){
-      val s = searchRequestSweepIterator.next();
-     countt++;
-    }
+//    val subSearchVariantReqIterator1 = createSubSearchVariantRequestIterator("1", 0, 100000, 10);
+//    val subSearchVariantReqIterator2 = createSubSearchVariantRequestIterator("2", 0, 100000, 10);
+//    val searchRequestSweepIterator = createSearchRequestSweepIterator(
+//        newArrayList(subSearchVariantReqIterator1,subSearchVariantReqIterator2));
+
+
 
 
     log.info("Config: \n{}", ServerConfig.toConfigString());
     try {
       val client = newClient();
+      val variantService = buildVariantService(client);
 
-      val subSearchVariantRequestIteratorList = createList(client,variantLength);
-      val searchVariantRequestSweepIterator = createSearchRequestSweepIterator(subSearchVariantRequestIteratorList);
-      int count = searchVariantRequestSweepIterator.getSize();
-
-      val variantRepo = new VariantRepository(client);
-      val headerRepo = new HeaderRepository(client);
-      val callSetRepo = new CallSetRepository(client);
-      val variantSetRepo = new VariantSetRepository(client);
-      val esVariantConverter = new EsVariantConverterJson();
-      val esVariantSetConverter = new EsVariantSetConverterJson();
-      val esCallSetConverter = new EsCallSetConverterJson();
-      val esCallConverter = new EsConsensusCallConverterJson();
-      val esVariantCallPairConverter = new EsVariantCallPairConverterJson(esVariantConverter
-          , esCallConverter, esVariantConverter, esCallConverter);
-
-      val startGen = createUniConstrainedRandomIntegerGenerator(13,249240613-variantLength);
-      val variantSetGen = createUniConstrainedRandomIntegerGenerator(0, 19);
-      val callSetGen = createUniConstrainedRandomIntegerGenerator(1, 1900);
-      val referenceNames = newArrayList("1","2","3","4","5","6","7","8","11","12");
-      val refGen = createUniConstrainedRandomStringGenerator(referenceNames);
+//      for (val svrSweeper : svrSweeperList){
+//        val startGen = createUniConstrainedRandomIntegerGenerator(svrSweeper.getMinStart(), svrSweeper.getMaxEnd()-variantLength);
+//        val variantSetGen = createUniConstrainedRandomIntegerGenerator(0, 3);
+//        val callSetGen = createUniConstrainedRandomIntegerGenerator(1, 1900);
+//        val referenceNames = newArrayList("1","2","3","4","5","6","7","8","11","12");
+//        val refGen = createUniConstrainedRandomStringGenerator(referenceNames);
+//
+//      }
+//
+//      val callSetGen = createUniConstrainedRandomIntegerGenerator(1, 1900);
+//      val referenceNames = newArrayList("1","2","3","4","5","6","7","8","11","12");
+//      val refGen = createUniConstrainedRandomStringGenerator(referenceNames);
 
 
-      val searchVariantsRequestGenerator = createSearchVariantsRequestGenerator(startGen,variantSetGen,callSetGen,refGen,10,variantLength);
-      val variantService =
-          new VariantService(variantRepo, headerRepo, callSetRepo, variantSetRepo, esVariantSetConverter, esCallSetConverter, esVariantCallPairConverter);
-      val performanceTest = Performance.builder()
-          .numSamples(sampleNum)
-          .variantService(variantService)
-          .searchVariantsRequestGenerator(searchVariantsRequestGenerator)
-          .seed(0)
-          .build();
-      performanceTest.run();
+//      val searchVariantsRequestGenerator = createSearchVariantsRequestGenerator(startGen,variantSetGen,callSetGen,refGen,10,variantLength);
+//      val performanceTest = Performance.builder()
+//          .numSamples(sampleNum)
+//          .variantService(variantService)
+//          .searchVariantsRequestGenerator(searchVariantsRequestGenerator)
+//          .seed(0)
+//          .build();
+//      performanceTest.run();
     } catch (Exception e) {
       log.error("Message[{}] : {}\nStackTrace: {}", e.getClass().getName(), e.getMessage(), e);
     }
@@ -159,7 +210,7 @@ public class Performance implements Runnable {
   private final int numSamples;
   private final long seed;
 
-  @NonNull @Singular  private List<SearchVariantsRequestGenerator> searchVariantsRequestGenerators;
+  @NonNull @Singular  private List<SVRRandomGenerator> SVRRandomGenerators;
 
   @Override
   @SneakyThrows
@@ -183,7 +234,7 @@ public class Performance implements Runnable {
 
 
     log.info("Using seed: {}", seed);
-    for (val searchVariantRequestGenerator : searchVariantsRequestGenerators){
+    for (val searchVariantRequestGenerator : SVRRandomGenerators){
       VariantServiceOuterClass.SearchVariantsResponse searchVariantsResponse =null;
       val watch = Stopwatch.createUnstarted();
       int count = 1;
@@ -250,4 +301,17 @@ public class Performance implements Runnable {
     @CsvBindByName private final int sampleTotal;
 
   }
+
+  @Value
+  public static class MinMax{
+
+    private final long minStart;
+    private final long maxEnd;
+
+    public static MinMax createMinMax(long minStart, long maxEnd) {
+      return new MinMax(minStart, maxEnd);
+    }
+
+  }
+
 }

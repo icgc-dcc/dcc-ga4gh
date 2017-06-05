@@ -16,7 +16,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.icgc.dcc.ga4gh.server.performance;
+package org.icgc.dcc.ga4gh.server.performance.sweep;
 
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.NonNull;
@@ -28,25 +28,12 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
 
-public class SearchRequestSweepIterator implements Iterator<SearchVariantsRequest.Builder> {
+public class SVRSweeperFlattener implements Iterator<SearchVariantsRequest.Builder> {
 
-  public static SearchRequestSweepIterator createSearchRequestSweepIterator(
-      List<SubSearchVariantRequestIterator> list) {
-    return new SearchRequestSweepIterator(list);
-  }
+  @NonNull private final List<SVRSweeper> list;
 
-  @NonNull private final List<SubSearchVariantRequestIterator> list;
-
-  private SubSearchVariantRequestIterator currentSubIterator;
-  private Iterator<SubSearchVariantRequestIterator> listIterator;
-
-  private SearchRequestSweepIterator(
-      List<SubSearchVariantRequestIterator> list) {
-    this.list = list;
-    checkState(!list.isEmpty(), "the list is empty");
-    listIterator = list.iterator();
-    currentSubIterator = listIterator.next();
-  }
+  private SVRSweeper currentSubIterator;
+  private Iterator<SVRSweeper> listIterator;
 
   public boolean hasNext2() {
     if (currentSubIterator.hasNext()){
@@ -83,5 +70,18 @@ public class SearchRequestSweepIterator implements Iterator<SearchVariantsReques
 
   @Override public SearchVariantsRequest.Builder next() {
     return currentSubIterator.next();
+  }
+
+  private SVRSweeperFlattener(
+      List<SVRSweeper> list) {
+    this.list = list;
+    checkState(!list.isEmpty(), "the list is empty");
+    listIterator = list.iterator();
+    currentSubIterator = listIterator.next();
+  }
+
+  public static SVRSweeperFlattener createSVRSweeperFlattener(
+      List<SVRSweeper> list) {
+    return new SVRSweeperFlattener(list);
   }
 }

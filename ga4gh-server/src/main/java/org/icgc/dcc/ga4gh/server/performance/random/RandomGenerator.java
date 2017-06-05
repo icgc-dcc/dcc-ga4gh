@@ -16,7 +16,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.icgc.dcc.ga4gh.server.performance;
+package org.icgc.dcc.ga4gh.server.performance.random;
 
 import com.google.common.collect.ImmutableList;
 import lombok.val;
