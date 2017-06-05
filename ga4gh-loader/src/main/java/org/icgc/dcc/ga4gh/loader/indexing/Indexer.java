@@ -41,7 +41,6 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsCallSet;
 import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantSet;
-import org.icgc.dcc.ga4gh.loader.Config;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantIdContext;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorage;
@@ -59,9 +58,10 @@ import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VCF_HEADER;
-import static org.icgc.dcc.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.icgc.dcc.ga4gh.common.types.IndexModes.NESTED;
 import static org.icgc.dcc.ga4gh.common.types.IndexModes.PARENT_CHILD;
+import static org.icgc.dcc.ga4gh.loader.Config.INDEX_NAME;
+import static org.icgc.dcc.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
 import static org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor.createCounterMonitor;
 
 @Slf4j
@@ -211,7 +211,7 @@ public class Indexer {
   public void indexVCFHeader(final String objectId, @NonNull final ObjectNode vcfHeader) {
     val parent_variant_set_id = vcfHeader.path(VARIANT_SET_ID).textValue();
     checkState(
-        client.prepareIndex(Config.PARENT_CHILD_INDEX_NAME, VCF_HEADER, objectId)
+        client.prepareIndex(INDEX_NAME, VCF_HEADER, objectId)
             .setContentType(SMILE)
             .setSource(createSource(vcfHeader))
             .setParent(parent_variant_set_id)

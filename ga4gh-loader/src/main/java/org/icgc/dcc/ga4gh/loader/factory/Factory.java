@@ -82,7 +82,9 @@ import static org.icgc.dcc.ga4gh.loader.Config.NESTED_VARIANT_INDEX_MAPPING_FILE
 import static org.icgc.dcc.ga4gh.loader.Config.PC_CALL_INDEX_MAPPING_FILE;
 import static org.icgc.dcc.ga4gh.loader.Config.PC_VARIANT_INDEX_MAPPING_FILE;
 import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
+import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_BYPASS_MD5_CHECK;
 import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
+import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_PERSIST_MODE;
 import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_SET_INDEX_MAPPING_FILE;
@@ -196,9 +198,9 @@ public class Factory {
 
   public static StorageFactory buildStorageFactory(){
     return StorageFactory.builder()
-        .bypassMD5Check(false)
+        .bypassMD5Check(STORAGE_BYPASS_MD5_CHECK)
         .outputVcfDir(Paths.get(STORAGE_OUTPUT_VCF_STORAGE_DIR))
-        .persistVcfDownloads(true)
+        .persistVcfDownloads(STORAGE_PERSIST_MODE)
         .token(TOKEN)
         .build();
   }

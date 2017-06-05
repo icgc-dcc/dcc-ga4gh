@@ -43,7 +43,7 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Stopwatch.createStarted;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.icgc.dcc.ga4gh.loader.Config.PARENT_CHILD_INDEX_NAME;
+import static org.icgc.dcc.ga4gh.loader.Config.INDEX_NAME;
 import static org.icgc.dcc.ga4gh.loader.factory.Factory.newClient;
 
 @Slf4j
@@ -59,7 +59,7 @@ public class Benchmarks {
   @SneakyThrows
   public static void main(String[] args) {
     try (val client = newClient()) {
-      val benchmarks = new Benchmarks(client, PARENT_CHILD_INDEX_NAME);
+      val benchmarks = new Benchmarks(client, INDEX_NAME);
       benchmarks.execute();
     } catch (Exception e) {
       log.error("Exception running: ", e);

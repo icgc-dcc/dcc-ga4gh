@@ -56,6 +56,9 @@ public class Loader {
   }
 
   public static void main(String[] args) throws IOException {
+    val jvmParser = JvmArgParser.createJvmArgParser();
+    log.info("JvmArgs: {}",jvmParser.parse());
+
     log.info("Config:\n"+ createPublicFinalStaticFieldsDescription(Config.class));
     val variantFilter = createVariantFilter(!FILTER_VARIANTS);
     val storage = Factory.buildStorageFactory().getStorage();
