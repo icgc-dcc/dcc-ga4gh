@@ -25,6 +25,7 @@ import org.icgc.dcc.ga4gh.common.model.portal.PortalMetadata;
 import org.icgc.dcc.ga4gh.common.types.WorkflowTypes;
 import org.icgc.dcc.ga4gh.loader.factory.Factory;
 import org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor;
+import org.icgc.dcc.ga4gh.loader.utils.counting.LongCounter;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IdStorageFactory2;
 import org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.IntegerIdStorage;
 
@@ -47,10 +48,16 @@ import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.RamMapStora
 @Slf4j
 public class Loader {
 
-  private static boolean skipPortatMetadata(PortalMetadata portalMetadata){
+  private int counter = 0;
+
+  private static boolean skipPortatMetadata(PortalMetadata portalMetadata, LongCounter counter){
     val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
     val out = workflowType == WorkflowTypes.CONSENSUS || portalMetadata.getFileSize() > 7000000 ;
-    return false;
+    if (counter.getCount() < 15){
+      counter.preIncr();
+      return false;
+    }
+    return true;
   }
 
   public static void main(String[] args) throws IOException {
@@ -72,9 +79,10 @@ public class Loader {
     long numVariants = 0;
     int count = 0;
     val total = portalMetadatas.size();
+    val skipCounter = LongCounter.createLongCounter0();
     for (val portalMetadata : portalMetadatas) {
 
-      if (skipPortatMetadata(portalMetadata)) {
+      if (skipPortatMetadata(portalMetadata, skipCounter)) {
         continue;
       }
 
@@ -102,7 +110,8 @@ public class Loader {
     try (val client = Factory.newClient();
         val writer = buildDocumentWriter(client)) {
 
-      val ctx = Factory.buildNestedIndexCreatorContext(client);
+//      val ctx = Factory.buildNestedIndexCreatorContext(client);
+      val ctx = Factory.buildPCIndexCreatorContext(client);
       val indexer2 = buildIndexer2(client, writer, ctx);
       indexer2.prepareIndex();
 

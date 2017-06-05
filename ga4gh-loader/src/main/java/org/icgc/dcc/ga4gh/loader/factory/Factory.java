@@ -87,6 +87,9 @@ import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_SET_INDEX_MAPPING_FILE;
 import static org.icgc.dcc.ga4gh.loader.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader.indexing.IndexCreatorContext.createIndexCreatorContext;
+import static org.icgc.dcc.ga4gh.loader.indexing.IndexModes.NESTED;
+import static org.icgc.dcc.ga4gh.loader.indexing.IndexModes.PARENT_CHILD;
+import static org.icgc.dcc.ga4gh.loader.indexing.Indexer.createIndexer;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator.createVariantAggregator;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory.createMapStorageFactory;
@@ -130,8 +133,9 @@ public class Factory {
   private static final String TRANSPORT_SETTINGS_FILENAME =
       "org/icgc/dcc/ga4gh/resources/settings/transport.properties";
 
+  //TODO: make an easy switch between parent child and nested method.
   public static Indexer buildIndexer2(Client client, DocumentWriter writer, IndexCreatorContext ctx){
-    return new Indexer(client,writer,ctx,ES_VARIANT_SET_CONVERTER_JSON, ES_CALL_SET_CONVERTER_JSON, ES_VARIANT_CALL_PAIR_CONVERTER_JSON_2);
+    return createIndexer(client,writer,ctx);
   }
 
   private static final <ID> String generateMapStorageName(String prefix, Class<ID> type){
@@ -151,14 +155,14 @@ public class Factory {
   }
 
   public static IndexCreatorContext buildNestedIndexCreatorContext(Client client) {
-    return createIndexCreatorContext(client,INDEX_NAME,INDEX_SETTINGS_JSON_FILENAME,true)
+    return createIndexCreatorContext(client,INDEX_NAME,INDEX_SETTINGS_JSON_FILENAME,true, NESTED)
         .add(CALL_SET, CALLSET_INDEX_MAPPING_FILE)
         .add(VARIANT_SET, VARIANT_SET_INDEX_MAPPING_FILE)
         .add(VARIANT, NESTED_VARIANT_INDEX_MAPPING_FILE);
   }
 
   public static IndexCreatorContext buildPCIndexCreatorContext(Client client) {
-    return createIndexCreatorContext(client,INDEX_NAME,INDEX_SETTINGS_JSON_FILENAME,true)
+    return createIndexCreatorContext(client,INDEX_NAME,INDEX_SETTINGS_JSON_FILENAME,true, PARENT_CHILD)
         .add(CALL_SET, CALLSET_INDEX_MAPPING_FILE)
         .add(VARIANT_SET, VARIANT_SET_INDEX_MAPPING_FILE)
         .add(VARIANT, PC_VARIANT_INDEX_MAPPING_FILE)

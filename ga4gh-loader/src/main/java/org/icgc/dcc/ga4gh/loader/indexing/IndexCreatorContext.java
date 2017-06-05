@@ -20,6 +20,7 @@ package org.icgc.dcc.ga4gh.loader.indexing;
 import com.google.common.collect.Maps;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.elasticsearch.client.Client;
 
 import java.nio.file.Path;
@@ -29,6 +30,7 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Data
+@RequiredArgsConstructor
 public class IndexCreatorContext {
 
   private final Map<String, Path> typeMap = Maps.newHashMap();
@@ -56,6 +58,11 @@ public class IndexCreatorContext {
   private final boolean indexingEnabled;
 
   /**
+   * Indexing modes
+   */
+  private final IndexModes indexMode;
+
+  /**
    * Maps a typeName to a file path
    */
   public IndexCreatorContext add(String typeName, Path mappingFilePath){
@@ -73,8 +80,9 @@ public class IndexCreatorContext {
   }
 
   public static IndexCreatorContext createIndexCreatorContext(Client client, String indexName, Path indexSettingsPath,
-      boolean indexingEnabled) {
-    return new IndexCreatorContext(client, indexName, indexSettingsPath, indexingEnabled);
+      boolean indexingEnabled,
+      IndexModes indexMode) {
+    return new IndexCreatorContext(client, indexName, indexSettingsPath, indexingEnabled, indexMode);
   }
 
 }

@@ -1,5 +1,5 @@
 {
-	"variant_nested": {
+	"variant": {
 		"properties": {
 			"start": {
 				"type": "long",
