@@ -65,31 +65,6 @@ public class SimpleSearchClient {
     this.post = createJsonPost(variantSearchUrl);
   }
 
-  private String getUrl(String path) {
-    return String.format("http://%s:%s/%s", host, port, path);
-  }
-
-  private String getVariantSearchUrl() {
-    return getUrl(VARIANT_SEARCH_PATH);
-  }
-
-  private static ObjectNode convertToObjectNode(VariantServiceOuterClass.SearchVariantsRequest request) {
-    val callsetlist = Lists.<String>newArrayList();
-    for (int i = 0; i < request.getCallSetIdsCount(); i++) {
-      callsetlist.add(request.getCallSetIds(i));
-    }
-    val obj = object()
-        .with("start", (int) request.getStart())
-        .with("end", (int) request.getEnd())
-        .with("reference_name", request.getReferenceName())
-        .with("page_size", (int) request.getPageSize())
-        .with("variant_set_id", request.getVariantSetId());
-    if (!callsetlist.isEmpty()) {
-      obj.with("call_set_ids", JsonNodeBuilders.array(callsetlist));
-    }
-    return obj.end();
-  }
-
   @SneakyThrows
   public int searchVariants(VariantServiceOuterClass.SearchVariantsRequest request, Stopwatch watch) {
     val jsonRequest = convertToObjectNode(request);
@@ -119,6 +94,18 @@ public class SimpleSearchClient {
     }
   }
 
+  private String getUrl(String path) {
+    return String.format("http://%s:%s/%s", host, port, path);
+  }
+
+  private String getVariantSearchUrl() {
+    return getUrl(VARIANT_SEARCH_PATH);
+  }
+
+  public static SimpleSearchClient createSimpleSearchClient(String host, int port) {
+    return new SimpleSearchClient(host, port);
+  }
+
   private static HttpPost createJsonPost(String url) {
     return createPost(url, "application/json");
   }
@@ -134,7 +121,22 @@ public class SimpleSearchClient {
     return post;
   }
 
-  public static SimpleSearchClient createSimpleSearchClient(String host, int port) {
-    return new SimpleSearchClient(host, port);
+  private static ObjectNode convertToObjectNode(VariantServiceOuterClass.SearchVariantsRequest request) {
+    val callsetlist = Lists.<String>newArrayList();
+    for (int i = 0; i < request.getCallSetIdsCount(); i++) {
+      callsetlist.add(request.getCallSetIds(i));
+    }
+    val obj = object()
+        .with("start", (int) request.getStart())
+        .with("end", (int) request.getEnd())
+        .with("reference_name", request.getReferenceName())
+        .with("page_size", (int) request.getPageSize())
+        .with("variant_set_id", request.getVariantSetId());
+    if (!callsetlist.isEmpty()) {
+      obj.with("call_set_ids", JsonNodeBuilders.array(callsetlist));
+    }
+    return obj.end();
   }
+
 }
+
