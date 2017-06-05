@@ -60,11 +60,11 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
-import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 import static org.icgc.dcc.common.core.util.Joiners.SEMICOLON;
 import static org.icgc.dcc.ga4gh.server.Factory.newClient;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.icgc.dcc.ga4gh.server.performance.Performance.MinMax.createMinMax;
+import static org.icgc.dcc.ga4gh.server.performance.SimpleSearchClient.createSimpleSearchClient;
 import static org.icgc.dcc.ga4gh.server.performance.random.SVRRandomGenerator.createSVRRandomGenerator;
 import static org.icgc.dcc.ga4gh.server.performance.random.UniConstrainedRandomIntegerGenerator.createUniConstrainedRandomIntegerGenerator;
 import static org.icgc.dcc.ga4gh.server.performance.random.UniConstrainedRandomStringGenerator.createUniConstrainedRandomStringGenerator;
@@ -165,6 +165,8 @@ public class Performance implements Runnable {
   }
 
   public static void main(String[] args){
+    val host = getProperty("host", "localhost");
+    val port = parseInt(getProperty("port", "8080"));
     val sampleNum = parseInt(getProperty("num_samples", "100"));
     val variantLength = parseInt(getProperty("variant_length", "10"));
     val seed = parseInt(getProperty("seed", "0"));
@@ -175,10 +177,10 @@ public class Performance implements Runnable {
 
     log.info("Config: \n{}", ServerConfig.toConfigString());
     try {
-      val client = newClient();
+      val esClient = newClient();
+      val client = createSimpleSearchClient(host,port);
       val pageSize = 10;
-      val variantService = buildVariantService(client);
-      val maxMin = getMinMax(client);
+      val maxMin = getMinMax(esClient);
       val startGen = createUniConstrainedRandomIntegerGenerator((int)maxMin.getMinStart(), (int)maxMin.getMaxEnd()-variantLength);
       val variantSetGen = createUniConstrainedRandomIntegerGenerator(0, 3);
       val callSetGen = createUniConstrainedRandomIntegerGenerator(1, 1900);
@@ -187,7 +189,7 @@ public class Performance implements Runnable {
       val searchVariantsRequestGenerator = createSVRRandomGenerator(startGen,variantSetGen,callSetGen,refGen,variantLength,pageSize);
       val performanceTest = Performance.builder()
           .numSamples(sampleNum)
-          .variantService(variantService)
+          .client(client)
           .SVRRandomGenerator(searchVariantsRequestGenerator)
           .numEpoch(numEpoch)
           .seed(seed)
@@ -225,7 +227,7 @@ public class Performance implements Runnable {
 
   }
 
-  @NonNull VariantService variantService;
+  @NonNull SimpleSearchClient client;
   private final int numSamples;
   private final long seed;
   private final int numEpoch;
@@ -255,23 +257,8 @@ public class Performance implements Runnable {
         val watch = Stopwatch.createUnstarted();
         int count = 1;
         for (val searchVariantsRequest : searchVariantRequestGenerator.nextRandomList(random, numSamples)) {
-          try {
-            watch.start();
-            searchVariantsResponse = variantService.searchVariants(searchVariantsRequest);
-          } catch (Throwable t) {
-            log.error("Error runnig variantSearch [{}] -- Message: {}\nStackTrace: {}",
-                t.getClass().getName(), t.getMessage(), NEWLINE.join(t.getStackTrace()));
-
-          } finally {
-            watch.stop();
-          }
-          int variantCount = 0;
-          try {
-            variantCount = searchVariantsResponse.getVariantsCount();
-          } catch (Throwable t) {
-            log.error("[{}] {}: \nStackTrace:\n{}", t.getClass().getSimpleName(), t.getMessage(),
-                NEWLINE.join(t.getStackTrace()));
-          }
+          int variantCount = -1;
+          variantCount = client.searchVariants(searchVariantsRequest, watch);
 
           val stat = Stats.builder()
               .start(searchVariantsRequest.getStart())
