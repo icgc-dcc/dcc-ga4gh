@@ -1,6 +1,5 @@
 package org.icgc.dcc.ga4gh.loader;
 
-import com.google.api.client.http.apache.ApacheHttpTransport;
 import com.google.common.base.Stopwatch;
 import ga4gh.MetadataServiceOuterClass;
 import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
@@ -109,7 +108,6 @@ public class ReqTest {
     data.writeTo(out);
     val entity = new ByteArrayEntity(out.toByteArray(), ContentType.create(proto));
 
-    val t = ApacheHttpTransport.newDefaultHttpClient();
 
     post.setEntity(entity);
 

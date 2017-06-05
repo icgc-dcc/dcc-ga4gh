@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import java.util.List;
 import java.util.Random;
 
 @Slf4j
@@ -39,6 +40,16 @@ public class SVRRandomGenerator implements RandomGenerator<SearchVariantsRequest
   @Getter private final int variantLength;
   private final int pageSize;
   private static final int MAX_NUM_CALLSET_IDS = 5;
+
+  public SearchVariantsRequest nextRandom(int seed){
+    val random  = new Random(seed);
+    return nextRandom(random);
+  }
+
+  public List<SearchVariantsRequest> nextRandomList(int seed, int num) {
+    val random  = new Random(seed);
+    return nextRandomList(random, num);
+  }
 
   @Override
   public SearchVariantsRequest nextRandom(Random random){

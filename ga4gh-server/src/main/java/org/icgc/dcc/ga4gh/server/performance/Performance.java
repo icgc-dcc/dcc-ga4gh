@@ -251,11 +251,11 @@ public class Performance implements Runnable {
     long totalCount = 0;
     for (int epochCount = 0; epochCount < numEpoch ; epochCount++) {
       long epochTime = 0;
-      val random = new Random(seed);
       for (val searchVariantRequestGenerator : SVRRandomGenerators) {
         VariantServiceOuterClass.SearchVariantsResponse searchVariantsResponse = null;
         val watch = Stopwatch.createUnstarted();
         int count = 1;
+        val random = new Random(seed);
         for (val searchVariantsRequest : searchVariantRequestGenerator.nextRandomList(random, numSamples)) {
           int variantCount = -1;
           variantCount = client.searchVariants(searchVariantsRequest, watch);
