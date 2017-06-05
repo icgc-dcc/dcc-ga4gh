@@ -66,23 +66,27 @@ import java.util.Properties;
 
 import static com.google.common.io.Resources.getResource;
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
-import static org.icgc.dcc.ga4gh.common.TypeNames.VCF_HEADER;
 import static org.icgc.dcc.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.icgc.dcc.ga4gh.loader.Config.BULK_SIZE_MB;
+import static org.icgc.dcc.ga4gh.loader.Config.CALLSET_INDEX_MAPPING_FILE;
 import static org.icgc.dcc.ga4gh.loader.Config.DEFAULT_MAPDB_ALLOCATION;
-import static org.icgc.dcc.ga4gh.loader.Config.DEFAULT_MAPPINGS_DIRNAME;
-import static org.icgc.dcc.ga4gh.loader.Config.DEFAULT_MAPPING_JSON_EXTENSION;
 import static org.icgc.dcc.ga4gh.loader.Config.INDEX_NAME;
 import static org.icgc.dcc.ga4gh.loader.Config.INDEX_SETTINGS_JSON_FILENAME;
+import static org.icgc.dcc.ga4gh.loader.Config.NESTED_VARIANT_INDEX_MAPPING_FILE;
+import static org.icgc.dcc.ga4gh.loader.Config.PC_CALL_INDEX_MAPPING_FILE;
+import static org.icgc.dcc.ga4gh.loader.Config.PC_VARIANT_INDEX_MAPPING_FILE;
 import static org.icgc.dcc.ga4gh.loader.Config.PERSISTED_DIRPATH;
 import static org.icgc.dcc.ga4gh.loader.Config.STORAGE_OUTPUT_VCF_STORAGE_DIR;
 import static org.icgc.dcc.ga4gh.loader.Config.TOKEN;
 import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_MAPDB_ALLOCATION;
+import static org.icgc.dcc.ga4gh.loader.Config.VARIANT_SET_INDEX_MAPPING_FILE;
 import static org.icgc.dcc.ga4gh.loader.factory.impl.IntegerIdStorageFactory.createIntegerIdStorageFactory;
 import static org.icgc.dcc.ga4gh.loader.factory.impl.LongIdStorageFactory.createLongIdStorageFactory;
+import static org.icgc.dcc.ga4gh.loader.indexing.IndexCreatorContext.createIndexCreatorContext;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.context.impl.IdStorageContextImpl.IdStorageContextImplSerializer.createIdStorageContextSerializer;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.id.impl.VariantAggregator.createVariantAggregator;
 import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.MapStorageFactory.createMapStorageFactory;
@@ -146,20 +150,19 @@ public class Factory {
     return createDocumentWriter(client, INDEX_NAME, BULK_SIZE_MB, BULK_NUM_THREADS);
   }
 
-  public static IndexCreatorContext buildIndexCreatorContext(Client client) {
-    return IndexCreatorContext.builder()
-        .client(client)
-        .indexingEnabled(true)
-        .indexName(INDEX_NAME)
-        .indexSettingsFilename(INDEX_SETTINGS_JSON_FILENAME)
-        .mappingDirname(DEFAULT_MAPPINGS_DIRNAME)
-        .mappingFilenameExtension(DEFAULT_MAPPING_JSON_EXTENSION)
-        .typeName(CALL_SET)
-        .typeName(VARIANT_SET)
-        .typeName(VARIANT)
-        .typeName(VCF_HEADER)
-        .build();
+  public static IndexCreatorContext buildNestedIndexCreatorContext(Client client) {
+    return createIndexCreatorContext(client,INDEX_NAME,INDEX_SETTINGS_JSON_FILENAME,true)
+        .add(CALL_SET, CALLSET_INDEX_MAPPING_FILE)
+        .add(VARIANT_SET, VARIANT_SET_INDEX_MAPPING_FILE)
+        .add(VARIANT, NESTED_VARIANT_INDEX_MAPPING_FILE);
+  }
 
+  public static IndexCreatorContext buildPCIndexCreatorContext(Client client) {
+    return createIndexCreatorContext(client,INDEX_NAME,INDEX_SETTINGS_JSON_FILENAME,true)
+        .add(CALL_SET, CALLSET_INDEX_MAPPING_FILE)
+        .add(VARIANT_SET, VARIANT_SET_INDEX_MAPPING_FILE)
+        .add(VARIANT, PC_VARIANT_INDEX_MAPPING_FILE)
+        .add(CALL, PC_CALL_INDEX_MAPPING_FILE);
   }
 
   public static PortalMetadataDaoFactory buildDefaultPortalMetadataDaoFactory(

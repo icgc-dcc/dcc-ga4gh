@@ -71,9 +71,13 @@ public class Config {
   public static final long VARIANT_MAPDB_ALLOCATION = 1024 * 1024 * 1024; //1GB
 
 
-  public static final String INDEX_SETTINGS_JSON_FILENAME = "index.settings.json";
-  public static final String DEFAULT_MAPPINGS_DIRNAME = "org/icgc/dcc/ga4gh/resources/mappings";
-  public static final String DEFAULT_MAPPING_JSON_EXTENSION = ".mapping.json";
+  public static final Path MAPPINGS_DIR = Paths.get("org/icgc/dcc/ga4gh/resources/mappings");
+  public static final Path INDEX_SETTINGS_JSON_FILENAME = MAPPINGS_DIR.resolve("index.settings.json");
+  public static final Path CALLSET_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("callset.mapping.json");
+  public static final Path VARIANT_SET_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("variant_set.mapping.json");
+  public static final Path NESTED_VARIANT_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("variant_nested.mapping.json");
+  public static final Path PC_VARIANT_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("variant_pc.mapping.json");
+  public static final Path PC_CALL_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("call_pc.mapping.json");
 
   private static final int MAX_NUM_SEGMENTS = 1;
 

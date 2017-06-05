@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 
+import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -63,9 +64,8 @@ public class IndexCreator {
 
       /// indexes.preparePutMapping(indices)
       val createIndexRequestBuilder = indexes.prepareCreate(indexName)
-          .setSettings(read(indexCreatorContext.getIndexSettingsFilename()).toString());
-
-      for (val typeName : indexCreatorContext.getTypeNames()) {
+          .setSettings(read(indexCreatorContext.getIndexSettingsPath()).toString());
+      for (val typeName : indexCreatorContext.getTypeNames()){
         addMapping(createIndexRequestBuilder, typeName);
       }
       checkState(createIndexRequestBuilder.execute().actionGet().isAcknowledged());
@@ -76,13 +76,13 @@ public class IndexCreator {
   }
 
   @SneakyThrows
-  private ObjectNode read(final String fileName) {
-    val url = Resources.getResource(indexCreatorContext.getMappingDirname() + "/" + fileName);
+  private ObjectNode read(final Path path) {
+    val url = Resources.getResource(path.toString());
     return (ObjectNode) DEFAULT.readTree(url);
   }
 
   private void addMapping(@NonNull final CreateIndexRequestBuilder builder, @NonNull final String typeName) {
-    builder.addMapping(typeName, read(typeName + this.indexCreatorContext.getMappingFilenameExtension()).toString());
+    builder.addMapping(typeName, read(indexCreatorContext.getPath(typeName)).toString());
   }
 
 

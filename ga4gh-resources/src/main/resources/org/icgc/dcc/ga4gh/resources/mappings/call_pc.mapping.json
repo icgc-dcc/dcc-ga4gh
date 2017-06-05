@@ -1,7 +1,7 @@
 {
 	"call": {
 		"properties": {
-			"variant_set_id": {
+			"variant_set_ids": {
 				"type": "integer",
 				"index": "true"
 			},
@@ -15,18 +15,6 @@
 			},
 			"info": {
 				"type" : "object"
-			},
-			"genotype_likelihood": {
-				"type": "keyword",
-				"index": "false"
-			},
-			"genotype_phaseset": {
-				"type": "boolean",
-				"index": "false"
-			},
-			"non_reference_alleles": {
-				"type": "integer",
-				"index": "false"
 			}
 		},
 		"_all": {
@@ -38,6 +26,5 @@
 		"_parent" : {
 			"type" : "variant"
 		}
-		
 	}
 }

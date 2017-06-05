@@ -1,5 +1,5 @@
 {
-	"variant_nested": {
+	"variant": {
 		"properties": {
 			"start": {
 				"type": "long",
@@ -20,28 +20,7 @@
 			"alternate_bases": {
 				"type": "keyword",
 				"index": "false"
-			},
-			"calls": {
-				"type" : "nested",
-				"properties": {
-					"variant_set_id": {
-						"type": "integer",
-						"index": "true"
-					},
-					"call_set_id": {
-						"type": "integer",
-						"index": "true"
-					},
-					"call_set_name": {
-						"type": "keyword",
-						"index": "true"
-					},
-					"info": {
-						"type" : "object"
-					}
-				}
 			}
-			
 		},
 		"_all": {
 			"enabled": false

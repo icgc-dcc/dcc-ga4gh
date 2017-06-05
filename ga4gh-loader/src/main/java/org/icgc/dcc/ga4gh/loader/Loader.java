@@ -102,7 +102,7 @@ public class Loader {
     try (val client = Factory.newClient();
         val writer = buildDocumentWriter(client)) {
 
-      val ctx = Factory.buildIndexCreatorContext(client);
+      val ctx = Factory.buildNestedIndexCreatorContext(client);
       val indexer2 = buildIndexer2(client, writer, ctx);
       indexer2.prepareIndex();
 

@@ -17,18 +17,21 @@
  */
 package org.icgc.dcc.ga4gh.loader.indexing;
 
-import lombok.Builder;
+import com.google.common.collect.Maps;
+import lombok.Data;
 import lombok.NonNull;
-import lombok.Singular;
-import lombok.Value;
 import org.elasticsearch.client.Client;
 
-import java.util.List;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Set;
 
-@Builder
-@Value
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Data
 public class IndexCreatorContext {
 
+  private final Map<String, Path> typeMap = Maps.newHashMap();
   /*
    * Es Client handle
    */
@@ -42,33 +45,36 @@ public class IndexCreatorContext {
   private final String indexName;
 
   /*
-   * Directory name where mapping files is stored
-   */
-  @NonNull
-  private final String mappingDirname;
-
-  /*
-   * Extension that is appended to the end of the generated mapping file filename
-   */
-  @NonNull
-  private final String mappingFilenameExtension;
-
-  /*
    * Filename where index setting file is stored, relative to MappingDirname
    */
   @NonNull
-  private final String indexSettingsFilename;
+  private final Path indexSettingsPath;
 
   /*
    * Enable bit, used to enable or disable indexing
    */
   private final boolean indexingEnabled;
 
-  /*
-   * MiscNames of the different types in this index
+  /**
+   * Maps a typeName to a file path
    */
-  @NonNull
-  @Singular
-  private final List<String> typeNames;
+  public IndexCreatorContext add(String typeName, Path mappingFilePath){
+    typeMap.put(typeName, mappingFilePath);
+    return this;
+  }
+
+  public Set<String> getTypeNames(){
+    return typeMap.keySet();
+  }
+
+  public Path getPath(String typeName){
+    checkArgument(typeMap.containsKey(typeName), "The typeName [%s] DNE", typeName);
+    return typeMap.get(typeName);
+  }
+
+  public static IndexCreatorContext createIndexCreatorContext(Client client, String indexName, Path indexSettingsPath,
+      boolean indexingEnabled) {
+    return new IndexCreatorContext(client, indexName, indexSettingsPath, indexingEnabled);
+  }
 
 }
