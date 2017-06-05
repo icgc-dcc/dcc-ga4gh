@@ -34,13 +34,12 @@ import java.util.Set;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.ga4gh.common.PropertyNames.CALLS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
 
 @Builder
 @RequiredArgsConstructor
 public class EsVariantCallPairConverterJson {
-
-  private static final String CHILD_TYPE = CALL; //CALLS;
 
   @NonNull
   private final SearchHitConverter<EsVariant> variantSearchHitConverter;
@@ -58,7 +57,7 @@ public class EsVariantCallPairConverterJson {
    * Converts ALL calls from the source to a EsVariantCallPair
    */
   public EsVariantCallPair convertFromNestedSource(Map<String, Object> source) {
-    return convertFromSource(source, CHILD_TYPE);
+    return convertFromSource(source, CALLS);
   }
 
   public EsVariantCallPair convertFromSource(Map<String, Object> source, String childType){
@@ -85,7 +84,7 @@ public class EsVariantCallPairConverterJson {
    * Only converts calls that have the specified allowedCallSetIds, and constructs a EsVariantCallPair
    */
   public EsVariantCallPair convertFromNestedSource(Map<String, Object> source, Set<String> allowedCallsetIds) {
-    return convertFromSource(source, allowedCallsetIds, CHILD_TYPE);
+    return convertFromSource(source, allowedCallsetIds, CALLS);
   }
 
   public EsVariantCallPair convertFromSource(Map<String, Object> source, Set<String> allowedCallsetIds, String childType) {
@@ -107,7 +106,7 @@ public class EsVariantCallPairConverterJson {
     val pair = EsVariantCallPair.builder()
         .variant(variantSearchHitConverter.convertFromSearchHit(hit));
 
-    for (val innerHit : hit.getInnerHits().get(CHILD_TYPE)) {
+    for (val innerHit : hit.getInnerHits().get(CALL)) {
       pair.call(callSearchHitConverter.convertFromSearchHit(innerHit));
     }
     return pair.build();
@@ -130,7 +129,7 @@ public class EsVariantCallPairConverterJson {
     }
     return object()
         .with(variantJsonObjectNodeConverter.convertToObjectNode(t.getVariant()))
-        .with(CHILD_TYPE, array)
+        .with(CALLS, array)
         .end();
   }
 

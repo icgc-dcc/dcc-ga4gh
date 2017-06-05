@@ -52,11 +52,7 @@ public class Loader {
   private static boolean skipPortatMetadata(PortalMetadata portalMetadata, LongCounter counter){
     val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
     val out = workflowType == WorkflowTypes.CONSENSUS || portalMetadata.getFileSize() > 7000000 ;
-    if (counter.getCount() < 15){
-      counter.preIncr();
-      return false;
-    }
-    return true;
+    return false;
   }
 
   public static void main(String[] args) throws IOException {

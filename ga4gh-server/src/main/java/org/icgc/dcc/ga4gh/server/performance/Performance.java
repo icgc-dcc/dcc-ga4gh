@@ -282,10 +282,10 @@ public class Performance implements Runnable {
 
           count++;
           epochTime += watch.elapsed(TimeUnit.MICROSECONDS);
-          totalTime += epochTime;
-          totalCount += numSamples;
           watch.reset();
         }
+        totalTime += epochTime;
+        totalCount += numSamples;
 
         val avgEpochTimeUs = epochTime / (double) numSamples;
         val avgEpochTimeMs = epochTime / (double) (numSamples * 1000);
@@ -295,8 +295,8 @@ public class Performance implements Runnable {
       }
     }
     writer.close();
-    val avgTotalTimeUs = totalTime/ (double) totalCount;
-    val avgTotalTimeMs = totalTime/ (double) (totalCount* 1000);
+    val avgTotalTimeUs = totalTime/ (double)totalCount;
+    val avgTotalTimeMs = totalTime/ (double)(totalCount * 1000);
     log.info("NumSamples: [{}], TotalTimeForSamples: {}, Average total time (microseconds): {}, Average total time (miliseconds): {}",
         totalCount, totalTime,
         avgTotalTimeUs, avgTotalTimeMs);
