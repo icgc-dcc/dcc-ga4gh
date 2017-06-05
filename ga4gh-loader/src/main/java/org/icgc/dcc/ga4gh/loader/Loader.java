@@ -35,6 +35,7 @@ import java.io.IOException;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Objects.isNull;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
+import static org.icgc.dcc.ga4gh.common.Configs.createPublicFinalStaticFieldsDescription;
 import static org.icgc.dcc.ga4gh.loader.CallSetAccumulator.createCallSetAccumulator;
 import static org.icgc.dcc.ga4gh.loader.Config.FILTER_VARIANTS;
 import static org.icgc.dcc.ga4gh.loader.VariantFilter.createVariantFilter;
@@ -59,7 +60,7 @@ public class Loader {
   }
 
   public static void main(String[] args) throws IOException {
-    log.info("Config:\n"+Config.toConfigString());
+    log.info("Config:\n"+ createPublicFinalStaticFieldsDescription(Config.class));
     val variantFilter = createVariantFilter(!FILTER_VARIANTS);
     val storage = Factory.buildStorageFactory().getStorage();
     val localFileRestorerFactory = Factory.buildFileObjectRestorerFactory();

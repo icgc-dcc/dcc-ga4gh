@@ -25,6 +25,7 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsConsensusCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
+import org.icgc.dcc.ga4gh.common.types.IndexModes;
 import org.icgc.dcc.ga4gh.server.reference.ReferenceGenome;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -43,16 +44,7 @@ public class ServerConfig {
   public static final String FASTA_FILE_LOC = "target/GRCh37.fasta";
   public static final TimeValue DEFAULT_SCROLL_TIMEOUT = TimeValue.timeValueMinutes(5);
   public static final int DEFAULT_PAGE_SIZE  = 10;
-
-  public static String toConfigString() {
-    return String.format(
-        "INDEX_NAME: %s"
-            + "\nNODE_ADDRESS: %s"
-            + "\nNODE_PORT: %s",
-        INDEX_NAME,
-        NODE_ADDRESS,
-        NODE_PORT);
-  }
+  public static final IndexModes INDEX_MODE = IndexModes.valueOf(getProperty("index_mode", "NESTED"));
 
   @Bean
   public ReferenceGenome referenceGenome(@Value("${reference.fastaFile:" + FASTA_FILE_LOC + "}") String fastaFile) {
@@ -75,10 +67,20 @@ public class ServerConfig {
   }
 
   @Bean
+  public EsConsensusCallConverterJson esConsensusCallConverterJson(){
+    return new EsConsensusCallConverterJson();
+  }
+
+  @Bean
   public EsVariantCallPairConverterJson esVariantCallPairConverterJson() {
     val varConv = new EsVariantConverterJson();
     val callConv = new EsConsensusCallConverterJson();
     return new EsVariantCallPairConverterJson(varConv, callConv, varConv, callConv);
+  }
+
+  @Bean
+  public IndexModes indexMode(){
+    return INDEX_MODE;
   }
 
 }

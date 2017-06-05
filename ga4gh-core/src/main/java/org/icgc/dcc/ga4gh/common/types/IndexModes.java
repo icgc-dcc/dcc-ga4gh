@@ -16,7 +16,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.icgc.dcc.ga4gh.loader.indexing;
+package org.icgc.dcc.ga4gh.common.types;
 
 public enum IndexModes {
   PARENT_CHILD,

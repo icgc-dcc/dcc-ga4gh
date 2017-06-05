@@ -60,8 +60,8 @@ import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VCF_HEADER;
 import static org.icgc.dcc.ga4gh.loader.Config.MONITOR_INTERVAL_COUNT;
-import static org.icgc.dcc.ga4gh.loader.indexing.IndexModes.NESTED;
-import static org.icgc.dcc.ga4gh.loader.indexing.IndexModes.PARENT_CHILD;
+import static org.icgc.dcc.ga4gh.common.types.IndexModes.NESTED;
+import static org.icgc.dcc.ga4gh.common.types.IndexModes.PARENT_CHILD;
 import static org.icgc.dcc.ga4gh.loader.utils.counting.CounterMonitor.createCounterMonitor;
 
 @Slf4j

@@ -23,19 +23,24 @@ import ga4gh.VariantServiceOuterClass.SearchVariantsRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Repository;
 
 import static ga4gh.VariantServiceOuterClass.SearchVariantsRequest.PAGE_SIZE_FIELD_NUMBER;
+import static org.apache.lucene.search.join.ScoreMode.None;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static org.elasticsearch.index.query.QueryBuilders.parentId;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.icgc.dcc.common.core.util.Joiners.DOT;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.CALL_SET_ID;
@@ -43,6 +48,7 @@ import static org.icgc.dcc.ga4gh.common.PropertyNames.END;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.REFERENCE_NAME;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.START;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALLS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_PAGE_SIZE;
@@ -62,32 +68,66 @@ public class VariantRepository {
 
   @NonNull private final Client client;
 
-  public SearchResponse findVariants(@NonNull SearchVariantsRequest request) {
+  public GetResponse findNestedVariantById(@NonNull GetVariantRequest request) {
+    return client.prepareGet(INDEX_NAME, VARIANT, request.getVariantId()).get();
+  }
+
+  public SearchResponse findParentChildVariantById(@NonNull GetVariantRequest request) {
+    val query = parentId(CALL, request.getVariantId());
+    return client.prepareSearch(INDEX_NAME)
+        .setTypes(CALL)
+        .setSize(10000)
+        .setQuery(query)
+        .get();
+  }
+
+  public SearchResponse findNestedVariants(@NonNull SearchVariantsRequest request) {
     val size = resolvePageSize(request);
-    if (isNewRequest(request)){
+    if (isNewRequest(request)) {
       val searchRequestBuilder = createScrollSearchRequest(size, DEFAULT_SCROLL_TIMEOUT);
-      val childBoolQuery = boolQuery()
-                  .must(
-                      matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
-      request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
-      val filteredChildBoolQuery = boolQuery().filter(childBoolQuery);
-
-      val boolQuery = boolQuery()
-          .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
-          .must(rangeQuery(START).gte(request.getStart()))
-          .must(rangeQuery(END).lt(request.getEnd()))
-          .must(nestedQuery(NESTED_TYPE,filteredChildBoolQuery,ScoreMode.None));
-
+      val boolQuery = createCoreQuery(request)
+          .must(nestedQuery(NESTED_TYPE, createNestedQuery(request), None));
       val filteredParentBoolQuery = boolQuery().filter(boolQuery);
-
       return searchRequestBuilder.setQuery(filteredParentBoolQuery).get();
     } else {
       return client.prepareSearchScroll(request.getPageToken()).setScroll(DEFAULT_SCROLL_TIMEOUT).get();
     }
   }
 
-  public GetResponse findVariantById(@NonNull GetVariantRequest request) {
-    return client.prepareGet(INDEX_NAME, VARIANT, request.getVariantId()).get();
+  public SearchResponse findParentChildVariants(@NonNull SearchVariantsRequest request) {
+    val size = resolvePageSize(request);
+    if (isNewRequest(request)) {
+      val searchRequestBuilder = createScrollSearchRequest(size, DEFAULT_SCROLL_TIMEOUT);
+      val boolQuery = createCoreQuery(request)
+          .must(hasChildQuery(CALL, createParentChildQuery(request), None).innerHit(new InnerHitBuilder()));
+      val filteredParentBoolQuery = boolQuery().filter(boolQuery);
+      return searchRequestBuilder.setQuery(filteredParentBoolQuery).get();
+    } else {
+      return client.prepareSearchScroll(request.getPageToken()).setScroll(DEFAULT_SCROLL_TIMEOUT).get();
+    }
+  }
+
+  private BoolQueryBuilder createCoreQuery(SearchVariantsRequest request){
+    return  boolQuery()
+        .must(matchQuery(REFERENCE_NAME, request.getReferenceName()))
+        .must(rangeQuery(START).gte(request.getStart()))
+        .must(rangeQuery(END).lt(request.getEnd()));
+  }
+
+  private QueryBuilder createParentChildQuery(SearchVariantsRequest request){
+    val childBoolQuery = boolQuery()
+        .must(
+            matchQuery(VARIANT_SET_IDS, request.getVariantSetId()));
+    request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(CALL_SET_ID, id)));
+    return boolQuery().filter(childBoolQuery);
+  }
+
+  private QueryBuilder createNestedQuery(SearchVariantsRequest request){
+    val childBoolQuery = boolQuery()
+        .must(
+            matchQuery(getNestedFieldName(VARIANT_SET_IDS), request.getVariantSetId()));
+    request.getCallSetIdsList().forEach(id -> childBoolQuery.should(matchQuery(getNestedFieldName(CALL_SET_ID), id)));
+    return boolQuery().filter(childBoolQuery);
   }
 
   private SearchRequestBuilder createSearchRequest(final int size) {
@@ -101,7 +141,6 @@ public class VariantRepository {
     return createSearchRequest(size)
         .setScroll(timeValue);
   }
-
 
   private static String getNestedFieldName(String fieldName){
     return DOT.join(NESTED_TYPE, fieldName);

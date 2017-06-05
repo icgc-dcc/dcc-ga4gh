@@ -18,24 +18,17 @@
 
 package org.icgc.dcc.ga4gh.loader;
 
-import com.google.common.collect.Lists;
-import lombok.SneakyThrows;
-import lombok.val;
-import org.icgc.dcc.ga4gh.loader.indexing.IndexModes;
+import org.icgc.dcc.ga4gh.common.types.IndexModes;
 
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
-import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static org.icgc.dcc.ga4gh.common.MiscNames.FALSE;
 import static org.icgc.dcc.ga4gh.common.MiscNames.TRUE;
@@ -87,26 +80,6 @@ public class Config {
   public static final Path PC_VARIANT_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("variant_pc.mapping.json");
   public static final Path PC_CALL_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("call_pc.mapping.json");
   public static final IndexModes INDEX_MODE = IndexModes.valueOf(getProperty("index_mode", "NESTED"));
-  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants-"+CURRENT_TIMESTAMP+"-"+INDEX_MODE.name());
-
-  public static class FieldComparator implements Comparator<Field>{
-    @Override public int compare(Field o1, Field o2) {
-      return o1.getName().compareTo(o2.getName());
-    }
-  }
-
-  @SneakyThrows
-  public static String toConfigString() {
-    val sb = new StringBuilder();
-    val list = Lists.newArrayList(Config.class.getFields());
-    Collections.sort(list, new FieldComparator() );
-
-    for (val field : list){
-      val fieldName = field.getName();
-      val fieldValue = field.get(null);
-      sb.append(format("%s : %s\n", fieldName, fieldValue));
-    }
-    return sb.toString();
-  }
+  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants-"+CURRENT_TIMESTAMP+"-"+INDEX_MODE.name().toLowerCase());
 
 }

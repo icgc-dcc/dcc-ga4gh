@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.client.Client;
+import org.icgc.dcc.ga4gh.common.types.IndexModes;
 
 import java.nio.file.Path;
 import java.util.Map;

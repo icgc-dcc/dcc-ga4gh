@@ -22,6 +22,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.PropertyNames;
 import org.icgc.dcc.ga4gh.common.SearchHits;
 import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
@@ -33,16 +34,13 @@ import java.util.Set;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
-import static org.icgc.dcc.ga4gh.common.TypeNames.CALLS;
+import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
 
 @Builder
 @RequiredArgsConstructor
-public class EsVariantCallPairConverterJson implements
-    JsonObjectNodeConverter<EsVariantCallPair>,
-    SearchHitConverter<EsVariantCallPair> {
+public class EsVariantCallPairConverterJson {
 
-    private static final String NESTED_TYPE = CALLS;
-
+  private static final String CHILD_TYPE = CALL; //CALLS;
 
   @NonNull
   private final SearchHitConverter<EsVariant> variantSearchHitConverter;
@@ -59,9 +57,12 @@ public class EsVariantCallPairConverterJson implements
   /**
    * Converts ALL calls from the source to a EsVariantCallPair
    */
-  @Override
-  public EsVariantCallPair convertFromSource(Map<String, Object> source) {
-    val calls = SearchHits.convertSourceToObjectList(source, NESTED_TYPE);
+  public EsVariantCallPair convertFromNestedSource(Map<String, Object> source) {
+    return convertFromSource(source, CHILD_TYPE);
+  }
+
+  public EsVariantCallPair convertFromSource(Map<String, Object> source, String childType){
+    val calls = SearchHits.convertSourceToObjectList(source, childType);
 
     val pair = EsVariantCallPair.builder()
         .variant(variantSearchHitConverter.convertFromSource(source));
@@ -74,11 +75,21 @@ public class EsVariantCallPairConverterJson implements
     return pair.build();
   }
 
+  public EsVariantCallPair convertFromSource(Map<String, Object> source){
+    return EsVariantCallPair.builder()
+        .variant(variantSearchHitConverter.convertFromSource(source))
+        .build();
+  }
+
   /**
    * Only converts calls that have the specified allowedCallSetIds, and constructs a EsVariantCallPair
    */
-  public EsVariantCallPair convertFromSource(Map<String, Object> source, Set<String> allowedCallsetIds) {
-    val calls = SearchHits.convertSourceToObjectList(source, NESTED_TYPE);
+  public EsVariantCallPair convertFromNestedSource(Map<String, Object> source, Set<String> allowedCallsetIds) {
+    return convertFromSource(source, allowedCallsetIds, CHILD_TYPE);
+  }
+
+  public EsVariantCallPair convertFromSource(Map<String, Object> source, Set<String> allowedCallsetIds, String childType) {
+    val calls = SearchHits.convertSourceToObjectList(source, childType);
 
     val pair = EsVariantCallPair.builder()
         .variant(variantSearchHitConverter.convertFromSource(source));
@@ -92,6 +103,16 @@ public class EsVariantCallPairConverterJson implements
     return pair.build();
   }
 
+  public EsVariantCallPair convertInnerHitsFromSearchHit(SearchHit hit) {
+    val pair = EsVariantCallPair.builder()
+        .variant(variantSearchHitConverter.convertFromSearchHit(hit));
+
+    for (val innerHit : hit.getInnerHits().get(CHILD_TYPE)) {
+      pair.call(callSearchHitConverter.convertFromSearchHit(innerHit));
+    }
+    return pair.build();
+  }
+
   private static boolean sourceHasCallSet(Map<String, Object> source, Set<String> allowedCallsetIds){
     if (allowedCallsetIds.isEmpty()){
       return false;
@@ -102,7 +123,6 @@ public class EsVariantCallPairConverterJson implements
   }
 
 
-  @Override
   public ObjectNode convertToObjectNode(EsVariantCallPair t) {
     val array = array();
     for (val call : t.getCalls()) {
@@ -110,7 +130,7 @@ public class EsVariantCallPairConverterJson implements
     }
     return object()
         .with(variantJsonObjectNodeConverter.convertToObjectNode(t.getVariant()))
-        .with(NESTED_TYPE, array)
+        .with(CHILD_TYPE, array)
         .end();
   }
 

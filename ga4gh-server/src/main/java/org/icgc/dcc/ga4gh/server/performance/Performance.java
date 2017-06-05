@@ -44,6 +44,7 @@ import org.icgc.dcc.ga4gh.common.model.converters.EsConsensusCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
+import org.icgc.dcc.ga4gh.common.types.IndexModes;
 import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.icgc.dcc.ga4gh.server.performance.random.SVRRandomGenerator;
 import org.icgc.dcc.ga4gh.server.variant.CallSetRepository;
@@ -61,6 +62,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
 import static org.icgc.dcc.common.core.util.Joiners.SEMICOLON;
+import static org.icgc.dcc.ga4gh.common.Configs.createPublicFinalStaticFieldsDescription;
 import static org.icgc.dcc.ga4gh.server.Factory.newClient;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.INDEX_NAME;
 import static org.icgc.dcc.ga4gh.server.performance.Performance.MinMax.createMinMax;
@@ -147,7 +149,7 @@ public class Performance implements Runnable {
     return null;
   }
 
-  private static VariantService buildVariantService(Client client){
+  private static VariantService buildVariantService(Client client, IndexModes indexMode){
     val variantRepo = new VariantRepository(client);
     val headerRepo = new HeaderRepository(client);
     val callSetRepo = new CallSetRepository(client);
@@ -161,7 +163,7 @@ public class Performance implements Runnable {
 
     return new VariantService(variantRepo, headerRepo,
         callSetRepo, variantSetRepo, esVariantSetConverter,
-        esCallSetConverter, esVariantCallPairConverter);
+        esCallSetConverter, esVariantCallPairConverter, esCallConverter,indexMode );
   }
 
   public static void main(String[] args){
@@ -175,7 +177,7 @@ public class Performance implements Runnable {
 
 
 
-    log.info("Config: \n{}", ServerConfig.toConfigString());
+    log.info("Config: \n{}", createPublicFinalStaticFieldsDescription(ServerConfig.class));
     try {
       val esClient = newClient();
       val client = createSimpleSearchClient(host,port);

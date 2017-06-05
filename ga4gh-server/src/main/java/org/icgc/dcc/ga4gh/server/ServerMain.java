@@ -17,18 +17,19 @@
  */
 package org.icgc.dcc.ga4gh.server;
 
+import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.icgc.dcc.ga4gh.common.Configs.createPublicFinalStaticFieldsDescription;
 
 @SpringBootApplication
 @Slf4j
 public class ServerMain {
 
   public static void main(String[] args) {
-    log.info("ServerConfig: {}", ServerConfig.toConfigString());
+    log.info("ServerConfig: \n{}", createPublicFinalStaticFieldsDescription(ServerConfig.class));
     SpringApplication.run(ServerMain.class, args);
   }
 

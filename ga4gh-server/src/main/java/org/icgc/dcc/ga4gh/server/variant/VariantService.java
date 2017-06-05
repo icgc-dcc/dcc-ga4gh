@@ -40,10 +40,12 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.icgc.dcc.ga4gh.common.model.converters.EsCallSetConverterJson;
+import org.icgc.dcc.ga4gh.common.model.converters.EsConsensusCallConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantCallPairConverterJson;
 import org.icgc.dcc.ga4gh.common.model.converters.EsVariantSetConverterJson;
 import org.icgc.dcc.ga4gh.common.model.es.EsConsensusCall;
 import org.icgc.dcc.ga4gh.common.model.es.EsVariantCallPair;
+import org.icgc.dcc.ga4gh.common.types.IndexModes;
 import org.icgc.dcc.ga4gh.server.util.Protobufs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,12 +54,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
+import static org.icgc.dcc.ga4gh.common.types.IndexModes.NESTED;
+import static org.icgc.dcc.ga4gh.common.types.IndexModes.PARENT_CHILD;
 
 @Slf4j
 @Service
@@ -65,71 +71,98 @@ import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
 public class VariantService {
 
   private static final Set<String> EMPTY_STRING_SET = newHashSet();
-  private static final Variant EMPTY_VARIANT = Variant.newBuilder().build();
+  private static final Variant.Builder EMPTY_VARIANT = Variant.newBuilder();
   private static final VariantSet EMPTY_VARIANT_SET = VariantSet.newBuilder().build();
   private static final CallSet EMPTY_CALL_SET = CallSet.newBuilder().build();
   private final static long DEFAULT_CREATED_VALUE = 0;
   private final static long DEFAULT_UPDATED_VALUE = 0;
+  private final static int FIRST_ELEMENT_POS= 0;
   private static final List<Integer> DEFAULT_CONSENSUS_NON_REF_ALLELES = newArrayList(-1);
   private static final double DEFAULT_CONSENSUS_GENOTYPE_LIKELIHOOD = -1.0;
   private static final boolean DEFAULT_CONSENSUS_GENOTYPE_PHASED = false;
 
 
-  @NonNull
-  private final VariantRepository variantRepository;
-
-  @NonNull
-  private final HeaderRepository headerRepository;
-
-  @NonNull
-  private final CallSetRepository callsetRepository;
-
-  @NonNull
-  private final VariantSetRepository variantSetRepository;
-
-  @NonNull
-  private final EsVariantSetConverterJson esVariantSetConverter;
-
-  @NonNull
-  private final EsCallSetConverterJson esEsCallSetConverter;
-
-  @NonNull
-  private final EsVariantCallPairConverterJson esVariantCallPairConverter;
+  @NonNull private final VariantRepository variantRepository;
+  @NonNull private final HeaderRepository headerRepository;
+  @NonNull private final CallSetRepository callsetRepository;
+  @NonNull private final VariantSetRepository variantSetRepository;
+  @NonNull private final EsVariantSetConverterJson esVariantSetConverter;
+  @NonNull private final EsCallSetConverterJson esEsCallSetConverter;
+  @NonNull private final EsVariantCallPairConverterJson esVariantCallPairConverter;
+  @NonNull private final EsConsensusCallConverterJson esConsensusCallConverterJson;
+  @NonNull private final IndexModes indexMode;
 
   /*
    * Variant Processing
    */
   public Variant getVariant(@NonNull GetVariantRequest request) {
     log.info("VariantId to Get: {}", request.getVariantId());
-    GetResponse response = variantRepository.findVariantById(request);
-    if (response.isSourceEmpty()) {
-      return EMPTY_VARIANT;
+    if (indexMode == NESTED){
+      val response = variantRepository.findNestedVariantById(request);
+      if (response.isSourceEmpty()) {
+        return EMPTY_VARIANT.build();
+      } else {
+        return convertToVariant(response.getId(), response.getSource()).build();
+      }
+    } else if (indexMode == PARENT_CHILD){
+      val variantResponse = variantRepository.findNestedVariantById(request);
+      val callResponse = variantRepository.findParentChildVariantById(request);
+      if (variantResponse.isSourceEmpty()){
+        return EMPTY_VARIANT.build();
+      } else {
+        val variantBuilder =  convertToVariant(variantResponse.getId(), variantResponse.getSource());
+
+        if (callResponse.getHits().getTotalHits() > 0) {
+          variantBuilder
+              .addAllCalls(
+                  stream(callResponse.getHits().getHits())
+                      .map(esConsensusCallConverterJson::convertFromSearchHit)
+                      .map(this::convertToCall)
+                      .collect(toImmutableList()));
+        }
+        return variantBuilder.build();
+      }
     } else {
-      return convertToVariant(response.getId(), response.getSource());
+     throw new IllegalStateException(format("The indexMode [%s] is not supported", indexMode.name())) ;
     }
   }
 
   public SearchVariantsResponse searchVariants(@NonNull SearchVariantsRequest request) {
-      val response = variantRepository.findVariants(request);
-      if (request.getCallSetIdsCount() > 0){
-        val callsetIds = newHashSet(((UnmodifiableLazyStringList) request.getCallSetIdsList()).getUnmodifiableView());
-        return buildSearchVariantResponse(response, callsetIds);
-      } else {
-        return buildSearchVariantResponse(response, EMPTY_STRING_SET);
-      }
+    SearchResponse response;
+    if (indexMode == NESTED){
+      response = variantRepository.findNestedVariants(request);
+    } else if (indexMode == PARENT_CHILD){
+      response = variantRepository.findParentChildVariants(request);
+    } else {
+      throw new IllegalStateException(format("The indexMode [%s] is not supported", indexMode.name())) ;
+    }
+    if (request.getCallSetIdsCount() > 0){
+      val callsetIds = newHashSet(((UnmodifiableLazyStringList) request.getCallSetIdsList()).getUnmodifiableView());
+      return buildSearchVariantResponse(response, callsetIds);
+    } else {
+      return buildSearchVariantResponse(response, EMPTY_STRING_SET);
+    }
   }
 
-  private Variant convertToVariant(final String id, @NonNull Map<String, Object> source, Set<String> allowedCallSetIds) {
-    val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source, allowedCallSetIds);
+  private Variant.Builder convertToVariant(final String id,
+      @NonNull Map<String, Object> source, Set<String> allowedCallSetIds) {
+      val esVariantCallPair = esVariantCallPairConverter.convertFromNestedSource(source, allowedCallSetIds);
     return convertToVariant(id, esVariantCallPair);
   }
 
-  private Variant convertToVariant(final String id, @NonNull Map<String, Object> source) {
-    val esVariantCallPair = esVariantCallPairConverter.convertFromSource(source);
+  private Variant.Builder convertToVariant(final String id, @NonNull Map<String, Object> source) {
+    EsVariantCallPair esVariantCallPair;
+    if (indexMode == NESTED){
+      esVariantCallPair = esVariantCallPairConverter.convertFromNestedSource(source);
+    } else if (indexMode ==  PARENT_CHILD) {
+      esVariantCallPair = esVariantCallPairConverter.convertFromSource(source);
+    } else {
+      throw new IllegalStateException(format("The index mode [%s] is not implemented", indexMode.name()));
+    }
     return convertToVariant(id, esVariantCallPair);
   }
 
-  private Variant convertToVariant(String id, EsVariantCallPair esVariantCallPair) {
+  private Variant.Builder convertToVariant(String id, EsVariantCallPair esVariantCallPair) {
     val esVariant = esVariantCallPair.getVariant();
 
     val variantBuilder = Variant.newBuilder()
@@ -142,15 +175,14 @@ public class VariantService {
         .setCreated(DEFAULT_CREATED_VALUE)
         .setUpdated(DEFAULT_UPDATED_VALUE);
 
-
-    esVariantCallPair.getCalls()
-        .stream()
-        .map(this::convertToCall)
-        .forEach(variantBuilder::addCalls);
-    return variantBuilder.build();
+      esVariantCallPair.getCalls()
+          .stream()
+          .map(this::convertToCall)
+          .forEach(variantBuilder::addCalls);
+    return variantBuilder;
   }
 
-  private Variant convertToVariant(@NonNull SearchHit hit) {
+  private Variant.Builder convertToVariant(@NonNull SearchHit hit) {
     if (hit.hasSource()) {
       return convertToVariant(hit.getId(), hit.getSource());
     } else {
@@ -158,7 +190,17 @@ public class VariantService {
     }
   }
 
-  private Variant convertToVariant(@NonNull SearchHit hit, Set<String> allowedCallSetIds) {
+  private Variant.Builder convertPCToVariant(@NonNull SearchHit hit, Set<String> allowedCallSetIds){
+    if (hit.hasSource()) {
+      val variantCallPair = esVariantCallPairConverter.convertInnerHitsFromSearchHit(hit);
+      return convertToVariant(hit.id(), variantCallPair);
+    } else {
+      return EMPTY_VARIANT;
+    }
+
+  }
+
+  private Variant.Builder convertToVariant(@NonNull SearchHit hit, Set<String> allowedCallSetIds) {
     if (hit.hasSource()) {
       return convertToVariant(hit.getId(), hit.getSource(), allowedCallSetIds);
     } else {
@@ -207,11 +249,19 @@ public class VariantService {
 
   private SearchVariantsResponse buildSearchVariantResponse(@NonNull SearchResponse searchResponse, Set<String> allowedCallSetIds) {
     val pageToken = searchResponse.getScrollId();
+    Function<SearchHit, Variant> functor;
+    if (indexMode == NESTED){
+      functor = x -> convertToVariant(x, allowedCallSetIds).build();
+    } else if (indexMode==PARENT_CHILD){
+      functor = x -> convertPCToVariant(x,allowedCallSetIds).build();
+    } else {
+      throw new IllegalStateException(format("The index mode [%s] is not implemented", indexMode.name()));
+    }
     return SearchVariantsResponse.newBuilder()
         .setNextPageToken(pageToken)
         .addAllVariants(
             stream(searchResponse.getHits())
-            .map(x -> convertToVariant(x, allowedCallSetIds))
+            .map(functor)
             .collect(toImmutableList())
         )
         .build();
