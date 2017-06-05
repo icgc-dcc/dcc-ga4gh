@@ -48,8 +48,6 @@ import static org.icgc.dcc.ga4gh.loader.utils.idstorage.storage.impl.RamMapStora
 @Slf4j
 public class Loader {
 
-  private int counter = 0;
-
   private static boolean skipPortatMetadata(PortalMetadata portalMetadata, LongCounter counter){
     val workflowType = WorkflowTypes.parseMatch(portalMetadata.getPortalFilename().getWorkflow(), false);
     val out = workflowType == WorkflowTypes.CONSENSUS || portalMetadata.getFileSize() > 7000000 ;
@@ -61,6 +59,7 @@ public class Loader {
   }
 
   public static void main(String[] args) throws IOException {
+    log.info("Config:\n"+Config.toConfigString());
     val variantFilter = createVariantFilter(!FILTER_VARIANTS);
     val storage = Factory.buildStorageFactory().getStorage();
     val localFileRestorerFactory = Factory.buildFileObjectRestorerFactory();
@@ -110,8 +109,7 @@ public class Loader {
     try (val client = Factory.newClient();
         val writer = buildDocumentWriter(client)) {
 
-//      val ctx = Factory.buildNestedIndexCreatorContext(client);
-      val ctx = Factory.buildPCIndexCreatorContext(client);
+      val ctx = Factory.buildIndexCreatorContext(client);
       val indexer2 = buildIndexer2(client, writer, ctx);
       indexer2.prepareIndex();
 

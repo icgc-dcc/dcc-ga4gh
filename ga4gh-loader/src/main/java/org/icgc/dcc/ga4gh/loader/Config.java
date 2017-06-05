@@ -18,15 +18,24 @@
 
 package org.icgc.dcc.ga4gh.loader;
 
+import com.google.common.collect.Lists;
+import lombok.SneakyThrows;
+import lombok.val;
+import org.icgc.dcc.ga4gh.loader.indexing.IndexModes;
+
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
+import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static org.icgc.dcc.ga4gh.common.MiscNames.FALSE;
 import static org.icgc.dcc.ga4gh.common.MiscNames.TRUE;
@@ -38,7 +47,6 @@ public class Config {
   public static final LoaderModes LOADER_MODE = parseLoaderMode(parseInt(getProperty("loader_mode", "3")));
   public static final String PARENT_CHILD_INDEX_NAME = getProperty("parent_child_index_name", "dcc-variants-pc");
   public static final String NESTED_INDEX_NAME = getProperty("nested_index_name", "dcc-variants-nested");
-  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants-"+CURRENT_TIMESTAMP);
   public static final int NESTED_SCROLL_SIZE = parseInt(getProperty("nested_scroll_size", "1000"));
   public static final String NODE_ADDRESS = getProperty("node_address", "localhost");
   public static final int NODE_PORT = parseInt(getProperty("node_port", "9300"));
@@ -78,54 +86,27 @@ public class Config {
   public static final Path NESTED_VARIANT_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("variant_nested.mapping.json");
   public static final Path PC_VARIANT_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("variant_pc.mapping.json");
   public static final Path PC_CALL_INDEX_MAPPING_FILE = MAPPINGS_DIR.resolve("call_pc.mapping.json");
+  public static final IndexModes INDEX_MODE = IndexModes.valueOf(getProperty("index_mode", "NESTED"));
+  public static final String INDEX_NAME = getProperty("index_name", "dcc-variants-"+CURRENT_TIMESTAMP+"-"+INDEX_MODE.name());
 
-  private static final int MAX_NUM_SEGMENTS = 1;
+  public static class FieldComparator implements Comparator<Field>{
+    @Override public int compare(Field o1, Field o2) {
+      return o1.getName().compareTo(o2.getName());
+    }
+  }
 
-
+  @SneakyThrows
   public static String toConfigString() {
-    return String.format("PARENT_CHILD_INDEX_NAME: %s"
-        + "\nNESTED_INDEX_NAME: %s"
-        + "\nNESTED_SCROLL_SIZE: %s"
-        + "\nLOADER_MODE: %s"
-        + "\nNODE_ADDRESS: %s"
-        + "\nNODE_PORT: %s"
-        + "\nES_URL: %s"
-        + "\nTOKEN: %s"
-        + "\nSTORAGE_API: %s"
-        + "\nPORTAL_API: %s"
-        + "\nBULK_NUM_THREADS: %s"
-        + "\nBULK_SIZE_MB: %s"
-        + "\nPERSIST_MODE: %s"
-        + "\nSORT_MODE: %s"
-        + "\nASCENDING_MODE: %s"
-        + "\nDATA_FETCHER_MAX_FILESIZE_BYTES: %s"
-        + "\nOUTPUT_VCF_STORAGE_DIR: %s"
-        + "\nFILE_META_DATA_STORE_FILENAME: %s"
-        + "\nUSE_MAP_DB: %s"
-        + "\nMONITOR_INTERVAL_COUNT: %s"
-        + "\nSTORAGE_BYPASS_MD5_CHECK: %s",
-        PARENT_CHILD_INDEX_NAME,
-        NESTED_INDEX_NAME,
-        NESTED_SCROLL_SIZE,
-        LOADER_MODE.name() + " (" + LOADER_MODE.getModeId() + ")",
-        NODE_ADDRESS,
-        NODE_PORT,
-        ES_URL,
-        TOKEN,
-        STORAGE_API,
-        PORTAL_API,
-        BULK_NUM_THREADS,
-        BULK_SIZE_MB,
-        STORAGE_PERSIST_MODE,
-        SORT_MODE,
-        ASCENDING_MODE,
-        DATA_FETCHER_MAX_FILESIZE_BYTES,
-        STORAGE_OUTPUT_VCF_STORAGE_DIR,
-        DEFAULT_FILE_META_DATA_STORE_FILENAME,
-        USE_MAP_DB,
-        MONITOR_INTERVAL_COUNT,
-        STORAGE_BYPASS_MD5_CHECK);
+    val sb = new StringBuilder();
+    val list = Lists.newArrayList(Config.class.getFields());
+    Collections.sort(list, new FieldComparator() );
 
+    for (val field : list){
+      val fieldName = field.getName();
+      val fieldValue = field.get(null);
+      sb.append(format("%s : %s\n", fieldName, fieldValue));
+    }
+    return sb.toString();
   }
 
 }

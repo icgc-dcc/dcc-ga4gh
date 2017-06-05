@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Properties;
 
 import static com.google.common.io.Resources.getResource;
+import static java.lang.String.format;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALL;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
@@ -74,6 +75,7 @@ import static org.icgc.dcc.ga4gh.loader.Config.BULK_NUM_THREADS;
 import static org.icgc.dcc.ga4gh.loader.Config.BULK_SIZE_MB;
 import static org.icgc.dcc.ga4gh.loader.Config.CALLSET_INDEX_MAPPING_FILE;
 import static org.icgc.dcc.ga4gh.loader.Config.DEFAULT_MAPDB_ALLOCATION;
+import static org.icgc.dcc.ga4gh.loader.Config.INDEX_MODE;
 import static org.icgc.dcc.ga4gh.loader.Config.INDEX_NAME;
 import static org.icgc.dcc.ga4gh.loader.Config.INDEX_SETTINGS_JSON_FILENAME;
 import static org.icgc.dcc.ga4gh.loader.Config.NESTED_VARIANT_INDEX_MAPPING_FILE;
@@ -154,6 +156,17 @@ public class Factory {
     return createDocumentWriter(client, INDEX_NAME, BULK_SIZE_MB, BULK_NUM_THREADS);
   }
 
+  public static IndexCreatorContext buildIndexCreatorContext(Client client) throws IllegalStateException {
+    if (INDEX_MODE == NESTED){
+      return buildNestedIndexCreatorContext(client);
+    } else if (INDEX_MODE == PARENT_CHILD){
+      return buildPCIndexCreatorContext(client);
+    } else {
+      throw new IllegalStateException(
+          format("The indexMode [%s] has no factory builder for index creator context",
+              INDEX_MODE.name()));
+    }
+  }
   public static IndexCreatorContext buildNestedIndexCreatorContext(Client client) {
     return createIndexCreatorContext(client,INDEX_NAME,INDEX_SETTINGS_JSON_FILENAME,true, NESTED)
         .add(CALL_SET, CALLSET_INDEX_MAPPING_FILE)
