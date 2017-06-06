@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.ga4gh.server.variant;
 
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import ga4gh.MetadataServiceOuterClass.SearchDatasetsRequest;
 import ga4gh.VariantServiceOuterClass.GetVariantSetRequest;
 import ga4gh.VariantServiceOuterClass.SearchVariantSetsRequest;
@@ -34,11 +35,13 @@ import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.springframework.stereotype.Repository;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.DATA_SET_ID;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.getAggNameForProperty;
 import static org.icgc.dcc.ga4gh.common.TypeNames.VARIANT_SET;
+import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_PAGE_SIZE;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_SCROLL_TIMEOUT;
 
 /**
@@ -50,6 +53,10 @@ public class VariantSetRepository {
 
   public static final String BY_DATA_SET_ID = getAggNameForProperty(DATA_SET_ID);
 
+  private static final FieldDescriptor VARIANT_SETS_PAGE_SIZE_FIELD_DESCRIPTOR = SearchVariantSetsRequest.getDescriptor().findFieldByNumber(SearchVariantSetsRequest.PAGE_SIZE_FIELD_NUMBER);
+
+  private static final FieldDescriptor DATASETS_PAGE_SIZE_FIELD_DESCRIPTOR = SearchDatasetsRequest.getDescriptor().findFieldByNumber(SearchDatasetsRequest.PAGE_SIZE_FIELD_NUMBER);
+
   @NonNull
   private final Client client;
 
@@ -59,13 +66,15 @@ public class VariantSetRepository {
    * then might have to create a mapping for dataSets in the index
    */
   public SearchResponse findAllDataSets(@NonNull SearchDatasetsRequest request) {
-    val searchRequestBuilder = createSearchRequest(request.getPageSize());
+    val pageSize = resolvePageSize(request);
+    val searchRequestBuilder = createSearchRequest(0);
     val boolQuery = boolQuery()
         .must(
             matchAllQuery());
     val agg = AggregationBuilders
         .terms(BY_DATA_SET_ID)
-        .field(DATA_SET_ID);
+        .field(DATA_SET_ID)
+        .size(pageSize);
     return searchRequestBuilder
         .setQuery(boolQuery)
         .addAggregation(agg)
@@ -73,8 +82,9 @@ public class VariantSetRepository {
   }
 
   public SearchResponse findVariantSets(@NonNull SearchVariantSetsRequest request) {
+    val pageSize = resolvePageSize(request);
     if (isNewRequest(request)){
-      val searchRequestBuilder = createScrollSearchRequest(request.getPageSize(), DEFAULT_SCROLL_TIMEOUT);
+      val searchRequestBuilder = createScrollSearchRequest(pageSize, DEFAULT_SCROLL_TIMEOUT);
       val boolQuery = boolQuery()
               .must(
                   matchQuery(DATA_SET_ID, request.getDatasetId()));
@@ -104,6 +114,14 @@ public class VariantSetRepository {
   private static boolean isNewRequest(SearchVariantSetsRequest searchVariantsRequest){
     return "".equals(searchVariantsRequest.getPageToken());
   }
+
+  private static int resolvePageSize(SearchVariantSetsRequest request){
+    return request.hasField(VARIANT_SETS_PAGE_SIZE_FIELD_DESCRIPTOR) ? request.getPageSize() : DEFAULT_PAGE_SIZE;
+  }
+  private static int resolvePageSize(SearchDatasetsRequest request){
+    return request.hasField(DATASETS_PAGE_SIZE_FIELD_DESCRIPTOR) ? request.getPageSize() : DEFAULT_PAGE_SIZE;
+  }
+
 
 
 }

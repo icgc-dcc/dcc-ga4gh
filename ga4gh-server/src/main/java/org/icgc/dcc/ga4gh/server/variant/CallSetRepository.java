@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.ga4gh.server.variant;
 
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import ga4gh.VariantServiceOuterClass.GetCallSetRequest;
 import ga4gh.VariantServiceOuterClass.SearchCallSetsRequest;
 import lombok.NonNull;
@@ -32,11 +33,13 @@ import org.icgc.dcc.ga4gh.server.config.ServerConfig;
 import org.springframework.stereotype.Repository;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.BIO_SAMPLE_ID;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.NAME;
 import static org.icgc.dcc.ga4gh.common.PropertyNames.VARIANT_SET_IDS;
 import static org.icgc.dcc.ga4gh.common.TypeNames.CALL_SET;
+import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_PAGE_SIZE;
 import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_SCROLL_TIMEOUT;
 
 /**
@@ -45,6 +48,8 @@ import static org.icgc.dcc.ga4gh.server.config.ServerConfig.DEFAULT_SCROLL_TIMEO
 @Repository
 @RequiredArgsConstructor
 public class CallSetRepository {
+
+  private static final FieldDescriptor CALLSET_PAGE_SIZE_FIELDDESCRIPTOR = SearchCallSetsRequest.getDescriptor().findFieldByNumber(SearchCallSetsRequest.PAGE_SIZE_FIELD_NUMBER);
 
   @NonNull
   private final Client client;
@@ -64,8 +69,9 @@ public class CallSetRepository {
   }
 
   public SearchResponse findCallSets(@NonNull SearchCallSetsRequest request) {
+    val pageSize = resolvePageSize(request);
     if(isNewRequest(request)){
-      val searchRequestBuilder = createScrollSearchRequest(request.getPageSize(), DEFAULT_SCROLL_TIMEOUT);
+      val searchRequestBuilder = createScrollSearchRequest(pageSize, DEFAULT_SCROLL_TIMEOUT);
       val query = boolQuery()
           .filter(
               boolQuery()
@@ -80,6 +86,10 @@ public class CallSetRepository {
 
   public GetResponse findCallSetById(@NonNull GetCallSetRequest request) {
     return client.prepareGet(ServerConfig.INDEX_NAME, CALL_SET, request.getCallSetId()).get();
+  }
+
+  private static int resolvePageSize(SearchCallSetsRequest request){
+    return request.hasField(CALLSET_PAGE_SIZE_FIELDDESCRIPTOR) ? request.getPageSize() : DEFAULT_PAGE_SIZE;
   }
 
 }
