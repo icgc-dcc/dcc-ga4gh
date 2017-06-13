@@ -36,7 +36,7 @@ import static org.icgc.dcc.ga4gh.loader.utils.Strings.toStringArray;
 @Slf4j
 public class PortalConsensusCollabVcfFileQueryCreator implements ObjectNodeConverter {
 
-  private static final Set<String> CONSENSUS_SOFTWARE_NAMES = newHashSet( "PCAWG SNV-MNV callers", "PCAWG InDel callers");
+  private static final Set<String> CONSENSUS_SOFTWARE_NAMES = newHashSet( " PCAWG SNV-MNV callers", "PCAWG InDel callers");
 
   @Override
   public ObjectNode toObjectNode(){
